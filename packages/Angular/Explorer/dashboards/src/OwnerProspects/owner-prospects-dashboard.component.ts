@@ -2,8 +2,11 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } 
 import { BaseDashboard, BaseResourceComponent } from '@memberjunction/ng-shared';
 import { RegisterClass } from '@memberjunction/global';
 import { ResourceData, UserInfoEngine } from '@memberjunction/core-entities';
-import { RunView } from '@memberjunction/core';
+import { CompositeKey, RunView, UserInfo } from '@memberjunction/core';
+import { MJNotificationService } from '@memberjunction/ng-notifications';
+import { indianataxProspectEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity } from 'mj_generatedentities';
 import { FilterFieldConfig } from '@memberjunction/ng-ui-components';
+import { ownerKeyFromRow } from './owner-key';
 import {
   OwnerRow,
   OwnerParcelRow,
@@ -88,7 +91,18 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** Sort keys that compare as strings — a fresh column on one of these starts ascending. */
   private static readonly STRING_SORT_KEYS: readonly OwnerSortKey[] = ['label', 'tier', 'appealYears', 'repStatus'];
 
-  constructor(private cdr: ChangeDetectorRef) {
+  /** tier → `Prospect.Priority` (mirrors `flag-prospect.js` `TIER_PRIORITY`). */
+  private static readonly TIER_PRIORITY: Record<string, indianataxProspectEntity['Priority']> = {
+    Prime: 'High',
+    Strong: 'High',
+    Moderate: 'Medium',
+    Watch: 'Low',
+  };
+
+  constructor(
+    private cdr: ChangeDetectorRef,
+    private notifications: MJNotificationService,
+  ) {
     super();
   }
 
@@ -261,14 +275,172 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     this.cdr.markForCheck();
   }
 
-  /** Detail-panel `(FlagRequested)` handler — Task 8 creates the `indiana_tax.Prospect`. */
-  public onFlagOwner(_row: OwnerRow): void {
-    /* Task 8 */
+  /**
+   * Detail-panel `(FlagRequested)` handler — creates the `indiana_tax.Prospect`
+   * (+ its `ProspectParcel` / `ProspectSnapshot` rows) through the MJ entity
+   * layer, mirroring `Indiana_Tax_Expert/scripts/flag-prospect.js`. Idempotent on
+   * the row: a row that already links a prospect is a no-op.
+   */
+  public async onFlagOwner(row: OwnerRow): Promise<void> {
+    if (row.prospectId) {
+      this.notify(`“${row.label}” is already a prospect.`, 'info');
+      return;
+    }
+    const p = this.ProviderToUse;
+    const user = p.CurrentUser;
+
+    const prospect = await this.createProspect(row, user);
+    if (!prospect) {
+      return;
+    }
+
+    const repd = await this.attachProspectParcels(prospect, row, user);
+    await this.writeProspectSnapshot(prospect, row, repd, user);
+
+    row.prospectId = prospect.ID;
+    this.notify(`Flagged “${row.label}” as a prospect.`, 'success');
+    this.recomputeVisibleRows();
+    this.cdr.markForCheck();
   }
 
-  /** Detail-panel `(ViewProspectRequested)` handler — Task 8 navigates to the existing prospect. */
-  public onViewProspect(_row: OwnerRow): void {
-    /* Task 8 */
+  /** Detail-panel `(ViewProspectRequested)` handler — opens the linked prospect record. */
+  public onViewProspect(row: OwnerRow): void {
+    if (!row.prospectId) {
+      return;
+    }
+    this.navigationService.OpenEntityRecord('Prospects', new CompositeKey([{ FieldName: 'ID', Value: row.prospectId }]));
+  }
+
+  // ───── Flag-as-prospect internals (mirror flag-prospect.js) ─────
+
+  /** `Prospect.RelationshipType` from the owner's rep status string. */
+  private relationshipFrom(repStatus: string): indianataxProspectEntity['RelationshipType'] {
+    const s = (repStatus ?? '').toLowerCase();
+    if (s.includes('faegre')) {
+      return 'ExistingClientExpand';
+    }
+    if (s.startsWith('represented by') || s.startsWith('multiple reps')) {
+      return 'CompetitorRepped';
+    }
+    return 'Cold';
+  }
+
+  /** `ProspectParcel.Disposition` inferred per parcel. */
+  private dispositionFor(pp: OwnerParcelRow): indianataxProspectParcelEntity['Disposition'] {
+    if (pp.existingRep && pp.existingRep.trim()) {
+      return 'AlreadyRepresented';
+    }
+    if (pp.rec === 'Appeal' || pp.rec === 'Monitor') {
+      return 'InScope';
+    }
+    return 'Monitoring';
+  }
+
+  /** The free-text `Prospect.Thesis` sentence (parcels, AV, YoY, modeled opportunity, rep status). */
+  private buildThesis(row: OwnerRow): string {
+    const av = Math.round(row.totalAV2026 ?? row.totalAV ?? 0).toLocaleString('en-US');
+    const yoySign = (row.avYoYPct ?? 0) >= 0 ? '+' : '';
+    const opp = Math.round(row.estSavingsAtAsk ?? 0).toLocaleString('en-US');
+    return (
+      `${row.parcelCount} Marion parcels, $${av} AV ` +
+      `(${yoySign}${row.avYoYPct}% YoY). Modeled opportunity ~$${opp}/yr at ask ` +
+      `across ${row.nAppealRec} appeal-rec parcels. Rep status: ${row.repStatus}.`
+    );
+  }
+
+  /** Create + save the `Prospects` row; null (and a toast) on failure. */
+  private async createProspect(row: OwnerRow, user: UserInfo): Promise<indianataxProspectEntity | null> {
+    const prospect = await this.ProviderToUse.GetEntityObject<indianataxProspectEntity>('Prospects', user);
+    prospect.NewRecord();
+    prospect.OwnerKey = ownerKeyFromRow({ coStarTrueOwner: row.coStarTrueOwner, label: row.label });
+    prospect.DisplayName = row.label;
+    prospect.RelationshipType = this.relationshipFrom(row.repStatus);
+    prospect.Stage = 'Identified';
+    prospect.StageEnteredDate = new Date();
+    prospect.Priority = OwnerProspectsDashboardComponent.TIER_PRIORITY[row.tier ?? 'Watch'] ?? 'Medium';
+    prospect.IdentifiedDate = new Date();
+    prospect.IdentificationSource = 'Owner Prospects dashboard';
+    prospect.EstimatedOpportunityAtAsk = row.estSavingsAtAsk;
+    prospect.Thesis = this.buildThesis(row);
+    if (!(await prospect.Save())) {
+      this.notify(`Flag failed: ${prospect.LatestResult?.CompleteMessage ?? 'unknown error'}`, 'error');
+      return null;
+    }
+    return prospect;
+  }
+
+  /** Resolve `indiana_tax.Parcel.ID` for a list of GIS parcel numbers → `Map<gis, id>`. */
+  private async resolveParcelIds(gisList: string[]): Promise<Map<string, string>> {
+    const byGis = new Map<string, string>();
+    if (!gisList.length) {
+      return byGis;
+    }
+    const inList = gisList.map((g) => `'${g}'`).join(',');
+    const res = await RunView.FromMetadataProvider(this.ProviderToUse).RunView<{ ID: string; GISParcelNumber: string }>({
+      EntityName: 'Parcels',
+      Fields: ['ID', 'GISParcelNumber'],
+      ExtraFilter: `GISParcelNumber IN (${inList})`,
+      MaxRows: 5000,
+      ResultType: 'simple',
+    });
+    if (res.Success) {
+      for (const r of res.Results) {
+        byGis.set(r.GISParcelNumber, r.ID);
+      }
+    }
+    return byGis;
+  }
+
+  /** Attach every resolvable parcel as a `ProspectParcel`; returns the represented-parcel count. */
+  private async attachProspectParcels(prospect: indianataxProspectEntity, row: OwnerRow, user: UserInfo): Promise<number> {
+    const idByGis = await this.resolveParcelIds(row.parcels.map((pp) => pp.gisParcelNumber));
+    const p = this.ProviderToUse;
+    let repd = 0;
+    for (const pp of row.parcels) {
+      const parcelId = idByGis.get(pp.gisParcelNumber);
+      if (!parcelId) {
+        continue;
+      }
+      const link = await p.GetEntityObject<indianataxProspectParcelEntity>('Prospect Parcels', user);
+      link.NewRecord();
+      link.ProspectID = prospect.ID;
+      link.ParcelID = parcelId;
+      link.Disposition = this.dispositionFor(pp);
+      link.ExistingRep = pp.existingRep?.trim() || null;
+      link.SnapshotAV = pp.av2026 ?? pp.currentAV ?? null;
+      link.SnapshotOpportunityAtAsk = pp.estSavingsAtAsk ?? null;
+      link.SnapshotOpportunityAtFloor = pp.estSavingsAtFloor ?? null;
+      if (pp.existingRep?.trim()) {
+        repd++;
+      }
+      if (!(await link.Save())) {
+        this.notify(`Parcel ${pp.gisParcelNumber} not attached: ${link.LatestResult?.CompleteMessage ?? ''}`, 'warning');
+      }
+    }
+    return repd;
+  }
+
+  /** Write the first `ProspectSnapshot` for a freshly-flagged prospect. */
+  private async writeProspectSnapshot(prospect: indianataxProspectEntity, row: OwnerRow, repd: number, user: UserInfo): Promise<void> {
+    const snap = await this.ProviderToUse.GetEntityObject<indianataxProspectSnapshotEntity>('Prospect Snapshots', user);
+    snap.NewRecord();
+    snap.ProspectID = prospect.ID;
+    snap.PortfolioRunTag = 'dashboard-flag';
+    snap.ParcelCount = row.parcelCount;
+    snap.TotalAV = row.totalAV2026 ?? row.totalAV ?? null;
+    snap.OpportunityAtAsk = row.estSavingsAtAsk ?? null;
+    snap.OpportunityAtFloor = row.estSavingsAtFloor ?? null;
+    snap.RepdParcelCount = repd;
+    snap.FreshParcelCount = Math.max(0, row.parcelCount - repd);
+    snap.AVYoYPct = row.avYoYPct ?? null;
+    if (!(await snap.Save())) {
+      this.notify(`Snapshot not written: ${snap.LatestResult?.CompleteMessage ?? ''}`, 'warning');
+    }
+  }
+
+  /** Route a short message through the package's toast service. */
+  private notify(message: string, style: 'success' | 'error' | 'warning' | 'info'): void {
+    this.notifications.CreateSimpleNotification(message, style, style === 'error' ? 6000 : 3500);
   }
 
   /** Money formatter for the table cells (`$12,345` / `$0` / `—`). */
@@ -465,11 +637,25 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   /**
-   * Task 8 fills this in — matches the loaded owners against existing
-   * `indiana_tax.Prospect` rows and sets {@link OwnerRow.prospectId}.
+   * Match the loaded owners against existing `indiana_tax.Prospect` rows by
+   * `OwnerKey` and stamp {@link OwnerRow.prospectId} on every hit — so the table
+   * pill and the detail panel's "View prospect" affordance light up for owners
+   * that are already flagged.
    */
-  private matchExistingProspects(): Promise<void> {
-    return Promise.resolve();
+  private async matchExistingProspects(): Promise<void> {
+    const res = await RunView.FromMetadataProvider(this.ProviderToUse).RunView<{ ID: string; OwnerKey: string }>({
+      EntityName: 'Prospects',
+      Fields: ['ID', 'OwnerKey'],
+      MaxRows: 20000,
+      ResultType: 'simple',
+    });
+    if (!res.Success) {
+      return;
+    }
+    const byKey = new Map<string, string>(res.Results.map((r): [string, string] => [r.OwnerKey, r.ID]));
+    for (const row of this.AllOwners) {
+      row.prospectId = byKey.get(row.ownerKey) ?? null;
+    }
   }
 
   /**

@@ -149,6 +149,11 @@
                     @if (row.coStarTrueOwner) {
                       <span class="co-star-check" title="CoStar true owner: {{ row.coStarTrueOwner }}">&#10003;</span>
                     }
+                    @if (row.prospectId) {
+                      <span class="pill pill--flagged">flagged</span>
+                    } @else if (row.isFreshProspect) {
+                      <span class="pill pill--cold">cold</span>
+                    }
                   </td>
                   <td>{{ row.tier ?? '—' }}</td>
                   <td class="num">{{ row.parcelCount | number }}</td>

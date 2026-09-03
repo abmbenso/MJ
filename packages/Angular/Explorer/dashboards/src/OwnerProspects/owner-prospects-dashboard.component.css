@@ -230,6 +230,29 @@
   color: var(--mj-text-muted);
 }
 
+/* ── Prospect status pill ─────────────────────────────────────────────────── */
+:host .pill {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0.0625rem 0.375rem;
+  border-radius: var(--mj-radius-full);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  vertical-align: middle;
+}
+
+:host .pill--flagged {
+  background: color-mix(in srgb, var(--mj-brand-primary) 15%, var(--mj-bg-surface));
+  color: var(--mj-brand-primary);
+}
+
+:host .pill--cold {
+  background: var(--mj-status-success-bg);
+  color: var(--mj-status-success-text);
+}
+
 :host .yoy--up {
   color: var(--mj-status-warning);
   font-weight: 600;
