@@ -1,0 +1,60 @@
+<div class="analytics-panel">
+  <button type="button" class="analytics-panel-header" (click)="toggleExpanded()" [attr.aria-expanded]="IsExpanded">
+    <i class="fa-solid" [class.fa-chevron-right]="!IsExpanded" [class.fa-chevron-down]="IsExpanded"></i>
+    <i class="fa-solid fa-chart-simple"></i>
+    <span class="analytics-panel-title">Result Set Analytics</span>
+    <span class="analytics-panel-subtitle">{{ Rows.length }} parcel{{ Rows.length === 1 ? '' : 's' }}</span>
+  </button>
+
+  @if (IsExpanded) {
+    <div class="analytics-panel-body">
+      @if (UnitToggleOptions.length > 1) {
+        <div class="analytics-panel-unit-row">
+          <span class="analytics-panel-unit-label">Compare per:</span>
+          <mj-view-toggle [Options]="UnitToggleOptions" [ActiveKey]="SelectedUnit" (KeyChange)="onUnitChange($event)"></mj-view-toggle>
+        </div>
+      }
+
+      @if (ShowCoStarProvenanceNote) {
+        <p class="analytics-panel-provenance-note">
+          <i class="fa-solid fa-circle-info"></i>
+          {{ SelectedUnit === 'unit' ? 'Unit' : 'Key' }} counts sourced from CoStar property data, not county assessor records.
+        </p>
+      }
+
+      <div class="analytics-panel-table-wrap">
+        <table class="analytics-panel-table">
+          <thead>
+            <tr>
+              <th scope="col">Metric</th>
+              <th scope="col">Average</th>
+              <th scope="col">Median</th>
+              <th scope="col">Minimum</th>
+              <th scope="col">Maximum</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (row of MetricRows; track row.label) {
+              <tr>
+                <th scope="row">{{ row.label }}</th>
+                @if (row.stats) {
+                  <td>{{ formatStat(row.stats.avg, row.isCurrency) }}</td>
+                  <td>{{ formatStat(row.stats.median, row.isCurrency) }}</td>
+                  <td>{{ formatStat(row.stats.min, row.isCurrency) }}</td>
+                  <td>{{ formatStat(row.stats.max, row.isCurrency) }}</td>
+                } @else {
+                  <td colspan="4" class="analytics-panel-no-data">No data for this unit</td>
+                }
+              </tr>
+              @if (row.stats) {
+                <tr class="analytics-panel-sample-row">
+                  <td colspan="5">based on {{ row.stats.sampleSize }} of {{ Rows.length }} parcels</td>
+                </tr>
+              }
+            }
+          </tbody>
+        </table>
+      </div>
+    </div>
+  }
+</div>

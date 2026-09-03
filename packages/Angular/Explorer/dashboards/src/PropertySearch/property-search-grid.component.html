@@ -1,0 +1,14 @@
+@if (!Rows.length) {
+  <mj-empty-state Icon="fa-solid fa-table-list" Title="No matching parcels" Message="Try a different search term or clear your filters."></mj-empty-state>
+} @else {
+  <ag-grid-angular
+    class="psg-grid"
+    [theme]="Theme"
+    [columnDefs]="ColumnDefs"
+    [defaultColDef]="DefaultColDef"
+    [gridOptions]="GridOptions"
+    [rowData]="Rows"
+    (gridReady)="OnGridReady($event)"
+    (rowClicked)="OnRowClicked($event)">
+  </ag-grid-angular>
+}

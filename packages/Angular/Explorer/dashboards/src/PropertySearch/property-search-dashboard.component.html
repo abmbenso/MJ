@@ -1,0 +1,173 @@
+<mj-page-layout>
+  <mj-page-header
+    Title="Property Search"
+    Icon="fa-solid fa-map-location-dot"
+    Subtitle="Search and map Marion County commercial and industrial parcels">
+
+    <div meta>
+      @if (MergedResults.length) {
+        <mj-stat-badge [Count]="MergedResults.length" [Label]="IsTruncated ? 'parcels shown (capped)' : 'parcels'"
+          Icon="fa-solid fa-circle-info" [Variant]="IsTruncated ? 'warning' : 'default'" />
+        <mj-stat-badge [Count]="FormattedTotalAssessedValue" Label="total assessed value" Icon="fa-solid fa-sack-dollar" />
+        <mj-stat-badge [Count]="FormattedAvgPricePerSqFt" [Label]="AvgPricePerSqFtSubLabel" Icon="fa-solid fa-ruler-combined" />
+      }
+    </div>
+
+    <div actions>
+      <mj-refresh-button [Loading]="IsLoading" (Clicked)="runSearch()"></mj-refresh-button>
+      <button mjButton variant="secondary" size="sm" (click)="openExportDialog()" [disabled]="!MergedResults.length">
+        <i class="fa-solid fa-file-export"></i> Export
+      </button>
+    </div>
+
+    <div toolbar>
+      <mj-page-search
+        Placeholder="Search by address, owner, parcel #, or subclass code (e.g. 411)..."
+        [Value]="SearchTerm"
+        (ValueChange)="onSearchChange($event)">
+      </mj-page-search>
+
+      <mj-filter-popover
+        [ActiveCount]="ActiveFilterCount"
+        [ShowClearAll]="ActiveFilterCount > 0"
+        (ClearAllRequested)="resetFilters()">
+        <mj-filter-panel
+          [Fields]="ParcelFilterFields"
+          [Values]="ParcelFilterValues"
+          (ValuesChange)="onFilterValuesChange($event)"
+          (Reset)="resetFilters()">
+          <mj-filter-field Label="Building Sq Ft" Icon="fa-solid fa-ruler-combined">
+            <div class="sqft-range-row">
+              <mj-numeric-input [Min]="0" Placeholder="Min" [ngModel]="SqFtMin" (ngModelChange)="onSqFtMinChange($event)"></mj-numeric-input>
+              <span class="sqft-range-sep">&ndash;</span>
+              <mj-numeric-input [Min]="0" Placeholder="Max" [ngModel]="SqFtMax" (ngModelChange)="onSqFtMaxChange($event)"></mj-numeric-input>
+            </div>
+            <p class="sqft-range-note">
+              Building sqft is unverified for many parcels &mdash; see the confidence badge on each parcel's detail panel.
+            </p>
+          </mj-filter-field>
+        </mj-filter-panel>
+      </mj-filter-popover>
+
+      @if (YearToggleOptions.length) {
+        <mj-view-toggle
+          [Options]="YearToggleOptions"
+          [ActiveKey]="SelectedAssessmentYear.toString()"
+          (KeyChange)="onAssessmentYearChange($any($event))">
+        </mj-view-toggle>
+      }
+
+      <mj-view-toggle
+        [Options]="[{ key: 'map', icon: 'fa-solid fa-map', label: 'Map' }, { key: 'list', icon: 'fa-solid fa-table-list', label: 'List' }, { key: 'analytics', icon: 'fa-solid fa-chart-column', label: 'Analytics' }]"
+        [ActiveKey]="ActiveViewMode"
+        (KeyChange)="onViewModeChange($any($event))">
+      </mj-view-toggle>
+
+      @if (ActiveViewMode === 'map') {
+        <mj-view-toggle
+          [Options]="[{ key: 'point', icon: 'fa-solid fa-location-dot', label: 'Pins' }, { key: 'boundary', icon: 'fa-solid fa-draw-polygon', label: 'Outlines' }]"
+          [ActiveKey]="ActiveRenderMode"
+          (KeyChange)="onRenderModeChange($any($event))">
+        </mj-view-toggle>
+      }
+
+      @if (ActiveViewMode === 'list') {
+        <mj-filter-popover Label="Columns" Icon="fa-solid fa-table-columns">
+          <div class="columns-popover">
+            @for (group of GroupedColumnOptions; track group.category) {
+              <div class="columns-popover-category">{{ group.category }}</div>
+              @for (col of group.columns; track col.key) {
+                <label class="columns-popover-row">
+                  <input type="checkbox" class="mj-checkbox"
+                    [checked]="VisibleColumnKeys.has(col.key)"
+                    (change)="toggleColumnVisible(col.key, $any($event.target).checked)">
+                  {{ col.label }}
+                </label>
+              }
+            }
+            <button mjButton variant="flat" size="sm" (click)="resetColumnsToDefault()">Reset to default</button>
+          </div>
+        </mj-filter-popover>
+      }
+    </div>
+  </mj-page-header>
+
+  <mj-page-body>
+    @if (IsLoading) {
+      <mj-loading text="Searching parcels..."></mj-loading>
+    } @else {
+      <div class="property-search-body">
+        @if (ActiveViewMode === 'analytics') {
+          <!-- Independent of the current search/filter/result-cap state -- a
+               global cross-sub-class rollup, not a view of MergedResults. -->
+          <mj-property-subclass-analytics
+            [Provider]="Provider"
+            [Active]="true"
+            [AssessmentYear]="SelectedAssessmentYear">
+          </mj-property-subclass-analytics>
+        } @else {
+          @if (MergedResults.length) {
+            <mj-property-search-analytics-panel [Rows]="MergedResults"></mj-property-search-analytics-panel>
+          }
+
+          @if (IsTruncated) {
+            <mj-alert Variant="info" Icon="fa-solid fa-circle-info"
+              Message="Showing the top {{ RESULT_CAP }} matching parcels by assessed value — narrow your filters to see more.">
+            </mj-alert>
+          }
+
+          @if (ActiveViewMode === 'map' && RowsWithoutGeometryCount > 0) {
+            <mj-alert Variant="warning" Icon="fa-solid fa-map-pin"
+              Message="{{ RowsWithoutGeometryCount }} of {{ MergedResults.length }} parcels have no map coordinates and aren't plotted — switch to List view to see all of them.">
+            </mj-alert>
+          }
+
+          @if (!MergedResults.length) {
+            <mj-empty-state
+              Icon="fa-solid fa-map-location-dot"
+              Title="No matching parcels"
+              Message="Try a different search term or clear your filters.">
+            </mj-empty-state>
+          } @else if (ActiveViewMode === 'map') {
+            @if (ParcelsEntity) {
+              <mj-map-view
+                [Entity]="ParcelsEntity"
+                [Records]="MergedResults"
+                LatitudeField="Latitude"
+                LongitudeField="Longitude"
+                BoundaryField="BoundaryGeoJSON"
+                [RenderMode]="ActiveRenderMode"
+                [TotalRecordCount]="MergedResults.length"
+                (MarkerClick)="onMarkerClick($event)">
+              </mj-map-view>
+            }
+          } @else {
+            <mj-property-search-grid
+              [Rows]="MergedResults"
+              [VisibleColumnKeys]="VisibleColumnKeys"
+              (RowClicked)="onGridRowClicked($event)">
+            </mj-property-search-grid>
+          }
+        }
+
+        <mj-property-detail-panel
+          [Visible]="DetailPanelVisible"
+          [Parcel]="SelectedParcel"
+          [TrendRows]="SelectedParcelTrend"
+          [IsTrendLoading]="IsTrendLoading"
+          [Appeals]="SelectedParcelAppeals"
+          [IsAppealsLoading]="IsAppealsLoading"
+          [CoStarMatches]="SelectedParcelCoStarMatches"
+          (Close)="closeDetailPanel()"
+          (OpenRecord)="openParcelRecord($event)">
+        </mj-property-detail-panel>
+      </div>
+    }
+  </mj-page-body>
+</mj-page-layout>
+
+<mj-export-dialog
+  [visible]="ShowExportDialog"
+  [config]="ExportDialogConfig"
+  (closed)="onExportDialogClosed($event)">
+</mj-export-dialog>

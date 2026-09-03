@@ -1,0 +1,260 @@
+<mj-slide-panel [Visible]="Visible" Mode="slide" [Title]="Title" (Closed)="Close.emit()">
+  @if (Parcel) {
+    <div class="detail-panel-body">
+      <div class="detail-subtitle">
+        @if (Parcel.ParcelNumber) {
+          <span>Parcel # {{ Parcel.ParcelNumber }}</span>
+        }
+        @if (Parcel.GISParcelNumber) {
+          <span>GIS # {{ Parcel.GISParcelNumber }}</span>
+        }
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">Owner</div>
+        <div class="detail-value">{{ Parcel.OwnerName || 'Unknown' }}</div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">Property Class / Sub Class</div>
+        <div class="detail-value">
+          {{ Parcel.PropertyClass || 'Unknown' }}
+          @if (Parcel.PropertySubClassDescription) {
+            <span class="detail-subvalue">&mdash; {{ Parcel.PropertySubClassDescription }}</span>
+          }
+        </div>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">Building Sq Ft</div>
+        <div class="detail-value">{{ formatSqFt(Parcel.EstimatedSqFt) }}</div>
+        <mj-stat-badge [Label]="SqFtConfidence.label" [Variant]="SqFtConfidence.variant"></mj-stat-badge>
+      </div>
+
+      <div class="detail-section">
+        <div class="detail-label">
+          Assessed Values
+          @if (Parcel.AssessmentYear) {
+            <span class="detail-subvalue">&mdash; {{ Parcel.AssessmentYear }}{{ Parcel.AssessmentSource === 'MarionPRC' ? ' (verified)' : '' }}</span>
+          } @else {
+            <span class="detail-subvalue">&mdash; no data for the selected year</span>
+          }
+        </div>
+        <div class="detail-value-grid">
+          <div><span class="detail-mini-label">Land</span> {{ formatCurrency(Parcel.AssessedLandAV) }}</div>
+          <div><span class="detail-mini-label">Improvement</span> {{ formatCurrency(Parcel.AssessedImprovementAV) }}</div>
+          <div><span class="detail-mini-label">Total</span> {{ formatCurrency(Parcel.AssessedTotalAV) }}</div>
+        </div>
+
+        <div class="trend-toggle-row">
+          <span class="detail-mini-label">Value Trend</span>
+          <mj-view-toggle
+            [Options]="TrendYearsToggleOptions"
+            [ActiveKey]="TrendYearsOption.toString()"
+            (KeyChange)="onTrendYearsToggle($any($event))">
+          </mj-view-toggle>
+        </div>
+
+        @if (IsTrendLoading) {
+          <mj-loading text="Loading trend..." size="small"></mj-loading>
+        } @else if (!VisibleTrendRows.length) {
+          <p class="trend-empty">No Tax History Report on file yet for this parcel — trend unavailable.</p>
+        } @else {
+          <div class="trend-table-wrap">
+            <table class="trend-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  @for (year of TrendYears; track year) {
+                    <th>{{ year }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="trend-row-label">Land</td>
+                  @for (row of VisibleTrendRows; track row.taxYear) {
+                    <td>{{ formatCurrency(row.landAssessment) }}</td>
+                  }
+                </tr>
+                <tr>
+                  <td class="trend-row-label">Improvement</td>
+                  @for (row of VisibleTrendRows; track row.taxYear) {
+                    <td>{{ formatCurrency(row.improvements) }}</td>
+                  }
+                </tr>
+                <tr>
+                  <td class="trend-row-label">Total</td>
+                  @for (row of VisibleTrendRows; track row.taxYear) {
+                    <td>{{ formatCurrency(row.grossAssessment) }}</td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        }
+      </div>
+
+      @if (VisibleTrendRows.length) {
+        <div class="detail-section">
+          <div class="detail-label">Tax Liability Trend</div>
+          <div class="trend-table-wrap">
+            <table class="trend-table">
+              <thead>
+                <tr>
+                  <th></th>
+                  @for (year of TrendYears; track year) {
+                    <th>{{ year }}</th>
+                  }
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td class="trend-row-label">Net Tax</td>
+                  @for (row of VisibleTrendRows; track row.taxYear) {
+                    <td>{{ formatCurrency(row.netAnnualTax) }}</td>
+                  }
+                </tr>
+                <tr>
+                  <td class="trend-row-label">Tax Rate</td>
+                  @for (row of VisibleTrendRows; track row.taxYear) {
+                    <td>{{ formatTaxRate(row.taxRate) }}</td>
+                  }
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      }
+
+      <div class="detail-section">
+        <div class="detail-label">$/SF</div>
+        <div class="detail-value">{{ PricePerSqFtDisplay }}</div>
+      </div>
+
+      @if (Parcel.Neighborhood || Parcel.TaxDistrictID) {
+        <div class="detail-section">
+          <div class="detail-label">Neighborhood / Tax District</div>
+          <div class="detail-value">{{ Parcel.Neighborhood || '—' }} / {{ Parcel.TaxDistrictID || '—' }}</div>
+        </div>
+      }
+
+      <div class="detail-section">
+        <div class="detail-label">Appeal History</div>
+
+        @if (IsAppealsLoading) {
+          <mj-loading text="Loading appeal history..." size="small"></mj-loading>
+        } @else if (!Appeals.length) {
+          <p class="trend-empty">No PTABOA appeal history on file for this parcel.</p>
+        } @else {
+          <div class="appeal-list">
+            @for (appeal of Appeals; track $index; let i = $index) {
+              <div class="appeal-card">
+                <button type="button" class="appeal-summary-row" (click)="toggleAppealExpanded(i)"
+                  [attr.aria-expanded]="isAppealExpanded(i)">
+                  <span class="appeal-year">{{ appeal.assessmentYear ?? '—' }}</span>
+                  <span class="appeal-info">
+                    <span class="appeal-case">{{ appeal.caseNumber || 'No case #' }}</span>
+                    <span class="appeal-meta">
+                      <span class="chip" [class.chip-success]="appealStatusVariant(appeal.decisionStatus) === 'success'"
+                        [class.chip-warning]="appealStatusVariant(appeal.decisionStatus) === 'warning'">
+                        {{ appeal.decisionStatus || 'Unknown status' }}
+                      </span>
+                      <span class="chip"
+                        [class.chip-success]="appealConfirmationStatus(appeal) === 'confirmed'"
+                        [class.chip-warning]="appealConfirmationStatus(appeal) === 'revised'"
+                        [title]="appealConfirmationStatus(appeal) === 'pending' ? 'The agenda outcome above has not yet been ratified by an actual Form 115 Final Determination -- this can take weeks to months, and rarely, the ratified outcome differs from what the agenda predicted.' : ''">
+                        {{ appealConfirmationLabel(appeal) }}
+                      </span>
+                      <span>{{ formatHearingDate(appeal.hearingDate) }}</span>
+                    </span>
+                    @if (appeal.taxRepresentative) {
+                      <span class="appeal-rep">Rep: {{ appeal.taxRepresentative }}</span>
+                    } @else {
+                      <span class="appeal-rep appeal-rep-self">Self-represented</span>
+                    }
+                    @if (formatAVChangeSummary(appeal); as avSummary) {
+                      <span class="appeal-av-summary"
+                        [class.av-reduction]="avChangeDirection(appeal) === 'reduction'"
+                        [class.av-increase]="avChangeDirection(appeal) === 'increase'">
+                        {{ avSummary }}
+                      </span>
+                    }
+                  </span>
+                  @if (appeal.circumstances || appeal.beforeTotalAV != null) {
+                    <i class="fa-solid fa-chevron-right chevron" [class.chevron-open]="isAppealExpanded(i)"></i>
+                  }
+                </button>
+
+                @if (isAppealExpanded(i)) {
+                  @if (appeal.beforeTotalAV != null) {
+                    <div class="appeal-av-table-wrap">
+                      <table class="appeal-av-table">
+                        <thead>
+                          <tr><th></th><th>Before PTABOA</th><th>After PTABOA</th></tr>
+                        </thead>
+                        <tbody>
+                          <tr><td class="appeal-av-row-label">Land</td><td>{{ formatCurrency(appeal.beforeLandAV) }}</td><td>{{ formatCurrency(appeal.afterLandAV) }}</td></tr>
+                          <tr><td class="appeal-av-row-label">Improvement</td><td>{{ formatCurrency(appeal.beforeImprovementAV) }}</td><td>{{ formatCurrency(appeal.afterImprovementAV) }}</td></tr>
+                          <tr><td class="appeal-av-row-label">Total</td><td>{{ formatCurrency(appeal.beforeTotalAV) }}</td><td>{{ formatCurrency(appeal.afterTotalAV) }}</td></tr>
+                        </tbody>
+                      </table>
+                    </div>
+                  }
+                  @if (appeal.circumstances) {
+                    <div class="appeal-circumstances">{{ appeal.circumstances }}</div>
+                  }
+                }
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      @if (CoStarMatches.length) {
+        <div class="detail-section">
+          <div class="detail-label">
+            CoStar Data
+            <span class="costar-badge" title="Sourced from CoStar property-export data, not county assessor records">CoStar</span>
+          </div>
+          <div class="costar-list">
+            @for (match of CoStarMatches; track match.costarPropertyID) {
+              <div class="costar-card">
+                <div class="costar-card-header">
+                  <span class="costar-name">{{ match.propertyName || match.propertyType || 'CoStar listing' }}</span>
+                  @if (match.isMultiParcel) {
+                    <span class="chip chip-warning" title="This CoStar listing spans multiple parcels -- Units/Rooms below describe the WHOLE property, not just this parcel">Multi-parcel</span>
+                  }
+                </div>
+                <div class="costar-card-body">
+                  @if (coStarSizeSummary(match); as sizeSummary) {
+                    <span class="costar-stat">{{ sizeSummary }}</span>
+                  }
+                  @if (match.rba != null && (match.numberOfUnits != null || match.rooms != null)) {
+                    <!-- RBA already covered by coStarSizeSummary's own fallback when Units/Rooms are both absent -- shown as a SECOND stat only when it's additional info alongside a Units/Rooms count (e.g. a mixed-use building). -->
+                    <span class="costar-stat">{{ match.rba.toLocaleString('en-US') }} SF (RBA)</span>
+                  }
+                  @if (match.buildingClass) {
+                    <span class="costar-stat">Class {{ match.buildingClass }}</span>
+                  }
+                  @if (match.starRating != null) {
+                    <span class="costar-stat">{{ match.starRating }}★</span>
+                  }
+                  @if (match.lastSalePrice != null) {
+                    <span class="costar-stat">Last sale: {{ formatCurrency(match.lastSalePrice) }} ({{ formatSaleDate(match.lastSaleDate) }})</span>
+                  }
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <div class="detail-actions">
+        <button mjButton variant="primary" size="sm" (click)="onOpenRecord()">
+          <i class="fa-solid fa-arrow-up-right-from-square"></i> Open Full Record
+        </button>
+      </div>
+    </div>
+  }
+</mj-slide-panel>

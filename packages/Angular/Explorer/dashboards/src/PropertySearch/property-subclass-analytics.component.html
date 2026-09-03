@@ -1,0 +1,47 @@
+<div class="analytics-body">
+  @if (IsLoading && !AssessmentRows.length && !AppealRows.length) {
+    <mj-loading text="Loading sub class analytics..."></mj-loading>
+  } @else {
+    <div class="analytics-section">
+      <div class="analytics-section-header">
+        <div class="analytics-section-title">Assessment by Sub Class</div>
+        <div class="analytics-section-subtitle">{{ AssessmentYear }} assessment year — {{ AssessmentRows.length }} sub classes</div>
+      </div>
+      <ag-grid-angular
+        class="analytics-grid"
+        [theme]="Theme"
+        [rowData]="AssessmentRows"
+        [columnDefs]="AssessmentColumnDefs"
+        [defaultColDef]="DefaultColDef"
+        [gridOptions]="GridOptions">
+      </ag-grid-angular>
+    </div>
+
+    <div class="analytics-section">
+      <div class="analytics-section-header">
+        <div>
+          <div class="analytics-section-title">Appeal Outcomes by Sub Class</div>
+          <div class="analytics-section-subtitle">
+            All years on file — {{ AppealRows.length }} sub class / type rows, {{ IncludedAppealCount }} appeals
+            @if (ExcludedExemptionCount > 0) {
+              <span class="analytics-exclusion-note">({{ ExcludedExemptionCount }} Exemption record{{ ExcludedExemptionCount === 1 ? '' : 's' }} excluded)</span>
+            }
+          </div>
+        </div>
+        <mj-view-toggle
+          [Options]="AppealTypeFilterOptions"
+          [ActiveKey]="AppealTypeFilterValue"
+          (KeyChange)="onAppealTypeFilterChange($any($event))">
+        </mj-view-toggle>
+      </div>
+      <ag-grid-angular
+        class="analytics-grid"
+        [theme]="Theme"
+        [rowData]="AppealRows"
+        [columnDefs]="AppealColumnDefs"
+        [defaultColDef]="DefaultColDef"
+        [gridOptions]="GridOptions">
+      </ag-grid-angular>
+    </div>
+  }
+</div>

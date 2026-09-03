@@ -77,7 +77,7 @@ const loadNgDashboardsMcpModule = {
   load: () => import('@memberjunction/ng-dashboards/mcp.module').then(() => {})
 };
 
-// --- @memberjunction/ng-dashboards → ./module (3 entries) ---
+// --- @memberjunction/ng-dashboards → ./module (7 entries) ---
 const loadNgDashboardsModule = {
   chunkId: '@memberjunction/ng-dashboards/module',
   load: () => import('@memberjunction/ng-dashboards/module').then(() => {})
@@ -240,9 +240,13 @@ export const LAZY_FEATURE_CONFIG: Record<string, { chunkId: string; load: () => 
   'BaseResourceComponent::MCPResource': loadNgDashboardsMcpModule,
 
   // @memberjunction/ng-dashboards → ./module
+  'BaseDashboard::OwnerProspectsResource': loadNgDashboardsModule,
+  'BaseDashboard::PropertySearchResource': loadNgDashboardsModule,
   'BaseResourceComponent::ArchiveConfigResource': loadNgDashboardsModule,
   'BaseResourceComponent::ArchiveRunsResource': loadNgDashboardsModule,
   'BaseResourceComponent::DatabaseDesignerDashboard': loadNgDashboardsModule,
+  'BaseResourceComponent::OwnerProspectsResource': loadNgDashboardsModule,
+  'BaseResourceComponent::PropertySearchResource': loadNgDashboardsModule,
 
   // @memberjunction/ng-dashboards → ./predictive-studio-dashboards.module
   'BaseResourceComponent::PredictiveStudioModelsResource': loadNgDashboardsPredictiveStudioDashboardsModule,
@@ -282,4 +286,4 @@ export const LAZY_FEATURE_CONFIG: Record<string, { chunkId: string; load: () => 
 
 };
 
-export const LAZY_FEATURE_CONFIG_COUNT = 114;
+export const LAZY_FEATURE_CONFIG_COUNT = 118;
