@@ -361,12 +361,13 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** The free-text `Prospect.Thesis` sentence (parcels, AV, YoY, modeled opportunity, rep status). */
   private buildThesis(row: OwnerRow): string {
     const av = Math.round(row.totalAV2026 ?? row.totalAV ?? 0).toLocaleString('en-US');
-    const yoySign = (row.avYoYPct ?? 0) >= 0 ? '+' : '';
+    const yoyPct = row.avYoYPct ?? 0;
+    const yoySign = yoyPct >= 0 ? '+' : '';
     const opp = Math.round(row.estSavingsAtAsk ?? 0).toLocaleString('en-US');
     return (
       `${row.parcelCount} Marion parcels, $${av} AV ` +
-      `(${yoySign}${row.avYoYPct}% YoY). Modeled opportunity ~$${opp}/yr at ask ` +
-      `across ${row.nAppealRec} appeal-rec parcels. Rep status: ${row.repStatus}.`
+      `(${yoySign}${yoyPct}% YoY). Modeled opportunity ~$${opp}/yr at ask ` +
+      `across ${row.nAppealRec ?? 0} appeal-rec parcels. Rep status: ${row.repStatus}.`
     );
   }
 
@@ -905,7 +906,11 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
           if (row.prospectId) {
             return { Success: true };
           }
-          await this.onFlagOwner(row);
+          try {
+            await this.onFlagOwner(row);
+          } catch (e) {
+            return { Success: false, ErrorMessage: `Flagging "${row.label}" failed: ${e instanceof Error ? e.message : String(e)}` };
+          }
           return row.prospectId
             ? { Success: true }
             : { Success: false, ErrorMessage: `Flagging "${row.label}" did not complete — see the dashboard for the error detail.` };
