@@ -1,0 +1,38 @@
+[
+  {
+    "fields": {
+      "Name": "Indiana Property Tax Expert",
+      "Description": "Search and map Marion County commercial and industrial parcels by property type, square footage, owner, and parcel number, and prospect appeal opportunities at the owner level.",
+      "Icon": "fa-solid fa-map-location-dot",
+      "DefaultForNewUser": false,
+      "DefaultSequence": 1100,
+      "Status": "Active",
+      "DefaultNavItems": [
+        {
+          "Label": "Property Search",
+          "Icon": "fa-solid fa-map-location-dot",
+          "ResourceType": "Custom",
+          "DriverClass": "PropertySearchResource",
+          "isDefault": true
+        },
+        {
+          "Label": "Owner Prospects",
+          "Icon": "fa-solid fa-bullseye",
+          "ResourceType": "Custom",
+          "DriverClass": "OwnerProspectsResource",
+          "isDefault": false
+        }
+      ]
+    },
+    "relatedEntities": {
+      "MJ: Application Entities": []
+    },
+    "primaryKey": {
+      "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
+    },
+    "sync": {
+      "lastModified": "2026-09-03T04:39:15.695Z",
+      "checksum": "54c3fbaa61abbf4c27e9092fe4bde7b6d5b97c45271d74c36a78f2751eb4317f"
+    }
+  }
+]
