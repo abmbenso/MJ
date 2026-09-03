@@ -10,8 +10,11 @@ import {
   OwnerProspectsFilters,
   OwnerProspectsSummary,
   OwnerSortKey,
+  BannerModel,
   DEFAULT_OWNER_PROSPECTS_FILTERS,
   computeOwnerProspectsSummary,
+  buildBannerModel,
+  formatMoneyShort,
   mapOwnerPortfolioRow,
   mapOwnerParcelRow,
   mapCountyRollup,
@@ -64,6 +67,36 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     super();
   }
 
+  /** Pre-formatted Marion County C&I year-over-year banner strings (null until {@link CountyRollup} loads). */
+  public get Banner(): BannerModel | null {
+    return this.CountyRollup ? buildBannerModel(this.CountyRollup) : null;
+  }
+
+  /** {@link OwnerProspectsSummary.totalAV} as `$X.XB` (`—` before load). */
+  public get SummaryTotalAV(): string {
+    return formatMoneyShort(this.Summary?.totalAV ?? null);
+  }
+
+  /** {@link OwnerProspectsSummary.oppAsk} as `$X.XM` — the hero metric, also used in the `[meta]` badge. */
+  public get SummaryOppAsk(): string {
+    return formatMoneyShort(this.Summary?.oppAsk ?? null);
+  }
+
+  /** {@link OwnerProspectsSummary.freshOpp} — opportunity where no rep is on record. */
+  public get SummaryFreshOpp(): string {
+    return formatMoneyShort(this.Summary?.freshOpp ?? null);
+  }
+
+  /** Point-in-time provenance footer; empty string when there's no run date to cite. */
+  public get ProvenanceLine(): string {
+    const cr = this.CountyRollup;
+    if (!cr || !cr.runDate) {
+      return '';
+    }
+    const runDate = new Date(cr.runDate).toLocaleDateString('en-US');
+    return `Point-in-time render — run ${runDate} · methodology ${cr.methodologyVersion ?? 'n/a'}`;
+  }
+
   async GetResourceDisplayName(_data: ResourceData): Promise<string> {
     return 'Owner Prospects';
   }
@@ -81,9 +114,20 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       const runRes = await rv.RunView<Record<string, unknown>>({
         EntityName: OWNER_PORTFOLIO_RUN_ENTITY,
         Fields: [
-          'ID', 'RunDate', 'MethodologyVersion', 'CountyParcelCount', 'CountyTotalAV2025',
-          'CountyTotalAV2026', 'CountyYoYDollars', 'CountyYoYPct', 'CountyParcelsUp5', 'CountyParcelsUp10',
-          'CountyParcelsUp25', 'CountyParcelsUp50', 'CountyParcelsDown', 'CountyByTypeJSON',
+          'ID',
+          'RunDate',
+          'MethodologyVersion',
+          'CountyParcelCount',
+          'CountyTotalAV2025',
+          'CountyTotalAV2026',
+          'CountyYoYDollars',
+          'CountyYoYPct',
+          'CountyParcelsUp5',
+          'CountyParcelsUp10',
+          'CountyParcelsUp25',
+          'CountyParcelsUp50',
+          'CountyParcelsDown',
+          'CountyByTypeJSON',
         ],
         ExtraFilter: 'IsLatest = 1',
         MaxRows: 1,
@@ -101,12 +145,39 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
         {
           EntityName: OWNER_PORTFOLIO_ENTITY,
           Fields: [
-            'ID', 'OwnerKey', 'Label', 'Kind', 'Tier', 'GroupKeyType', 'CoStarTrueOwner', 'ParcelCount',
-            'DistinctEntities', 'TotalAV', 'TotalAV2025', 'TotalAV2026', 'AVYoYDollars', 'AVYoYPct', 'ParcelsUp10',
-            'ParcelsUp25', 'TotalUnits', 'TotalSqFt', 'NAppealRec', 'NTwoSupport', 'NHighConfAppeal',
-            'EstSavingsAtAsk', 'EstSavingsAtFloor', 'AppealedParcels', 'HistoricalReductionWon', 'AppealYears',
-            'MostRecentAppealYear', 'LikelyRep', 'RepStatus', 'RepsOnReductionJSON', 'IsFreshProspect',
-            'MailAddress', 'ByTypeJSON',
+            'ID',
+            'OwnerKey',
+            'Label',
+            'Kind',
+            'Tier',
+            'GroupKeyType',
+            'CoStarTrueOwner',
+            'ParcelCount',
+            'DistinctEntities',
+            'TotalAV',
+            'TotalAV2025',
+            'TotalAV2026',
+            'AVYoYDollars',
+            'AVYoYPct',
+            'ParcelsUp10',
+            'ParcelsUp25',
+            'TotalUnits',
+            'TotalSqFt',
+            'NAppealRec',
+            'NTwoSupport',
+            'NHighConfAppeal',
+            'EstSavingsAtAsk',
+            'EstSavingsAtFloor',
+            'AppealedParcels',
+            'HistoricalReductionWon',
+            'AppealYears',
+            'MostRecentAppealYear',
+            'LikelyRep',
+            'RepStatus',
+            'RepsOnReductionJSON',
+            'IsFreshProspect',
+            'MailAddress',
+            'ByTypeJSON',
           ],
           ExtraFilter: `RunID = '${this.latestRunId}'`,
           MaxRows: 20000,
@@ -115,9 +186,25 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
         {
           EntityName: OWNER_PORTFOLIO_PARCEL_ENTITY,
           Fields: [
-            'ID', 'OwnerPortfolioID', 'GISParcelNumber', 'Address', 'TypeGroup', 'CurrentAV', 'AV2025',
-            'AV2026', 'AVYoYPct', 'SqFt', 'Units', 'AskValue', 'EstSavingsAtAsk', 'EstSavingsAtFloor',
-            'Recommendation', 'ConfidenceTier', 'SupportingApproachCount', 'Appealed', 'ExistingRep',
+            'ID',
+            'OwnerPortfolioID',
+            'GISParcelNumber',
+            'Address',
+            'TypeGroup',
+            'CurrentAV',
+            'AV2025',
+            'AV2026',
+            'AVYoYPct',
+            'SqFt',
+            'Units',
+            'AskValue',
+            'EstSavingsAtAsk',
+            'EstSavingsAtFloor',
+            'Recommendation',
+            'ConfidenceTier',
+            'SupportingApproachCount',
+            'Appealed',
+            'ExistingRep',
             'LastAppealYear',
           ],
           // Scoped to the latest run's owner groups via a subquery (mirrors PropertySearch's

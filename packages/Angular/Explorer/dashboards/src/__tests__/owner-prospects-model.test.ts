@@ -1,8 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
   computeOwnerProspectsSummary, filterOwnerRows, sortOwnerRows, dominantType,
-  formatMoneyShort, prcUrl, taxHistoryUrl, mapOwnerPortfolioRow,
-  DEFAULT_OWNER_PROSPECTS_FILTERS, OwnerRow,
+  formatMoneyShort, prcUrl, taxHistoryUrl, mapOwnerPortfolioRow, buildBannerModel,
+  DEFAULT_OWNER_PROSPECTS_FILTERS, OwnerRow, CountyRollup,
 } from '../OwnerProspects/owner-prospects.model';
 
 const base: OwnerRow = {
@@ -71,6 +71,49 @@ describe('sortOwnerRows', () => {
     const b = { ...base, id: 'b', estSavingsAtAsk: null };
     expect(sortOwnerRows([b, a], 'estSavingsAtAsk', -1).map((o) => o.id)).toEqual(['a', 'b']);
     expect(sortOwnerRows([a, b], 'estSavingsAtAsk', 1).map((o) => o.id)).toEqual(['a', 'b']);
+  });
+});
+
+const rollup: CountyRollup = {
+  parcels: 10126, totalAV2025: 28.8e9, totalAV2026: 33.2e9, yoyDollars: 4.4e9, yoyPct: 15.2,
+  parcelsUp5: 9000, parcelsUp10: 8941, parcelsUp25: 3000, parcelsUp50: 900, parcelsDown: 400,
+  runDate: '2026-08-15', methodologyVersion: 'v3',
+  byType: {
+    Office: { n: 200, av2025: 8e9, av2026: 8.4e9, yoyPct: 5.0 },
+    Industrial: { n: 100, av2025: 5e9, av2026: 6.25e9, yoyPct: 25.1 },
+    Retail: { n: 150, av2025: 6e9, av2026: 7.2e9, yoyPct: 20.0 },
+    Apartment: { n: 80, av2025: 4e9, av2026: 5.6e9, yoyPct: 40.0 },
+    Warehouse: { n: 50, av2025: 3e9, av2026: 3.3e9, yoyPct: null },
+  },
+};
+
+describe('buildBannerModel', () => {
+  it('formats the one-year C&I rollup line', () => {
+    const b = buildBannerModel(rollup);
+    expect(b.av2025).toBe('$28.80B');
+    expect(b.av2026).toBe('$33.20B');
+    expect(b.yoyPct).toBe('+15.2%');
+    expect(b.yoyLine).toBe('$4.40B · 10,126 parcels');
+  });
+
+  it('takes the top 4 byType entries by av2026 descending', () => {
+    const b = buildBannerModel(rollup);
+    expect(b.breakChips.map((c) => c.label)).toEqual(['Office', 'Retail', 'Industrial', 'Apartment']);
+    expect(b.breakChips.some((c) => c.label === 'Industrial' && c.value === '+25.1%')).toBe(true);
+  });
+
+  it('signs positive percentages and dashes a null yoyPct', () => {
+    const b = buildBannerModel({
+      ...rollup,
+      byType: { A: { n: 1, av2025: 1, av2026: 9, yoyPct: null }, B: { n: 1, av2025: 1, av2026: 1, yoyPct: -3.2 } },
+    });
+    expect(b.breakChips.find((c) => c.label === 'A')?.value).toBe('—');
+    expect(b.breakChips.find((c) => c.label === 'B')?.value).toBe('-3.2%');
+  });
+
+  it('does not prefix a non-positive top-level yoyPct with a plus', () => {
+    expect(buildBannerModel({ ...rollup, yoyPct: 0 }).yoyPct).toBe('0%');
+    expect(buildBannerModel({ ...rollup, yoyPct: -4.1 }).yoyPct).toBe('-4.1%');
   });
 });
 

@@ -105,6 +105,19 @@ export interface CountyRollup {
   parcelsUp50: number;
   parcelsDown: number;
   byType: Record<string, { n: number; av2025: number; av2026: number; yoyPct: number | null }>;
+  /** ISO date the source run was computed (for the provenance footer); null when the run row omits it. */
+  runDate: string | null;
+  /** Methodology version stamp of the source run (for the provenance footer); null when absent. */
+  methodologyVersion: string | null;
+}
+
+/** The banner view-model — pre-formatted strings the template renders verbatim. */
+export interface BannerModel {
+  av2025: string;
+  av2026: string;
+  yoyPct: string;
+  yoyLine: string;
+  breakChips: { label: string; value: string }[];
 }
 
 /** The dashboard's filter state. */
@@ -139,9 +152,19 @@ export interface OwnerProspectsSummary {
 }
 
 export type OwnerSortKey =
-  | 'label' | 'tier' | 'parcelCount' | 'totalAV2025' | 'totalAV2026' | 'avYoYPct'
-  | 'totalUnits' | 'nAppealRec' | 'estSavingsAtAsk' | 'estSavingsAtFloor'
-  | 'historicalReductionWon' | 'appealYears' | 'repStatus';
+  | 'label'
+  | 'tier'
+  | 'parcelCount'
+  | 'totalAV2025'
+  | 'totalAV2026'
+  | 'avYoYPct'
+  | 'totalUnits'
+  | 'nAppealRec'
+  | 'estSavingsAtAsk'
+  | 'estSavingsAtFloor'
+  | 'historicalReductionWon'
+  | 'appealYears'
+  | 'repStatus';
 
 const STRING_SORT_KEYS: ReadonlySet<OwnerSortKey> = new Set<OwnerSortKey>(['label', 'tier', 'appealYears', 'repStatus']);
 
@@ -229,6 +252,30 @@ export function computeOwnerProspectsSummary(companyRows: OwnerRow[]): OwnerPros
     freshOpp: co.filter((o) => o.isFreshProspect).reduce((s, o) => s + (o.estSavingsAtAsk ?? 0), 0),
     prime: co.filter((o) => o.tier === 'Prime').length,
     strong: co.filter((o) => o.tier === 'Strong').length,
+  };
+}
+
+/** Signed percent string: `+15.2%` / `0%` / `-4.1%`; `—` when the pct is null. */
+function signedPct(pct: number | null): string {
+  if (pct == null) return '—';
+  return (pct > 0 ? '+' : '') + pct + '%';
+}
+
+/**
+ * The Marion County C&I year-over-year banner view-model.
+ * Money via {@link formatMoneyShort}; `breakChips` = the top 4 `byType` buckets by 2026 AV.
+ */
+export function buildBannerModel(cr: CountyRollup): BannerModel {
+  const breakChips = Object.entries(cr.byType)
+    .sort((a, b) => b[1].av2026 - a[1].av2026)
+    .slice(0, 4)
+    .map(([label, v]) => ({ label, value: signedPct(v.yoyPct) }));
+  return {
+    av2025: formatMoneyShort(cr.totalAV2025),
+    av2026: formatMoneyShort(cr.totalAV2026),
+    yoyPct: (cr.yoyPct > 0 ? '+' : '') + cr.yoyPct + '%',
+    yoyLine: `${formatMoneyShort(cr.yoyDollars)} · ${cr.parcels.toLocaleString('en-US')} parcels`,
+    breakChips,
   };
 }
 
@@ -351,6 +398,8 @@ export function mapCountyRollup(raw: RawRow): CountyRollup {
     parcelsUp50: toNum(raw['CountyParcelsUp50']) ?? 0,
     parcelsDown: toNum(raw['CountyParcelsDown']) ?? 0,
     byType,
+    runDate: toStr(raw['RunDate']),
+    methodologyVersion: toStr(raw['MethodologyVersion']),
   };
 }
 

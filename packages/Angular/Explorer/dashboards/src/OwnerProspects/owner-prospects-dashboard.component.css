@@ -1,3 +1,137 @@
 :host {
   display: block;
 }
+
+/* ── Marion County C&I year-over-year banner ──────────────────────────────── */
+:host .ci-banner {
+  margin-bottom: 1rem;
+  padding: 1rem 1.25rem;
+  background: var(--mj-bg-surface);
+  border: 1px solid var(--mj-border-default);
+  border-radius: var(--mj-radius-lg);
+}
+
+:host .ci-banner__head {
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--mj-text-secondary);
+  margin-bottom: 0.75rem;
+}
+
+:host .ci-banner__row {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 1.25rem;
+}
+
+:host .ci-banner__cell {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+}
+
+:host .ci-banner__yr {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mj-text-muted);
+}
+
+:host .ci-banner__av {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--mj-text-primary);
+}
+
+:host .ci-banner__arrow {
+  font-size: 1.25rem;
+  color: var(--mj-text-muted);
+}
+
+:host .ci-banner__pct {
+  display: flex;
+  flex-direction: column;
+  gap: 0.125rem;
+  margin-left: auto;
+  text-align: right;
+}
+
+:host .ci-banner__pct-val {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--mj-status-warning);
+}
+
+:host .ci-banner__pct-sub {
+  font-size: 0.8125rem;
+  color: var(--mj-text-secondary);
+}
+
+:host .ci-banner__break {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid var(--mj-border-subtle);
+}
+
+:host .ci-banner__chip {
+  font-size: 0.8125rem;
+  color: var(--mj-text-secondary);
+}
+
+:host .ci-banner__chip b {
+  color: var(--mj-text-primary);
+  font-weight: 700;
+}
+
+/* ── Stat cards ───────────────────────────────────────────────────────────── */
+:host .stat-cards {
+  display: grid;
+  grid-template-columns: repeat(5, 1fr);
+  gap: 1px;
+  margin-bottom: 1rem;
+  background: var(--mj-border-default);
+  border: 1px solid var(--mj-border-default);
+  border-radius: var(--mj-radius-lg);
+  overflow: hidden;
+}
+
+:host .stat-card {
+  padding: 0.875rem 1rem;
+  background: var(--mj-bg-surface);
+}
+
+:host .stat-card__n {
+  font-size: 1.375rem;
+  font-weight: 700;
+  color: var(--mj-text-primary);
+}
+
+:host .stat-card__l {
+  margin-top: 0.25rem;
+  font-size: 0.75rem;
+  line-height: 1.3;
+  color: var(--mj-text-secondary);
+}
+
+@media (max-width: 760px) {
+  :host .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  :host .ci-banner__pct {
+    margin-left: 0;
+    text-align: left;
+  }
+}
+
+/* ── Provenance footer ────────────────────────────────────────────────────── */
+:host .provenance {
+  margin: 1rem 0 0;
+  font-size: 0.75rem;
+  color: var(--mj-text-muted);
+}

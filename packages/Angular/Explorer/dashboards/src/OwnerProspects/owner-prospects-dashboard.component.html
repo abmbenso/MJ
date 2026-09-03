@@ -3,11 +3,75 @@
     Title="Owner Prospects"
     Icon="fa-solid fa-bullseye"
     Subtitle="Marion County parcels rolled up to the operating company — triaged by dollars at stake">
+    <div meta>
+      @if (Summary) {
+        <mj-stat-badge [Count]="SummaryOppAsk" Label="opportunity / yr at ask" Icon="fa-solid fa-sack-dollar" />
+      }
+    </div>
     <div actions>
       <mj-refresh-button [Loading]="IsLoading" (Clicked)="loadData()"></mj-refresh-button>
     </div>
   </mj-page-header>
   <mj-page-body>
-    <p>Owner Prospects dashboard — data wiring lands in Task 4.</p>
+    @if (LoadError) {
+      <mj-alert Variant="warning" [Message]="LoadError"></mj-alert>
+    }
+
+    @if (Banner) {
+      <section class="ci-banner">
+        <div class="ci-banner__head">Marion County commercial &amp; industrial assessed value — one year</div>
+        <div class="ci-banner__row">
+          <div class="ci-banner__cell">
+            <span class="ci-banner__yr">2025</span>
+            <span class="ci-banner__av">{{ Banner.av2025 }}</span>
+          </div>
+          <div class="ci-banner__arrow" aria-hidden="true">&rarr;</div>
+          <div class="ci-banner__cell">
+            <span class="ci-banner__yr">2026</span>
+            <span class="ci-banner__av">{{ Banner.av2026 }}</span>
+          </div>
+          <div class="ci-banner__pct">
+            <span class="ci-banner__pct-val">{{ Banner.yoyPct }}</span>
+            <span class="ci-banner__pct-sub">{{ Banner.yoyLine }}</span>
+          </div>
+        </div>
+        <div class="ci-banner__break">
+          @for (chip of Banner.breakChips; track chip.label) {
+            <span class="ci-banner__chip"><b>{{ chip.value }}</b> {{ chip.label }}</span>
+          }
+        </div>
+      </section>
+    }
+
+    @if (Summary) {
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-card__n">{{ Summary.companyOwners | number }}</div>
+          <div class="stat-card__l">company owners ({{ Summary.parcels | number }} parcels)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__n">{{ SummaryTotalAV }}</div>
+          <div class="stat-card__l">total assessed value</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__n">{{ SummaryOppAsk }}</div>
+          <div class="stat-card__l">est. annual opportunity — at the ask</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__n">{{ SummaryFreshOpp }}</div>
+          <div class="stat-card__l">opportunity where no rep is on record</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__n">{{ Summary.prime }} / {{ Summary.strong }}</div>
+          <div class="stat-card__l">Prime / Strong tier owners</div>
+        </div>
+      </div>
+    }
+
+    <!-- filter bar (Task 6) + owners table (Task 6) + detail panel (Task 7) land below -->
+
+    @if (CountyRollup) {
+      <p class="provenance">{{ ProvenanceLine }}</p>
+    }
   </mj-page-body>
 </mj-page-layout>
