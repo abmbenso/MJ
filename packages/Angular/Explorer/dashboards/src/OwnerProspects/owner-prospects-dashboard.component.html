@@ -11,6 +11,49 @@
     <div actions>
       <mj-refresh-button [Loading]="IsLoading" (Clicked)="loadData()"></mj-refresh-button>
     </div>
+    <div toolbar>
+      <mj-page-search
+        Placeholder="Search by owner or representative…"
+        [Value]="SearchTerm"
+        (ValueChange)="onSearchChange($event)">
+      </mj-page-search>
+
+      <mj-filter-popover
+        [ActiveCount]="ActiveFilterCount"
+        [ShowClearAll]="ActiveFilterCount > 0"
+        (ClearAllRequested)="resetFilters()">
+        <mj-filter-panel
+          [Fields]="FilterFields"
+          [Values]="FilterValues"
+          (ValuesChange)="onFilterValuesChange($event)"
+          (Reset)="resetFilters()">
+          <mj-filter-field Label="Minimum opportunity / yr (at ask)" Icon="fa-solid fa-sack-dollar">
+            <mj-numeric-input
+              [Min]="0"
+              Placeholder="Any"
+              [ngModel]="MinOppPerYear"
+              (ngModelChange)="onMinOppChange($event)">
+            </mj-numeric-input>
+          </mj-filter-field>
+          <mj-filter-field Label="Appeal history" Icon="fa-solid fa-gavel">
+            <label class="op-check">
+              <input
+                type="checkbox"
+                class="mj-checkbox"
+                [checked]="HasAppealHistory"
+                (change)="onHasAppealHistoryChange($any($event.target).checked)">
+              Has at least one appealed parcel
+            </label>
+          </mj-filter-field>
+        </mj-filter-panel>
+      </mj-filter-popover>
+
+      <mj-view-toggle
+        [Options]="TierOptions"
+        [ActiveKey]="TierFilter"
+        (KeyChange)="onTierChange($any($event))">
+      </mj-view-toggle>
+    </div>
   </mj-page-header>
   <mj-page-body>
     @if (LoadError) {
@@ -68,7 +111,88 @@
       </div>
     }
 
-    <!-- filter bar (Task 6) + owners table (Task 6) + detail panel (Task 7) land below -->
+    @if (!IsLoading && !LoadError) {
+      @if (VisibleRows.length === 0) {
+        <mj-empty-state
+          Icon="fa-solid fa-users-viewfinder"
+          Title="No owners match"
+          Message="Adjust the search, tier, or filters above.">
+        </mj-empty-state>
+      } @else {
+        <div class="owners-count">{{ FilterCountLabel }}</div>
+        <div class="owners-table-wrap">
+          <table class="owners-table">
+            <thead>
+              <tr>
+                <th class="num">#</th>
+                <th (click)="onSortColumn('label')" [attr.data-sort]="isSorted('label')">Owner</th>
+                <th (click)="onSortColumn('tier')" [attr.data-sort]="isSorted('tier')">Tier</th>
+                <th class="num" (click)="onSortColumn('parcelCount')" [attr.data-sort]="isSorted('parcelCount')">Parcels</th>
+                <th class="num" (click)="onSortColumn('totalAV2025')" [attr.data-sort]="isSorted('totalAV2025')">AV 2025</th>
+                <th class="num" (click)="onSortColumn('totalAV2026')" [attr.data-sort]="isSorted('totalAV2026')">AV 2026</th>
+                <th class="num" (click)="onSortColumn('avYoYPct')" [attr.data-sort]="isSorted('avYoYPct')">YoY</th>
+                <th class="num" (click)="onSortColumn('totalUnits')" [attr.data-sort]="isSorted('totalUnits')">Units</th>
+                <th class="num" (click)="onSortColumn('nAppealRec')" [attr.data-sort]="isSorted('nAppealRec')">Appeal recs</th>
+                <th class="num" (click)="onSortColumn('estSavingsAtAsk')" [attr.data-sort]="isSorted('estSavingsAtAsk')">Opp / yr (ask)</th>
+                <th class="num" (click)="onSortColumn('estSavingsAtFloor')" [attr.data-sort]="isSorted('estSavingsAtFloor')">Opp / yr (floor)</th>
+                <th class="num" (click)="onSortColumn('historicalReductionWon')" [attr.data-sort]="isSorted('historicalReductionWon')">Hist. reduction</th>
+                <th (click)="onSortColumn('appealYears')" [attr.data-sort]="isSorted('appealYears')">Appeals filed</th>
+                <th (click)="onSortColumn('repStatus')" [attr.data-sort]="isSorted('repStatus')">Tax rep</th>
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of RenderedRows; track row.id; let i = $index) {
+                <tr (click)="toggleOwner(row)" [class.is-selected]="SelectedOwnerId === row.id">
+                  <td class="num muted">{{ i + 1 }}</td>
+                  <td class="owner-cell">
+                    <span class="owner-label">{{ row.label }}</span>
+                    @if (row.coStarTrueOwner) {
+                      <span class="co-star-check" title="CoStar true owner: {{ row.coStarTrueOwner }}">&#10003;</span>
+                    }
+                  </td>
+                  <td>{{ row.tier ?? '—' }}</td>
+                  <td class="num">{{ row.parcelCount | number }}</td>
+                  <td class="num">{{ money(row.totalAV2025) }}</td>
+                  <td class="num">{{ money(row.totalAV2026) }}</td>
+                  <td class="num">
+                    <span
+                      class="yoy"
+                      [class.yoy--up]="row.avYoYPct != null && row.avYoYPct > 0"
+                      [class.yoy--down]="row.avYoYPct != null && row.avYoYPct < 0">
+                      {{ yoy(row.avYoYPct) }}
+                    </span>
+                  </td>
+                  <td class="num">{{ row.totalUnits != null ? (row.totalUnits | number) : '—' }}</td>
+                  <td class="num">{{ row.nAppealRec != null ? (row.nAppealRec | number) : '—' }}</td>
+                  <td class="num">{{ money(row.estSavingsAtAsk) }}</td>
+                  <td class="num">{{ money(row.estSavingsAtFloor) }}</td>
+                  <td class="num">{{ money(row.historicalReductionWon) }}</td>
+                  <td>
+                    {{ (row.appealedParcels ?? 0) | number }}
+                    @if (row.appealYears) {
+                      <span class="muted">· {{ row.appealYears }}</span>
+                    }
+                  </td>
+                  <td>
+                    @if (row.repStatus === 'No rep on record') {
+                      <span class="rep-open">— open</span>
+                    } @else {
+                      {{ row.repStatus }}
+                    }
+                  </td>
+                </tr>
+                <!-- detail row + <mj-owner-detail-panel>: Task 7 -->
+              }
+              @if (OverflowRowCount > 0) {
+                <tr class="overflow-row">
+                  <td colspan="14">{{ OverflowRowCount | number }} more — narrow the filters</td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
 
     @if (CountyRollup) {
       <p class="provenance">{{ ProvenanceLine }}</p>

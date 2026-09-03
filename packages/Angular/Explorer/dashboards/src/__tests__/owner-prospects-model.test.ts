@@ -2,6 +2,7 @@ import { describe, it, expect } from 'vitest';
 import {
   computeOwnerProspectsSummary, filterOwnerRows, sortOwnerRows, dominantType,
   formatMoneyShort, prcUrl, taxHistoryUrl, mapOwnerPortfolioRow, buildBannerModel,
+  buildVisibleRows, sanitizeFilters, KNOWN_SORT_KEYS,
   DEFAULT_OWNER_PROSPECTS_FILTERS, OwnerRow, CountyRollup,
 } from '../OwnerProspects/owner-prospects.model';
 
@@ -114,6 +115,85 @@ describe('buildBannerModel', () => {
   it('does not prefix a non-positive top-level yoyPct with a plus', () => {
     expect(buildBannerModel({ ...rollup, yoyPct: 0 }).yoyPct).toBe('0%');
     expect(buildBannerModel({ ...rollup, yoyPct: -4.1 }).yoyPct).toBe('-4.1%');
+  });
+});
+
+describe('buildVisibleRows', () => {
+  it('filters then sorts', () => {
+    const rows = [
+      { ...base, id: 'a', estSavingsAtAsk: 50_000, repStatus: 'No rep on record' },
+      { ...base, id: 'b', estSavingsAtAsk: 300_000, repStatus: 'No rep on record' },
+      { ...base, id: 'c', estSavingsAtAsk: 300_000, repStatus: 'Represented by X' },
+    ] as OwnerRow[];
+    const out = buildVisibleRows(
+      rows,
+      { ...DEFAULT_OWNER_PROSPECTS_FILTERS, rep: 'none', minOppPerYear: 100_000 },
+      'estSavingsAtAsk',
+      -1
+    );
+    expect(out.map((o) => o.id)).toEqual(['b']);
+  });
+
+  it('sorts the filtered set ascending when dir is 1', () => {
+    const rows = [
+      { ...base, id: 'a', estSavingsAtAsk: 300_000 },
+      { ...base, id: 'b', estSavingsAtAsk: 100_000 },
+      { ...base, id: 'c', estSavingsAtAsk: 200_000 },
+    ] as OwnerRow[];
+    const out = buildVisibleRows(rows, { ...DEFAULT_OWNER_PROSPECTS_FILTERS }, 'estSavingsAtAsk', 1);
+    expect(out.map((o) => o.id)).toEqual(['b', 'c', 'a']);
+  });
+
+  it('does not mutate the input array', () => {
+    const rows = [
+      { ...base, id: 'a', estSavingsAtAsk: 100 },
+      { ...base, id: 'b', estSavingsAtAsk: 900 },
+    ] as OwnerRow[];
+    const snapshot = rows.map((r) => r.id);
+    buildVisibleRows(rows, { ...DEFAULT_OWNER_PROSPECTS_FILTERS }, 'estSavingsAtAsk', -1);
+    expect(rows.map((r) => r.id)).toEqual(snapshot);
+  });
+
+  it('excludes a filtered row and returns the two survivors reordered', () => {
+    const rows = [
+      { ...base, id: 'a', estSavingsAtAsk: 100_000, repStatus: 'Represented by X' },
+      { ...base, id: 'b', estSavingsAtAsk: 120_000, repStatus: 'No rep on record' },
+      { ...base, id: 'c', estSavingsAtAsk: 400_000, repStatus: 'No rep on record' },
+    ] as OwnerRow[];
+    // rep=none drops 'a'; survivors enter as [b, c], sort desc swaps them to [c, b].
+    const out = buildVisibleRows(rows, { ...DEFAULT_OWNER_PROSPECTS_FILTERS, rep: 'none' }, 'estSavingsAtAsk', -1);
+    expect(out.map((o) => o.id)).toEqual(['c', 'b']);
+  });
+});
+
+describe('KNOWN_SORT_KEYS', () => {
+  it('covers every OwnerSortKey union member', () => {
+    expect(KNOWN_SORT_KEYS.size).toBe(13);
+    for (const k of ['label', 'tier', 'parcelCount', 'totalAV2025', 'totalAV2026', 'avYoYPct', 'totalUnits',
+      'nAppealRec', 'estSavingsAtAsk', 'estSavingsAtFloor', 'historicalReductionWon', 'appealYears', 'repStatus'] as const) {
+      expect(KNOWN_SORT_KEYS.has(k)).toBe(true);
+    }
+  });
+});
+
+describe('sanitizeFilters', () => {
+  it('passes a valid blob through unchanged', () => {
+    const good = { tier: 'Prime', rep: 'has', hasAppealHistory: true, typeGroup: 'Industrial', minOppPerYear: 50_000, query: 'acme' };
+    expect(sanitizeFilters(good)).toEqual(good);
+  });
+  it('replaces a bogus tier / rep with the defaults', () => {
+    const out = sanitizeFilters({ tier: 'Bogus', rep: 'x' });
+    expect(out.tier).toBe('all');
+    expect(out.rep).toBe('');
+  });
+  it('clamps a negative / non-numeric minOppPerYear to 0 and coerces the rest', () => {
+    expect(sanitizeFilters({ minOppPerYear: -5 }).minOppPerYear).toBe(0);
+    expect(sanitizeFilters({ minOppPerYear: 'lots' }).minOppPerYear).toBe(0);
+    expect(sanitizeFilters({ hasAppealHistory: 'false', typeGroup: 42, query: null })).toEqual(DEFAULT_OWNER_PROSPECTS_FILTERS);
+  });
+  it('returns the full default set for a non-object input', () => {
+    expect(sanitizeFilters(null)).toEqual(DEFAULT_OWNER_PROSPECTS_FILTERS);
+    expect(sanitizeFilters('nope')).toEqual(DEFAULT_OWNER_PROSPECTS_FILTERS);
   });
 });
 

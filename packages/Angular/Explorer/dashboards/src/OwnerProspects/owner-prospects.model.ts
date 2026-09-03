@@ -139,6 +139,28 @@ export const DEFAULT_OWNER_PROSPECTS_FILTERS: OwnerProspectsFilters = {
   query: '',
 };
 
+/**
+ * Coerce an untrusted blob (a persisted, possibly stale/corrupt
+ * `mj.ownerProspects.filters.v1`) into a valid {@link OwnerProspectsFilters}.
+ * Every field falls back to its {@link DEFAULT_OWNER_PROSPECTS_FILTERS} value
+ * when out of range — a bogus `tier`/`rep` would otherwise render an empty table
+ * with no UI to recover short of Reset.
+ */
+export function sanitizeFilters(raw: unknown): OwnerProspectsFilters {
+  const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
+  const tier = r['tier'];
+  const rep = r['rep'];
+  const minOpp = Number(r['minOppPerYear']);
+  return {
+    tier: tier === 'Prime' || tier === 'Strong' || tier === 'Moderate' ? tier : 'all',
+    rep: rep === 'none' || rep === 'has' ? rep : '',
+    hasAppealHistory: r['hasAppealHistory'] === true,
+    typeGroup: typeof r['typeGroup'] === 'string' ? r['typeGroup'] : '',
+    minOppPerYear: Number.isFinite(minOpp) && minOpp >= 0 ? minOpp : 0,
+    query: typeof r['query'] === 'string' ? r['query'] : '',
+  };
+}
+
 /** Banner totals — summed over Company-kind rows (mirrors `gen_owner_portfolios_view.js` `totals`). */
 export interface OwnerProspectsSummary {
   companyOwners: number;
@@ -165,6 +187,28 @@ export type OwnerSortKey =
   | 'historicalReductionWon'
   | 'appealYears'
   | 'repStatus';
+
+/**
+ * Every valid {@link OwnerSortKey}, as a runtime set — used to reject a stale or
+ * corrupt persisted `mj.ownerProspects.sort.v1` blob before it reaches
+ * {@link sortOwnerRows} (an unknown key silently produces an unsorted table with
+ * no UI to clear it). Keep in lockstep with the `OwnerSortKey` union above.
+ */
+export const KNOWN_SORT_KEYS: ReadonlySet<OwnerSortKey> = new Set<OwnerSortKey>([
+  'label',
+  'tier',
+  'parcelCount',
+  'totalAV2025',
+  'totalAV2026',
+  'avYoYPct',
+  'totalUnits',
+  'nAppealRec',
+  'estSavingsAtAsk',
+  'estSavingsAtFloor',
+  'historicalReductionWon',
+  'appealYears',
+  'repStatus',
+]);
 
 const STRING_SORT_KEYS: ReadonlySet<OwnerSortKey> = new Set<OwnerSortKey>(['label', 'tier', 'appealYears', 'repStatus']);
 
@@ -239,6 +283,15 @@ export function sortOwnerRows(rows: OwnerRow[], key: OwnerSortKey, dir: 1 | -1):
       return dir * ((a as number) - (b as number)) || x.i - y.i;
     })
     .map((w) => w.r);
+}
+
+/**
+ * The table's visible-row pipeline: {@link filterOwnerRows} then
+ * {@link sortOwnerRows}. Pure — never mutates `all` (both helpers copy).
+ * The component's `recomputeVisibleRows()` is a thin call to this.
+ */
+export function buildVisibleRows(all: OwnerRow[], f: OwnerProspectsFilters, sortKey: OwnerSortKey, sortDir: 1 | -1): OwnerRow[] {
+  return sortOwnerRows(filterOwnerRows(all, f), sortKey, sortDir);
 }
 
 export function computeOwnerProspectsSummary(companyRows: OwnerRow[]): OwnerProspectsSummary {

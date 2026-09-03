@@ -129,6 +129,133 @@
   }
 }
 
+/* ── Toolbar filter-field custom controls ─────────────────────────────────── */
+:host .op-check {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--mj-text-secondary);
+  cursor: pointer;
+}
+
+/* ── Owners table ─────────────────────────────────────────────────────────── */
+:host .owners-count {
+  margin-bottom: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--mj-text-secondary);
+}
+
+:host .owners-table-wrap {
+  overflow-x: auto;
+  border: 1px solid var(--mj-border-default);
+  border-radius: var(--mj-radius-lg);
+}
+
+:host .owners-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+  white-space: nowrap;
+}
+
+:host .owners-table thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background: var(--mj-bg-surface);
+  padding: 0.625rem 0.75rem;
+  text-align: left;
+  font-weight: 600;
+  color: var(--mj-text-secondary);
+  border-bottom: 1px solid var(--mj-border-default);
+  cursor: pointer;
+  user-select: none;
+}
+
+:host .owners-table thead th.num {
+  text-align: right;
+}
+
+:host .owners-table thead th[data-sort='asc']::after {
+  content: ' \25B2';
+  color: var(--mj-text-muted);
+}
+
+:host .owners-table thead th[data-sort='desc']::after {
+  content: ' \25BC';
+  color: var(--mj-text-muted);
+}
+
+:host .owners-table tbody td {
+  padding: 0.5rem 0.75rem;
+  color: var(--mj-text-primary);
+  border-bottom: 1px solid var(--mj-border-subtle);
+}
+
+:host .owners-table tbody td.num {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+:host .owners-table tbody td.muted,
+:host .owners-table tbody .muted {
+  color: var(--mj-text-muted);
+}
+
+:host .owners-table tbody tr {
+  cursor: pointer;
+}
+
+:host .owners-table tbody tr:hover {
+  background: var(--mj-bg-surface-hover);
+}
+
+:host .owners-table tbody tr.is-selected {
+  background: color-mix(in srgb, var(--mj-brand-primary) 10%, var(--mj-bg-surface));
+}
+
+:host .owner-cell {
+  white-space: normal;
+  min-width: 12rem;
+}
+
+:host .owner-label {
+  font-weight: 600;
+}
+
+:host .co-star-check {
+  margin-left: 0.375rem;
+  font-size: 0.75rem;
+  color: var(--mj-text-muted);
+}
+
+:host .yoy--up {
+  color: var(--mj-status-warning);
+  font-weight: 600;
+}
+
+:host .yoy--down {
+  color: var(--mj-status-success);
+  font-weight: 600;
+}
+
+:host .rep-open {
+  color: var(--mj-status-warning-text);
+  font-weight: 600;
+}
+
+:host .owners-table tbody tr.overflow-row td {
+  text-align: center;
+  color: var(--mj-text-muted);
+  font-style: italic;
+  cursor: default;
+}
+
+:host .owners-table tbody tr.overflow-row:hover {
+  background: transparent;
+}
+
 /* ── Provenance footer ────────────────────────────────────────────────────── */
 :host .provenance {
   margin: 1rem 0 0;

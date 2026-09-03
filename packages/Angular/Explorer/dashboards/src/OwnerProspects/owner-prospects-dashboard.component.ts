@@ -1,8 +1,9 @@
 import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
 import { BaseDashboard, BaseResourceComponent } from '@memberjunction/ng-shared';
 import { RegisterClass } from '@memberjunction/global';
-import { ResourceData } from '@memberjunction/core-entities';
+import { ResourceData, UserInfoEngine } from '@memberjunction/core-entities';
 import { RunView } from '@memberjunction/core';
+import { FilterFieldConfig } from '@memberjunction/ng-ui-components';
 import {
   OwnerRow,
   OwnerParcelRow,
@@ -12,9 +13,13 @@ import {
   OwnerSortKey,
   BannerModel,
   DEFAULT_OWNER_PROSPECTS_FILTERS,
+  KNOWN_SORT_KEYS,
+  sanitizeFilters,
   computeOwnerProspectsSummary,
   buildBannerModel,
+  buildVisibleRows,
   formatMoneyShort,
+  formatMoneyOrDash,
   mapOwnerPortfolioRow,
   mapOwnerParcelRow,
   mapCountyRollup,
@@ -22,6 +27,13 @@ import {
   OWNER_PORTFOLIO_ENTITY,
   OWNER_PORTFOLIO_PARCEL_ENTITY,
 } from './owner-prospects.model';
+
+/** ViewToggle option shape (mirrors `<mj-view-toggle>`'s `[Options]`). */
+interface ViewToggleOption {
+  key: string;
+  label: string;
+  icon?: string;
+}
 
 /**
  * Owner Prospects — Marion County parcels rolled up to the operating company
@@ -58,10 +70,23 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** User-facing load failure message (e.g. no published run) — null when the load succeeded. */
   public LoadError: string | null = null;
 
+  /** {@link CompanyOwners} after the active filters + sort — what the table renders (Task 6). */
+  public VisibleRows: OwnerRow[] = [];
+  /** The owner whose detail row is expanded, or null. Task 7 renders the panel; Task 6 just tracks the id. */
+  public SelectedOwnerId: string | null = null;
+  /** Hard render cap — rows beyond this collapse into a "N more" trailing row. */
+  public readonly RENDER_CAP = 1000;
+
   private filters: OwnerProspectsFilters = { ...DEFAULT_OWNER_PROSPECTS_FILTERS };
   private sortKey: OwnerSortKey = 'estSavingsAtAsk';
   private sortDir: 1 | -1 = -1;
   private latestRunId: string | null = null;
+
+  /** UserInfoEngine setting keys — versioned so a future shape change migrates cleanly. */
+  private static readonly FILTERS_KEY = 'mj.ownerProspects.filters.v1';
+  private static readonly SORT_KEY = 'mj.ownerProspects.sort.v1';
+  /** Sort keys that compare as strings — a fresh column on one of these starts ascending. */
+  private static readonly STRING_SORT_KEYS: readonly OwnerSortKey[] = ['label', 'tier', 'appealYears', 'repStatus'];
 
   constructor(private cdr: ChangeDetectorRef) {
     super();
@@ -101,8 +126,191 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     return 'Owner Prospects';
   }
 
+  // ───── Toolbar: search + filters + sort (Task 6) ─────
+
+  public get SearchTerm(): string {
+    return this.filters.query;
+  }
+  public onSearchChange(term: string): void {
+    this.filters = { ...this.filters, query: term };
+    this.afterFilterChange();
+  }
+
+  public get TierFilter(): string {
+    return this.filters.tier;
+  }
+  public onTierChange(v: string): void {
+    const tier = (v as OwnerProspectsFilters['tier']) || 'all';
+    this.filters = { ...this.filters, tier };
+    this.afterFilterChange();
+  }
+  /** Segmented tier control options for the inline `<mj-view-toggle>`. */
+  public readonly TierOptions: ViewToggleOption[] = [
+    { key: 'all', label: 'All' },
+    { key: 'Prime', label: 'Prime' },
+    { key: 'Strong', label: 'Strong' },
+    { key: 'Moderate', label: 'Moderate' },
+  ];
+
+  public get MinOppPerYear(): number {
+    return this.filters.minOppPerYear;
+  }
+  public onMinOppChange(v: number | null): void {
+    this.filters = { ...this.filters, minOppPerYear: v ?? 0 };
+    this.afterFilterChange();
+  }
+
+  public get HasAppealHistory(): boolean {
+    return this.filters.hasAppealHistory;
+  }
+  public onHasAppealHistoryChange(checked: boolean): void {
+    this.filters = { ...this.filters, hasAppealHistory: checked };
+    this.afterFilterChange();
+  }
+
+  /** Distinct non-null dominant property types across the loaded owners, sorted. */
+  public get TypeGroupOptions(): string[] {
+    return [...new Set(this.CompanyOwners.map((o) => o.dominantType).filter((t): t is string => !!t))].sort();
+  }
+
+  /** Config-driven fields for `<mj-filter-panel>` — the two dropdowns. */
+  public get FilterFields(): FilterFieldConfig[] {
+    return [
+      {
+        key: 'rep',
+        type: 'dropdown',
+        label: 'Representation',
+        icon: 'fa-solid fa-user-tie',
+        options: [
+          { text: 'Any', value: '' },
+          { text: 'No rep on record', value: 'none' },
+          { text: 'Represented', value: 'has' },
+        ],
+      },
+      {
+        key: 'typeGroup',
+        type: 'dropdown',
+        label: 'Dominant property type',
+        icon: 'fa-solid fa-shapes',
+        filterable: true,
+        options: [{ text: 'Any', value: '' }, ...this.TypeGroupOptions.map((t) => ({ text: t, value: t }))],
+      },
+    ];
+  }
+  public get FilterValues(): Record<string, unknown> {
+    return { rep: this.filters.rep, typeGroup: this.filters.typeGroup };
+  }
+  public onFilterValuesChange(v: Record<string, unknown>): void {
+    const next = (v ?? {}) as { rep?: string; typeGroup?: string };
+    this.filters = {
+      ...this.filters,
+      rep: (next.rep as OwnerProspectsFilters['rep']) || '',
+      typeGroup: next.typeGroup || '',
+    };
+    this.afterFilterChange();
+  }
+
+  public get ActiveFilterCount(): number {
+    let n = 0;
+    if (this.filters.tier !== 'all') n++;
+    if (this.filters.rep) n++;
+    if (this.filters.hasAppealHistory) n++;
+    if (this.filters.typeGroup) n++;
+    if (this.filters.minOppPerYear > 0) n++;
+    return n;
+  }
+
+  public resetFilters(): void {
+    this.filters = { ...DEFAULT_OWNER_PROSPECTS_FILTERS };
+    this.afterFilterChange();
+  }
+
+  /** `"1,234 owners · Σ opp/yr $12.3M (ask) / $8.1M (floor)"` — mirrors the Artifact `cnt`. */
+  public get FilterCountLabel(): string {
+    const rows = this.VisibleRows;
+    const ask = rows.reduce((s, o) => s + (o.estSavingsAtAsk ?? 0), 0);
+    const floor = rows.reduce((s, o) => s + (o.estSavingsAtFloor ?? 0), 0);
+    return `${rows.length.toLocaleString('en-US')} owners · Σ opp/yr ${formatMoneyShort(ask)} (ask) / ${formatMoneyShort(floor)} (floor)`;
+  }
+
+  /** Count of rows past {@link RENDER_CAP} — drives the "N more" trailing row. */
+  public get OverflowRowCount(): number {
+    return Math.max(0, this.VisibleRows.length - this.RENDER_CAP);
+  }
+
+  // ───── Sort ─────
+
+  public onSortColumn(key: OwnerSortKey): void {
+    if (this.sortKey === key) {
+      this.sortDir = this.sortDir === 1 ? -1 : 1;
+    } else {
+      this.sortKey = key;
+      this.sortDir = OwnerProspectsDashboardComponent.STRING_SORT_KEYS.includes(key) ? 1 : -1;
+    }
+    UserInfoEngine.Instance.SetSettingDebounced(OwnerProspectsDashboardComponent.SORT_KEY, JSON.stringify({ key: this.sortKey, dir: this.sortDir }));
+    this.recomputeVisibleRows();
+  }
+  public isSorted(key: OwnerSortKey): '' | 'asc' | 'desc' {
+    return this.sortKey !== key ? '' : this.sortDir === 1 ? 'asc' : 'desc';
+  }
+
+  // ───── Row expansion (Task 6 tracks the id only; Task 7 renders the panel) ─────
+
+  public toggleOwner(row: OwnerRow): void {
+    this.SelectedOwnerId = this.SelectedOwnerId === row.id ? null : row.id;
+    this.cdr.markForCheck();
+  }
+
+  /** Money formatter for the table cells (`$12,345` / `$0` / `—`). */
+  public money(n: number | null): string {
+    return formatMoneyOrDash(n);
+  }
+
+  /** Signed YoY percent for the table cell: `+15.2%` / `-4.1%` / `—`. */
+  public yoy(pct: number | null): string {
+    if (pct == null) return '—';
+    return (pct > 0 ? '+' : '') + pct + '%';
+  }
+
+  /** {@link VisibleRows} capped at {@link RENDER_CAP} — what the `<tbody>` actually renders. */
+  public get RenderedRows(): OwnerRow[] {
+    return this.VisibleRows.length > this.RENDER_CAP ? this.VisibleRows.slice(0, this.RENDER_CAP) : this.VisibleRows;
+  }
+
+  /** Persist the filter state and rebuild the visible rows. */
+  private afterFilterChange(): void {
+    UserInfoEngine.Instance.SetSettingDebounced(OwnerProspectsDashboardComponent.FILTERS_KEY, JSON.stringify(this.filters));
+    this.recomputeVisibleRows();
+  }
+
   initDashboard(): void {
     // No sub-state to restore on init — loadData() (called by BaseDashboard.ngOnInit) does the work.
+    // Task 6: restore the per-user filter + sort preferences before the first load.
+    this.restoreFilterAndSortPrefs();
+  }
+
+  /** Rehydrate {@link filters} / {@link sortKey} / {@link sortDir} from `UserInfoEngine`; keep defaults on any failure. */
+  private restoreFilterAndSortPrefs(): void {
+    const rawF = UserInfoEngine.Instance.GetSetting(OwnerProspectsDashboardComponent.FILTERS_KEY);
+    if (rawF) {
+      try {
+        this.filters = sanitizeFilters(JSON.parse(rawF));
+      } catch {
+        /* keep defaults */
+      }
+    }
+    const rawS = UserInfoEngine.Instance.GetSetting(OwnerProspectsDashboardComponent.SORT_KEY);
+    if (rawS) {
+      try {
+        const s = JSON.parse(rawS) as { key?: unknown; dir?: unknown };
+        if (typeof s?.key === 'string' && KNOWN_SORT_KEYS.has(s.key as OwnerSortKey)) {
+          this.sortKey = s.key as OwnerSortKey;
+          this.sortDir = s.dir === 1 ? 1 : -1;
+        }
+      } catch {
+        /* keep defaults */
+      }
+    }
   }
 
   async loadData(): Promise<void> {
@@ -255,11 +463,12 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   /**
-   * Task 6 fills this in — applies {@link filters} + {@link sortKey}/{@link sortDir}
-   * to {@link AllOwners} to produce the visible table rows.
+   * Applies {@link filters} + {@link sortKey}/{@link sortDir} to {@link CompanyOwners}
+   * to produce the visible table rows (a thin call to the pure {@link buildVisibleRows}).
    */
   private recomputeVisibleRows(): void {
-    // no-op until Task 6
+    this.VisibleRows = buildVisibleRows(this.CompanyOwners, this.filters, this.sortKey, this.sortDir);
+    this.cdr.markForCheck();
   }
 
   ngAfterViewInit(): void {
