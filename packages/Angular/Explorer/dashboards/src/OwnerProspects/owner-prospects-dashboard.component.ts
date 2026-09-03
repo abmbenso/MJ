@@ -307,22 +307,32 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       this.notify(`“${row.label}” is already a prospect.`, 'info');
       return;
     }
-    const p = this.ProviderToUse;
-    const user = p.CurrentUser;
+    try {
+      const p = this.ProviderToUse;
+      const user = p.CurrentUser;
 
-    const prospect = await this.createProspect(row, user);
-    if (!prospect) {
-      return;
+      const prospect = await this.createProspect(row, user);
+      if (!prospect) {
+        return;
+      }
+
+      const repd = await this.attachProspectParcels(prospect, row, user);
+      await this.writeProspectSnapshot(prospect, row, repd, user);
+
+      row.prospectId = prospect.ID;
+      this.notify(`Flagged “${row.label}” as a prospect.`, 'success');
+      this.recomputeVisibleRows();
+      this.publishAgentContext();
+      this.cdr.markForCheck();
+    } catch (e) {
+      // An infrastructure-level failure (network/connection) inside GetEntityObject/Save/RunView
+      // throws rather than returning false — unlike the boolean Save() failures createProspect/
+      // attachProspectParcels/writeProspectSnapshot already handle gracefully. Without this guard
+      // a user clicking "Flag as prospect" directly (bypassing the agent-tool path, which has its
+      // own try/catch) would see the promise reject with no toast and the button left stuck.
+      this.notify(`Flagging “${row.label}” failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+      this.cdr.markForCheck();
     }
-
-    const repd = await this.attachProspectParcels(prospect, row, user);
-    await this.writeProspectSnapshot(prospect, row, repd, user);
-
-    row.prospectId = prospect.ID;
-    this.notify(`Flagged “${row.label}” as a prospect.`, 'success');
-    this.recomputeVisibleRows();
-    this.publishAgentContext();
-    this.cdr.markForCheck();
   }
 
   /** Detail-panel `(ViewProspectRequested)` handler — opens the linked prospect record. */
