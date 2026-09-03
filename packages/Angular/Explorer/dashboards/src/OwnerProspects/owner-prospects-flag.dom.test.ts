@@ -179,7 +179,15 @@ function instantiate(): { component: OwnerProspectsDashboardComponent; getCalls:
     declarations: [OwnerProspectsDashboardComponent],
     imports: [CommonModule],
     providers: [
-      { provide: NavigationService, useValue: { OpenEntityRecord: (): void => {} } },
+      {
+        provide: NavigationService,
+        useValue: {
+          OpenEntityRecord: (): void => {},
+          // Task 9: onFlagOwner's success path now publishes agent context.
+          SetAgentContext: (): void => {},
+          SetAgentClientTools: (): void => {},
+        },
+      },
       { provide: MJNotificationService, useValue: { CreateSimpleNotification: (): void => {} } },
     ],
     schemas: [NO_ERRORS_SCHEMA],

@@ -21,6 +21,7 @@ import {
   computeOwnerProspectsSummary,
   buildBannerModel,
   buildVisibleRows,
+  buildOwnerProspectsAgentContext,
   formatMoneyShort,
   formatMoneyOrDash,
   mapOwnerPortfolioRow,
@@ -30,6 +31,19 @@ import {
   OWNER_PORTFOLIO_ENTITY,
   OWNER_PORTFOLIO_PARCEL_ENTITY,
 } from './owner-prospects.model';
+import { AgentToolResult, validateEnumParam, validateStringParam, validateNonNegativeNumberParam } from '../shared/agent-tool-validation';
+
+/**
+ * Local alias for the client-tool shape `NavigationService.SetAgentClientTools`
+ * accepts — declared here rather than imported, matching the convention used
+ * by other dashboards in this package (e.g. PropertySearchDashboardComponent).
+ */
+interface AgentClientTool {
+  Name: string;
+  Description: string;
+  ParameterSchema: Record<string, unknown>;
+  Handler: (params: Record<string, unknown>) => Promise<AgentToolResult>;
+}
 
 /** ViewToggle option shape (mirrors `<mj-view-toggle>`'s `[Options]`). */
 interface ViewToggleOption {
@@ -261,8 +275,14 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       this.sortKey = key;
       this.sortDir = OwnerProspectsDashboardComponent.STRING_SORT_KEYS.includes(key) ? 1 : -1;
     }
-    UserInfoEngine.Instance.SetSettingDebounced(OwnerProspectsDashboardComponent.SORT_KEY, JSON.stringify({ key: this.sortKey, dir: this.sortDir }));
+    this.persistSort();
     this.recomputeVisibleRows();
+    this.publishAgentContext();
+  }
+
+  /** Persist the current sort key + direction to the per-user setting (shared by {@link onSortColumn} and the SortOwnerProspects tool). */
+  private persistSort(): void {
+    UserInfoEngine.Instance.SetSettingDebounced(OwnerProspectsDashboardComponent.SORT_KEY, JSON.stringify({ key: this.sortKey, dir: this.sortDir }));
   }
   public isSorted(key: OwnerSortKey): '' | 'asc' | 'desc' {
     return this.sortKey !== key ? '' : this.sortDir === 1 ? 'asc' : 'desc';
@@ -272,6 +292,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   public toggleOwner(row: OwnerRow): void {
     this.SelectedOwnerId = this.SelectedOwnerId === row.id ? null : row.id;
+    this.publishAgentContext();
     this.cdr.markForCheck();
   }
 
@@ -300,6 +321,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     row.prospectId = prospect.ID;
     this.notify(`Flagged “${row.label}” as a prospect.`, 'success');
     this.recomputeVisibleRows();
+    this.publishAgentContext();
     this.cdr.markForCheck();
   }
 
@@ -463,6 +485,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   private afterFilterChange(): void {
     UserInfoEngine.Instance.SetSettingDebounced(OwnerProspectsDashboardComponent.FILTERS_KEY, JSON.stringify(this.filters));
     this.recomputeVisibleRows();
+    this.publishAgentContext();
   }
 
   initDashboard(): void {
@@ -631,7 +654,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       this.recomputeVisibleRows(); // Task 6
     } finally {
       this.IsLoading = false;
-      // Task 9 publishes agent context here.
+      this.publishAgentContext();
       this.cdr.markForCheck();
     }
   }
@@ -668,7 +691,227 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   ngAfterViewInit(): void {
-    // publishAgentContext() added in Task 9
+    this.publishAgentContext();
+  }
+
+  // ───── Agent context + client tools (required per dashboards/CLAUDE.md) ─────
+
+  /**
+   * Report the dashboard's state to the AI agent and (re-)register the client
+   * tools it may invoke. Called from {@link ngAfterViewInit} and on every
+   * meaningful state change (load, filter, sort, row expand, flag success).
+   */
+  private publishAgentContext(): void {
+    const selected = this.SelectedOwnerId ? (this.AllOwners.find((o) => o.id === this.SelectedOwnerId) ?? null) : null;
+    this.navigationService.SetAgentContext(
+      this,
+      buildOwnerProspectsAgentContext({
+        runDate: this.CountyRollup?.runDate ?? null,
+        methodologyVersion: this.CountyRollup?.methodologyVersion ?? null,
+        companyOwnerCount: this.CompanyOwners.length,
+        visibleRows: this.VisibleRows,
+        summary: this.Summary,
+        filters: this.filters,
+        sortKey: this.sortKey,
+        sortDir: this.sortDir,
+        selectedOwnerLabel: selected?.label ?? null,
+        selectedOwnerIsFlagged: !!selected?.prospectId,
+        countyYoYPct: this.CountyRollup?.yoyPct ?? null,
+      }),
+    );
+    this.navigationService.SetAgentClientTools(this, this.buildAgentTools());
+  }
+
+  /** id → exact-label → partial-contains (case-insensitive) lookup over {@link CompanyOwners}; null on a miss. */
+  private resolveOwner(ref: string): OwnerRow | null {
+    const needle = (ref ?? '').trim();
+    if (!needle) {
+      return null;
+    }
+    const byId = this.CompanyOwners.find((o) => o.id === needle);
+    if (byId) {
+      return byId;
+    }
+    const lower = needle.toLowerCase();
+    return this.CompanyOwners.find((o) => o.label.toLowerCase() === lower) ?? this.CompanyOwners.find((o) => o.label.toLowerCase().includes(lower)) ?? null;
+  }
+
+  /** Tolerant "no such owner" result listing up to 15 candidate labels (never throws). */
+  private ownerNotFound(ref: string): AgentToolResult {
+    const names = this.CompanyOwners.slice(0, 15)
+      .map((o) => o.label)
+      .join(', ');
+    const more = this.CompanyOwners.length > 15 ? ', …' : '';
+    return { Success: false, ErrorMessage: `No owner matching "${ref}". Available (first 15): ${names}${more}` };
+  }
+
+  /** FilterOwnerProspects handler body — validates each provided key, merges into {@link filters}, re-filters. */
+  private applyAgentFilters(params: Record<string, unknown>): AgentToolResult {
+    const next: OwnerProspectsFilters = { ...this.filters };
+    if (params['tier'] !== undefined) {
+      const v = validateEnumParam(params['tier'], ['all', 'Prime', 'Strong', 'Moderate'] as const, 'tier');
+      if (!v.ok) return v.result;
+      next.tier = v.value;
+    }
+    if (params['rep'] !== undefined) {
+      const v = validateEnumParam(params['rep'], ['', 'none', 'has'] as const, 'rep');
+      if (!v.ok) return v.result;
+      next.rep = v.value;
+    }
+    if (params['typeGroup'] !== undefined) {
+      const v = validateStringParam(params['typeGroup'], 'typeGroup');
+      if (!v.ok) return v.result;
+      next.typeGroup = v.value;
+    }
+    if (params['minOppPerYear'] !== undefined) {
+      const v = validateNonNegativeNumberParam(params['minOppPerYear'], 'minOppPerYear');
+      if (!v.ok) return v.result;
+      next.minOppPerYear = v.value;
+    }
+    if (params['hasAppealHistory'] !== undefined) {
+      if (typeof params['hasAppealHistory'] !== 'boolean') {
+        return { Success: false, ErrorMessage: 'hasAppealHistory must be a boolean.' };
+      }
+      next.hasAppealHistory = params['hasAppealHistory'];
+    }
+    this.filters = next;
+    this.afterFilterChange();
+    return { Success: true };
+  }
+
+  /** SortOwnerProspects handler body — validates key + direction, sets sort, persists, re-filters, re-publishes. */
+  private applyAgentSort(params: Record<string, unknown>): AgentToolResult {
+    const key = String(params['key'] ?? '');
+    if (!KNOWN_SORT_KEYS.has(key as OwnerSortKey)) {
+      return { Success: false, ErrorMessage: `Invalid sort key "${key}". Expected one of: ${[...KNOWN_SORT_KEYS].join(', ')}.` };
+    }
+    const dir = params['direction'];
+    if (dir !== 'asc' && dir !== 'desc') {
+      return { Success: false, ErrorMessage: `Invalid direction "${String(dir)}". Expected 'asc' or 'desc'.` };
+    }
+    this.sortKey = key as OwnerSortKey;
+    this.sortDir = dir === 'asc' ? 1 : -1;
+    this.persistSort();
+    this.recomputeVisibleRows();
+    this.publishAgentContext();
+    return { Success: true };
+  }
+
+  /**
+   * 🚨 SAFETY BOUNDARY: every tool below is filter / search / sort / select /
+   * clear-filters / open-prospect-record (VIEW) only — EXCEPT FlagOwnerAsProspect,
+   * the one deliberate mutating tool. Creating an indiana_tax.Prospect IS this
+   * screen's purpose (it parallels RunClassificationPipeline being exposed on the
+   * Classify dashboard), and it is idempotent: flagging an owner that is already
+   * a prospect is a no-op that returns success — never a duplicate Prospect
+   * (enforced by the `row.prospectId` check). OpenProspectRecord opens the linked
+   * Prospect for VIEWING only; an unflagged owner yields a structured
+   * "not a prospect yet" result, not an error/throw.
+   *
+   * NOT EXPOSED: editing or deleting a Prospect; editing Stage /
+   * ConflictCheckStatus / any other Prospect field; any ProspectParcel
+   * disposition change; any write to the OwnerPortfolio* tables; any bulk flag.
+   * Every Handler returns an AgentToolResult and never throws.
+   */
+  private buildAgentTools(): AgentClientTool[] {
+    return [
+      {
+        Name: 'FilterOwnerProspects',
+        Description:
+          "Filter the owners table. tier: 'all' | 'Prime' | 'Strong' | 'Moderate'. rep: '' (any) | 'none' (no rep on record) | 'has' (represented). typeGroup: a dominant-property-type label (empty string clears). minOppPerYear: minimum modeled opportunity/yr at ask. hasAppealHistory: true keeps only owners with a prior appeal. Omitted keys are left unchanged.",
+        ParameterSchema: {
+          type: 'object',
+          properties: {
+            tier: { type: 'string', enum: ['all', 'Prime', 'Strong', 'Moderate'] },
+            rep: { type: 'string', enum: ['', 'none', 'has'] },
+            typeGroup: { type: 'string' },
+            minOppPerYear: { type: 'number' },
+            hasAppealHistory: { type: 'boolean' },
+          },
+        },
+        Handler: async (params) => this.applyAgentFilters(params),
+      },
+      {
+        Name: 'SearchOwnerProspects',
+        Description: 'Set the free-text search over owner label / likely representative (case-insensitive contains-match). Pass an empty string to clear.',
+        ParameterSchema: { type: 'object', properties: { query: { type: 'string' } }, required: ['query'] },
+        Handler: async (params) => {
+          const v = validateStringParam(params['query'], 'query');
+          if (!v.ok) return v.result;
+          this.filters = { ...this.filters, query: v.value };
+          this.afterFilterChange();
+          return { Success: true };
+        },
+      },
+      {
+        Name: 'SortOwnerProspects',
+        Description: `Sort the owners table. key: one of ${[...KNOWN_SORT_KEYS].join(', ')}. direction: 'asc' or 'desc'.`,
+        ParameterSchema: {
+          type: 'object',
+          properties: { key: { type: 'string' }, direction: { type: 'string', enum: ['asc', 'desc'] } },
+          required: ['key', 'direction'],
+        },
+        Handler: async (params) => this.applyAgentSort(params),
+      },
+      {
+        Name: 'SelectOwner',
+        Description:
+          "Expand one owner's detail row, by owner ID or label (exact, then case-insensitive contains-match). On a miss, returns the available owner labels.",
+        ParameterSchema: { type: 'object', properties: { owner: { type: 'string' } }, required: ['owner'] },
+        Handler: async (params) => {
+          const ref = String(params['owner'] ?? '');
+          const row = this.resolveOwner(ref);
+          if (!row) return this.ownerNotFound(ref);
+          this.SelectedOwnerId = row.id;
+          this.publishAgentContext();
+          this.cdr.markForCheck();
+          return { Success: true };
+        },
+      },
+      {
+        Name: 'ClearOwnerProspectsFilters',
+        Description: 'Reset every filter (tier, representation, dominant type, appeal-history, min opportunity/yr, search) to its default.',
+        ParameterSchema: { type: 'object', properties: {} },
+        Handler: async () => {
+          this.resetFilters();
+          return { Success: true };
+        },
+      },
+      {
+        Name: 'OpenProspectRecord',
+        Description:
+          'Open the linked indiana_tax.Prospect record for an owner (by ID or label) for VIEWING. If the owner is not flagged as a prospect yet, returns a structured "not a prospect yet" result — use FlagOwnerAsProspect first.',
+        ParameterSchema: { type: 'object', properties: { owner: { type: 'string' } }, required: ['owner'] },
+        Handler: async (params) => {
+          const ref = String(params['owner'] ?? '');
+          const row = this.resolveOwner(ref);
+          if (!row) return this.ownerNotFound(ref);
+          if (!row.prospectId) {
+            return { Success: false, ErrorMessage: `"${row.label}" is not flagged as a prospect yet — use FlagOwnerAsProspect first.` };
+          }
+          this.onViewProspect(row);
+          return { Success: true };
+        },
+      },
+      {
+        Name: 'FlagOwnerAsProspect',
+        Description:
+          "Flag an owner (by ID or label) as an indiana_tax.Prospect — the screen's purpose. Idempotent: an owner that is already a prospect returns success with no duplicate created. This is the only tool here that writes.",
+        ParameterSchema: { type: 'object', properties: { owner: { type: 'string' } }, required: ['owner'] },
+        Handler: async (params) => {
+          const ref = String(params['owner'] ?? '');
+          const row = this.resolveOwner(ref);
+          if (!row) return this.ownerNotFound(ref);
+          if (row.prospectId) {
+            return { Success: true };
+          }
+          await this.onFlagOwner(row);
+          return row.prospectId
+            ? { Success: true }
+            : { Success: false, ErrorMessage: `Flagging "${row.label}" did not complete — see the dashboard for the error detail.` };
+        },
+      },
+    ];
   }
 }
 

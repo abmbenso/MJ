@@ -333,6 +333,68 @@ export function buildBannerModel(cr: CountyRollup): BannerModel {
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
+// Agent context (Task 9) — pure, Angular-free snapshot the dashboard publishes
+// via NavigationService.SetAgentContext. See the SAFETY BOUNDARY comment in
+// owner-prospects-dashboard.component.ts for what the paired tools may do.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/** The dashboard state {@link buildOwnerProspectsAgentContext} consumes — the component projects `this.*` onto this. */
+export interface OwnerProspectsAgentContextState {
+  runDate: string | null;
+  methodologyVersion: string | null;
+  companyOwnerCount: number;
+  /** The visible table rows — only `label` is read (for the bounded {@link TOP_VISIBLE_OWNER_LABELS_CAP} list). */
+  visibleRows: readonly Pick<OwnerRow, 'label'>[];
+  summary: OwnerProspectsSummary | null;
+  filters: OwnerProspectsFilters;
+  sortKey: OwnerSortKey;
+  sortDir: 1 | -1;
+  selectedOwnerLabel: string | null;
+  selectedOwnerIsFlagged: boolean;
+  countyYoYPct: number | null;
+}
+
+/** Upper bound on the streamed `TopVisibleOwnerLabels` list; `TopVisibleOwnerLabelsCount` carries the true total past this. */
+export const TOP_VISIBLE_OWNER_LABELS_CAP = 25;
+
+/**
+ * Builds the ~18-field agent-context object the Owner Prospects dashboard
+ * publishes. Pure — no Angular / MJ imports. Emits only the named, non-opaque
+ * fields below (no raw ids, no `prospectId`, no `ownerKey`, no secrets);
+ * `TopVisibleOwnerLabels` is bounded at {@link TOP_VISIBLE_OWNER_LABELS_CAP}
+ * with a companion `TopVisibleOwnerLabelsCount` emitted ONLY when the visible
+ * set exceeds the cap.
+ */
+export function buildOwnerProspectsAgentContext(state: OwnerProspectsAgentContextState): Record<string, unknown> {
+  const labels = state.visibleRows.slice(0, TOP_VISIBLE_OWNER_LABELS_CAP).map((r) => r.label);
+  const ctx: Record<string, unknown> = {
+    RunDate: state.runDate,
+    MethodologyVersion: state.methodologyVersion,
+    CompanyOwnerCount: state.companyOwnerCount,
+    VisibleOwnerCount: state.visibleRows.length,
+    TotalOpportunityAtAsk: state.summary?.oppAsk ?? null,
+    FreshOpportunityAtAsk: state.summary?.freshOpp ?? null,
+    PrimeCount: state.summary?.prime ?? null,
+    StrongCount: state.summary?.strong ?? null,
+    TierFilter: state.filters.tier,
+    RepFilter: state.filters.rep,
+    TypeFilter: state.filters.typeGroup,
+    MinOppPerYear: state.filters.minOppPerYear,
+    SearchQuery: state.filters.query,
+    SortKey: state.sortKey,
+    SortDir: state.sortDir === 1 ? 'asc' : 'desc',
+    SelectedOwnerLabel: state.selectedOwnerLabel,
+    SelectedOwnerIsFlagged: state.selectedOwnerIsFlagged,
+    CountyYoYPct: state.countyYoYPct,
+    TopVisibleOwnerLabels: labels,
+  };
+  if (state.visibleRows.length > TOP_VISIBLE_OWNER_LABELS_CAP) {
+    ctx['TopVisibleOwnerLabelsCount'] = state.visibleRows.length;
+  }
+  return ctx;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
 // RunView('simple') row coercion helpers
 // ─────────────────────────────────────────────────────────────────────────────
 

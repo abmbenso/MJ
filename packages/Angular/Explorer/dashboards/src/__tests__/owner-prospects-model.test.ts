@@ -4,6 +4,7 @@ import {
   formatMoneyShort, prcUrl, taxHistoryUrl, mapOwnerPortfolioRow, buildBannerModel,
   buildVisibleRows, sanitizeFilters, KNOWN_SORT_KEYS,
   DEFAULT_OWNER_PROSPECTS_FILTERS, OwnerRow, CountyRollup,
+  buildOwnerProspectsAgentContext, OwnerProspectsAgentContextState,
 } from '../OwnerProspects/owner-prospects.model';
 
 const base: OwnerRow = {
@@ -194,6 +195,70 @@ describe('sanitizeFilters', () => {
   it('returns the full default set for a non-object input', () => {
     expect(sanitizeFilters(null)).toEqual(DEFAULT_OWNER_PROSPECTS_FILTERS);
     expect(sanitizeFilters('nope')).toEqual(DEFAULT_OWNER_PROSPECTS_FILTERS);
+  });
+});
+
+describe('buildOwnerProspectsAgentContext', () => {
+  const mkState = (over: Partial<OwnerProspectsAgentContextState> = {}): OwnerProspectsAgentContextState => ({
+    runDate: '2026-08-15', methodologyVersion: 'v3', companyOwnerCount: 42,
+    visibleRows: [{ label: 'ACME PROPERTIES' }, { label: 'BETA HOLDINGS' }],
+    summary: { companyOwners: 42, parcels: 100, totalAV: 9e9, oppAsk: 1_200_000, oppFloor: 800_000, freshOpp: 500_000, prime: 4, strong: 7 },
+    filters: { ...DEFAULT_OWNER_PROSPECTS_FILTERS, tier: 'Prime', rep: 'none', typeGroup: 'Industrial', minOppPerYear: 50_000, query: 'acme' },
+    sortKey: 'estSavingsAtAsk', sortDir: -1,
+    selectedOwnerLabel: 'ACME PROPERTIES', selectedOwnerIsFlagged: true, countyYoYPct: 15.2,
+    ...over,
+  });
+
+  const NAMED_FIELDS = [
+    'RunDate', 'MethodologyVersion', 'CompanyOwnerCount', 'VisibleOwnerCount', 'TotalOpportunityAtAsk',
+    'FreshOpportunityAtAsk', 'PrimeCount', 'StrongCount', 'TierFilter', 'RepFilter', 'TypeFilter',
+    'MinOppPerYear', 'SearchQuery', 'SortKey', 'SortDir', 'SelectedOwnerLabel', 'SelectedOwnerIsFlagged', 'CountyYoYPct',
+  ] as const;
+
+  it('emits every documented named field plus the bounded label list', () => {
+    const ctx = buildOwnerProspectsAgentContext(mkState());
+    for (const key of NAMED_FIELDS) expect(ctx).toHaveProperty(key);
+    expect(ctx).toHaveProperty('TopVisibleOwnerLabels');
+    expect(ctx['CompanyOwnerCount']).toBe(42);
+    expect(ctx['VisibleOwnerCount']).toBe(2);
+    expect(ctx['TotalOpportunityAtAsk']).toBe(1_200_000);
+    expect(ctx['FreshOpportunityAtAsk']).toBe(500_000);
+    expect(ctx['PrimeCount']).toBe(4);
+    expect(ctx['StrongCount']).toBe(7);
+    expect(ctx['TierFilter']).toBe('Prime');
+    expect(ctx['SortDir']).toBe('desc');
+    expect(ctx['SelectedOwnerIsFlagged']).toBe(true);
+    expect(ctx['CountyYoYPct']).toBe(15.2);
+    expect(ctx['TopVisibleOwnerLabels']).toEqual(['ACME PROPERTIES', 'BETA HOLDINGS']);
+  });
+
+  it('caps TopVisibleOwnerLabels at 25 and emits TopVisibleOwnerLabelsCount only when truncated', () => {
+    const at25 = buildOwnerProspectsAgentContext(mkState({ visibleRows: Array.from({ length: 25 }, (_, i) => ({ label: `OWNER ${i}` })) }));
+    expect(at25['TopVisibleOwnerLabels']).toHaveLength(25);
+    expect(at25).not.toHaveProperty('TopVisibleOwnerLabelsCount');
+
+    const over25 = buildOwnerProspectsAgentContext(mkState({ visibleRows: Array.from({ length: 40 }, (_, i) => ({ label: `OWNER ${i}` })) }));
+    expect(over25['TopVisibleOwnerLabels']).toHaveLength(25);
+    expect(over25['TopVisibleOwnerLabelsCount']).toBe(40);
+    expect(over25['VisibleOwnerCount']).toBe(40);
+  });
+
+  it('leaks no opaque / id / prospect field — only the documented keys appear', () => {
+    const allowed = new Set<string>([...NAMED_FIELDS, 'TopVisibleOwnerLabels', 'TopVisibleOwnerLabelsCount']);
+    const ctx = buildOwnerProspectsAgentContext(mkState({ visibleRows: Array.from({ length: 30 }, (_, i) => ({ label: `OWNER ${i}` })) }));
+    for (const key of Object.keys(ctx)) expect(allowed.has(key)).toBe(true);
+    for (const banned of ['id', 'prospectId', 'ownerKey', 'SelectedOwnerId', 'runId', 'coStarTrueOwner']) {
+      expect(Object.keys(ctx)).not.toContain(banned);
+    }
+  });
+
+  it('nulls the summary-derived metrics when no run summary is loaded', () => {
+    const ctx = buildOwnerProspectsAgentContext(mkState({ summary: null, countyYoYPct: null }));
+    expect(ctx['TotalOpportunityAtAsk']).toBeNull();
+    expect(ctx['FreshOpportunityAtAsk']).toBeNull();
+    expect(ctx['PrimeCount']).toBeNull();
+    expect(ctx['StrongCount']).toBeNull();
+    expect(ctx['CountyYoYPct']).toBeNull();
   });
 });
 
