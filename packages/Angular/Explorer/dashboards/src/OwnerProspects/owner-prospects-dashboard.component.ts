@@ -2,6 +2,23 @@ import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } 
 import { BaseDashboard, BaseResourceComponent } from '@memberjunction/ng-shared';
 import { RegisterClass } from '@memberjunction/global';
 import { ResourceData } from '@memberjunction/core-entities';
+import { RunView } from '@memberjunction/core';
+import {
+  OwnerRow,
+  OwnerParcelRow,
+  CountyRollup,
+  OwnerProspectsFilters,
+  OwnerProspectsSummary,
+  OwnerSortKey,
+  DEFAULT_OWNER_PROSPECTS_FILTERS,
+  computeOwnerProspectsSummary,
+  mapOwnerPortfolioRow,
+  mapOwnerParcelRow,
+  mapCountyRollup,
+  OWNER_PORTFOLIO_RUN_ENTITY,
+  OWNER_PORTFOLIO_ENTITY,
+  OWNER_PORTFOLIO_PARCEL_ENTITY,
+} from './owner-prospects.model';
 
 /**
  * Owner Prospects — Marion County parcels rolled up to the operating company
@@ -27,6 +44,22 @@ import { ResourceData } from '@memberjunction/core-entities';
 export class OwnerProspectsDashboardComponent extends BaseDashboard implements AfterViewInit {
   public IsLoading = false;
 
+  /** Every owner group in the latest run — Company, Individual, Government, Institution. */
+  public AllOwners: OwnerRow[] = [];
+  /** The `Company`-kind subset of {@link AllOwners} — the prospect universe the table/banner work over. */
+  public CompanyOwners: OwnerRow[] = [];
+  /** County-wide C&I 2025→2026 rollup for the banner (null until loaded / when no run exists). */
+  public CountyRollup: CountyRollup | null = null;
+  /** Banner totals over {@link CompanyOwners} (null until loaded). */
+  public Summary: OwnerProspectsSummary | null = null;
+  /** User-facing load failure message (e.g. no published run) — null when the load succeeded. */
+  public LoadError: string | null = null;
+
+  private filters: OwnerProspectsFilters = { ...DEFAULT_OWNER_PROSPECTS_FILTERS };
+  private sortKey: OwnerSortKey = 'estSavingsAtAsk';
+  private sortDir: 1 | -1 = -1;
+  private latestRunId: string | null = null;
+
   constructor(private cdr: ChangeDetectorRef) {
     super();
   }
@@ -36,11 +69,110 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   initDashboard(): void {
-    // resolved in Task 4
+    // No sub-state to restore on init — loadData() (called by BaseDashboard.ngOnInit) does the work.
   }
 
   async loadData(): Promise<void> {
-    // populated in Task 4 — BaseDashboard.ngOnInit() calls this then NotifyLoadComplete()
+    this.IsLoading = true;
+    this.LoadError = null;
+    this.cdr.markForCheck();
+    try {
+      const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+      const runRes = await rv.RunView<Record<string, unknown>>({
+        EntityName: OWNER_PORTFOLIO_RUN_ENTITY,
+        Fields: [
+          'ID', 'RunDate', 'MethodologyVersion', 'CountyParcelCount', 'CountyTotalAV2025',
+          'CountyTotalAV2026', 'CountyYoYDollars', 'CountyYoYPct', 'CountyParcelsUp5', 'CountyParcelsUp10',
+          'CountyParcelsUp25', 'CountyParcelsUp50', 'CountyParcelsDown', 'CountyByTypeJSON',
+        ],
+        ExtraFilter: 'IsLatest = 1',
+        MaxRows: 1,
+        ResultType: 'simple',
+      });
+      if (!runRes.Success || !runRes.Results?.length) {
+        this.LoadError = 'No owner-portfolio run has been published yet. Run scripts/build-owner-portfolios.js.';
+        return;
+      }
+      const runRow = runRes.Results[0];
+      this.latestRunId = String(runRow['ID']);
+      this.CountyRollup = mapCountyRollup(runRow);
+
+      const [ownerRes, parcelRes] = await rv.RunViews<Record<string, unknown>>([
+        {
+          EntityName: OWNER_PORTFOLIO_ENTITY,
+          Fields: [
+            'ID', 'OwnerKey', 'Label', 'Kind', 'Tier', 'GroupKeyType', 'CoStarTrueOwner', 'ParcelCount',
+            'DistinctEntities', 'TotalAV', 'TotalAV2025', 'TotalAV2026', 'AVYoYDollars', 'AVYoYPct', 'ParcelsUp10',
+            'ParcelsUp25', 'TotalUnits', 'TotalSqFt', 'NAppealRec', 'NTwoSupport', 'NHighConfAppeal',
+            'EstSavingsAtAsk', 'EstSavingsAtFloor', 'AppealedParcels', 'HistoricalReductionWon', 'AppealYears',
+            'MostRecentAppealYear', 'LikelyRep', 'RepStatus', 'RepsOnReductionJSON', 'IsFreshProspect',
+            'MailAddress', 'ByTypeJSON',
+          ],
+          ExtraFilter: `RunID = '${this.latestRunId}'`,
+          MaxRows: 20000,
+          ResultType: 'simple',
+        },
+        {
+          EntityName: OWNER_PORTFOLIO_PARCEL_ENTITY,
+          Fields: [
+            'ID', 'OwnerPortfolioID', 'GISParcelNumber', 'Address', 'TypeGroup', 'CurrentAV', 'AV2025',
+            'AV2026', 'AVYoYPct', 'SqFt', 'Units', 'AskValue', 'EstSavingsAtAsk', 'EstSavingsAtFloor',
+            'Recommendation', 'ConfidenceTier', 'SupportingApproachCount', 'Appealed', 'ExistingRep',
+            'LastAppealYear',
+          ],
+          // Scoped to the latest run's owner groups via a subquery (mirrors PropertySearch's
+          // Assessments-year subquery pattern); ParcelID/join not needed for display.
+          ExtraFilter: `OwnerPortfolioID IN (SELECT ID FROM indiana_tax.OwnerPortfolio WHERE RunID = '${this.latestRunId}')`,
+          MaxRows: 50000,
+          ResultType: 'simple',
+        },
+      ]);
+      if (!ownerRes.Success) {
+        this.LoadError = ownerRes.ErrorMessage || 'Failed to load owners.';
+        return;
+      }
+      if (!parcelRes.Success) {
+        this.LoadError = parcelRes.ErrorMessage || 'Failed to load parcels.';
+        return;
+      }
+
+      const parcelsByOwner = new Map<string, OwnerParcelRow[]>();
+      for (const raw of parcelRes.Results ?? []) {
+        const pr = mapOwnerParcelRow(raw);
+        const key = String(raw['OwnerPortfolioID']);
+        if (!parcelsByOwner.has(key)) parcelsByOwner.set(key, []);
+        parcelsByOwner.get(key)!.push(pr);
+      }
+      this.AllOwners = (ownerRes.Results ?? []).map((raw) => {
+        const row = mapOwnerPortfolioRow(raw);
+        row.parcels = parcelsByOwner.get(row.id) ?? [];
+        return row;
+      });
+      this.CompanyOwners = this.AllOwners.filter((o) => o.kind === 'Company');
+      this.Summary = computeOwnerProspectsSummary(this.CompanyOwners);
+      await this.matchExistingProspects(); // Task 8
+      this.recomputeVisibleRows(); // Task 6
+    } finally {
+      this.IsLoading = false;
+      // Task 9 publishes agent context here.
+      this.cdr.markForCheck();
+    }
+  }
+
+  /**
+   * Task 8 fills this in — matches the loaded owners against existing
+   * `indiana_tax.Prospect` rows and sets {@link OwnerRow.prospectId}.
+   */
+  private matchExistingProspects(): Promise<void> {
+    return Promise.resolve();
+  }
+
+  /**
+   * Task 6 fills this in — applies {@link filters} + {@link sortKey}/{@link sortDir}
+   * to {@link AllOwners} to produce the visible table rows.
+   */
+  private recomputeVisibleRows(): void {
+    // no-op until Task 6
   }
 
   ngAfterViewInit(): void {
