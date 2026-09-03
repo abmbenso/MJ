@@ -1000,7 +1000,7 @@ import {
     MJVectorIndexEntityServer,
 } from '@memberjunction/core-entities-server';
 
-// @memberjunction/core-actions (144 classes)
+// @memberjunction/core-actions (145 classes)
 import {
     APIRateLimiterAction,
     ActionSmithAgent,
@@ -1072,6 +1072,7 @@ import {
     GetObjectAction,
     GetRecordAction,
     GetRecordListMembershipAction,
+    GetRecordsAction,
     GetSignatureStatusAction,
     GetStockPriceAction,
     GetUploadUrlAction,
@@ -1966,6 +1967,7 @@ export const CLASS_REGISTRATIONS: any[] = [
     GetObjectAction,
     GetRecordAction,
     GetRecordListMembershipAction,
+    GetRecordsAction,
     GetSignatureStatusAction,
     GetStockPriceAction,
     GetUploadUrlAction,
@@ -2047,7 +2049,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 882;
+export const CLASS_REGISTRATIONS_COUNT = 883;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

@@ -34384,6 +34384,10 @@ export class MJContentItemChunk_ {
     ContentItem?: string;
         
     @Field({nullable: true}) 
+    @MaxLength(500)
+    ParentChunk?: string;
+        
+    @Field({nullable: true}) 
     @MaxLength(36)
     RootParentChunkID?: string;
         

@@ -12227,6 +12227,10 @@ export const MJContentItemChunkSchema = z.object({
         * * Field Name: ContentItem
         * * Display Name: Content Item
         * * SQL Data Type: nvarchar(250)`),
+    ParentChunk: z.string().nullable().describe(`
+        * * Field Name: ParentChunk
+        * * Display Name: Parent Chunk
+        * * SQL Data Type: nvarchar(500)`),
     RootParentChunkID: z.string().nullable().describe(`
         * * Field Name: RootParentChunkID
         * * Display Name: Root Parent Chunk
@@ -44246,7 +44250,7 @@ export class MJAIAgentTypeEntity extends BaseEntity<MJAIAgentTypeEntityType> {
     /**
     * Validate() method override for MJ: AI Agent Types entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
     * * CompactionTargetPercent: The compaction target percentage must be a value between 1 and 100 percent.
-    * * CompactionTriggerPercent: The compaction trigger percentage must be a value between 1 and 100 percent.
+    * * CompactionTriggerPercent: The compaction trigger percentage must be between 1 and 100 (inclusive). This ensures that the threshold for triggering context compression is set to a reasonable value - at least 1% to ensure compression happens when needed, and no more than 100% to maintain practical memory management.
     * * ContextWindowMaxTokens: The maximum tokens for the context window must be a positive number greater than 0.
     * * Table-Level: The compaction target percentage must be less than the compaction trigger percentage to ensure that compaction successfully reduces the resource usage below the trigger threshold.
     * @public
@@ -44282,13 +44286,13 @@ export class MJAIAgentTypeEntity extends BaseEntity<MJAIAgentTypeEntityType> {
     }
 
     /**
-    * The compaction trigger percentage must be a value between 1 and 100 percent.
+    * The compaction trigger percentage must be between 1 and 100 (inclusive). This ensures that the threshold for triggering context compression is set to a reasonable value - at least 1% to ensure compression happens when needed, and no more than 100% to maintain practical memory management.
     * @param result - the ValidationResult object to add any errors or warnings to
     * @public
     * @method
     */
     public ValidateCompactionTriggerPercentRange(result: ValidationResult) {
-    	if (this.CompactionTriggerPercent != null && (this.CompactionTriggerPercent < 1 || this.CompactionTriggerPercent > 100)) {
+    	if (this.CompactionTriggerPercent < 1 || this.CompactionTriggerPercent > 100) {
     		result.Errors.push(new ValidationErrorInfo(
     			"CompactionTriggerPercent",
     			"Compaction trigger percentage must be between 1 and 100.",
@@ -65617,6 +65621,15 @@ export class MJContentItemChunkEntity extends BaseEntity<MJContentItemChunkEntit
     */
     get ContentItem(): string | null {
         return this.Get('ContentItem');
+    }
+
+    /**
+    * * Field Name: ParentChunk
+    * * Display Name: Parent Chunk
+    * * SQL Data Type: nvarchar(500)
+    */
+    get ParentChunk(): string | null {
+        return this.Get('ParentChunk');
     }
 
     /**
