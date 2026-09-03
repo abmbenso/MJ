@@ -1,0 +1,101 @@
+<div class="detail">
+  <dl class="dgrid">
+    <div class="dgrid__pair">
+      <dt>CoStar true owner</dt>
+      <dd>{{ Owner.coStarTrueOwner ?? '—' }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>Mailing address</dt>
+      <dd>{{ Owner.mailAddress ?? '—' }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>Distinct entities</dt>
+      <dd>{{ Owner.distinctEntities ?? '—' }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>Total SF</dt>
+      <dd>{{ Owner.totalSqFt != null ? (Owner.totalSqFt | number) : '—' }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>High-confidence appeal recs</dt>
+      <dd>{{ Owner.nHighConfAppeal ?? '—' }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>Historical reduction won</dt>
+      <dd>{{ money(Owner.historicalReductionWon) }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>Reps that won a cut</dt>
+      <dd>{{ Owner.repsOnReduction.length ? Owner.repsOnReduction.join('; ') : '—' }}</dd>
+    </div>
+    <div class="dgrid__pair">
+      <dt>Rep status</dt>
+      <dd>{{ Owner.repStatus }}</dd>
+    </div>
+  </dl>
+
+  <p class="detail__portfolio">Portfolio: {{ ByTypeSummary || '—' }}</p>
+
+  <div class="pt-wrap">
+    <table class="pt">
+      <thead>
+        <tr>
+          <th>Parcel</th>
+          <th>Type</th>
+          <th class="num">AV 2025</th>
+          <th class="num">AV 2026</th>
+          <th class="num">YoY</th>
+          <th class="num">Units</th>
+          <th class="num">Ask</th>
+          <th class="num">Save/yr</th>
+          <th>Rec</th>
+          <th>Conf</th>
+          <th>Appealed</th>
+          <th>Rep</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (p of TopParcels; track p.id) {
+          <tr>
+            <td class="pt__parcel">
+              <span class="pt__addr">{{ p.address ?? p.gisParcelNumber }}</span>
+              @if (p.gisParcelNumber) {
+                <span class="pt__links">
+                  <a [href]="prcUrl(p.gisParcelNumber)" target="_blank" rel="noopener">PRC&#8599;</a>
+                  <a [href]="taxHistoryUrl(p.gisParcelNumber)" target="_blank" rel="noopener">TH&#8599;</a>
+                </span>
+              }
+            </td>
+            <td>{{ p.typeGroup ?? '—' }}</td>
+            <td class="num">{{ p.av2025 != null ? (p.av2025 | number) : '—' }}</td>
+            <td class="num">{{ p.av2026 != null ? (p.av2026 | number) : '—' }}</td>
+            <td class="num">{{ yoy(p.avYoYPct) }}</td>
+            <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
+            <td class="num">{{ p.ask != null ? (p.ask | number) : '—' }}</td>
+            <td class="num">{{ money(p.estSavingsAtAsk) }}</td>
+            <td>{{ p.rec ?? '—' }}</td>
+            <td>{{ p.conf ?? '—' }}</td>
+            <td>{{ p.appealed ? '✓' + (p.lastAppealYear ? ' ' + p.lastAppealYear : '') : '' }}</td>
+            <td>{{ p.existingRep ?? '—' }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+
+  @if (RemainingParcelCount > 0) {
+    <p class="detail__more">{{ RemainingParcelCount }} more parcels</p>
+  }
+
+  <div class="detail__actions">
+    @if (Owner.prospectId) {
+      <button mjButton variant="secondary" size="sm" (click)="ViewProspectRequested.emit(Owner)">
+        <i class="fa-solid fa-arrow-up-right-from-square"></i> View prospect
+      </button>
+    } @else {
+      <button mjButton variant="primary" size="sm" data-testid="flag-btn" (click)="FlagRequested.emit(Owner)">
+        <i class="fa-solid fa-flag"></i> Flag as prospect
+      </button>
+    }
+  </div>
+</div>

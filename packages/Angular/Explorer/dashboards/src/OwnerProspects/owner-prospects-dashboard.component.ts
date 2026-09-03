@@ -261,6 +261,16 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     this.cdr.markForCheck();
   }
 
+  /** Detail-panel `(FlagRequested)` handler — Task 8 creates the `indiana_tax.Prospect`. */
+  public onFlagOwner(_row: OwnerRow): void {
+    /* Task 8 */
+  }
+
+  /** Detail-panel `(ViewProspectRequested)` handler — Task 8 navigates to the existing prospect. */
+  public onViewProspect(_row: OwnerRow): void {
+    /* Task 8 */
+  }
+
   /** Money formatter for the table cells (`$12,345` / `$0` / `—`). */
   public money(n: number | null): string {
     return formatMoneyOrDash(n);

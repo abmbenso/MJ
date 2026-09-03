@@ -181,7 +181,17 @@
                     }
                   </td>
                 </tr>
-                <!-- detail row + <mj-owner-detail-panel>: Task 7 -->
+                @if (SelectedOwnerId === row.id) {
+                  <tr class="detail-row">
+                    <td [attr.colspan]="14">
+                      <mj-owner-detail-panel
+                        [Owner]="row"
+                        (FlagRequested)="onFlagOwner($event)"
+                        (ViewProspectRequested)="onViewProspect($event)">
+                      </mj-owner-detail-panel>
+                    </td>
+                  </tr>
+                }
               }
               @if (OverflowRowCount > 0) {
                 <tr class="overflow-row">
