@@ -17,7 +17,7 @@ import { MaxLength } from 'class-validator';
 import * as mj_core_schema_server_object_types from '@memberjunction/server'
 
 
-import { indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFormCatalogEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
+import { indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFormCatalogEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailStoreEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
     
 
 //****************************************************************************
@@ -12942,6 +12942,363 @@ export class indianataxStatuteSectionResolver extends ResolverBase {
         const provider = GetReadWriteProvider(providers);
         const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
         return this.DeleteRecord('Statute Sections', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Stores
+//****************************************************************************
+@ObjectType({ description: `One row per address/owner-confirmed big-box retail store, imported from the separate Big Box Retail research project\'s Indiana roster (Big_Box_Retail/states/indiana/data/indiana-bigbox-roster.csv). Deliberately isolated from indiana_tax -- no foreign keys either direction. See docs/superpowers/specs/2026-09-04-big-box-retail-mj-import-design.md.` })
+export class bigboxretailStore_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The tenant/retailer brand name (e.g. Walmart, Kohl's, Menards). One row per confirmed store, not per parcel -- a multi-parcel site is one Store row with multiple parcels listed in Parcels.`}) 
+    @MaxLength(100)
+    Brand: string;
+        
+    @Field({nullable: true, description: `The store's display name as returned by the locator source, when it differs from Brand (e.g. "Walmart Supercenter", "Meijer Express").`}) 
+    @MaxLength(200)
+    StoreName?: string;
+        
+    @Field({description: `Street address of the store.`}) 
+    @MaxLength(200)
+    Address: string;
+        
+    @Field({description: `City.`}) 
+    @MaxLength(100)
+    City: string;
+        
+    @Field({description: `Two-letter state code. Indiana-only for now ('IN') -- a placeholder for future states, not yet used for any multi-state logic.`}) 
+    @MaxLength(2)
+    State: string;
+        
+    @Field({nullable: true, description: `ZIP code, as returned by the locator source.`}) 
+    @MaxLength(10)
+    ZIP?: string;
+        
+    @Field({nullable: true, description: `Indiana county name (DLGF numbering -- see Big_Box_Retail/states/indiana/data/COUNTY_CODES.md), derived from the matched parcel's county code.`}) 
+    @MaxLength(50)
+    County?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Latitude in decimal degrees, from the locator source (OpenStreetMap Overpass or Nominatim).`}) 
+    Latitude?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Longitude in decimal degrees, from the locator source (OpenStreetMap Overpass or Nominatim).`}) 
+    Longitude?: number;
+        
+    @Field({nullable: true, description: `Which store-locator source(s) found this store: overpass, nominatim, or both (nominatim+overpass).`}) 
+    @MaxLength(30)
+    LocatorSource?: string;
+        
+    @Field({nullable: true, description: `Which address-matching tier confirmed this store against a county assessor parcel -- see Big_Box_Retail/states/indiana/data/README.md for the methodology and how each tier was verified.`}) 
+    @MaxLength(30)
+    MatchMethod?: string;
+        
+    @Field(() => Int, {description: `Number of assessor parcels this store's building spans (a store is often 2-4 parcels: pad, parking, outlots).`}) 
+    ParcelCount: number;
+        
+    @Field({nullable: true, description: `Delimited county:parcel;county:parcel... list of every matched assessor parcel, using DLGF county numbers.`}) 
+    Parcels?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Sum of building square footage across this store's matched parcels.`}) 
+    TotalBuildingSqFt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Max building square footage across this store's matched parcels.`}) 
+    MaxBuildingSqFt?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of total assessed value (land + improvement) across this store's matched parcels, in dollars.`}) 
+    TotalAssessedValue?: number;
+        
+    @Field({nullable: true, description: `Whether the matched parcel's owner is the retailer itself (retailer-owned) or a separate landlord/investor (leased / investor).`}) 
+    @MaxLength(30)
+    Tenure?: string;
+        
+    @Field({nullable: true, description: `County assessor's owner-of-record name for the matched parcel(s).`}) 
+    @MaxLength(200)
+    OwnerName?: string;
+        
+    @Field(() => Int, {description: `Number of PTABOA appeals on record for this store's matched parcel(s).`}) 
+    AppealCount: number;
+        
+    @Field(() => Int, {nullable: true, description: `Most recent assessment year with an appeal on record, if any.`}) 
+    LastAppealYear?: number;
+        
+    @Field({nullable: true, description: `Tax representative(s) of record from the most recent appeal, if any.`}) 
+    @MaxLength(300)
+    TaxReps?: string;
+        
+    @Field({description: `Path/name of the CSV file this row was last imported from -- provenance for every row, per this project's documentation standard.`}) 
+    @MaxLength(300)
+    SourceFile: string;
+        
+    @Field({description: `When this row was last written by the importer script.`}) 
+    ImportedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Latitude?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Longitude?: number;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Stores
+//****************************************************************************
+@InputType()
+export class CreatebigboxretailStoreInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    Brand?: string;
+
+    @Field({ nullable: true })
+    StoreName: string | null;
+
+    @Field({ nullable: true })
+    Address?: string;
+
+    @Field({ nullable: true })
+    City?: string;
+
+    @Field({ nullable: true })
+    State?: string;
+
+    @Field({ nullable: true })
+    ZIP: string | null;
+
+    @Field({ nullable: true })
+    County: string | null;
+
+    @Field(() => Float, { nullable: true })
+    Latitude: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Longitude: number | null;
+
+    @Field({ nullable: true })
+    LocatorSource: string | null;
+
+    @Field({ nullable: true })
+    MatchMethod: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelCount?: number;
+
+    @Field({ nullable: true })
+    Parcels: string | null;
+
+    @Field(() => Int, { nullable: true })
+    TotalBuildingSqFt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    MaxBuildingSqFt: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAssessedValue: number | null;
+
+    @Field({ nullable: true })
+    Tenure: string | null;
+
+    @Field({ nullable: true })
+    OwnerName: string | null;
+
+    @Field(() => Int, { nullable: true })
+    AppealCount?: number;
+
+    @Field(() => Int, { nullable: true })
+    LastAppealYear: number | null;
+
+    @Field({ nullable: true })
+    TaxReps: string | null;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Stores
+//****************************************************************************
+@InputType()
+export class UpdatebigboxretailStoreInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    Brand?: string;
+
+    @Field({ nullable: true })
+    StoreName?: string | null;
+
+    @Field({ nullable: true })
+    Address?: string;
+
+    @Field({ nullable: true })
+    City?: string;
+
+    @Field({ nullable: true })
+    State?: string;
+
+    @Field({ nullable: true })
+    ZIP?: string | null;
+
+    @Field({ nullable: true })
+    County?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    Latitude?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Longitude?: number | null;
+
+    @Field({ nullable: true })
+    LocatorSource?: string | null;
+
+    @Field({ nullable: true })
+    MatchMethod?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelCount?: number;
+
+    @Field({ nullable: true })
+    Parcels?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    TotalBuildingSqFt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    MaxBuildingSqFt?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAssessedValue?: number | null;
+
+    @Field({ nullable: true })
+    Tenure?: string | null;
+
+    @Field({ nullable: true })
+    OwnerName?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    AppealCount?: number;
+
+    @Field(() => Int, { nullable: true })
+    LastAppealYear?: number | null;
+
+    @Field({ nullable: true })
+    TaxReps?: string | null;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Stores
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailStoreViewResult {
+    @Field(() => [bigboxretailStore_])
+    Results: bigboxretailStore_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailStore_)
+export class bigboxretailStoreResolver extends ResolverBase {
+    @Query(() => RunbigboxretailStoreViewResult)
+    async RunbigboxretailStoreViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailStoreViewResult)
+    async RunbigboxretailStoreViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailStoreViewResult)
+    async RunbigboxretailStoreDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Stores';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailStore_, { nullable: true })
+    async bigboxretailStore(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailStore_ | null> {
+        this.CheckUserReadPermissions('Stores', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStores')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Stores', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Stores', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => bigboxretailStore_)
+    async CreatebigboxretailStore(
+        @Arg('input', () => CreatebigboxretailStoreInput) input: CreatebigboxretailStoreInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Stores', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => bigboxretailStore_)
+    async UpdatebigboxretailStore(
+        @Arg('input', () => UpdatebigboxretailStoreInput) input: UpdatebigboxretailStoreInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Stores', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => bigboxretailStore_)
+    async DeletebigboxretailStore(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Stores', key, options, provider, userPayload, pubSub);
     }
     
 }

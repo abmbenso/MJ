@@ -4780,6 +4780,170 @@ export const indianataxStatuteSectionSchema = z.object({
 export type indianataxStatuteSectionEntityType = z.infer<typeof indianataxStatuteSectionSchema>;
 
 /**
+ * zod schema definition for the entity Stores
+ */
+export const bigboxretailStoreSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    Brand: z.string().describe(`
+        * * Field Name: Brand
+        * * Display Name: Brand
+        * * SQL Data Type: nvarchar(100)
+        * * Description: The tenant/retailer brand name (e.g. Walmart, Kohl's, Menards). One row per confirmed store, not per parcel -- a multi-parcel site is one Store row with multiple parcels listed in Parcels.`),
+    StoreName: z.string().nullable().describe(`
+        * * Field Name: StoreName
+        * * Display Name: Store Name
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The store's display name as returned by the locator source, when it differs from Brand (e.g. "Walmart Supercenter", "Meijer Express").`),
+    Address: z.string().describe(`
+        * * Field Name: Address
+        * * Display Name: Street Address
+        * * SQL Data Type: nvarchar(200)
+        * * Description: Street address of the store.`),
+    City: z.string().describe(`
+        * * Field Name: City
+        * * Display Name: City
+        * * SQL Data Type: nvarchar(100)
+        * * Description: City.`),
+    State: z.string().describe(`
+        * * Field Name: State
+        * * Display Name: State
+        * * SQL Data Type: nchar(2)
+        * * Default Value: IN
+        * * Description: Two-letter state code. Indiana-only for now ('IN') -- a placeholder for future states, not yet used for any multi-state logic.`),
+    ZIP: z.string().nullable().describe(`
+        * * Field Name: ZIP
+        * * Display Name: ZIP Code
+        * * SQL Data Type: nvarchar(10)
+        * * Description: ZIP code, as returned by the locator source.`),
+    County: z.string().nullable().describe(`
+        * * Field Name: County
+        * * Display Name: County
+        * * SQL Data Type: nvarchar(50)
+        * * Description: Indiana county name (DLGF numbering -- see Big_Box_Retail/states/indiana/data/COUNTY_CODES.md), derived from the matched parcel's county code.`),
+    Latitude: z.number().nullable().describe(`
+        * * Field Name: Latitude
+        * * Display Name: Latitude
+        * * SQL Data Type: decimal(9, 6)
+        * * Description: Latitude in decimal degrees, from the locator source (OpenStreetMap Overpass or Nominatim).`),
+    Longitude: z.number().nullable().describe(`
+        * * Field Name: Longitude
+        * * Display Name: Longitude
+        * * SQL Data Type: decimal(9, 6)
+        * * Description: Longitude in decimal degrees, from the locator source (OpenStreetMap Overpass or Nominatim).`),
+    LocatorSource: z.union([z.literal('nominatim'), z.literal('nominatim+overpass'), z.literal('overpass')]).nullable().describe(`
+        * * Field Name: LocatorSource
+        * * Display Name: Locator Source
+        * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * nominatim
+    *   * nominatim+overpass
+    *   * overpass
+        * * Description: Which store-locator source(s) found this store: overpass, nominatim, or both (nominatim+overpass).`),
+    MatchMethod: z.union([z.literal('exact addr'), z.literal('owner + city'), z.literal('street + near #'), z.literal('subset street + #')]).nullable().describe(`
+        * * Field Name: MatchMethod
+        * * Display Name: Match Method
+        * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * exact addr
+    *   * owner + city
+    *   * street + near #
+    *   * subset street + #
+        * * Description: Which address-matching tier confirmed this store against a county assessor parcel -- see Big_Box_Retail/states/indiana/data/README.md for the methodology and how each tier was verified.`),
+    ParcelCount: z.number().describe(`
+        * * Field Name: ParcelCount
+        * * Display Name: Parcel Count
+        * * SQL Data Type: int
+        * * Default Value: 0
+        * * Description: Number of assessor parcels this store's building spans (a store is often 2-4 parcels: pad, parking, outlots).`),
+    Parcels: z.string().nullable().describe(`
+        * * Field Name: Parcels
+        * * Display Name: Parcels
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: Delimited county:parcel;county:parcel... list of every matched assessor parcel, using DLGF county numbers.`),
+    TotalBuildingSqFt: z.number().nullable().describe(`
+        * * Field Name: TotalBuildingSqFt
+        * * Display Name: Total Building Square Feet
+        * * SQL Data Type: int
+        * * Description: Sum of building square footage across this store's matched parcels.`),
+    MaxBuildingSqFt: z.number().nullable().describe(`
+        * * Field Name: MaxBuildingSqFt
+        * * Display Name: Max Building Square Feet
+        * * SQL Data Type: int
+        * * Description: Max building square footage across this store's matched parcels.`),
+    TotalAssessedValue: z.number().nullable().describe(`
+        * * Field Name: TotalAssessedValue
+        * * Display Name: Total Assessed Value
+        * * SQL Data Type: money
+        * * Description: Sum of total assessed value (land + improvement) across this store's matched parcels, in dollars.`),
+    Tenure: z.union([z.literal('leased / investor'), z.literal('retailer-owned')]).nullable().describe(`
+        * * Field Name: Tenure
+        * * Display Name: Tenure
+        * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * leased / investor
+    *   * retailer-owned
+        * * Description: Whether the matched parcel's owner is the retailer itself (retailer-owned) or a separate landlord/investor (leased / investor).`),
+    OwnerName: z.string().nullable().describe(`
+        * * Field Name: OwnerName
+        * * Display Name: Owner Name
+        * * SQL Data Type: nvarchar(200)
+        * * Description: County assessor's owner-of-record name for the matched parcel(s).`),
+    AppealCount: z.number().describe(`
+        * * Field Name: AppealCount
+        * * Display Name: Appeal Count
+        * * SQL Data Type: int
+        * * Default Value: 0
+        * * Description: Number of PTABOA appeals on record for this store's matched parcel(s).`),
+    LastAppealYear: z.number().nullable().describe(`
+        * * Field Name: LastAppealYear
+        * * Display Name: Last Appeal Year
+        * * SQL Data Type: smallint
+        * * Description: Most recent assessment year with an appeal on record, if any.`),
+    TaxReps: z.string().nullable().describe(`
+        * * Field Name: TaxReps
+        * * Display Name: Tax Representatives
+        * * SQL Data Type: nvarchar(300)
+        * * Description: Tax representative(s) of record from the most recent appeal, if any.`),
+    SourceFile: z.string().describe(`
+        * * Field Name: SourceFile
+        * * Display Name: Source File
+        * * SQL Data Type: nvarchar(300)
+        * * Description: Path/name of the CSV file this row was last imported from -- provenance for every row, per this project's documentation standard.`),
+    ImportedAt: z.date().describe(`
+        * * Field Name: ImportedAt
+        * * Display Name: Imported At
+        * * SQL Data Type: datetimeoffset
+        * * Description: When this row was last written by the importer script.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_Latitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Latitude
+        * * Display Name: Mj Latitude
+        * * SQL Data Type: decimal(9, 6)`),
+    __mj_Longitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Longitude
+        * * Display Name: Mj Longitude
+        * * SQL Data Type: decimal(9, 6)`),
+});
+
+export type bigboxretailStoreEntityType = z.infer<typeof bigboxretailStoreSchema>;
+
+/**
  * zod schema definition for the entity Tax History Years
  */
 export const indianataxTaxHistoryYearSchema = z.object({
@@ -17767,6 +17931,406 @@ export class indianataxStatuteSectionEntity extends BaseEntity<indianataxStatute
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+}
+
+
+/**
+ * Stores - strongly typed entity sub-class
+ * * Schema: big_box_retail
+ * * Base Table: Store
+ * * Base View: vwStores
+ * * @description One row per address/owner-confirmed big-box retail store, imported from the separate Big Box Retail research project's Indiana roster (Big_Box_Retail/states/indiana/data/indiana-bigbox-roster.csv). Deliberately isolated from indiana_tax -- no foreign keys either direction. See docs/superpowers/specs/2026-09-04-big-box-retail-mj-import-design.md.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Stores')
+export class bigboxretailStoreEntity extends BaseEntity<bigboxretailStoreEntityType> {
+    /**
+    * Loads the Stores record from the database
+    * @param ID: string - primary key value to load the Stores record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof bigboxretailStoreEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: Brand
+    * * Display Name: Brand
+    * * SQL Data Type: nvarchar(100)
+    * * Description: The tenant/retailer brand name (e.g. Walmart, Kohl's, Menards). One row per confirmed store, not per parcel -- a multi-parcel site is one Store row with multiple parcels listed in Parcels.
+    */
+    get Brand(): string {
+        return this.Get('Brand');
+    }
+    set Brand(value: string) {
+        this.Set('Brand', value);
+    }
+
+    /**
+    * * Field Name: StoreName
+    * * Display Name: Store Name
+    * * SQL Data Type: nvarchar(200)
+    * * Description: The store's display name as returned by the locator source, when it differs from Brand (e.g. "Walmart Supercenter", "Meijer Express").
+    */
+    get StoreName(): string | null {
+        return this.Get('StoreName');
+    }
+    set StoreName(value: string | null) {
+        this.Set('StoreName', value);
+    }
+
+    /**
+    * * Field Name: Address
+    * * Display Name: Street Address
+    * * SQL Data Type: nvarchar(200)
+    * * Description: Street address of the store.
+    */
+    get Address(): string {
+        return this.Get('Address');
+    }
+    set Address(value: string) {
+        this.Set('Address', value);
+    }
+
+    /**
+    * * Field Name: City
+    * * Display Name: City
+    * * SQL Data Type: nvarchar(100)
+    * * Description: City.
+    */
+    get City(): string {
+        return this.Get('City');
+    }
+    set City(value: string) {
+        this.Set('City', value);
+    }
+
+    /**
+    * * Field Name: State
+    * * Display Name: State
+    * * SQL Data Type: nchar(2)
+    * * Default Value: IN
+    * * Description: Two-letter state code. Indiana-only for now ('IN') -- a placeholder for future states, not yet used for any multi-state logic.
+    */
+    get State(): string {
+        return this.Get('State');
+    }
+    set State(value: string) {
+        this.Set('State', value);
+    }
+
+    /**
+    * * Field Name: ZIP
+    * * Display Name: ZIP Code
+    * * SQL Data Type: nvarchar(10)
+    * * Description: ZIP code, as returned by the locator source.
+    */
+    get ZIP(): string | null {
+        return this.Get('ZIP');
+    }
+    set ZIP(value: string | null) {
+        this.Set('ZIP', value);
+    }
+
+    /**
+    * * Field Name: County
+    * * Display Name: County
+    * * SQL Data Type: nvarchar(50)
+    * * Description: Indiana county name (DLGF numbering -- see Big_Box_Retail/states/indiana/data/COUNTY_CODES.md), derived from the matched parcel's county code.
+    */
+    get County(): string | null {
+        return this.Get('County');
+    }
+    set County(value: string | null) {
+        this.Set('County', value);
+    }
+
+    /**
+    * * Field Name: Latitude
+    * * Display Name: Latitude
+    * * SQL Data Type: decimal(9, 6)
+    * * Description: Latitude in decimal degrees, from the locator source (OpenStreetMap Overpass or Nominatim).
+    */
+    get Latitude(): number | null {
+        return this.Get('Latitude');
+    }
+    set Latitude(value: number | null) {
+        this.Set('Latitude', value);
+    }
+
+    /**
+    * * Field Name: Longitude
+    * * Display Name: Longitude
+    * * SQL Data Type: decimal(9, 6)
+    * * Description: Longitude in decimal degrees, from the locator source (OpenStreetMap Overpass or Nominatim).
+    */
+    get Longitude(): number | null {
+        return this.Get('Longitude');
+    }
+    set Longitude(value: number | null) {
+        this.Set('Longitude', value);
+    }
+
+    /**
+    * * Field Name: LocatorSource
+    * * Display Name: Locator Source
+    * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * nominatim
+    *   * nominatim+overpass
+    *   * overpass
+    * * Description: Which store-locator source(s) found this store: overpass, nominatim, or both (nominatim+overpass).
+    */
+    get LocatorSource(): 'nominatim' | 'nominatim+overpass' | 'overpass' | null {
+        return this.Get('LocatorSource');
+    }
+    set LocatorSource(value: 'nominatim' | 'nominatim+overpass' | 'overpass' | null) {
+        this.Set('LocatorSource', value);
+    }
+
+    /**
+    * * Field Name: MatchMethod
+    * * Display Name: Match Method
+    * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * exact addr
+    *   * owner + city
+    *   * street + near #
+    *   * subset street + #
+    * * Description: Which address-matching tier confirmed this store against a county assessor parcel -- see Big_Box_Retail/states/indiana/data/README.md for the methodology and how each tier was verified.
+    */
+    get MatchMethod(): 'exact addr' | 'owner + city' | 'street + near #' | 'subset street + #' | null {
+        return this.Get('MatchMethod');
+    }
+    set MatchMethod(value: 'exact addr' | 'owner + city' | 'street + near #' | 'subset street + #' | null) {
+        this.Set('MatchMethod', value);
+    }
+
+    /**
+    * * Field Name: ParcelCount
+    * * Display Name: Parcel Count
+    * * SQL Data Type: int
+    * * Default Value: 0
+    * * Description: Number of assessor parcels this store's building spans (a store is often 2-4 parcels: pad, parking, outlots).
+    */
+    get ParcelCount(): number {
+        return this.Get('ParcelCount');
+    }
+    set ParcelCount(value: number) {
+        this.Set('ParcelCount', value);
+    }
+
+    /**
+    * * Field Name: Parcels
+    * * Display Name: Parcels
+    * * SQL Data Type: nvarchar(MAX)
+    * * Description: Delimited county:parcel;county:parcel... list of every matched assessor parcel, using DLGF county numbers.
+    */
+    get Parcels(): string | null {
+        return this.Get('Parcels');
+    }
+    set Parcels(value: string | null) {
+        this.Set('Parcels', value);
+    }
+
+    /**
+    * * Field Name: TotalBuildingSqFt
+    * * Display Name: Total Building Square Feet
+    * * SQL Data Type: int
+    * * Description: Sum of building square footage across this store's matched parcels.
+    */
+    get TotalBuildingSqFt(): number | null {
+        return this.Get('TotalBuildingSqFt');
+    }
+    set TotalBuildingSqFt(value: number | null) {
+        this.Set('TotalBuildingSqFt', value);
+    }
+
+    /**
+    * * Field Name: MaxBuildingSqFt
+    * * Display Name: Max Building Square Feet
+    * * SQL Data Type: int
+    * * Description: Max building square footage across this store's matched parcels.
+    */
+    get MaxBuildingSqFt(): number | null {
+        return this.Get('MaxBuildingSqFt');
+    }
+    set MaxBuildingSqFt(value: number | null) {
+        this.Set('MaxBuildingSqFt', value);
+    }
+
+    /**
+    * * Field Name: TotalAssessedValue
+    * * Display Name: Total Assessed Value
+    * * SQL Data Type: money
+    * * Description: Sum of total assessed value (land + improvement) across this store's matched parcels, in dollars.
+    */
+    get TotalAssessedValue(): number | null {
+        return this.Get('TotalAssessedValue');
+    }
+    set TotalAssessedValue(value: number | null) {
+        this.Set('TotalAssessedValue', value);
+    }
+
+    /**
+    * * Field Name: Tenure
+    * * Display Name: Tenure
+    * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * leased / investor
+    *   * retailer-owned
+    * * Description: Whether the matched parcel's owner is the retailer itself (retailer-owned) or a separate landlord/investor (leased / investor).
+    */
+    get Tenure(): 'leased / investor' | 'retailer-owned' | null {
+        return this.Get('Tenure');
+    }
+    set Tenure(value: 'leased / investor' | 'retailer-owned' | null) {
+        this.Set('Tenure', value);
+    }
+
+    /**
+    * * Field Name: OwnerName
+    * * Display Name: Owner Name
+    * * SQL Data Type: nvarchar(200)
+    * * Description: County assessor's owner-of-record name for the matched parcel(s).
+    */
+    get OwnerName(): string | null {
+        return this.Get('OwnerName');
+    }
+    set OwnerName(value: string | null) {
+        this.Set('OwnerName', value);
+    }
+
+    /**
+    * * Field Name: AppealCount
+    * * Display Name: Appeal Count
+    * * SQL Data Type: int
+    * * Default Value: 0
+    * * Description: Number of PTABOA appeals on record for this store's matched parcel(s).
+    */
+    get AppealCount(): number {
+        return this.Get('AppealCount');
+    }
+    set AppealCount(value: number) {
+        this.Set('AppealCount', value);
+    }
+
+    /**
+    * * Field Name: LastAppealYear
+    * * Display Name: Last Appeal Year
+    * * SQL Data Type: smallint
+    * * Description: Most recent assessment year with an appeal on record, if any.
+    */
+    get LastAppealYear(): number | null {
+        return this.Get('LastAppealYear');
+    }
+    set LastAppealYear(value: number | null) {
+        this.Set('LastAppealYear', value);
+    }
+
+    /**
+    * * Field Name: TaxReps
+    * * Display Name: Tax Representatives
+    * * SQL Data Type: nvarchar(300)
+    * * Description: Tax representative(s) of record from the most recent appeal, if any.
+    */
+    get TaxReps(): string | null {
+        return this.Get('TaxReps');
+    }
+    set TaxReps(value: string | null) {
+        this.Set('TaxReps', value);
+    }
+
+    /**
+    * * Field Name: SourceFile
+    * * Display Name: Source File
+    * * SQL Data Type: nvarchar(300)
+    * * Description: Path/name of the CSV file this row was last imported from -- provenance for every row, per this project's documentation standard.
+    */
+    get SourceFile(): string {
+        return this.Get('SourceFile');
+    }
+    set SourceFile(value: string) {
+        this.Set('SourceFile', value);
+    }
+
+    /**
+    * * Field Name: ImportedAt
+    * * Display Name: Imported At
+    * * SQL Data Type: datetimeoffset
+    * * Description: When this row was last written by the importer script.
+    */
+    get ImportedAt(): Date {
+        return this.Get('ImportedAt');
+    }
+    set ImportedAt(value: Date) {
+        this.Set('ImportedAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_Latitude
+    * * Display Name: Mj Latitude
+    * * SQL Data Type: decimal(9, 6)
+    */
+    get __mj_Latitude(): number | null {
+        return this.Get('__mj_Latitude');
+    }
+
+    /**
+    * * Field Name: __mj_Longitude
+    * * Display Name: Mj Longitude
+    * * SQL Data Type: decimal(9, 6)
+    */
+    get __mj_Longitude(): number | null {
+        return this.Get('__mj_Longitude');
     }
 }
 

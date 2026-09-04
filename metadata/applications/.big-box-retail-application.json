@@ -1,0 +1,28 @@
+{
+  "fields": {
+    "Name": "Big Box Retail",
+    "Description": "Indiana big-box retail store roster — address/owner-confirmed stores from the separate Big Box Retail research project, cross-checked against SEC 10-K store counts and the retailers' own store directories.",
+    "Icon": "fa-solid fa-store",
+    "DefaultForNewUser": false,
+    "DefaultSequence": 1200,
+    "DefaultNavItems": [
+      {
+        "Label": "Stores",
+        "Icon": "fa-solid fa-store",
+        "ResourceType": "User Views",
+        "RecordID": "DF0F833D-0F8A-4334-BCE4-A5B35DA11B95",
+        "isDefault": true
+      }
+    ]
+  },
+  "relatedEntities": {
+    "MJ: Application Entities": []
+  },
+  "primaryKey": {
+    "ID": "9260B6AA-D342-4CF5-B300-BD8EB1DF6469"
+  },
+  "sync": {
+    "lastModified": "2026-09-04T13:18:29.347Z",
+    "checksum": "10a1feabbcad56149b6e9a185eeb0cb0249f95e56b5c06116b785d2024d7739f"
+  }
+}
