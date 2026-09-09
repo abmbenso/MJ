@@ -1,0 +1,439 @@
+<mj-page-layout>
+  <mj-page-header
+    Title="Tax Bill Projection"
+    Icon="fa-solid fa-file-lines"
+    Subtitle="The projection in the shape of the taxpayer's own TS-1 bill — line items down, pay years across.">
+
+    <div meta>
+      @if (SelectedParcel) {
+        <mj-stat-badge Icon="fa-solid fa-map-pin" [Label]="SelectedParcel.GISParcelNumber" Variant="default" />
+      }
+    </div>
+
+    <div actions>
+      @if (SelectedParcel) {
+        <mj-refresh-button [Loading]="IsLoading" (Clicked)="OnParcelSelected(SelectedParcel)"></mj-refresh-button>
+      }
+    </div>
+
+    <div toolbar>
+      <div class="parcel-search">
+        <input
+          class="mj-input"
+          type="text"
+          placeholder="Search by address, parcel #, or GIS parcel #..."
+          [value]="SearchTerm"
+          (input)="OnSearchTermChange($any($event.target).value)" />
+        @if (SearchResults.length) {
+          <div class="search-results">
+            @for (r of SearchResults; track r.ID) {
+              <button type="button" class="search-result" (click)="OnParcelSelected(r)">
+                <span class="num">{{ r.GISParcelNumber }}</span>
+                <span class="addr">{{ r.Address }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+
+      @if (HasBillShape) {
+        <div class="bill-controls">
+          <div class="scenario-picker" role="group" aria-label="Projection scenario">
+            @for (name of ScenarioNames; track name) {
+              <button
+                type="button"
+                mjButton
+                size="sm"
+                [variant]="ActiveScenario === name ? 'primary' : 'outline'"
+                (click)="OnScenarioChange(name)">
+                {{ ScenarioMeta[name].label }}
+              </button>
+            }
+          </div>
+          <button type="button" mjButton size="sm" [variant]="ShowAssumptions ? 'primary' : 'outline'" (click)="OnToggleAssumptions()">
+            <i class="fa-solid fa-sliders"></i>
+            Assumptions
+          </button>
+          <button type="button" mjButton size="sm" variant="flat" (click)="OnToggleColumnWindow()">
+            <i class="fa-solid" [class.fa-arrows-left-right]="!ShowAllColumns" [class.fa-compress]="ShowAllColumns"></i>
+            {{ ShowAllColumns ? 'Recent years' : 'All ' + TotalColumnCount + ' years' }}
+          </button>
+        </div>
+      }
+    </div>
+  </mj-page-header>
+
+  <mj-page-body>
+    @if (LoadError) {
+      <mj-alert Variant="error" [Message]="LoadError"></mj-alert>
+    }
+
+    @if (IsLoading) {
+      <mj-loading text="Loading parcel bill..."></mj-loading>
+    } @else if (!SelectedParcel) {
+      <mj-empty-state
+        Icon="fa-solid fa-file-lines"
+        Title="Search for a parcel"
+        Message="Look up a Marion County parcel to see its filed tax bills and a projected bill in the same TS-1 format.">
+      </mj-empty-state>
+    } @else if (!HasBillShape) {
+      <!-- No filed bills means no bill to shape and no calibration. Saying so is the honest
+           answer; rendering a bill-shaped grid out of invented lines is not. -->
+      <mj-empty-state
+        Icon="fa-solid fa-file-circle-question"
+        Title="No filed tax bills for this parcel"
+        Message="This view builds on the parcel's own DLGF bills, and none are loaded for it. The Tax Budget Projection view still works — it projects from assessment history alone.">
+      </mj-empty-state>
+    } @else {
+      <div class="bill-sheet">
+        <div class="bill-head">
+          <div class="bill-title">
+            <div class="who">{{ SelectedParcel.Address }}</div>
+            <div class="what">
+              Parcel {{ SelectedParcel.GISParcelNumber }} · TS-1 Table 1 ·
+              projected under <strong>{{ ScenarioLabel }}</strong>
+            </div>
+          </div>
+        </div>
+
+        <div class="bill-scroll">
+          <table class="bill-table">
+            <thead>
+              <tr class="band">
+                <th class="ts" scope="col"></th>
+                <th class="line-label" scope="col"></th>
+                @for (c of VisibleColumns; track c.payYear) {
+                  <th class="fig" scope="col" [class.is-projected]="c.isProjected" [class.band-start]="c.isProjected && !VisibleColumns[$index - 1]?.isProjected">
+                    {{ c.isProjected ? 'Projected' : 'Actual' }}
+                  </th>
+                }
+              </tr>
+              <tr>
+                <th class="ts" scope="col">Line</th>
+                <th class="line-label" scope="col">&nbsp;</th>
+                @for (c of VisibleColumns; track c.payYear) {
+                  <th class="fig" scope="col" [class.is-projected]="c.isProjected" [class.band-start]="c.isProjected && !VisibleColumns[$index - 1]?.isProjected">
+                    <span class="ay">{{ c.assessmentYear }}</span>
+                    <span class="py">pay {{ c.payYear }}</span>
+                  </th>
+                }
+              </tr>
+            </thead>
+            <tbody>
+              @for (row of GridRows; track row.key) {
+                <tr
+                  [class.is-total]="row.key === 'totalDue'"
+                  [class.is-subtotal]="row.key === 'netAV' || row.key === 'grossTax'"
+                  [class.is-breakdown]="row.isBreakdown">
+                  <td class="ts">{{ row.tsLine }}</td>
+                  <th class="line-label" scope="row">{{ row.label }}</th>
+                  @for (f of row.figures; track $index) {
+                    <td
+                      class="fig"
+                      [class.is-projected]="VisibleColumns[$index].isProjected"
+                      [class.band-start]="VisibleColumns[$index].isProjected && !VisibleColumns[$index - 1]?.isProjected">
+                      <span class="amt">{{ FormatFigure(row, f) }}</span>
+                      @if (f.value !== null) {
+                        <span
+                          class="prov"
+                          [class.is-actual]="f.source === 'actual'"
+                          [title]="f.source === 'actual' ? 'Actual — as filed with DLGF' : 'Projected'">{{ ProvenanceMark(f) }}</span>
+                      }
+                    </td>
+                  }
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+
+        @if (CapRows.length) {
+          <div class="cap-block">
+            <div class="cap-title">TS-1 Table 2 · Circuit breaker (IC 6-1.1-20.6)</div>
+            <div class="bill-scroll">
+              <table class="bill-table cap-table">
+                <tbody>
+                  @for (row of CapRows; track row.key) {
+                    <tr>
+                      <td class="ts">{{ row.tsLine }}</td>
+                      <th class="line-label" scope="row">{{ row.label }}</th>
+                      @for (f of row.figures; track $index) {
+                        <td class="fig" [class.is-projected]="VisibleColumns[$index].isProjected">
+                          <span class="amt">{{ FormatFigure(row, f) }}</span>
+                        </td>
+                      }
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          </div>
+        }
+
+        @if (ShowAssumptions) {
+          <div class="assumptions">
+            <div class="assumptions-head">
+              <div>
+                <div class="cap-title">Assumptions · {{ ScenarioLabel }}</div>
+                <div class="assumptions-sub">
+                  The top three rows are yearly <strong>growth</strong> applied to the assessment — land and
+                  improvements move independently, because improvements usually carry the volatility.
+                  The bill-line rows below are <strong>absolute values</strong> for that year, so an abatement
+                  burning off, a deduction lost, a reclassification, or a referendum passing can be modelled
+                  year by year.
+                </div>
+              </div>
+              <div class="head-actions">
+                @if (BillIsEdited) {
+                  <mj-stat-badge Icon="fa-solid fa-pen" Label="Bill lines edited" Variant="warning" />
+                }
+                <button type="button" mjButton size="sm" variant="outline" (click)="OnResetScenario()">
+                  <i class="fa-solid fa-rotate-left"></i> Reset {{ ScenarioLabel }}
+                </button>
+              </div>
+            </div>
+
+            @if (SaleAdjustment) {
+              <p class="note">
+                <strong>Recent sale on file:</strong> {{ SaleAdjustment.saleYear }} for
+                {{ SaleAdjustment.salePrice | currency: 'USD':'symbol':'1.0-0' }},
+                {{ SaleAdjustment.gap / SaleAdjustment.avAtSale | percent: '1.1-1' }} above its then-current AV of
+                {{ SaleAdjustment.avAtSale | currency: 'USD':'symbol':'1.0-0' }} ({{ SaleAdjustment.propertyType }}).
+              </p>
+            }
+            @if (ActiveAssumptions.probability != null) {
+              <p class="note">
+                Probability of this scenario: <strong>{{ ActiveAssumptions.probability | percent: '1.0-0' }}</strong>
+                @if (ActiveAssumptions.probabilitySource) { — {{ ActiveAssumptions.probabilitySource }} }
+              </p>
+            } @else if (ActiveAssumptions.probabilitySource) {
+              <p class="note">{{ ActiveAssumptions.probabilitySource }}</p>
+            }
+
+            <div class="bill-scroll">
+              <table class="bill-table assumption-table">
+                <thead>
+                  <tr>
+                    <th class="line-label" scope="col">Yearly %</th>
+                    @for (i of ProjectedYearIndexes; track i) {
+                      <th class="fig" scope="col">
+                        <span class="ay">{{ BaseYear + i + 1 }}</span>
+                        <span class="py">pay {{ BaseYear + i + 2 }}</span>
+                      </th>
+                    }
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <th class="line-label" scope="row">Land</th>
+                    @for (v of ActiveAssumptions.land; track $index) {
+                      <td class="fig">
+                        @if ($index === PinnedYearIndex) {
+                          <span class="locked" title="The Assessor has already set this year's assessed value — it is not a projection input.">set</span>
+                        } @else {
+                          <input
+                            class="mj-input pct-input"
+                            type="number"
+                            step="0.1"
+                            aria-label="Land growth"
+                            [value]="(v * 100).toFixed(1)"
+                            (change)="OnAssumptionChange('land', $index, $any($event.target).value)" />
+                        }
+                      </td>
+                    }
+                  </tr>
+                  <tr>
+                    <th class="line-label" scope="row">Improvements</th>
+                    @for (v of ActiveAssumptions.imp; track $index) {
+                      <td class="fig">
+                        @if ($index === PinnedYearIndex) {
+                          <span class="locked" title="The Assessor has already set this year's assessed value — it is not a projection input.">set</span>
+                        } @else {
+                          <input
+                            class="mj-input pct-input"
+                            type="number"
+                            step="0.1"
+                            aria-label="Improvement growth"
+                            [value]="(v * 100).toFixed(1)"
+                            (change)="OnAssumptionChange('imp', $index, $any($event.target).value)" />
+                        }
+                      </td>
+                    }
+                  </tr>
+                  <tr>
+                    <th class="line-label" scope="row">Tax rate</th>
+                    @for (v of ActiveAssumptions.rate; track $index) {
+                      <td class="fig">
+                        <input
+                          class="mj-input pct-input"
+                          type="number"
+                          step="0.1"
+                          aria-label="Tax rate growth"
+                          [value]="(v * 100).toFixed(1)"
+                          (change)="OnAssumptionChange('rate', $index, $any($event.target).value)" />
+                      </td>
+                    }
+                  </tr>
+
+                  <tr class="group-break">
+                    <th class="line-label group-head" scope="row" [attr.colspan]="ProjectedYearIndexes.length + 1">
+                      Bill lines — absolute values, not growth
+                    </th>
+                  </tr>
+                  <tr>
+                    <th class="line-label" scope="row"><span class="ts-ref">2a</span> Deductions (% of gross AV)</th>
+                    @for (v of ActiveBill.deductionPct; track $index) {
+                      <td class="fig">
+                        <input
+                          class="mj-input pct-input"
+                          type="number"
+                          step="0.1"
+                          aria-label="Deductions as a percent of gross assessed value"
+                          [value]="v"
+                          (change)="OnBillAssumptionChange('deductionPct', $index, $any($event.target).value)" />
+                      </td>
+                    }
+                  </tr>
+                  <tr>
+                    <th class="line-label" scope="row"><span class="ts-ref">4b</span> Outside-cap uplift (%)</th>
+                    @for (v of ActiveBill.upliftPct; track $index) {
+                      <td class="fig">
+                        <input
+                          class="mj-input pct-input"
+                          type="number"
+                          step="0.1"
+                          aria-label="Outside-cap uplift percent"
+                          [value]="v"
+                          (change)="OnBillAssumptionChange('upliftPct', $index, $any($event.target).value)" />
+                      </td>
+                    }
+                  </tr>
+                  <tr>
+                    <th class="line-label" scope="row"><span class="ts-ref">4b</span> Cap ceiling (% of gross AV)</th>
+                    @for (v of ActiveBill.capRatePct; track $index) {
+                      <td class="fig">
+                        <input
+                          class="mj-input pct-input"
+                          type="number"
+                          step="0.1"
+                          aria-label="Statutory circuit breaker ceiling as a percent of gross assessed value"
+                          [value]="v"
+                          (change)="OnBillAssumptionChange('capRatePct', $index, $any($event.target).value)" />
+                      </td>
+                    }
+                  </tr>
+                  <tr>
+                    <th class="line-label" scope="row"><span class="ts-ref">T4</span> Other charges ($)</th>
+                    @for (v of ActiveBill.otherCharges; track $index) {
+                      <td class="fig">
+                        <input
+                          class="mj-input av-input-sm"
+                          type="number"
+                          step="1"
+                          aria-label="Other charges in dollars"
+                          [value]="v"
+                          (change)="OnBillAssumptionChange('otherCharges', $index, $any($event.target).value)" />
+                      </td>
+                    }
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="override-row">
+              <label class="override-label">
+                <input
+                  type="checkbox"
+                  class="mj-checkbox"
+                  [checked]="ActiveAssumptions.override.enabled"
+                  (change)="OnOverrideToggle($any($event.target).checked)" />
+                Set an exact total AV for
+              </label>
+              <select
+                class="mj-input year-select"
+                [disabled]="!ActiveAssumptions.override.enabled"
+                (change)="OnOverrideYearChange(+$any($event.target).value)">
+                @for (y of OverridableYears; track y) {
+                  <option [value]="y" [selected]="ActiveAssumptions.override.year === y">
+                    {{ BaseYear + y }} (pay {{ BaseYear + y + 1 }})
+                  </option>
+                }
+              </select>
+              <input
+                class="mj-input av-input"
+                type="number"
+                placeholder="Total AV $"
+                aria-label="Override total assessed value"
+                [disabled]="!ActiveAssumptions.override.enabled"
+                [value]="ActiveAssumptions.override.value ?? ''"
+                (input)="OnOverrideValueChange($any($event.target).value)" />
+            </div>
+            <p class="note">
+              An override replaces that year's projected total AV outright; later years grow from it.
+              The bridge year is not listed — a published assessment cannot be re-projected.
+            </p>
+          </div>
+        }
+
+        <div class="bill-notes">
+          <div class="prov-legend">
+            <span class="prov is-actual">●</span> actual &nbsp; <span class="prov">‡</span> projected &nbsp;
+            <span class="dash">—</span> not available (never assumed to be zero)
+            @if (KnownAV) {
+              <span class="legend-note">
+                — {{ KnownAV.year }}'s assessment is set; its rate is projected until DLGF certifies it in early {{ KnownAV.year + 1 }}.
+              </span>
+            }
+          </div>
+
+          @if (BillCalibration) {
+            <p class="note">
+              @if (BillIsEdited) {
+                <strong>Bill lines have been edited by hand for {{ ScenarioLabel }}.</strong>
+                The projected bill below is your model, not the one derived from this parcel's filed bills —
+                so the Tax Budget Projection view, which has no such control, will legitimately disagree with it.
+                Its calibrated starting point was
+              } @else {
+                Projected lines use this parcel's own bill shape from its {{ BillCalibration.years }} filed
+                {{ BillCalibration.years === 1 ? 'bill' : 'bills' }}:
+              }
+              deductions at {{ (BillCalibration.deductionRatio * 100).toFixed(1) }}% of gross AV, and an
+              outside-cap uplift of {{ (BillCalibration.uplift * 100).toFixed(1) }}%
+              @if (BillCalibration.upliftSource === 'parcel') {
+                measured from its own capped years.
+              } @else {
+                from a county-wide placeholder, because this parcel has never been capped.
+              }
+            </p>
+            <p class="note">
+              Line 4a is absent from the projected columns by design: the uplift above is an effective figure
+              already net of local credits, so projecting a separate 4a would double-count them.
+            </p>
+            @if (BillCalibration.capClass) {
+              <p class="note">
+                Cap ceiling is the statutory circuit-breaker rate (IC 6-1.1-20.6) applied to gross AV. This
+                parcel calibrates to <strong>{{ (CalibratedCapRate * 100).toFixed(2) }}%</strong> from its
+                <strong>{{ BillCalibration.capClass }}</strong> class mix; editing it models the effect of a
+                reclassification, which does happen — 14,814 Marion parcels moved 3% to 2% in pay-2025 alone.
+              </p>
+            }
+          }
+
+          @if (FallbackUpliftIsBinding) {
+            <mj-alert
+              Variant="warning"
+              Message="The cap binds in a projected year, but this parcel has never been capped — so the ceiling rests on a county-wide placeholder uplift, not on this parcel's own history. Treat the projected total as indicative.">
+            </mj-alert>
+          }
+
+          @if (IsMultifamilyCapClass) {
+            <mj-alert
+              Variant="info"
+              Message="This parcel sits in the OtherResidential cap class (2%), where estimating tax as AV × rate is reliably wrong. The circuit-breaker line below is doing real work here.">
+            </mj-alert>
+          }
+        </div>
+      </div>
+    }
+  </mj-page-body>
+</mj-page-layout>

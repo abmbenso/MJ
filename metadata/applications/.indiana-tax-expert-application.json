@@ -21,6 +21,20 @@
           "ResourceType": "Custom",
           "DriverClass": "OwnerProspectsResource",
           "isDefault": false
+        },
+        {
+          "Label": "Tax Budget Projection",
+          "Icon": "fa-solid fa-file-invoice-dollar",
+          "ResourceType": "Custom",
+          "DriverClass": "TaxBudgetProjectionResource",
+          "isDefault": false
+        },
+        {
+          "Label": "Tax Bill Projection V2",
+          "Icon": "fa-solid fa-file-lines",
+          "ResourceType": "Custom",
+          "DriverClass": "TaxBillProjectionResource",
+          "isDefault": false
         }
       ]
     },
@@ -31,8 +45,8 @@
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
     },
     "sync": {
-      "lastModified": "2026-09-03T04:39:15.695Z",
-      "checksum": "54c3fbaa61abbf4c27e9092fe4bde7b6d5b97c45271d74c36a78f2751eb4317f"
+      "lastModified": "2026-09-08T23:04:57.177Z",
+      "checksum": "063a2ab9cfef878e6049bbfe83d237d9bf2d70ef290484469f1505ff28905e6d"
     }
   }
 ]

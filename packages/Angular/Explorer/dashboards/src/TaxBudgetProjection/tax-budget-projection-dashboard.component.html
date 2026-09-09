@@ -1,0 +1,255 @@
+<mj-page-layout>
+  <mj-page-header
+    Title="Tax Budget Projection"
+    Icon="fa-solid fa-file-invoice-dollar"
+    Subtitle="5 years of history and 5 years of projection, three probability-weighted scenarios, every assumption editable.">
+
+    <div meta>
+      @if (SelectedParcel) {
+        <mj-stat-badge Icon="fa-solid fa-map-pin" [Label]="SelectedParcel.GISParcelNumber" Variant="default" />
+      }
+    </div>
+
+    <div actions>
+      @if (SelectedParcel) {
+        <mj-refresh-button [Loading]="IsLoading" (Clicked)="OnParcelSelected(SelectedParcel)"></mj-refresh-button>
+      }
+    </div>
+
+    <div toolbar>
+      <div class="parcel-search">
+        <input
+          class="mj-input"
+          type="text"
+          placeholder="Search by address, parcel #, or GIS parcel #..."
+          [value]="SearchTerm"
+          (input)="OnSearchTermChange($any($event.target).value)" />
+        @if (SearchResults.length) {
+          <div class="search-results">
+            @for (r of SearchResults; track r.ID) {
+              <button type="button" class="search-result" (click)="OnParcelSelected(r)">
+                <span class="num">{{ r.GISParcelNumber }}</span>
+                <span class="addr">{{ r.Address }}</span>
+              </button>
+            }
+          </div>
+        }
+      </div>
+    </div>
+  </mj-page-header>
+
+  <mj-page-body>
+    @if (LoadError) {
+      <mj-alert Variant="error" [Message]="LoadError"></mj-alert>
+    }
+    @if (IsLoading) {
+      <mj-loading text="Loading parcel budget..."></mj-loading>
+    } @else if (!SelectedParcel) {
+      <mj-empty-state
+        Icon="fa-solid fa-file-invoice-dollar"
+        Title="Search for a parcel"
+        Message="Look up a Marion County commercial or industrial parcel by address, parcel number, or GIS parcel number to see its 10-year tax budget.">
+      </mj-empty-state>
+    } @else {
+      <div class="subject-strip">
+        <div class="cell wide">
+          <div class="label">Address</div>
+          <div class="value">{{ SelectedParcel.Address }}</div>
+        </div>
+        <div class="cell">
+          <div class="label">Base Year</div>
+          <div class="value num">{{ BaseYear }} <span class="pay">pay {{ BaseYear + 1 }}</span></div>
+        </div>
+        <div class="cell">
+          <div class="label">Base Total AV</div>
+          <div class="value num">{{ (BaseLand + BaseImp) | currency: 'USD':'symbol':'1.0-0' }}</div>
+        </div>
+        <div class="cell">
+          <div class="label">Base Tax Rate</div>
+          <div class="value num small">{{ BaseRate | number: '1.4-4' }}%</div>
+        </div>
+        @if (KnownAV) {
+          <div class="cell">
+            <div class="label">{{ KnownAV.year }} AV (set)</div>
+            <div class="value num">{{ CurrentAV | currency: 'USD':'symbol':'1.0-0' }}</div>
+          </div>
+        }
+      </div>
+
+      @if (BillCalibration) {
+        <div class="calibration-note">
+          <strong>Projected from this parcel's own bills.</strong>
+          Tax is computed on <em>net</em> assessed value and limited by the
+          {{ BillCalibration.capClass === 'Homestead' ? '1%' : BillCalibration.capClass === 'OtherResidential' ? '2%' : '3%' }}
+          circuit-breaker cap — not <code>AV × rate</code>.
+          Deductions average {{ BillCalibration.deductionRatio | percent: '1.1-1' }} of gross AV;
+          outside-cap uplift {{ BillCalibration.uplift | percent: '1.1-1' }}
+          (<em>{{ BillCalibration.upliftSource === 'parcel' ? 'this parcel’s own capped years' : 'county fallback — this parcel has never been capped' }}</em>),
+          from {{ BillCalibration.years }} year(s) of DLGF bills.
+          @if (FallbackUpliftIsBinding) {
+            <span class="mf-flag">⚠️ This parcel has never been capped, so the outside-cap uplift above is a
+            county-wide placeholder — and a scenario here does push it into the cap, so that placeholder
+            is affecting the number. Marion districts range from −0.5% to +27%. Treat these capped years
+            as indicative.</span>
+          }
+          @if (IsMultifamilyCapClass) {
+            <span class="mf-flag">2% cap class (multifamily/rental) — the old <code>AV × rate</code> formula was wrong on every parcel in this class.</span>
+          }
+        </div>
+      }
+
+      @if (SaleAdjustment) {
+        <div class="sale-note">
+          <strong>Recent sale on file:</strong> {{ SaleAdjustment.saleYear }} for {{ SaleAdjustment.salePrice | currency: 'USD':'symbol':'1.0-0' }},
+          {{ (SaleAdjustment.gap / SaleAdjustment.avAtSale) | percent: '1.1-1' }} above its then-current AV of
+          {{ SaleAdjustment.avAtSale | currency: 'USD':'symbol':'1.0-0' }} ({{ SaleAdjustment.propertyType }}).
+        </div>
+      }
+
+      <div class="section-label">Historical — actual assessment, actual rate, billed</div>
+      <div class="table-scroll">
+        <table class="data">
+          <thead>
+            <tr>
+              <th>Assessment → Pay</th><th>Land</th><th>Improvement</th><th>Total AV</th><th>Tax Rate</th><th>Annual Tax</th>
+            </tr>
+          </thead>
+          <tbody>
+            @for (r of HistoricalRows; track r.Year) {
+              <tr>
+                <td class="num">{{ r.Year }} <span class="pay">→ {{ r.Year + 1 }}</span></td>
+                <td class="num">{{ r.Land | currency: 'USD':'symbol':'1.0-0' }}</td>
+                <td class="num">{{ r.Improvement | currency: 'USD':'symbol':'1.0-0' }}</td>
+                <td class="num">{{ r.TotalAV | currency: 'USD':'symbol':'1.0-0' }}</td>
+                <td class="num">{{ r.TaxRate | number: '1.4-4' }}%</td>
+                <td class="num">
+                  @if (r.Tax != null) { {{ r.Tax | currency: 'USD':'symbol':'1.0-0' }} }
+                  @else { <span class="tax-unknown">not yet billed</span> }
+                </td>
+              </tr>
+            }
+          </tbody>
+        </table>
+      </div>
+
+      <div class="section-label">Projection scenarios — every rate below is editable</div>
+      <div class="scenario-grid">
+        @for (name of ScenarioNames; track name) {
+          <div class="scenario-card" [class]="ScenarioMeta[name].cssClass">
+            <div class="scenario-head">
+              <h3>{{ ScenarioMeta[name].label }}</h3>
+              @if (Scenarios[name].probability != null) {
+                <span class="prob-pill">P = {{ Scenarios[name].probability | percent: '1.0-0' }}</span>
+              } @else {
+                <span class="prob-pill fallback">trend fallback</span>
+              }
+            </div>
+
+            <div class="assumption-grid">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Yearly %</th>
+                    @for (y of [1, 2, 3, 4, 5]; track y) { <th>{{ BaseYear + y }}<span class="pay">pay {{ BaseYear + y + 1 }}</span></th> }
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr>
+                    <td>Land</td>
+                    @for (v of Scenarios[name].land; track $index) {
+                      @if ($index === PinnedYearIndex) {
+                        <td class="locked" title="The Assessor has already set this year's assessed value — it is not a projection input.">set</td>
+                      } @else {
+                        <td><input class="pct-input" type="number" step="0.1" [value]="(v * 100).toFixed(1)"
+                          (change)="OnAssumptionChange(name, 'land', $index, $any($event.target).value)">%</td>
+                      }
+                    }
+                  </tr>
+                  <tr>
+                    <td>Improvement</td>
+                    @for (v of Scenarios[name].imp; track $index) {
+                      @if ($index === PinnedYearIndex) {
+                        <td class="locked" title="The Assessor has already set this year's assessed value — it is not a projection input.">set</td>
+                      } @else {
+                        <td><input class="pct-input" type="number" step="0.1" [value]="(v * 100).toFixed(1)"
+                          (change)="OnAssumptionChange(name, 'imp', $index, $any($event.target).value)">%</td>
+                      }
+                    }
+                  </tr>
+                  <tr>
+                    <td>Tax Rate</td>
+                    @for (v of Scenarios[name].rate; track $index) {
+                      <td><input class="pct-input" type="number" step="0.1" [value]="(v * 100).toFixed(1)"
+                        (change)="OnAssumptionChange(name, 'rate', $index, $any($event.target).value)">%</td>
+                    }
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <div class="override-row">
+              <label>
+                <input type="checkbox" [checked]="Scenarios[name].override.enabled"
+                  (change)="OnOverrideToggle(name, $any($event.target).checked)">
+                Set exact AV for
+              </label>
+              <select class="year-select" [disabled]="!Scenarios[name].override.enabled"
+                (change)="OnOverrideYearChange(name, +$any($event.target).value)">
+                @for (y of OverridableYears; track y) {
+                  <option [value]="y" [selected]="Scenarios[name].override.year === y">{{ BaseYear + y }} (pay {{ BaseYear + y + 1 }})</option>
+                }
+              </select>
+              <input type="number" placeholder="Total AV $" [disabled]="!Scenarios[name].override.enabled"
+                [value]="Scenarios[name].override.value ?? ''"
+                (input)="OnOverrideValueChange(name, $any($event.target).value)">
+            </div>
+
+            <div class="results-label">Resulting projection</div>
+            <table class="data results">
+              <thead><tr><th>Assessment → Pay</th><th>Total AV</th><th>Tax Rate</th><th>Tax</th></tr></thead>
+              <tbody>
+                @for (row of ScenarioProjections[name]; track row.assessmentYear) {
+                  <tr [class.bridge-year]="row.avSource === 'actual'">
+                    <td class="num">{{ row.assessmentYear }} <span class="pay">→ {{ row.payYear }}</span></td>
+                    <td class="num">
+                      {{ row.totalAV | currency: 'USD':'symbol':'1.0-0' }}
+                      <span class="prov" [class.is-actual]="row.avSource === 'actual'"
+                        [title]="row.avSource === 'actual' ? 'Actual — set by the Assessor' : 'Projected'">{{ row.avSource === 'actual' ? '●' : '‡' }}</span>
+                    </td>
+                    <td class="num">
+                      {{ row.rate | number: '1.4-4' }}%
+                      <span class="prov" title="Projected — DLGF certifies the rate the following year">‡</span>
+                    </td>
+                    <td class="num">{{ row.tax | currency: 'USD':'symbol':'1.0-0' }}</td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+            <div class="prov-legend">
+              <span class="prov is-actual">●</span> actual &nbsp; <span class="prov">‡</span> projected
+              @if (KnownAV) {
+                <span class="legend-note">— {{ KnownAV.year }}'s assessment is set; its rate is projected until DLGF certifies it in early {{ KnownAV.year + 1 }}.</span>
+              }
+            </div>
+
+            <div class="narrative">
+              <ol>
+                @for (line of ScenarioNarratives[name]; track $index) { <li>{{ line }}</li> }
+              </ol>
+            </div>
+
+            <button type="button" class="reset-link" (click)="OnResetScenario(name)">Reset to model defaults</button>
+          </div>
+        }
+      </div>
+
+      <p class="disclaimer">
+        This is an estimate based on historical county records and a simple trend model — not a statistical guarantee, a
+        certified appraisal, or tax advice. Worst Case probabilities, where shown, come from Marion County's own historical
+        post-sale reassessment behavior for comparable transactions and describe empirical frequency, not a prediction for
+        this specific parcel. Does not model abatements, local tax credits, new-construction phase-in, or special/direct
+        assessments.
+      </p>
+    }
+  </mj-page-body>
+</mj-page-layout>

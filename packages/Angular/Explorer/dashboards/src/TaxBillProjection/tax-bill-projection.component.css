@@ -1,0 +1,373 @@
+:host {
+  display: block;
+  height: 100%;
+}
+
+/* --- parcel search (same shape as V1's, so the two views feel like one tool) --- */
+
+.parcel-search {
+  position: relative;
+  flex: 1 1 320px;
+  max-width: 520px;
+}
+
+.parcel-search .mj-input {
+  width: 100%;
+}
+
+.search-results {
+  position: absolute;
+  z-index: 20;
+  inset-inline: 0;
+  top: calc(100% + var(--mj-space-1));
+  background: var(--mj-bg-surface);
+  border: 1px solid var(--mj-border-default);
+  border-radius: var(--mj-radius-md);
+  box-shadow: var(--mj-shadow-md);
+  max-height: 320px;
+  overflow-y: auto;
+}
+
+.search-result {
+  display: flex;
+  gap: var(--mj-space-2);
+  width: 100%;
+  padding: var(--mj-space-2) var(--mj-space-3);
+  background: none;
+  border: none;
+  border-bottom: 1px solid var(--mj-border-subtle);
+  text-align: left;
+  cursor: pointer;
+  color: var(--mj-text-primary);
+}
+
+.search-result:hover {
+  background: var(--mj-bg-surface-hover);
+}
+
+.search-result .num {
+  font-variant-numeric: tabular-nums;
+  color: var(--mj-text-secondary);
+  flex: 0 0 auto;
+}
+
+.search-result .addr {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.bill-controls {
+  display: flex;
+  align-items: center;
+  gap: var(--mj-space-3);
+  flex-wrap: wrap;
+}
+
+.scenario-picker {
+  display: flex;
+  gap: var(--mj-space-1);
+}
+
+/* --- the bill sheet --- */
+
+.bill-sheet {
+  background: var(--mj-bg-surface);
+  border: 1px solid var(--mj-border-default);
+  border-radius: var(--mj-radius-md);
+  box-shadow: var(--mj-shadow-sm);
+  /* `clip`, NOT `hidden`. Both clip the inner table to the card's rounded corners, but
+     `hidden` makes this a SCROLL CONTAINER -- programmatically scrollable, not
+     user-scrollable -- and the browser stops a wheel event here instead of chaining it to
+     <mj-page-body>, which is what actually scrolls. With `hidden` the whole view was
+     unscrollable below the fold: everything under the first screenful was unreachable. */
+  overflow: clip;
+}
+
+.bill-head {
+  padding: var(--mj-space-4);
+  border-bottom: 2px solid var(--mj-border-default);
+}
+
+.bill-title .who {
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--mj-text-primary);
+}
+
+.bill-title .what {
+  margin-top: var(--mj-space-1);
+  font-size: 0.85rem;
+  color: var(--mj-text-secondary);
+}
+
+/* Ten columns of currency will not fit a laptop; the table scrolls inside its own box
+   rather than making the page scroll sideways.
+   `overflow-y: clip` is deliberate: leaving Y as `visible` would COMPUTE to `auto` (the
+   spec forces that whenever the other axis is not `visible`), making this a second
+   vertical scroll container that swallows the wheel on its way to the page body. `clip`
+   keeps the horizontal scroller without creating a vertical one. */
+.bill-scroll {
+  overflow-x: auto;
+  overflow-y: clip;
+}
+
+.bill-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.875rem;
+}
+
+.bill-table th,
+.bill-table td {
+  padding: var(--mj-space-2) var(--mj-space-3);
+  border-bottom: 1px solid var(--mj-border-subtle);
+  white-space: nowrap;
+}
+
+.bill-table thead th {
+  color: var(--mj-text-secondary);
+  font-weight: 600;
+  vertical-align: bottom;
+  border-bottom: 1px solid var(--mj-border-default);
+}
+
+.bill-table thead .band th {
+  border-bottom: none;
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  padding-bottom: 0;
+}
+
+.bill-table .ts {
+  width: 3.5rem;
+  color: var(--mj-text-muted);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+}
+
+.bill-table .line-label {
+  text-align: left;
+  font-weight: 400;
+  color: var(--mj-text-primary);
+  white-space: normal;
+  min-width: 16rem;
+}
+
+.bill-table .fig {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+  min-width: 8.5rem;
+}
+
+.bill-table thead .fig .ay {
+  display: block;
+  font-size: 0.95rem;
+  color: var(--mj-text-primary);
+}
+
+.bill-table thead .fig .py {
+  display: block;
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+/* The projected half is tinted so the eye finds the actual/projected seam without
+   having to read every provenance mark. */
+.bill-table .is-projected {
+  background: var(--mj-bg-page);
+}
+
+.bill-table .band-start {
+  border-left: 2px solid var(--mj-border-default);
+}
+
+.bill-table tr.is-subtotal .line-label,
+.bill-table tr.is-subtotal .amt {
+  font-weight: 600;
+}
+
+.bill-table tr.is-total th,
+.bill-table tr.is-total td {
+  border-top: 2px solid var(--mj-border-default);
+  border-bottom: none;
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--mj-text-primary);
+}
+
+.prov {
+  margin-left: var(--mj-space-1);
+  font-size: 0.7rem;
+  color: var(--mj-text-muted);
+}
+
+.prov.is-actual {
+  color: var(--mj-status-success);
+}
+
+/* --- Table 2 --- */
+
+.cap-block {
+  border-top: 1px solid var(--mj-border-default);
+  padding-top: var(--mj-space-3);
+}
+
+.cap-title {
+  padding: 0 var(--mj-space-4) var(--mj-space-2);
+  font-size: 0.78rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mj-text-secondary);
+}
+
+/* --- notes --- */
+
+.bill-notes {
+  padding: var(--mj-space-4);
+  border-top: 1px solid var(--mj-border-default);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mj-space-2);
+}
+
+.prov-legend {
+  font-size: 0.8rem;
+  color: var(--mj-text-secondary);
+}
+
+.prov-legend .dash {
+  color: var(--mj-text-muted);
+}
+
+.legend-note {
+  font-style: italic;
+}
+
+.note {
+  margin: 0;
+  font-size: 0.82rem;
+  line-height: 1.5;
+  color: var(--mj-text-secondary);
+}
+
+/* --- assessment breakdown rows (land / improvements) ---
+   Indented and de-emphasised: they are not TS-1 lines, they roll UP into line 2. */
+
+.bill-table tr.is-breakdown .line-label {
+  padding-left: var(--mj-space-6);
+  color: var(--mj-text-secondary);
+  font-size: 0.82rem;
+}
+
+.bill-table tr.is-breakdown .fig {
+  color: var(--mj-text-secondary);
+  font-size: 0.82rem;
+}
+
+/* --- assumptions editor --- */
+
+.assumptions {
+  padding: var(--mj-space-4);
+  border-top: 1px solid var(--mj-border-default);
+  background: var(--mj-bg-surface-sunken);
+  display: flex;
+  flex-direction: column;
+  gap: var(--mj-space-3);
+}
+
+.assumptions-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--mj-space-3);
+  flex-wrap: wrap;
+}
+
+.assumptions-head .cap-title {
+  padding: 0 0 var(--mj-space-1);
+}
+
+.assumptions-sub {
+  font-size: 0.82rem;
+  color: var(--mj-text-secondary);
+  max-width: 48rem;
+}
+
+.assumption-table .line-label {
+  min-width: 10rem;
+}
+
+.pct-input {
+  /* inline-block so the cell's text-align:right actually positions the box -- otherwise the
+     inputs sit left while the locked "set" cell sits right, and the year columns stop
+     lining up in a table whose whole job is being scanned down a year. */
+  display: inline-block;
+  width: 5.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.locked {
+  color: var(--mj-text-muted);
+  font-style: italic;
+}
+
+.override-row {
+  display: flex;
+  align-items: center;
+  gap: var(--mj-space-2);
+  flex-wrap: wrap;
+  font-size: 0.85rem;
+  color: var(--mj-text-primary);
+}
+
+.override-label {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--mj-space-2);
+}
+
+.year-select {
+  display: inline-block;
+  width: auto;
+}
+
+.av-input {
+  display: inline-block;
+  width: 11rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.head-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--mj-space-2);
+}
+
+/* The bill-line block edits absolute values, not growth rates -- the break makes that
+   change of unit visible rather than leaving it to be inferred from the row labels. */
+.assumption-table .group-break .group-head {
+  padding-top: var(--mj-space-4);
+  font-size: 0.72rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--mj-text-secondary);
+  border-bottom: 1px solid var(--mj-border-default);
+}
+
+.ts-ref {
+  display: inline-block;
+  min-width: 1.75rem;
+  color: var(--mj-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
+.av-input-sm {
+  display: inline-block;
+  width: 6.5rem;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
