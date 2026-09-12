@@ -443,3 +443,42 @@ td.locked {
   color: var(--mj-status-warning-text, var(--mj-text-primary));
   font-weight: 600;
 }
+
+/* Verification routes to the county's own documents — kept beside the history they
+   substantiate, so "where does this come from?" is answered next to the numbers. */
+.verify-strip {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--mj-space-2) var(--mj-space-4);
+  margin: var(--mj-space-3) 0 var(--mj-space-2);
+  font-size: 0.78rem;
+}
+
+.verify-label {
+  color: var(--mj-text-muted);
+}
+
+.verify-item a {
+  color: var(--mj-color-primary, var(--mj-text-primary));
+  text-decoration: none;
+  font-weight: 500;
+}
+
+.verify-item a:hover {
+  text-decoration: underline;
+}
+
+.verify-item a .fa-arrow-up-right-from-square {
+  font-size: 0.62rem;
+  opacity: 0.7;
+}
+
+.verify-note {
+  margin-left: var(--mj-space-1);
+  color: var(--mj-text-muted);
+}
+
+.verify-item.off-file .verify-note {
+  color: var(--mj-color-warning-fg, var(--mj-text-secondary));
+}

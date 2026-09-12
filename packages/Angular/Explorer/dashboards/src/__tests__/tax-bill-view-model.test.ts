@@ -7,6 +7,8 @@ import {
   billAssumptionsDifferFrom,
   blendedCapRate,
   scaledCapAV,
+  parseBillViewParams,
+  billViewParams,
   BillShape,
 } from '../TaxBillProjection/tax-bill-view-model';
 import { BillLines } from '../TaxBudgetProjection/tax-budget-projection-types';
@@ -350,5 +352,64 @@ describe('billAssumptionsDifferFrom', () => {
     const capEdit = defaultBillAssumptions(shape, 5);
     capEdit.capRatePct[1] = 3;
     expect(billAssumptionsDifferFrom(capEdit, base)).toBe(true);
+  });
+});
+
+describe('URL round-trip — parseBillViewParams', () => {
+  it('restores the parcel, scenario and column window from a deep link', () => {
+    expect(parseBillViewParams({ parcel: 'abc-123', scenario: 'WorstCase', columns: 'all' })).toEqual({
+      parcelId: 'abc-123',
+      scenario: 'WorstCase',
+      showAllColumns: true,
+    });
+  });
+
+  it('returns nulls for an empty URL rather than inventing a default parcel', () => {
+    expect(parseBillViewParams({})).toEqual({ parcelId: null, scenario: null, showAllColumns: false });
+  });
+
+  it('IGNORES an unrecognised scenario instead of guessing one', () => {
+    // A hand-edited or stale URL must not silently land the reader on a scenario they did
+    // not ask for -- a projection labelled "Worst Case" that is actually Most Likely is a
+    // number someone could rely on.
+    expect(parseBillViewParams({ scenario: 'Catastrophic' }).scenario).toBeNull();
+  });
+
+  it('accepts a scenario regardless of case, since URLs get hand-edited', () => {
+    expect(parseBillViewParams({ scenario: 'mostlikely' }).scenario).toBe('MostLikely');
+    expect(parseBillViewParams({ scenario: 'BESTCASE' }).scenario).toBe('BestCase');
+  });
+
+  it('treats any columns value other than "all" as the recent window', () => {
+    expect(parseBillViewParams({ columns: 'recent' }).showAllColumns).toBe(false);
+    expect(parseBillViewParams({ columns: 'nonsense' }).showAllColumns).toBe(false);
+    expect(parseBillViewParams({ columns: 'ALL' }).showAllColumns).toBe(true);
+  });
+});
+
+describe('URL round-trip — billViewParams', () => {
+  it('writes the state a reader would want back', () => {
+    expect(billViewParams('abc-123', 'WorstCase', true)).toEqual({
+      parcel: 'abc-123',
+      scenario: 'WorstCase',
+      columns: 'all',
+    });
+  });
+
+  it('nulls the parcel when none is selected, so the param LEAVES the URL', () => {
+    // Writing an empty string would leave "?parcel=" behind and make a cleared view look
+    // like a broken deep link.
+    expect(billViewParams(null, 'MostLikely', false).parcel).toBeNull();
+  });
+
+  it('round-trips: what it writes, the parser reads back unchanged', () => {
+    for (const scenario of ['WorstCase', 'MostLikely', 'BestCase'] as const) {
+      for (const showAll of [true, false]) {
+        const written = billViewParams('p1', scenario, showAll);
+        const params: Record<string, string> = {};
+        for (const [k, v] of Object.entries(written)) if (v != null) params[k] = v;
+        expect(parseBillViewParams(params)).toEqual({ parcelId: 'p1', scenario, showAllColumns: showAll });
+      }
+    }
   });
 });

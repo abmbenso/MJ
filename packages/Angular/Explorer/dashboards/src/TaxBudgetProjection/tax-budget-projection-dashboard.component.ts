@@ -16,6 +16,7 @@ import {
   KnownAssessment,
   gapBandForRatio,
 } from './tax-budget-projection-types';
+import { VerificationLink, buildVerificationLinks } from './marion-verification';
 import { trendStats, projectScenario, narrativeLines, selectBaseYearRow, residualProbability } from './tax-budget-projection-engine';
 
 const COUNTY_NUMBER = 49; // Marion
@@ -77,6 +78,9 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
   } | null = null;
   public SaleAdjustment: SaleAdjustment | null = null;
 
+  /** Routes to the county's own documents, each saying whether we hold a retrieved copy. */
+  public Verification: VerificationLink[] = [];
+
   public Scenarios: Record<ScenarioName, ScenarioState> = this.emptyScenarios();
   public ScenarioProjections: Record<ScenarioName, ProjectionRow[]> = { WorstCase: [], MostLikely: [], BestCase: [] };
   public ScenarioNarratives: Record<ScenarioName, string[]> = { WorstCase: [], MostLikely: [], BestCase: [] };
@@ -106,11 +110,75 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
   }
 
   initDashboard(): void {
-    // No parcel selected on load -- the search box is the entry point.
+    // No parcel selected on load -- the search box is the entry point, unless the URL names one.
   }
 
   async loadData(): Promise<void> {
-    // Nothing to preload; NotifyLoadComplete() fires automatically after this resolves.
+    // Restore the parcel the URL asks for. Explorer reuses cached component instances, so
+    // this also covers returning to an already-mounted tab.
+    await this.applyViewParams(this.GetQueryParams());
+    // NotifyLoadComplete() fires automatically after this resolves.
+  }
+
+  /**
+   * The other half of every UpdateQueryParams call -- back/forward, a deep link and a tab
+   * re-focus all land here. The two are a pair: pushing the parcel to the URL without a
+   * matching restore would leave it unrecoverable the moment the reader navigated away.
+   */
+  protected override OnQueryParamsChanged(params: Record<string, string>, _source: 'popstate' | 'deeplink'): void {
+    void this.applyViewParams(params);
+  }
+
+  private async applyViewParams(params: Record<string, string>): Promise<void> {
+    const parcelId = params['parcel']?.trim() || null;
+    if (!parcelId) {
+      if (this.SelectedParcel) this.clearParcel();
+    } else if (parcelId !== this.SelectedParcel?.ID) {
+      await this.restoreParcel(parcelId);
+    }
+    this.publishAgentContext();
+    this.cdr.markForCheck();
+  }
+
+  private clearParcel(): void {
+    this.SelectedParcel = null;
+    this.SearchTerm = '';
+    this.SearchResults = [];
+    this.HistoricalRows = [];
+    this.fullHistory = [];
+    this.BillCalibration = null;
+    this.SaleAdjustment = null;
+    this.Verification = [];
+    this.ScenarioProjections = { WorstCase: [], MostLikely: [], BestCase: [] };
+    this.ScenarioNarratives = { WorstCase: [], MostLikely: [], BestCase: [] };
+  }
+
+  /**
+   * Loads a parcel named by the URL. The URL carries only the ID, so the display fields
+   * must be fetched before anything can be labelled -- a parcel we cannot resolve is
+   * reported as an error rather than rendered as a nameless budget.
+   */
+  private async restoreParcel(parcelId: string): Promise<void> {
+    const esc = parcelId.replace(/'/g, "''");
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const result = await rv.RunView<ParcelSearchResult>({
+      EntityName: 'Parcels',
+      Fields: ['ID', 'GISParcelNumber', 'Address'],
+      ExtraFilter: `ID = '${esc}'`,
+      MaxRows: 1,
+      ResultType: 'simple',
+    });
+    const parcel = result.Success ? result.Results?.[0] : undefined;
+    if (!parcel) {
+      this.LoadError = result.Success
+        ? `The parcel in this link (${parcelId}) no longer exists.`
+        : `Could not open the parcel in this link: ${result.ErrorMessage ?? 'unknown error'}`;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.SelectedParcel = parcel;
+    this.SearchTerm = `${parcel.GISParcelNumber} — ${parcel.Address}`;
+    await this.loadParcelBudget(parcel.ID);
   }
 
   ngAfterViewInit(): void {
@@ -182,6 +250,7 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
     this.SearchResults = [];
     this.SearchTerm = `${parcel.GISParcelNumber} — ${parcel.Address}`;
     await this.loadParcelBudget(parcel.ID);
+    this.UpdateQueryParams({ parcel: parcel.ID });
     this.publishAgentContext();
   }
 
@@ -199,7 +268,7 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
       const [taxHistoryResult, assessmentResult, billResult, saleResult] = await rv.RunViews<Record<string, unknown>>([
         {
           EntityName: 'Tax History Years',
-          Fields: ['TaxYear', 'LandAssessment', 'Improvements', 'GrossAssessment', 'TaxRate', 'NetAnnualTax'],
+          Fields: ['TaxYear', 'LandAssessment', 'Improvements', 'GrossAssessment', 'TaxRate', 'NetAnnualTax', 'TaxHistorySourceDocumentID'],
           ExtraFilter: `ParcelID = '${parcelId}' AND ColumnOrdinal <= 20`,
           OrderBy: 'TaxYear ASC',
           MaxRows: 60,
@@ -207,7 +276,7 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
         },
         {
           EntityName: 'Assessments',
-          Fields: ['AssessmentYear', 'OriginalTotalAV', 'OriginalLandAV', 'OriginalImprovementAV'],
+          Fields: ['AssessmentYear', 'OriginalTotalAV', 'OriginalLandAV', 'OriginalImprovementAV', 'SourceDocumentID'],
           ExtraFilter: `ParcelID = '${parcelId}' AND Source = 'MarionPRC'`,
           OrderBy: 'AssessmentYear DESC',
           MaxRows: 10,
@@ -257,12 +326,52 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
 
       const saleRow = saleResult.Success ? (saleResult.Results?.[0] as unknown as SaleRawRow | undefined) : undefined;
       this.SaleAdjustment = this.buildSaleAdjustment(saleRow);
+      await this.applyVerification(
+        assessmentResult.Success ? ((assessmentResult.Results as unknown as AssessmentRawRow[]) ?? []) : [],
+        taxHistoryResult.Success ? ((taxHistoryResult.Results as unknown as TaxHistoryRawRow[]) ?? []) : [],
+      );
 
       await this.buildScenarios();
     } finally {
       this.IsLoading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  /**
+   * Whether we hold a retrieved copy of each county document, and when. Provenance, not
+   * data: if this query fails the links still render, just without a retrieval date --
+   * which reads as "not on file" and sends the reader to the county. The safe direction.
+   */
+  private async applyVerification(assessments: AssessmentRawRow[], history: TaxHistoryRawRow[]): Promise<void> {
+    const parcel = this.SelectedParcel?.GISParcelNumber ?? '';
+    const ids = [...assessments.map((a) => a.SourceDocumentID), ...history.map((h) => h.TaxHistorySourceDocumentID)].filter((id): id is string => !!id);
+
+    if (!ids.length) {
+      this.Verification = buildVerificationLinks(parcel, {});
+      return;
+    }
+    const unique = [...new Set(ids)].map((id) => `'${id.replace(/'/g, "''")}'`);
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const result = await rv.RunView<SourceDocRawRow>({
+      EntityName: 'Source Documents',
+      Fields: ['ID', 'DocumentType', 'RetrievedAt'],
+      ExtraFilter: `ID IN (${unique.join(', ')})`,
+      MaxRows: 50,
+      ResultType: 'simple',
+    });
+    const docs = result.Success ? (result.Results ?? []) : [];
+    const newest = (type: string): Date | null => {
+      const times = docs
+        .filter((d) => d.DocumentType === type && d.RetrievedAt)
+        .map((d) => new Date(d.RetrievedAt as string).getTime())
+        .filter((t) => !isNaN(t));
+      return times.length ? new Date(Math.max(...times)) : null;
+    };
+    this.Verification = buildVerificationLinks(parcel, {
+      prc: newest('PropertyRecordCard'),
+      taxHistory: newest('TaxHistoryReport'),
+    });
   }
 
   private applyTaxHistory(rows: TaxHistoryRawRow[]): void {
@@ -649,8 +758,15 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
   }
 }
 
+interface SourceDocRawRow {
+  ID: string;
+  DocumentType: string;
+  RetrievedAt: string | null;
+}
+
 interface TaxHistoryRawRow {
   TaxYear: number;
+  TaxHistorySourceDocumentID?: string | null;
   LandAssessment: number | null;
   Improvements: number | null;
   GrossAssessment: number | null;
@@ -697,6 +813,7 @@ interface TaxBillRawRow {
 
 interface AssessmentRawRow {
   AssessmentYear: number;
+  SourceDocumentID?: string | null;
   OriginalTotalAV: number | null;
   OriginalLandAV: number | null;
   OriginalImprovementAV: number | null;

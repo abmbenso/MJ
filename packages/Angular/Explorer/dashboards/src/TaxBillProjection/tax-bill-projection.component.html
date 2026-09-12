@@ -13,6 +13,20 @@
     <div actions>
       @if (SelectedParcel) {
         <mj-refresh-button [Loading]="IsLoading" (Clicked)="OnParcelSelected(SelectedParcel)"></mj-refresh-button>
+        @if (HasBillShape) {
+          <button type="button" mjButton size="sm" variant="flat" (click)="OnCopyForMemo()" title="Copy as a table you can paste into a draft">
+            <i class="fa-solid fa-clipboard"></i> Copy
+          </button>
+          <button type="button" mjButton size="sm" variant="outline" (click)="OnDownloadReport()">
+            <i class="fa-solid fa-file-arrow-down"></i> HTML
+          </button>
+          <button type="button" mjButton size="sm" variant="outline" (click)="OnOpenReport()">
+            <i class="fa-solid fa-file-lines"></i> Report
+          </button>
+          <button type="button" mjButton size="sm" variant="primary" [disabled]="IsExporting" (click)="OnExportExcel()">
+            <i class="fa-solid fa-file-excel"></i> {{ IsExporting ? 'Exporting…' : 'Excel' }}
+          </button>
+        }
       }
     </div>
 
@@ -64,6 +78,14 @@
   </mj-page-header>
 
   <mj-page-body>
+    @if (ExportNotice) {
+      <div class="export-notice" role="status">
+        {{ ExportNotice }}
+        <button type="button" mjButton size="sm" variant="flat" (click)="ExportNotice = null" aria-label="Dismiss">
+          <i class="fa-solid fa-xmark"></i>
+        </button>
+      </div>
+    }
     @if (LoadError) {
       <mj-alert Variant="error" [Message]="LoadError"></mj-alert>
     }
@@ -93,6 +115,19 @@
               Parcel {{ SelectedParcel.GISParcelNumber }} · TS-1 Table 1 ·
               projected under <strong>{{ ScenarioLabel }}</strong>
             </div>
+            @if (Verification.length) {
+              <div class="verify-strip">
+                <span class="verify-label">Verify against the county:</span>
+                @for (v of Verification; track v.kind) {
+                  <span class="verify-item" [class.off-file]="!v.onFile">
+                    <a [href]="v.url" target="_blank" rel="noopener noreferrer"
+                      >{{ v.label }} <i class="fa-solid fa-arrow-up-right-from-square"></i
+                    ></a>
+                    <span class="verify-note">{{ v.note }}</span>
+                  </span>
+                }
+              </div>
+            }
           </div>
         </div>
 
@@ -387,6 +422,15 @@
           </div>
 
           @if (BillCalibration) {
+            @if (!CanProject) {
+              <p class="note note-blocked">
+                <strong>No projection for this parcel.</strong> Its rates come from the county Tax History
+                report, which is not on file here, so there is no year with both a published assessment and a
+                published rate to project from. The bill above is filed history only — use the Tax History link
+                above to pull the report from the county.
+              </p>
+            }
+            @if (CanProject) {
             <p class="note">
               @if (BillIsEdited) {
                 <strong>Bill lines have been edited by hand for {{ ScenarioLabel }}.</strong>
@@ -416,6 +460,7 @@
                 <strong>{{ BillCalibration.capClass }}</strong> class mix; editing it models the effect of a
                 reclassification, which does happen — 14,814 Marion parcels moved 3% to 2% in pay-2025 alone.
               </p>
+            }
             }
           }
 

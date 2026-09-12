@@ -17,7 +17,10 @@ import {
   ScenarioProbabilityRow,
   gapBandForRatio,
 } from '../TaxBudgetProjection/tax-budget-projection-types';
+import { VerificationLink, buildVerificationLinks } from '../TaxBudgetProjection/marion-verification';
 import { trendStats, projectScenario, selectBaseYearRow, computeBill, residualProbability } from '../TaxBudgetProjection/tax-budget-projection-engine';
+import { ExportEngine } from '@memberjunction/export-engine';
+import { BillExportInput, ExportScenario, buildBillExport, buildSheets, exportToDocument, exportToHtml, exportToMarkdown } from './tax-bill-export';
 import {
   BillAssumptions,
   BillColumn,
@@ -25,9 +28,11 @@ import {
   BillRow,
   billAssumptionsDifferFrom,
   blendedCapRate,
+  billViewParams,
   buildBillGrid,
   capSummaryRows,
   defaultBillAssumptions,
+  parseBillViewParams,
   scaledCapAV,
 } from './tax-bill-view-model';
 
@@ -102,6 +107,13 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
   public SaleAdjustment: SaleAdjustment | null = null;
 
   /**
+   * Routes to the county's own documents for this parcel, each saying whether we hold a
+   * retrieved copy. Always populated once a parcel is selected -- the links resolve for any
+   * Marion parcel; only the "on file" claim depends on what we harvested.
+   */
+  public Verification: VerificationLink[] = [];
+
+  /**
    * Editable BILL lines, per scenario. Kept beside the growth assumptions (rather than as
    * one parcel-wide setting) so "what if the abatement expires" can be a scenario in its
    * own right, and so Reset restores this scenario's bill without touching the others.
@@ -135,11 +147,117 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
   }
 
   initDashboard(): void {
-    // No parcel on load -- the search box is the entry point.
+    // No parcel on load -- the search box is the entry point, unless the URL names one.
   }
 
   async loadData(): Promise<void> {
-    // Nothing to preload; NotifyLoadComplete() fires automatically after this resolves.
+    // Restore whatever the URL asks for. Explorer reuses cached component instances, so
+    // this also covers coming back to an already-mounted tab.
+    await this.applyViewParams(this.initialParams());
+    // NotifyLoadComplete() fires automatically after this resolves.
+  }
+
+  /**
+   * Navigation intent beats preserved state on the FIRST mount.
+   *
+   * Explorer restores a workspace's tabs with their saved `queryParams`, and on a cold
+   * deep link those saved params can still be the previous session's -- so
+   * `GetQueryParams()` returned a DIFFERENT parcel than the address bar named, and the
+   * view loaded that one. Showing one property's tax projection under a URL naming
+   * another is the worst failure this surface has: it is silently, confidently wrong.
+   *
+   * The address bar is only a reliable signal for the ACTIVE tab at mount time, which is
+   * exactly when this runs -- every later change arrives through OnQueryParamsChanged,
+   * which stays tab-scoped. Deliberately narrow for that reason.
+   */
+  private initialParams(): Record<string, string> {
+    const fromTab = this.GetQueryParams();
+    if (typeof window === 'undefined' || !window.location?.search) return fromTab;
+    const url = new URLSearchParams(window.location.search);
+    const parcel = url.get('parcel');
+    if (!parcel || parcel === fromTab['parcel']) return fromTab;
+    const merged: Record<string, string> = { ...fromTab };
+    for (const key of ['parcel', 'scenario', 'columns']) {
+      const v = url.get(key);
+      if (v != null) merged[key] = v;
+      else delete merged[key];
+    }
+    return merged;
+  }
+
+  /**
+   * The other half of every UpdateQueryParams call -- back/forward, a deep link, and a tab
+   * re-focus all land here. The two are a pair; pushing state to the URL without this
+   * would leave the reader's parcel unrecoverable the moment they navigated away.
+   */
+  protected override OnQueryParamsChanged(params: Record<string, string>, _source: 'popstate' | 'deeplink'): void {
+    void this.applyViewParams(params);
+  }
+
+  private async applyViewParams(params: Record<string, string>): Promise<void> {
+    const wanted = parseBillViewParams(params);
+
+    if (wanted.scenario && wanted.scenario !== this.ActiveScenario) {
+      this.ActiveScenario = wanted.scenario;
+      this.recomputeProjection();
+    }
+    if (wanted.showAllColumns !== this.ShowAllColumns) {
+      this.ShowAllColumns = wanted.showAllColumns;
+      this.refreshColumns();
+    }
+
+    if (!wanted.parcelId) {
+      if (this.SelectedParcel) this.clearParcel();
+    } else if (wanted.parcelId !== this.SelectedParcel?.ID) {
+      await this.restoreParcel(wanted.parcelId);
+    }
+
+    this.publishAgentContext();
+    this.cdr.markForCheck();
+  }
+
+  private clearParcel(): void {
+    this.SelectedParcel = null;
+    this.SearchTerm = '';
+    this.SearchResults = [];
+    this.actualColumns = [];
+    this.projectedColumns = [];
+    this.Verification = [];
+    this.BillCalibration = null;
+    this.refreshColumns();
+  }
+
+  /**
+   * Loads a parcel named by the URL. The URL carries only the ID, so the display fields
+   * have to be fetched before the bill can be labelled -- a parcel whose address we cannot
+   * resolve is reported as an error, not rendered as a nameless bill.
+   */
+  private async restoreParcel(parcelId: string): Promise<void> {
+    const esc = parcelId.replace(/'/g, "''");
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const result = await rv.RunView<ParcelSearchResult>({
+      EntityName: 'Parcels',
+      Fields: ['ID', 'GISParcelNumber', 'Address'],
+      ExtraFilter: `ID = '${esc}'`,
+      MaxRows: 1,
+      ResultType: 'simple',
+    });
+    const parcel = result.Success ? result.Results?.[0] : undefined;
+    if (!parcel) {
+      this.LoadError = result.Success
+        ? `The parcel in this link (${parcelId}) no longer exists.`
+        : `Could not open the parcel in this link: ${result.ErrorMessage ?? 'unknown error'}`;
+      this.cdr.markForCheck();
+      return;
+    }
+    this.SelectedParcel = parcel;
+    this.SearchTerm = `${parcel.GISParcelNumber} — ${parcel.Address}`;
+    await this.loadParcelBill(parcel.ID);
+  }
+
+  /** Publishes the current view to the URL so it survives a refresh, a tab switch or a share. */
+  private syncQueryParams(): void {
+    this.UpdateQueryParams(billViewParams(this.SelectedParcel?.ID ?? null, this.ActiveScenario, this.ShowAllColumns));
   }
 
   ngAfterViewInit(): void {
@@ -161,6 +279,19 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
    */
   public get HasBillShape(): boolean {
     return this.BillCalibration != null && this.actualColumns.length > 0;
+  }
+
+  /**
+   * Whether a projection could be made at all.
+   *
+   * The rates come from the Tax History report; a parcel we have never harvested one for
+   * has no rate history, so `selectBaseYearRow` finds no year with BOTH a published value
+   * and a published rate and there is nothing to project from. The bill above is then
+   * filed history only -- and the notes must not go on describing projected lines that do
+   * not exist, which is what they did before this guard.
+   */
+  public get CanProject(): boolean {
+    return this.BaseYear > 0 && this.projectedColumns.length > 0;
   }
 
   public get ScenarioLabel(): string {
@@ -284,6 +415,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
     this.SearchResults = [];
     this.SearchTerm = `${parcel.GISParcelNumber} — ${parcel.Address}`;
     await this.loadParcelBill(parcel.ID);
+    this.syncQueryParams();
     this.publishAgentContext();
   }
 
@@ -301,7 +433,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
       const [taxHistoryResult, assessmentResult, billResult, saleResult] = await rv.RunViews<Record<string, unknown>>([
         {
           EntityName: 'Tax History Years',
-          Fields: ['TaxYear', 'LandAssessment', 'Improvements', 'GrossAssessment', 'TaxRate', 'NetAnnualTax'],
+          Fields: ['TaxYear', 'LandAssessment', 'Improvements', 'GrossAssessment', 'TaxRate', 'NetAnnualTax', 'TaxHistorySourceDocumentID'],
           ExtraFilter: `ParcelID = '${parcelId}' AND ColumnOrdinal <= 20`,
           OrderBy: 'TaxYear ASC',
           MaxRows: 60,
@@ -309,7 +441,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
         },
         {
           EntityName: 'Assessments',
-          Fields: ['AssessmentYear', 'OriginalTotalAV', 'OriginalLandAV', 'OriginalImprovementAV'],
+          Fields: ['AssessmentYear', 'OriginalTotalAV', 'OriginalLandAV', 'OriginalImprovementAV', 'SourceDocumentID'],
           ExtraFilter: `ParcelID = '${parcelId}' AND Source = 'MarionPRC'`,
           OrderBy: 'AssessmentYear DESC',
           MaxRows: 10,
@@ -348,6 +480,8 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
 
       // A failed query is NOT "this parcel has no bills" -- rendering an empty bill for a
       // transport failure would quietly understate a real parcel's taxes.
+      // The document query is provenance, not data: if it fails the projection is still
+      // sound, so it must not poison the load error. It is reported separately below.
       const failed = [taxHistoryResult, assessmentResult, billResult, saleResult].filter((r) => !r.Success);
       if (failed.length) {
         this.LoadError = `Could not load this parcel's bill: ${failed.map((f) => f.ErrorMessage ?? 'unknown error').join('; ')}`;
@@ -363,12 +497,60 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
 
       const saleRow = saleResult.Success ? (saleResult.Results?.[0] as unknown as SaleRawRow | undefined) : undefined;
       this.SaleAdjustment = this.buildSaleAdjustment(saleRow);
+      await this.applyVerification(
+        assessmentResult.Success ? ((assessmentResult.Results as unknown as AssessmentRawRow[]) ?? []) : [],
+        taxHistoryResult.Success ? ((taxHistoryResult.Results as unknown as TaxHistoryRawRow[]) ?? []) : [],
+      );
 
       await this.buildScenarios();
     } finally {
       this.IsLoading = false;
       this.cdr.markForCheck();
     }
+  }
+
+  /**
+   * Whether we hold a retrieved copy of each county document, and when.
+   *
+   * The document ids ride on rows already loaded, so this needs one small follow-up query
+   * rather than a raw sub-select against the base tables. Provenance is not data: if this
+   * fails the projection is still sound, so the links still render -- just without a
+   * retrieval date, which reads as "not on file" and sends the reader to the county. That
+   * is the safe direction to fail.
+   */
+  private async applyVerification(assessments: AssessmentRawRow[], history: TaxHistoryRawRow[]): Promise<void> {
+    const parcel = this.SelectedParcel?.GISParcelNumber ?? '';
+    const ids = [...assessments.map((a) => a.SourceDocumentID), ...history.map((h) => h.TaxHistorySourceDocumentID)].filter((id): id is string => !!id);
+
+    if (!ids.length) {
+      this.Verification = buildVerificationLinks(parcel, {});
+      return;
+    }
+
+    const unique = [...new Set(ids)].map((id) => `'${id.replace(/'/g, "''")}'`);
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const result = await rv.RunView<SourceDocRawRow>({
+      EntityName: 'Source Documents',
+      Fields: ['ID', 'DocumentType', 'RetrievedAt'],
+      ExtraFilter: `ID IN (${unique.join(', ')})`,
+      MaxRows: 50,
+      ResultType: 'simple',
+    });
+    const docs = result.Success ? (result.Results ?? []) : [];
+
+    // A parcel's PRC years share one retrieval, so the most recent date is the honest
+    // answer to "how current is our copy?".
+    const newest = (type: string): Date | null => {
+      const times = docs
+        .filter((d) => d.DocumentType === type && d.RetrievedAt)
+        .map((d) => new Date(d.RetrievedAt as string).getTime())
+        .filter((t) => !isNaN(t));
+      return times.length ? new Date(Math.max(...times)) : null;
+    };
+    this.Verification = buildVerificationLinks(parcel, {
+      prc: newest('PropertyRecordCard'),
+      taxHistory: newest('TaxHistoryReport'),
+    });
   }
 
   private applyTaxHistory(rows: TaxHistoryRawRow[]): void {
@@ -499,9 +681,12 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
   }
 
   private projectedColumn(row: ProjectionRow, index: number): BillColumn {
+    return this.projectedColumnFor(row, index, this.ActiveBill);
+  }
+
+  private projectedColumnFor(row: ProjectionRow, index: number, bill: BillAssumptions): BillColumn {
     const cal = this.BillCalibration!;
     const share = cal.capClassShare;
-    const bill = this.ActiveBill;
     // The editor holds percentages (what a person reads and types); the engine wants
     // fractions. This is the single boundary where that conversion happens.
     const deductionRatio = (bill.deductionPct[index] ?? 0) / 100;
@@ -741,6 +926,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
   public OnScenarioChange(name: ScenarioName): void {
     this.ActiveScenario = name;
     this.recomputeProjection();
+    this.syncQueryParams();
     this.publishAgentContext();
     this.cdr.markForCheck();
   }
@@ -748,6 +934,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
   public OnToggleColumnWindow(): void {
     this.ShowAllColumns = !this.ShowAllColumns;
     this.refreshColumns();
+    this.syncQueryParams();
     this.publishAgentContext();
     this.cdr.markForCheck();
   }
@@ -808,6 +995,172 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
     this.recomputeProjection();
     this.publishAgentContext();
     this.cdr.markForCheck();
+  }
+
+  /* -------------------------------------------------------------------
+   * Export
+   * ------------------------------------------------------------------- */
+
+  public IsExporting = false;
+  public ExportNotice: string | null = null;
+
+  /**
+   * Projects EVERY scenario, not just the active one.
+   *
+   * The view renders one future at a time, so only the active scenario is kept computed.
+   * An export carries the range, and recomputing the other two here -- pure synchronous
+   * math, no queries -- is far cheaper than keeping all three current on every keystroke.
+   */
+  private buildExportInput(): BillExportInput | null {
+    if (!this.SelectedParcel || !this.BillCalibration) return null;
+    const cal = this.BillCalibration;
+
+    const scenarios: ExportScenario[] = SCENARIO_NAMES.map((name) => {
+      const rows = projectScenario({
+        baseYear: this.BaseYear,
+        baseLand: this.BaseLand,
+        baseImp: this.BaseImp,
+        baseRate: this.BaseRate,
+        scenario: this.Scenarios[name],
+        yearsForward: YEARS_FORWARD,
+        knownAV: this.KnownAV,
+        deductionRatio: cal.deductionRatio,
+        capClassShare: cal.capClassShare,
+        uplift: cal.uplift,
+        otherCharges: cal.otherCharges,
+      });
+      const bill = this.BillAssumptionsByScenario[name];
+      // Every loaded year, not the on-screen window -- an export silently truncated by a
+      // view setting would be a trap.
+      const columns = [...this.actualColumns, ...rows.map((r, i) => this.projectedColumnFor(r, i, bill))];
+      return {
+        scenario: name,
+        label: SCENARIO_META[name].label,
+        edited: billAssumptionsDifferFrom(bill, this.defaultBills[name]),
+        columns,
+        assumptions: this.Scenarios[name],
+        bill,
+      };
+    });
+
+    return {
+      parcelNumber: this.SelectedParcel.GISParcelNumber,
+      address: this.SelectedParcel.Address,
+      county: 'Marion',
+      generatedAt: new Date(),
+      activeScenario: this.ActiveScenario,
+      scenarios,
+      verification: this.Verification,
+      calibration: {
+        years: cal.years,
+        deductionRatio: cal.deductionRatio,
+        uplift: cal.uplift,
+        upliftSource: cal.upliftSource,
+        capClass: cal.capClass,
+        capRate: this.CalibratedCapRate,
+      },
+    };
+  }
+
+  /** Copies the projection as rich text (a real table in Word/Docs) with a plain-text fallback. */
+  public async OnCopyForMemo(): Promise<void> {
+    const input = this.buildExportInput();
+    if (!input) return;
+    const model = buildBillExport(input);
+    const html = exportToHtml(model);
+    const text = exportToMarkdown(model);
+    try {
+      // Both flavours at once: Word and Docs take the HTML and render a real table;
+      // plain-text editors fall back to the Markdown.
+      const item = new ClipboardItem({
+        'text/html': new Blob([html], { type: 'text/html' }),
+        'text/plain': new Blob([text], { type: 'text/plain' }),
+      });
+      await navigator.clipboard.write([item]);
+      this.ExportNotice = 'Projection copied — paste into your memo.';
+    } catch {
+      // Rich copy can be refused (permissions, older browsers). Plain text still works.
+      try {
+        await navigator.clipboard.writeText(text);
+        this.ExportNotice = 'Projection copied as plain text.';
+      } catch {
+        this.ExportNotice = 'Could not copy — your browser blocked clipboard access.';
+      }
+    }
+    this.cdr.markForCheck();
+  }
+
+  /**
+   * Opens the styled report in a new tab. It carries its own Print button, so
+   * Save-as-PDF goes through the browser's own engine -- real vector text, not the
+   * raster a JS PDF library would produce.
+   */
+  public OnOpenReport(): void {
+    const html = this.buildReportHtml();
+    if (!html) return;
+    // A blob URL rather than document.write: same-origin, no popup-blocker heuristics
+    // around written documents, and it disposes cleanly.
+    const url = URL.createObjectURL(new Blob([html], { type: 'text/html' }));
+    const opened = window.open(url, '_blank');
+    if (!opened) {
+      this.ExportNotice = 'Your browser blocked the new tab — allow pop-ups for this site, or use Download HTML.';
+    }
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    this.cdr.markForCheck();
+  }
+
+  /** Saves the same report to disk — safe to attach or archive. */
+  public OnDownloadReport(): void {
+    const html = this.buildReportHtml();
+    if (!html) return;
+    const parcel = this.SelectedParcel?.GISParcelNumber ?? 'projection';
+    this.downloadFile(new TextEncoder().encode(html), `tax-bill-projection-${parcel}.html`, 'text/html');
+    this.ExportNotice = 'Report downloaded.';
+    this.cdr.markForCheck();
+  }
+
+  private buildReportHtml(): string | null {
+    const input = this.buildExportInput();
+    return input ? exportToDocument(buildBillExport(input)) : null;
+  }
+
+  /** Downloads the projection as a workbook: summary, a bill per scenario, and the assumptions. */
+  public async OnExportExcel(): Promise<void> {
+    const input = this.buildExportInput();
+    if (!input) return;
+    this.IsExporting = true;
+    this.ExportNotice = null;
+    this.cdr.markForCheck();
+    try {
+      const model = buildBillExport(input);
+      const result = await ExportEngine.toExcelMultiSheet(buildSheets(model), {
+        fileName: `tax-bill-projection-${input.parcelNumber}`,
+        metadata: { title: model.title, author: 'Indiana Property Tax Expert' },
+      });
+      if (!result.success || !result.data) {
+        this.ExportNotice = `Export failed: ${result.error ?? 'no data was produced'}`;
+      } else {
+        // ExportEngine returns the bytes; handing them to the browser is ours to do.
+        this.downloadFile(result.data, result.fileName ?? `tax-bill-projection-${input.parcelNumber}.xlsx`, result.mimeType);
+        this.ExportNotice = 'Workbook downloaded.';
+      }
+    } catch (e) {
+      this.ExportNotice = `Export failed: ${e instanceof Error ? e.message : 'unknown error'}`;
+    } finally {
+      this.IsExporting = false;
+      this.cdr.markForCheck();
+    }
+  }
+
+  private downloadFile(bytes: Uint8Array, fileName: string, mimeType?: string): void {
+    const blob = new Blob([bytes as BlobPart], { type: mimeType || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    // Revoking immediately can cancel the download in some browsers; one tick is enough.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   /** A figure with no value is blank, never "$0.00" -- those are different claims. */
@@ -881,6 +1234,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
           const requested = params['showAll'];
           this.ShowAllColumns = typeof requested === 'boolean' ? requested : !this.ShowAllColumns;
           this.refreshColumns();
+          this.syncQueryParams();
           this.publishAgentContext();
           this.cdr.markForCheck();
           return { Success: true, Data: { ColumnWindow: this.ShowAllColumns ? 'all' : 'recent' } };
@@ -912,6 +1266,7 @@ function clampRate(cagr: number | null): number {
 
 interface TaxHistoryRawRow {
   TaxYear: number;
+  TaxHistorySourceDocumentID?: string | null;
   LandAssessment: number | null;
   Improvements: number | null;
   GrossAssessment: number | null;
@@ -934,6 +1289,12 @@ interface TaxBillRawRow {
   StatutoryCapClass: string | null;
 }
 
+interface SourceDocRawRow {
+  ID: string;
+  DocumentType: string;
+  RetrievedAt: string | null;
+}
+
 interface SaleRawRow {
   SaleDate: string;
   SalePrice: number;
@@ -943,6 +1304,7 @@ interface SaleRawRow {
 
 interface AssessmentRawRow {
   AssessmentYear: number;
+  SourceDocumentID?: string | null;
   OriginalTotalAV: number | null;
   OriginalLandAV: number | null;
   OriginalImprovementAV: number | null;

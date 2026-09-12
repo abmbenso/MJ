@@ -12,7 +12,7 @@
  * belongs to ../TaxBudgetProjection/tax-budget-projection-engine.
  */
 
-import { BillFigure, BillLines, CapClassAV } from '../TaxBudgetProjection/tax-budget-projection-types';
+import { BillFigure, BillLines, CapClassAV, ScenarioName, SCENARIO_NAMES } from '../TaxBudgetProjection/tax-budget-projection-types';
 
 /**
  * The engine's TS-1 chain plus the one line it has no need to model.
@@ -280,4 +280,54 @@ export function billAssumptionsDifferFrom(current: BillAssumptions, defaults: Bi
     differs(current.otherCharges, defaults.otherCharges) ||
     differs(current.capRatePct, defaults.capRatePct)
   );
+}
+
+/* ===========================================================================
+ * URL ROUND-TRIP
+ *
+ * Explorer CACHES and REUSES resource components -- switching tabs away and back
+ * reattaches the same instance rather than building a new one -- so state that lives only
+ * in component fields survives a tab switch by luck, not design, and does not survive a
+ * refresh or a shared link at all. Without this the reader loses their parcel every time
+ * they look at something else and has to search for it again.
+ *
+ * `UpdateQueryParams` and `OnQueryParamsChanged` are a PAIR: anything pushed to the URL
+ * owes a matching restore. These pure helpers are that pair's encode/decode, kept here so
+ * the parsing of untrusted URL text is testable on its own.
+ * =========================================================================== */
+
+/** View state that survives a refresh, a tab switch, or a shared link. */
+export interface BillViewParams {
+  parcelId: string | null;
+  scenario: ScenarioName | null;
+  showAllColumns: boolean;
+}
+
+/**
+ * Reads view state out of the URL.
+ *
+ * An unrecognised scenario yields `null` rather than a guess. URLs get hand-edited and go
+ * stale, and silently landing the reader on a different scenario than the one named would
+ * put a number in front of them under the wrong label.
+ */
+export function parseBillViewParams(params: Record<string, string>): BillViewParams {
+  const rawScenario = (params['scenario'] ?? '').trim().toLowerCase();
+  const scenario = SCENARIO_NAMES.find((n) => n.toLowerCase() === rawScenario) ?? null;
+  return {
+    parcelId: params['parcel']?.trim() || null,
+    scenario,
+    showAllColumns: (params['columns'] ?? '').trim().toLowerCase() === 'all',
+  };
+}
+
+/**
+ * Writes view state to the URL. `null` REMOVES a param rather than emptying it -- a
+ * trailing `?parcel=` makes a cleared view look like a broken deep link.
+ */
+export function billViewParams(parcelId: string | null, scenario: ScenarioName, showAllColumns: boolean): Record<string, string | null> {
+  return {
+    parcel: parcelId || null,
+    scenario,
+    columns: showAllColumns ? 'all' : 'recent',
+  };
 }

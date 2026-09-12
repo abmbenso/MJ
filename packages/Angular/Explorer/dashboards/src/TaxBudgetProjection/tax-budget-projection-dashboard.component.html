@@ -106,6 +106,20 @@
         </div>
       }
 
+      @if (Verification.length) {
+        <div class="verify-strip">
+          <span class="verify-label">Verify against the county:</span>
+          @for (v of Verification; track v.kind) {
+            <span class="verify-item" [class.off-file]="!v.onFile">
+              <a [href]="v.url" target="_blank" rel="noopener noreferrer"
+                >{{ v.label }} <i class="fa-solid fa-arrow-up-right-from-square"></i
+              ></a>
+              <span class="verify-note">{{ v.note }}</span>
+            </span>
+          }
+        </div>
+      }
+
       <div class="section-label">Historical — actual assessment, actual rate, billed</div>
       <div class="table-scroll">
         <table class="data">
