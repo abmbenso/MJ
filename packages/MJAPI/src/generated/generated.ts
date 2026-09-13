@@ -17,8 +17,197 @@ import { MaxLength } from 'class-validator';
 import * as mj_core_schema_server_object_types from '@memberjunction/server'
 
 
-import { indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFormCatalogEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailStoreEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
+import { indianataxAdjustmentCodeEntity, indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFormCatalogEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
     
+
+//****************************************************************************
+// ENTITY CLASS for Adjustment Codes
+//****************************************************************************
+@ObjectType({ description: `DLGF Code List 37. Codes 61/62/63 are the circuit-breaker credits (homestead residential / non-homestead residential / other real and personal) and are how a CAPPED parcel is identified. A capped parcel still saves on an AV reduction -- referendum debt levies sit outside the cap (IC 6-1.1-20.6), so the cap is a rate MODIFIER, not a gate. SunsetPayYear matters: without it, year-over-year net-AV movement across vintages looks like assessment change when it is statutory change.` })
+export class indianataxAdjustmentCode_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(2)
+    Code: string;
+        
+    @Field() 
+    @MaxLength(1)
+    AdjustmentType: string;
+        
+    @Field() 
+    @MaxLength(200)
+    Name: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(100)
+    StatuteCite?: string;
+        
+    @Field(() => Int, {nullable: true}) 
+    SunsetPayYear?: number;
+        
+    @Field(() => Boolean) 
+    IsCircuitBreaker: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Adjustment Codes
+//****************************************************************************
+@InputType()
+export class CreateindianataxAdjustmentCodeInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    Code?: string;
+
+    @Field({ nullable: true })
+    AdjustmentType?: string;
+
+    @Field({ nullable: true })
+    Name?: string;
+
+    @Field({ nullable: true })
+    StatuteCite: string | null;
+
+    @Field(() => Int, { nullable: true })
+    SunsetPayYear: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsCircuitBreaker?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Adjustment Codes
+//****************************************************************************
+@InputType()
+export class UpdateindianataxAdjustmentCodeInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    Code?: string;
+
+    @Field({ nullable: true })
+    AdjustmentType?: string;
+
+    @Field({ nullable: true })
+    Name?: string;
+
+    @Field({ nullable: true })
+    StatuteCite?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    SunsetPayYear?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsCircuitBreaker?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Adjustment Codes
+//****************************************************************************
+@ObjectType()
+export class RunindianataxAdjustmentCodeViewResult {
+    @Field(() => [indianataxAdjustmentCode_])
+    Results: indianataxAdjustmentCode_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxAdjustmentCode_)
+export class indianataxAdjustmentCodeResolver extends ResolverBase {
+    @Query(() => RunindianataxAdjustmentCodeViewResult)
+    async RunindianataxAdjustmentCodeViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAdjustmentCodeViewResult)
+    async RunindianataxAdjustmentCodeViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAdjustmentCodeViewResult)
+    async RunindianataxAdjustmentCodeDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Adjustment Codes';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxAdjustmentCode_, { nullable: true })
+    async indianataxAdjustmentCode(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxAdjustmentCode_ | null> {
+        this.CheckUserReadPermissions('Adjustment Codes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAdjustmentCodes')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Adjustment Codes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Adjustment Codes', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxAdjustmentCode_)
+    async CreateindianataxAdjustmentCode(
+        @Arg('input', () => CreateindianataxAdjustmentCodeInput) input: CreateindianataxAdjustmentCodeInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Adjustment Codes', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxAdjustmentCode_)
+    async UpdateindianataxAdjustmentCode(
+        @Arg('input', () => UpdateindianataxAdjustmentCodeInput) input: UpdateindianataxAdjustmentCodeInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Adjustment Codes', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxAdjustmentCode_)
+    async DeleteindianataxAdjustmentCode(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Adjustment Codes', key, options, provider, userPayload, pubSub);
+    }
+    
+}
 
 //****************************************************************************
 // ENTITY CLASS for Appeal Leads
@@ -896,7 +1085,7 @@ export class indianataxAppealStage_ {
     @Field(() => Boolean, {description: `TRUE where, in addition to the primary deadline, the statute lets the taxpayer act "any time after the agency's own deadline lapses": Stage 3 (PTABOA misses its 180-day hearing window -> straight to IBTR) and Stage 6 (Tax Court petition may be filed once IBTR's own decision deadline passes).`}) 
     DeadlineHasAgencyLapseAlt: boolean;
         
-    @Field({nullable: true, description: `Whether this stage's informal step is mandatory: Required / Optional / Recommended / NotOffered. Indiana Stage 2 (Preliminary Informal Meeting) = Required -- filing Form 130 obligates the assessing official to hold it. Other jurisdictions vary (the Faegre Appeal Deadline Tracking workbook tracks this per state).`}) 
+    @Field({nullable: true, description: `Whether this stage's informal step is mandatory: Required / Optional / Recommended / NotOffered. Indiana Stage 2 (Preliminary Informal Meeting) = Required -- filing Form 130 obligates the assessing official to hold it. Other jurisdictions vary; this is tracked per state.`}) 
     @MaxLength(20)
     InformalMeetingRequirement?: string;
         
@@ -1216,13 +1405,13 @@ export class indianataxAssessment_ {
     @Field(() => Float, {nullable: true, description: `Originally assessed total value for the year (land + improvement), before any appeal.`}) 
     OriginalTotalAV?: number;
         
-    @Field(() => Float, {nullable: true, description: `Land value after a PTABOA appeal determination. NULL until an appeal on this parcel/year is decided.`}) 
+    @Field(() => Float, {nullable: true, description: `Land value as revised after the original determination. For Marion sources: the value after a PTABOA appeal determination, NULL until an appeal on this parcel/year is decided. For a county-card source (Assessment.Source in scripts/lib/county-card-sources.js, e.g. LakePRC): the later certified column of the same year on the parcel's cards, whatever the county's reason -- an appeal form (Rev. 134, Det/115), a Form 113 notice, a re-trend, a split or a correction; the reason is CardValuationColumn.ReasonForChange / ReasonKind, and only ReasonKind = 'appeal' is an appeal outcome. NULL when no later column differs.`}) 
     PTABOALandAV?: number;
         
-    @Field(() => Float, {nullable: true, description: `Improvement value after a PTABOA appeal determination. NULL until an appeal on this parcel/year is decided.`}) 
+    @Field(() => Float, {nullable: true, description: `Improvement value as revised after the original determination. For Marion sources: the value after a PTABOA appeal determination, NULL until an appeal on this parcel/year is decided. For a county-card source (Assessment.Source in scripts/lib/county-card-sources.js, e.g. LakePRC): the later certified column of the same year on the parcel's cards, whatever the county's reason -- an appeal form (Rev. 134, Det/115), a Form 113 notice, a re-trend, a split or a correction; the reason is CardValuationColumn.ReasonForChange / ReasonKind, and only ReasonKind = 'appeal' is an appeal outcome. NULL when no later column differs.`}) 
     PTABOAImprovementAV?: number;
         
-    @Field(() => Float, {nullable: true, description: `Total value after a PTABOA appeal determination. NULL until an appeal on this parcel/year is decided.`}) 
+    @Field(() => Float, {nullable: true, description: `Total value as revised after the original determination. For Marion sources: the value after a PTABOA appeal determination, NULL until an appeal on this parcel/year is decided. For a county-card source (Assessment.Source in scripts/lib/county-card-sources.js, e.g. LakePRC): the later certified column of the same year on the parcel's cards, whatever the county's reason -- an appeal form (Rev. 134, Det/115), a Form 113 notice, a re-trend, a split or a correction; the reason is CardValuationColumn.ReasonForChange / ReasonKind, and only ReasonKind = 'appeal' is an appeal outcome. NULL when no later column differs.`}) 
     PTABOATotalAV?: number;
         
     @Field() 
@@ -1629,6 +1818,1361 @@ export class indianataxBoardDecisionResolver extends ResolverBase {
         const provider = GetReadWriteProvider(providers);
         const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
         return this.DeleteRecord('Board Decisions', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Card Improvements
+//****************************************************************************
+@ObjectType({ description: `Every Summary of Improvements row of every county record card, per card year: the structures and yard items the county priced that year, with size, depreciation, obsolescence, factors, the cap split and value. An addition appears as new or larger rows on the year it was assessed and not before. CountyAssessorImprovement holds the newest card\'s rows only.` })
+export class indianataxCardImprovement_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    ParcelID: string;
+        
+    @Field(() => Int, {description: `The Assessment Year printed on the card this row was read from.`}) 
+    CardAssessmentYear: number;
+        
+    @Field(() => Int, {description: `Position among the document's improvement rows, from 0, across all its cards.`}) 
+    EntryIndex: number;
+        
+    @Field(() => Int, {nullable: true, description: `Which card of a multi-card document the row is on (each card restarts its row numbers).`}) 
+    CardNumber?: number;
+        
+    @Field({nullable: true, description: `The row number printed before the colon ("3" in "6x3:").`}) 
+    @MaxLength(10)
+    RowIndex?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Identical items on the row ("6x3:" = six); SizeSqFt, RCN and RemainingValue are per item, ImprovementValue for all. 1 for an ordinary row.`}) 
+    Quantity?: number;
+        
+    @Field({nullable: true, description: `The Description cell verbatim (C/I Building, Paving, Canopies - Commercial, Docking Facilities).`}) 
+    @MaxLength(100)
+    Description?: string;
+        
+    @Field({description: `The parser's classification of the description: building (floor area), site (paving, fencing, walls, canopies), ancillary (porches, booths, pools), other. Only building rows sized in sqft count as floor area.`}) 
+    @MaxLength(10)
+    Kind: string;
+        
+    @Field({nullable: true, description: `The Grade cell (C, C+1, D+1, B+2).`}) 
+    @MaxLength(10)
+    Grade?: string;
+        
+    @Field(() => Float, {nullable: true, description: `The Story Height cell.`}) 
+    StoryHeight?: number;
+        
+    @Field({nullable: true, description: `The Constr Type cell (Concrete, Brick, Wood Frame, Asphalt); NULL where blank.`}) 
+    @MaxLength(50)
+    Construction?: string;
+        
+    @Field(() => Int, {nullable: true, description: `The Year Built cell.`}) 
+    YearBuilt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `The Eff Year cell.`}) 
+    EffectiveYear?: number;
+        
+    @Field(() => Int, {nullable: true, description: `The Eff Age cell, in years.`}) 
+    EffectiveAge?: number;
+        
+    @Field({nullable: true, description: `The Cond cell (A, F, P).`}) 
+    @MaxLength(5)
+    Condition?: string;
+        
+    @Field(() => Float, {nullable: true, description: `The Size cell when printed in sqft (per item); NULL when the item is sized by dimensions or units -- see SizeText.`}) 
+    SizeSqFt?: number;
+        
+    @Field({nullable: true, description: `The Size cell as printed (122,628 sqft / 80' x 17' / 2 Units).`}) 
+    @MaxLength(30)
+    SizeText?: string;
+        
+    @Field(() => Int, {nullable: true, description: `The unit count when the Size cell is printed in Units (a pool, a whirlpool).`}) 
+    Units?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Base Rate, printed for rate-priced items (paving, fencing, walls); NULL for buildings.`}) 
+    BaseRate?: number;
+        
+    @Field(() => Float, {nullable: true, description: `LCM: the location cost multiplier.`}) 
+    LCM?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Adj Rate: the base rate after the multiplier; NULL for buildings.`}) 
+    AdjRate?: number;
+        
+    @Field(() => Float, {nullable: true, description: `RCN: replacement cost new, per item.`}) 
+    RCN?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Norm Dep: normal depreciation, percent.`}) 
+    NormDepPct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Remain. Value: RCN after normal depreciation, per item.`}) 
+    RemainingValue?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Abn Obs: abnormal obsolescence, percent.`}) 
+    AbnObsPct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `PC: percent complete.`}) 
+    PctComplete?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Nbhd: the neighborhood factor.`}) 
+    NeighborhoodFactor?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Mrkt: the market (trending) factor, as printed (1.120 = +12%).`}) 
+    MarketFactor?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Cap 1: percent of this row's value under the 1% circuit-breaker cap; printed on AY2024+ Lake cards only.`}) 
+    Cap1Pct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Cap 2: percent under the 2% cap.`}) 
+    Cap2Pct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Cap 3: percent under the 3% cap.`}) 
+    Cap3Pct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Improv Value: the row's assessed value (all items together).`}) 
+    ImprovementValue?: number;
+        
+    @Field(() => Boolean, {description: `1 when the parser read the whole row; 0 when only description, years and size could be read (the other cells are then NULL).`}) 
+    IsFullRead: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(30)
+    Parcel: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Card Improvements
+//****************************************************************************
+@InputType()
+export class CreateindianataxCardImprovementInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    EntryIndex?: number;
+
+    @Field(() => Int, { nullable: true })
+    CardNumber: number | null;
+
+    @Field({ nullable: true })
+    RowIndex: string | null;
+
+    @Field(() => Int, { nullable: true })
+    Quantity: number | null;
+
+    @Field({ nullable: true })
+    Description: string | null;
+
+    @Field({ nullable: true })
+    Kind?: string;
+
+    @Field({ nullable: true })
+    Grade: string | null;
+
+    @Field(() => Float, { nullable: true })
+    StoryHeight: number | null;
+
+    @Field({ nullable: true })
+    Construction: string | null;
+
+    @Field(() => Int, { nullable: true })
+    YearBuilt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveYear: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveAge: number | null;
+
+    @Field({ nullable: true })
+    Condition: string | null;
+
+    @Field(() => Float, { nullable: true })
+    SizeSqFt: number | null;
+
+    @Field({ nullable: true })
+    SizeText: string | null;
+
+    @Field(() => Int, { nullable: true })
+    Units: number | null;
+
+    @Field(() => Float, { nullable: true })
+    BaseRate: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LCM: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AdjRate: number | null;
+
+    @Field(() => Float, { nullable: true })
+    RCN: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NormDepPct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    RemainingValue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AbnObsPct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PctComplete: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NeighborhoodFactor: number | null;
+
+    @Field(() => Float, { nullable: true })
+    MarketFactor: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap1Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap2Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap3Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementValue: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsFullRead?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Card Improvements
+//****************************************************************************
+@InputType()
+export class UpdateindianataxCardImprovementInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    EntryIndex?: number;
+
+    @Field(() => Int, { nullable: true })
+    CardNumber?: number | null;
+
+    @Field({ nullable: true })
+    RowIndex?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    Quantity?: number | null;
+
+    @Field({ nullable: true })
+    Description?: string | null;
+
+    @Field({ nullable: true })
+    Kind?: string;
+
+    @Field({ nullable: true })
+    Grade?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    StoryHeight?: number | null;
+
+    @Field({ nullable: true })
+    Construction?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    YearBuilt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveYear?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveAge?: number | null;
+
+    @Field({ nullable: true })
+    Condition?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    SizeSqFt?: number | null;
+
+    @Field({ nullable: true })
+    SizeText?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    Units?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    BaseRate?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LCM?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AdjRate?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    RCN?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NormDepPct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    RemainingValue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AbnObsPct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PctComplete?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NeighborhoodFactor?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    MarketFactor?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap1Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap2Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap3Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementValue?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsFullRead?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Card Improvements
+//****************************************************************************
+@ObjectType()
+export class RunindianataxCardImprovementViewResult {
+    @Field(() => [indianataxCardImprovement_])
+    Results: indianataxCardImprovement_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxCardImprovement_)
+export class indianataxCardImprovementResolver extends ResolverBase {
+    @Query(() => RunindianataxCardImprovementViewResult)
+    async RunindianataxCardImprovementViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardImprovementViewResult)
+    async RunindianataxCardImprovementViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardImprovementViewResult)
+    async RunindianataxCardImprovementDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Card Improvements';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxCardImprovement_, { nullable: true })
+    async indianataxCardImprovement(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxCardImprovement_ | null> {
+        this.CheckUserReadPermissions('Card Improvements', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardImprovements')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Improvements', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Card Improvements', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxCardImprovement_)
+    async CreateindianataxCardImprovement(
+        @Arg('input', () => CreateindianataxCardImprovementInput) input: CreateindianataxCardImprovementInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Card Improvements', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxCardImprovement_)
+    async UpdateindianataxCardImprovement(
+        @Arg('input', () => UpdateindianataxCardImprovementInput) input: UpdateindianataxCardImprovementInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Card Improvements', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxCardImprovement_)
+    async DeleteindianataxCardImprovement(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Card Improvements', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Card Notes
+//****************************************************************************
+@ObjectType({ description: `Every Notes-panel entry of every county record card, verbatim, one row per card-year printing: appeal notes (agreements, PTABOA and IBTR forms), building permits, corrections, combinations. The same note reprints on later cards; NoteKey groups the printings. Lake prints notes on AY2022/2023 cards only.` })
+export class indianataxCardNote_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    ParcelID: string;
+        
+    @Field(() => Int, {description: `The Assessment Year printed on the card this note was read from.`}) 
+    CardAssessmentYear: number;
+        
+    @Field(() => Int, {description: `Position in the Notes panel, top to bottom, from 0.`}) 
+    EntryIndex: number;
+        
+    @Field({nullable: true, description: `The date that opens the note (M/D/YYYY on the card); NULL where the entry has none.`}) 
+    NoteDate?: Date;
+        
+    @Field({nullable: true, description: `The code after the date (BPER, BCHG, DBAS, 20ap, F134, RYR4-22, BPER/NRMP).`}) 
+    @MaxLength(20)
+    NoteCode?: string;
+        
+    @Field({description: `A hint from prc_standard.note_kind: appeal (an appeal, board, petition form 115/130/131/133/134, settlement), permit, or other. Read NoteText before relying on it.`}) 
+    @MaxLength(10)
+    NoteKind: string;
+        
+    @Field({description: `The note's text verbatim, wrapped lines joined; may be empty.`}) 
+    NoteText: string;
+        
+    @Field({description: `SHA-256 hex of date|code|text (whitespace collapsed, upper-cased): equal across the card years that reprint the same note.`}) 
+    @MaxLength(64)
+    NoteKey: string;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(30)
+    Parcel: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Card Notes
+//****************************************************************************
+@InputType()
+export class CreateindianataxCardNoteInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    EntryIndex?: number;
+
+    @Field({ nullable: true })
+    NoteDate: Date | null;
+
+    @Field({ nullable: true })
+    NoteCode: string | null;
+
+    @Field({ nullable: true })
+    NoteKind?: string;
+
+    @Field({ nullable: true })
+    NoteText?: string;
+
+    @Field({ nullable: true })
+    NoteKey?: string;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Card Notes
+//****************************************************************************
+@InputType()
+export class UpdateindianataxCardNoteInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    EntryIndex?: number;
+
+    @Field({ nullable: true })
+    NoteDate?: Date | null;
+
+    @Field({ nullable: true })
+    NoteCode?: string | null;
+
+    @Field({ nullable: true })
+    NoteKind?: string;
+
+    @Field({ nullable: true })
+    NoteText?: string;
+
+    @Field({ nullable: true })
+    NoteKey?: string;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Card Notes
+//****************************************************************************
+@ObjectType()
+export class RunindianataxCardNoteViewResult {
+    @Field(() => [indianataxCardNote_])
+    Results: indianataxCardNote_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxCardNote_)
+export class indianataxCardNoteResolver extends ResolverBase {
+    @Query(() => RunindianataxCardNoteViewResult)
+    async RunindianataxCardNoteViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardNoteViewResult)
+    async RunindianataxCardNoteViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardNoteViewResult)
+    async RunindianataxCardNoteDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Card Notes';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxCardNote_, { nullable: true })
+    async indianataxCardNote(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxCardNote_ | null> {
+        this.CheckUserReadPermissions('Card Notes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardNotes')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Notes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Card Notes', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxCardNote_)
+    async CreateindianataxCardNote(
+        @Arg('input', () => CreateindianataxCardNoteInput) input: CreateindianataxCardNoteInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Card Notes', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxCardNote_)
+    async UpdateindianataxCardNote(
+        @Arg('input', () => UpdateindianataxCardNoteInput) input: UpdateindianataxCardNoteInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Card Notes', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxCardNote_)
+    async DeleteindianataxCardNote(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Card Notes', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Card Summaries
+//****************************************************************************
+@ObjectType({ description: `One row per county record card (card year): the card\'s own physical summary -- class, building and site area, units, year built, acreage -- so a year-by-year view shows what each year\'s card said. CountyAssessorRecord keeps the newest card\'s picture only. Loaded by Indiana_Tax_Expert/scripts/load-county-prc.js from the same parse as CardValuationColumn.` })
+export class indianataxCardSummary_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    ParcelID: string;
+        
+    @Field(() => Int, {description: `The Assessment Year printed on this card (its newest year) -- the year that names the card.`}) 
+    CardAssessmentYear: number;
+        
+    @Field({nullable: true, description: `The property class code printed on this card year (it can change between years: 5 of 20 Lake pilot parcels did).`}) 
+    @MaxLength(10)
+    PropertyClassCode?: string;
+        
+    @Field({nullable: true, description: `The class description printed beside the code on the header band.`}) 
+    @MaxLength(100)
+    PropertyClassDescription?: string;
+        
+    @Field({nullable: true, description: `The Ownership block's owner name as printed on this card year (the card truncates long names).`}) 
+    @MaxLength(500)
+    OwnerName?: string;
+        
+    @Field({nullable: true, description: `The situs address from the header band.`}) 
+    @MaxLength(200)
+    SitusAddress?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Calculated Acreage from the Land Computations block (never Parcel Acreage, which prints 0.00 on some cards).`}) 
+    Acreage?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Building floor area on this card year: the Summary of Improvements rows classified as buildings and sized in sqft, times their quantity. The figure that changes when an addition is built.`}) 
+    BuildingSqFt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Site improvements (paving, fencing, walls, canopies) sized in sqft on this card year.`}) 
+    SiteImprovementSqFt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Ancillary structures (porches, booths, mezzanines, pools) sized in sqft on this card year.`}) 
+    AncillarySqFt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Improvement rows of no recognised kind sized in sqft; normally NULL.`}) 
+    OtherSqFt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Year built of the primary (largest) building on this card year.`}) 
+    YearBuilt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Effective year of the primary building on this card year.`}) 
+    EffectiveYear?: number;
+        
+    @Field(() => Int, {nullable: true, description: `The oldest year built among the card's buildings.`}) 
+    OldestStructureYear?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Page 2 "# of Units", summed over the document's cards; NULL where none prints.`}) 
+    Units?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Number of Summary of Improvements rows on this card year (all cards of the document).`}) 
+    ImprovementCount?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Number of those rows classified as buildings.`}) 
+    BuildingCount?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Number of cards (Summary of Improvements blocks) in the document.`}) 
+    CardCount?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of the improvement rows' Improv Value cells; equals the card's improvement AV when every row was read.`}) 
+    ImprovementRowsValue?: number;
+        
+    @Field({nullable: true, description: `The footer's Printed date -- when the county produced this card.`}) 
+    PrintedDate?: Date;
+        
+    @Field({nullable: true, description: `What the parser flagged for review on this card (a list-year disagreement, a valuation-block problem, improvement rows not summing to the improvement AV); NULL when clean.`}) 
+    @MaxLength(1000)
+    ParseNotes?: string;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(30)
+    Parcel: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Latitude?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Longitude?: number;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Card Summaries
+//****************************************************************************
+@InputType()
+export class CreateindianataxCardSummaryInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field({ nullable: true })
+    PropertyClassCode: string | null;
+
+    @Field({ nullable: true })
+    PropertyClassDescription: string | null;
+
+    @Field({ nullable: true })
+    OwnerName: string | null;
+
+    @Field({ nullable: true })
+    SitusAddress: string | null;
+
+    @Field(() => Float, { nullable: true })
+    Acreage: number | null;
+
+    @Field(() => Int, { nullable: true })
+    BuildingSqFt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    SiteImprovementSqFt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    AncillarySqFt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    OtherSqFt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    YearBuilt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveYear: number | null;
+
+    @Field(() => Int, { nullable: true })
+    OldestStructureYear: number | null;
+
+    @Field(() => Int, { nullable: true })
+    Units: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ImprovementCount: number | null;
+
+    @Field(() => Int, { nullable: true })
+    BuildingCount: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CardCount: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementRowsValue: number | null;
+
+    @Field({ nullable: true })
+    PrintedDate: Date | null;
+
+    @Field({ nullable: true })
+    ParseNotes: string | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Card Summaries
+//****************************************************************************
+@InputType()
+export class UpdateindianataxCardSummaryInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field({ nullable: true })
+    PropertyClassCode?: string | null;
+
+    @Field({ nullable: true })
+    PropertyClassDescription?: string | null;
+
+    @Field({ nullable: true })
+    OwnerName?: string | null;
+
+    @Field({ nullable: true })
+    SitusAddress?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    Acreage?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    BuildingSqFt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    SiteImprovementSqFt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    AncillarySqFt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    OtherSqFt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    YearBuilt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveYear?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    OldestStructureYear?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    Units?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ImprovementCount?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    BuildingCount?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CardCount?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementRowsValue?: number | null;
+
+    @Field({ nullable: true })
+    PrintedDate?: Date | null;
+
+    @Field({ nullable: true })
+    ParseNotes?: string | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Card Summaries
+//****************************************************************************
+@ObjectType()
+export class RunindianataxCardSummaryViewResult {
+    @Field(() => [indianataxCardSummary_])
+    Results: indianataxCardSummary_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxCardSummary_)
+export class indianataxCardSummaryResolver extends ResolverBase {
+    @Query(() => RunindianataxCardSummaryViewResult)
+    async RunindianataxCardSummaryViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardSummaryViewResult)
+    async RunindianataxCardSummaryViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardSummaryViewResult)
+    async RunindianataxCardSummaryDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Card Summaries';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxCardSummary_, { nullable: true })
+    async indianataxCardSummary(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxCardSummary_ | null> {
+        this.CheckUserReadPermissions('Card Summaries', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardSummaries')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Summaries', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Card Summaries', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxCardSummary_)
+    async CreateindianataxCardSummary(
+        @Arg('input', () => CreateindianataxCardSummaryInput) input: CreateindianataxCardSummaryInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Card Summaries', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxCardSummary_)
+    async UpdateindianataxCardSummary(
+        @Arg('input', () => UpdateindianataxCardSummaryInput) input: UpdateindianataxCardSummaryInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Card Summaries', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxCardSummary_)
+    async DeleteindianataxCardSummary(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Card Summaries', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Card Valuation Columns
+//****************************************************************************
+@ObjectType({ description: `Every Valuation Records column of every county record card, one row per card year x printed column: original determinations, revisions (a year printed twice) and the uncertified work-in-progress column, with the Res (1) / Non Res (2) / Non Res (3) cap-tier split. Assessment takes one value per parcel-year from here (as determined on that year\'s own card; a later revision in its PTABOA columns); this table keeps the complete record. Loaded by Indiana_Tax_Expert/scripts/load-county-prc.js.` })
+export class indianataxCardValuationColumn_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    ParcelID: string;
+        
+    @Field(() => Int, {description: `The Assessment Year printed on the card this column was read from (its newest year) -- the year that names the card.`}) 
+    CardAssessmentYear: number;
+        
+    @Field(() => Int, {description: `Position on the card: 0 = the uncertified work-in-progress column printed left of the row labels; 1.. = certified columns left to right (newest first).`}) 
+    ColumnIndex: number;
+        
+    @Field(() => Int, {description: `The assessment year this column values. A year printed twice on one card is a revision, a split or a combination; the later As Of Date is final.`}) 
+    AssessmentYear: number;
+        
+    @Field(() => Boolean, {description: `0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise. A WIP column never becomes an Assessment row.`}) 
+    IsCertified: boolean;
+        
+    @Field({nullable: true, description: `The Reason For Change cell verbatim (AA, GenReval, Rev. 134, Det/115, WIP). NULL where the card prints it blank.`}) 
+    @MaxLength(50)
+    ReasonForChange?: string;
+        
+    @Field({description: `A coarse bucket for ReasonForChange (prc_standard.reason_kind): appeal, reval, annual, other, blank, or wip. A hint; the verbatim cell is ReasonForChange.`}) 
+    @MaxLength(10)
+    ReasonKind: string;
+        
+    @Field({nullable: true, description: `The As Of Date cell: when this value was set. Orders two columns of the same year.`}) 
+    AsOfDate?: Date;
+        
+    @Field({nullable: true, description: `The Valuation Method cell verbatim (Indiana Cost Mod, Other (external)).`}) 
+    @MaxLength(50)
+    ValuationMethod?: string;
+        
+    @Field(() => Float, {nullable: true, description: `The Land row. Always present on a certified column (the parser refuses a card missing one); may be NULL on a WIP column.`}) 
+    LandAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The Improvement row. Always present on a certified column; may be NULL on a WIP column.`}) 
+    ImprovementAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The Total row. Always present on a certified column; may be NULL on a WIP column.`}) 
+    TotalAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Land Res (1): land value under the 1% circuit-breaker cap. The three Land tiers sum to LandAV.`}) 
+    LandRes1AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Land Non Res (2): land value under the 2% cap -- apartments and residential care carry their value here.`}) 
+    LandNonRes2AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Land Non Res (3): land value under the 3% cap (most commercial and industrial land).`}) 
+    LandNonRes3AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Imp Res (1): improvement value under the 1% cap. The three Improvement tiers sum to ImprovementAV.`}) 
+    ImprovementRes1AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Imp Non Res (2): improvement value under the 2% cap.`}) 
+    ImprovementNonRes2AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Imp Non Res (3): improvement value under the 3% cap.`}) 
+    ImprovementNonRes3AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total Res (1): total value under the 1% cap. The three Total tiers sum to TotalAV.`}) 
+    TotalRes1AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total Non Res (2): total value under the 2% cap.`}) 
+    TotalNonRes2AV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total Non Res (3): total value under the 3% cap.`}) 
+    TotalNonRes3AV?: number;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(30)
+    Parcel: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Card Valuation Columns
+//****************************************************************************
+@InputType()
+export class CreateindianataxCardValuationColumnInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    ColumnIndex?: number;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field(() => Boolean, { nullable: true })
+    IsCertified?: boolean;
+
+    @Field({ nullable: true })
+    ReasonForChange: string | null;
+
+    @Field({ nullable: true })
+    ReasonKind?: string;
+
+    @Field({ nullable: true })
+    AsOfDate: Date | null;
+
+    @Field({ nullable: true })
+    ValuationMethod: string | null;
+
+    @Field(() => Float, { nullable: true })
+    LandAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LandRes1AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LandNonRes2AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LandNonRes3AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementRes1AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementNonRes2AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementNonRes3AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalRes1AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalNonRes2AV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalNonRes3AV: number | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Card Valuation Columns
+//****************************************************************************
+@InputType()
+export class UpdateindianataxCardValuationColumnInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CardAssessmentYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    ColumnIndex?: number;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field(() => Boolean, { nullable: true })
+    IsCertified?: boolean;
+
+    @Field({ nullable: true })
+    ReasonForChange?: string | null;
+
+    @Field({ nullable: true })
+    ReasonKind?: string;
+
+    @Field({ nullable: true })
+    AsOfDate?: Date | null;
+
+    @Field({ nullable: true })
+    ValuationMethod?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    LandAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LandRes1AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LandNonRes2AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LandNonRes3AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementRes1AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementNonRes2AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementNonRes3AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalRes1AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalNonRes2AV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalNonRes3AV?: number | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Card Valuation Columns
+//****************************************************************************
+@ObjectType()
+export class RunindianataxCardValuationColumnViewResult {
+    @Field(() => [indianataxCardValuationColumn_])
+    Results: indianataxCardValuationColumn_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxCardValuationColumn_)
+export class indianataxCardValuationColumnResolver extends ResolverBase {
+    @Query(() => RunindianataxCardValuationColumnViewResult)
+    async RunindianataxCardValuationColumnViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardValuationColumnViewResult)
+    async RunindianataxCardValuationColumnViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxCardValuationColumnViewResult)
+    async RunindianataxCardValuationColumnDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Card Valuation Columns';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxCardValuationColumn_, { nullable: true })
+    async indianataxCardValuationColumn(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxCardValuationColumn_ | null> {
+        this.CheckUserReadPermissions('Card Valuation Columns', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardValuationColumns')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Valuation Columns', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Card Valuation Columns', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxCardValuationColumn_)
+    async CreateindianataxCardValuationColumn(
+        @Arg('input', () => CreateindianataxCardValuationColumnInput) input: CreateindianataxCardValuationColumnInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Card Valuation Columns', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxCardValuationColumn_)
+    async UpdateindianataxCardValuationColumn(
+        @Arg('input', () => UpdateindianataxCardValuationColumnInput) input: UpdateindianataxCardValuationColumnInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Card Valuation Columns', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxCardValuationColumn_)
+    async DeleteindianataxCardValuationColumn(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Card Valuation Columns', key, options, provider, userPayload, pubSub);
     }
     
 }
@@ -3777,6 +5321,28 @@ export class indianataxCountyAssessorImprovement_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field(() => Int, {nullable: true, description: `Identical items on one Summary of Improvements row: the card prints "6x3:" for six items on row 3. SizeOrArea, ReproductionCost and RemainderValue are per item; TrueTaxValue is for all of them. 1 for an ordinary row.`}) 
+    Quantity?: number;
+        
+    @Field({nullable: true, description: `The Size cell as printed (122,628 sqft / 80' x 17' / 2 Units). SizeOrArea carries it only when printed in sqft.`}) 
+    @MaxLength(30)
+    SizeText?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Abn Obs: abnormal obsolescence, percent. DepreciationObsolescence carries normal depreciation (Norm Dep).`}) 
+    AbnormalObsolescencePct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Nbhd: the neighborhood factor on the improvement row (1.0000 on most). TrendFactor carries Mrkt x 100.`}) 
+    NeighborhoodFactor?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Cap 1: percent of this improvement's value under the 1% circuit-breaker cap. Printed on AY2024+ Lake cards only.`}) 
+    Cap1Pct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Cap 2: percent under the 2% cap.`}) 
+    Cap2Pct?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Cap 3: percent under the 3% cap.`}) 
+    Cap3Pct?: number;
+        
     @Field({nullable: true}) 
     @MaxLength(500)
     CountyAssessorRecord?: string;
@@ -3833,6 +5399,27 @@ export class CreateindianataxCountyAssessorImprovementInput {
     @Field(() => Float, { nullable: true })
     TrueTaxValue: number | null;
 
+    @Field(() => Int, { nullable: true })
+    Quantity: number | null;
+
+    @Field({ nullable: true })
+    SizeText: string | null;
+
+    @Field(() => Float, { nullable: true })
+    AbnormalObsolescencePct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NeighborhoodFactor: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap1Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap2Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap3Pct: number | null;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -3887,6 +5474,27 @@ export class UpdateindianataxCountyAssessorImprovementInput {
 
     @Field(() => Float, { nullable: true })
     TrueTaxValue?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    Quantity?: number | null;
+
+    @Field({ nullable: true })
+    SizeText?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    AbnormalObsolescencePct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NeighborhoodFactor?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap1Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap2Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    Cap3Pct?: number | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -4599,6 +6207,22 @@ export class indianataxCountyAssessorSaleHistory_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({nullable: true, description: `The Standard card's Owner column: the owner AFTER this transfer (the grantee). The card prints no grantor, so GrantorName stays NULL on these rows.`}) 
+    @MaxLength(300)
+    OwnerName?: string;
+        
+    @Field({nullable: true, description: `The Doc ID cell: the recorder's instrument reference (a number, or text such as PLAT TRACK).`}) 
+    @MaxLength(50)
+    DocID?: string;
+        
+    @Field({nullable: true, description: `The Book/Page cell (PB108/90, 2023/528516); NULL where the card prints only the slash.`}) 
+    @MaxLength(50)
+    BookPage?: string;
+        
+    @Field({nullable: true, description: `The V/I cell: V = vacant, I = improved at the time of the transfer.`}) 
+    @MaxLength(1)
+    VacantOrImproved?: string;
+        
     @Field({nullable: true}) 
     @MaxLength(500)
     CountyAssessorRecord?: string;
@@ -4631,6 +6255,18 @@ export class CreateindianataxCountyAssessorSaleHistoryInput {
     @Field({ nullable: true })
     SaleType: string | null;
 
+    @Field({ nullable: true })
+    OwnerName: string | null;
+
+    @Field({ nullable: true })
+    DocID: string | null;
+
+    @Field({ nullable: true })
+    BookPage: string | null;
+
+    @Field({ nullable: true })
+    VacantOrImproved: string | null;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -4661,6 +6297,18 @@ export class UpdateindianataxCountyAssessorSaleHistoryInput {
 
     @Field({ nullable: true })
     SaleType?: string | null;
+
+    @Field({ nullable: true })
+    OwnerName?: string | null;
+
+    @Field({ nullable: true })
+    DocID?: string | null;
+
+    @Field({ nullable: true })
+    BookPage?: string | null;
+
+    @Field({ nullable: true })
+    VacantOrImproved?: string | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -7056,7 +8704,7 @@ export class indianataxFormCatalogResolver extends ResolverBase {
 //****************************************************************************
 // ENTITY CLASS for Jurisdiction Deadline Anchors
 //****************************************************************************
-@ObjectType({ description: `Per (county, township?, tax year, anchor event) the observed/published date that feeds a DeadlineBasis = \'RelativeDays\' deadline (or branches a \'CalendarRule\'). The "rolling deadline" shape from the Faegre Appeal Deadline Tracking workbook\'s WA/IL tabs. APPEND-ONLY BY YEAR: one row per key, never overwrite a prior year, so year-over-year history is just the older rows.` })
+@ObjectType({ description: `Per (county, township?, tax year, anchor event) the observed/published date that feeds a DeadlineBasis = \'RelativeDays\' deadline (or branches a \'CalendarRule\'). The "rolling deadline" shape used by WA and IL. APPEND-ONLY BY YEAR: one row per key, never overwrite a prior year, so year-over-year history is just the older rows.` })
 export class indianataxJurisdictionDeadlineAnchor_ {
     @Field() 
     @MaxLength(36)
@@ -8608,6 +10256,982 @@ export class indianataxOwnerPortfolioResolver extends ResolverBase {
 }
 
 //****************************************************************************
+// ENTITY CLASS for Parcel Burden Shifts
+//****************************************************************************
+@ObjectType()
+export class bigboxretailParcelBurdenShift_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(36)
+    StoreID?: string;
+        
+    @Field({description: `The 18-digit Indiana state parcel number screened.`}) 
+    @MaxLength(30)
+    StateParcel: string;
+        
+    @Field({description: `Indiana county the parcel sits in.`}) 
+    @MaxLength(50)
+    County: string;
+        
+    @Field(() => Int, {description: `Assessment year whose increase is being tested against the prior year.`}) 
+    AssessmentYear: number;
+        
+    @Field({nullable: true, description: `DLGF property class code for the parcel in this year.`}) 
+    @MaxLength(10)
+    PropertyClass?: string;
+        
+    @Field(() => Float, {description: `The prior years assessed value, taken from that years own statewide harvest file rather than the current rows PRIOR_AV field. The file value is independently observed and reconciled 92.5% exact against this projects DLGF extraction; in-row PRIOR_AV is sometimes self-copied from the current year (hiding a real increase) and sometimes sits below the prior years certified value (manufacturing one).`}) 
+    PriorAV: number;
+        
+    @Field(() => Float, {description: `Assessed value as initially determined for this year -- the figure a Form 11 notice carries, and the one that triggers the appeal.`}) 
+    CurrentAV: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value as finally certified for billing, from this projects own DLGF Gateway extraction. Lower than CurrentAV where an appeal already obtained a reduction. NULL where no bill row exists for the parcel-year.`}) 
+    CertifiedAV?: number;
+        
+    @Field(() => Float, {description: `CurrentAV less PriorAV: the increase the assessor would have to justify.`}) 
+    AVIncrease: number;
+        
+    @Field(() => Float, {description: `The increase as a percentage. Held to two decimals so a case just over the statutory 5% does not display as exactly 5.0.`}) 
+    PctIncrease: number;
+        
+    @Field(() => Float, {nullable: true, description: `The prior years value as recorded in this rows own PRIOR_AV fields, kept for corroboration. NULL where it was self-copied from the current year and therefore carries no information.`}) 
+    InRowPriorAV?: number;
+        
+    @Field({description: `Whether the two readings of the prior year agree that the 5% threshold is crossed: "corroborated", "disputed" (forced to Usability = verify), or "baseline unconfirmed" where no in-row value survives.`}) 
+    @MaxLength(30)
+    BaselineAgreement: string;
+        
+    @Field({nullable: true, description: `DLGF Code List 5 reason for change. Rows carrying a statutory exception (new construction, addition, reclassification of use) or a split/combination are not emitted at all.`}) 
+    @MaxLength(5)
+    ReasonCode?: string;
+        
+    @Field({description: `Magnitude band. The reason code is not trustworthy at the extremes -- counties routinely code new construction as 17 Miscellaneous or 19 Annual Adjustment -- so every parcel-year is additionally banded by how far it moved.`}) 
+    @MaxLength(60)
+    Band: string;
+        
+    @Field({description: `"usable" for bands a-c; "verify" for band d or a disputed baseline, meaning check the record card first; "reject" for bands e-f, which are construction whatever the reason code says.`}) 
+    @MaxLength(10)
+    Usability: string;
+        
+    @Field({description: `What became of the determined value: "stands" (no reduction obtained), "reduced after determination" (an appeal cut it, CertifiedAV says by how much), "already at or below prior year" (the increase was fully given back), or "no bill data".`}) 
+    @MaxLength(40)
+    AVStatus: string;
+        
+    @Field(() => Boolean, {description: `Cleared where the increase was already given back in full, so the burden shift has no live value on this parcel-year.`}) 
+    Actionable: boolean;
+        
+    @Field(() => Int, {nullable: true, description: `Building area used for the per-square-foot figures below.`}) 
+    BuildingSqFt?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The prior years assessed value per square foot -- the value reverting would land, and therefore the number that decides whether the burden argument alone is enough.`}) 
+    PriorAVPSF?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The current determined assessed value per square foot.`}) 
+    CurrentAVPSF?: number;
+        
+    @Field({description: `"revert-and-done" where PriorAVPSF is already at or below the $50/SF Indiana big-box benchmark, so the burden argument alone lands an acceptable value; "revert-then-argue" where it is not, and market evidence is still needed underneath the shift.`}) 
+    @MaxLength(30)
+    Posture: string;
+        
+    @Field(() => Float, {nullable: true, description: `Highest prior settlement on this parcel at or below the prior year AV, where one exists. The county has already conceded a value it now exceeds -- the strongest form of this case.`}) 
+    PriorSettlementAtOrBelow?: number;
+        
+    @Field(() => Boolean, {description: `Always set. A zoning change is a statutory exception to the burden shift, but zoning has no DLGF code, so this exception cannot be tested from data and must be checked per parcel before filing.`}) 
+    ZoningExceptionUntested: boolean;
+        
+    @Field({description: `Screen output the row was loaded from.`}) 
+    @MaxLength(300)
+    SourceFile: string;
+        
+    @Field({description: `When this row was loaded from the screening pipeline.`}) 
+    ImportedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(100)
+    Store?: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Parcel Burden Shifts
+//****************************************************************************
+@InputType()
+export class CreatebigboxretailParcelBurdenShiftInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    StoreID: string | null;
+
+    @Field({ nullable: true })
+    StateParcel?: string;
+
+    @Field({ nullable: true })
+    County?: string;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field({ nullable: true })
+    PropertyClass: string | null;
+
+    @Field(() => Float, { nullable: true })
+    PriorAV?: number;
+
+    @Field(() => Float, { nullable: true })
+    CurrentAV?: number;
+
+    @Field(() => Float, { nullable: true })
+    CertifiedAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVIncrease?: number;
+
+    @Field(() => Float, { nullable: true })
+    PctIncrease?: number;
+
+    @Field(() => Float, { nullable: true })
+    InRowPriorAV: number | null;
+
+    @Field({ nullable: true })
+    BaselineAgreement?: string;
+
+    @Field({ nullable: true })
+    ReasonCode: string | null;
+
+    @Field({ nullable: true })
+    Band?: string;
+
+    @Field({ nullable: true })
+    Usability?: string;
+
+    @Field({ nullable: true })
+    AVStatus?: string;
+
+    @Field(() => Boolean, { nullable: true })
+    Actionable?: boolean;
+
+    @Field(() => Int, { nullable: true })
+    BuildingSqFt: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PriorAVPSF: number | null;
+
+    @Field(() => Float, { nullable: true })
+    CurrentAVPSF: number | null;
+
+    @Field({ nullable: true })
+    Posture?: string;
+
+    @Field(() => Float, { nullable: true })
+    PriorSettlementAtOrBelow: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    ZoningExceptionUntested?: boolean;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Parcel Burden Shifts
+//****************************************************************************
+@InputType()
+export class UpdatebigboxretailParcelBurdenShiftInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    StoreID?: string | null;
+
+    @Field({ nullable: true })
+    StateParcel?: string;
+
+    @Field({ nullable: true })
+    County?: string;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field({ nullable: true })
+    PropertyClass?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    PriorAV?: number;
+
+    @Field(() => Float, { nullable: true })
+    CurrentAV?: number;
+
+    @Field(() => Float, { nullable: true })
+    CertifiedAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVIncrease?: number;
+
+    @Field(() => Float, { nullable: true })
+    PctIncrease?: number;
+
+    @Field(() => Float, { nullable: true })
+    InRowPriorAV?: number | null;
+
+    @Field({ nullable: true })
+    BaselineAgreement?: string;
+
+    @Field({ nullable: true })
+    ReasonCode?: string | null;
+
+    @Field({ nullable: true })
+    Band?: string;
+
+    @Field({ nullable: true })
+    Usability?: string;
+
+    @Field({ nullable: true })
+    AVStatus?: string;
+
+    @Field(() => Boolean, { nullable: true })
+    Actionable?: boolean;
+
+    @Field(() => Int, { nullable: true })
+    BuildingSqFt?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PriorAVPSF?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    CurrentAVPSF?: number | null;
+
+    @Field({ nullable: true })
+    Posture?: string;
+
+    @Field(() => Float, { nullable: true })
+    PriorSettlementAtOrBelow?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    ZoningExceptionUntested?: boolean;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Parcel Burden Shifts
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailParcelBurdenShiftViewResult {
+    @Field(() => [bigboxretailParcelBurdenShift_])
+    Results: bigboxretailParcelBurdenShift_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailParcelBurdenShift_)
+export class bigboxretailParcelBurdenShiftResolver extends ResolverBase {
+    @Query(() => RunbigboxretailParcelBurdenShiftViewResult)
+    async RunbigboxretailParcelBurdenShiftViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailParcelBurdenShiftViewResult)
+    async RunbigboxretailParcelBurdenShiftViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailParcelBurdenShiftViewResult)
+    async RunbigboxretailParcelBurdenShiftDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Parcel Burden Shifts';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailParcelBurdenShift_, { nullable: true })
+    async bigboxretailParcelBurdenShift(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailParcelBurdenShift_ | null> {
+        this.CheckUserReadPermissions('Parcel Burden Shifts', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwParcelBurdenShifts')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Burden Shifts', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Parcel Burden Shifts', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => bigboxretailParcelBurdenShift_)
+    async CreatebigboxretailParcelBurdenShift(
+        @Arg('input', () => CreatebigboxretailParcelBurdenShiftInput) input: CreatebigboxretailParcelBurdenShiftInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Parcel Burden Shifts', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => bigboxretailParcelBurdenShift_)
+    async UpdatebigboxretailParcelBurdenShift(
+        @Arg('input', () => UpdatebigboxretailParcelBurdenShiftInput) input: UpdatebigboxretailParcelBurdenShiftInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Parcel Burden Shifts', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => bigboxretailParcelBurdenShift_)
+    async DeletebigboxretailParcelBurdenShift(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Parcel Burden Shifts', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Parcel Settlements
+//****************************************************************************
+@ObjectType()
+export class bigboxretailParcelSettlement_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(36)
+    StoreID?: string;
+        
+    @Field({description: `The 18-digit Indiana state parcel number this settlement was recorded against.`}) 
+    @MaxLength(30)
+    StateParcel: string;
+        
+    @Field({description: `Indiana county whose record card the settlement note was read from.`}) 
+    @MaxLength(50)
+    County: string;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value a prior appeal settled at, read from an assessor note recording an agreement, stipulation, PTABOA reduction or Form 115 determination. This is an ASSESSED VALUE, not a sale price -- treating it as market evidence would be a substantive error.`}) 
+    SettlementAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `A settlement the assessor stated directly as a rate per square foot (e.g. "APPEAL ADJUSTED TO $44.00 SQ. FT."). The most directly usable form, because it is already in benchmark units.`}) 
+    AgreedPSF?: number;
+        
+    @Field({nullable: true, description: `The matched phrase and figure alone -- the trigger word through the amount. Used to de-duplicate, because the same settlement is reprinted on every later card with different surrounding text.`}) 
+    @MaxLength(300)
+    SettlementStatement?: string;
+        
+    @Field({nullable: true, description: `The surrounding note text, kept so the finding stays auditable against the card.`}) 
+    @MaxLength(500)
+    Note?: string;
+        
+    @Field({description: `Record card the settlement was parsed from, relative to the projects county-records directory.`}) 
+    @MaxLength(300)
+    SourceFile: string;
+        
+    @Field({description: `When this row was loaded from the parsing pipeline.`}) 
+    ImportedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field(() => Int, {nullable: true, description: `The assessment year this settlement resolved, where the note states it unambiguously. NULL on most rows by design: a first extraction pass reached 27% coverage and an audit found it wrong often enough to be dangerous (dash-written dates read as year pairs, building-permit references read as settlements). A wrong year files a concession against an assessment it never touched, so the extractor now requires the year to sit within 60 characters of the amount and be joined to it by an actual statement of value.`}) 
+    AssessmentYear?: number;
+        
+    @Field({nullable: true, description: `Indiana form number naming how the appeal was disposed of: 134 preliminary informal conference, 115 PTABOA determination, 133 correction of error, 130 petition to the county board, 131 appeal to the IBTR, 136 exemption. NULL where the note does not name one (88 of 123).`}) 
+    @MaxLength(4)
+    DispositionForm?: string;
+        
+    @Field({nullable: true, description: `The form number in words. Read Form 134 first: a preliminary informal conference is a settlement reached BEFORE any hearing, and it is the stage that actually produces reductions - 24 of the 35 settlements naming a form are Form 134 against 4 Form 115. Form 133 is a correction of error and is NOT a valuation dispute, so it must not be counted as a concession on value.`}) 
+    @MaxLength(60)
+    Disposition?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(100)
+    Store?: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Latitude?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Longitude?: number;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Parcel Settlements
+//****************************************************************************
+@InputType()
+export class CreatebigboxretailParcelSettlementInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    StoreID: string | null;
+
+    @Field({ nullable: true })
+    StateParcel?: string;
+
+    @Field({ nullable: true })
+    County?: string;
+
+    @Field(() => Float, { nullable: true })
+    SettlementAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AgreedPSF: number | null;
+
+    @Field({ nullable: true })
+    SettlementStatement: string | null;
+
+    @Field({ nullable: true })
+    Note: string | null;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear: number | null;
+
+    @Field({ nullable: true })
+    DispositionForm: string | null;
+
+    @Field({ nullable: true })
+    Disposition: string | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Parcel Settlements
+//****************************************************************************
+@InputType()
+export class UpdatebigboxretailParcelSettlementInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    StoreID?: string | null;
+
+    @Field({ nullable: true })
+    StateParcel?: string;
+
+    @Field({ nullable: true })
+    County?: string;
+
+    @Field(() => Float, { nullable: true })
+    SettlementAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AgreedPSF?: number | null;
+
+    @Field({ nullable: true })
+    SettlementStatement?: string | null;
+
+    @Field({ nullable: true })
+    Note?: string | null;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number | null;
+
+    @Field({ nullable: true })
+    DispositionForm?: string | null;
+
+    @Field({ nullable: true })
+    Disposition?: string | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Parcel Settlements
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailParcelSettlementViewResult {
+    @Field(() => [bigboxretailParcelSettlement_])
+    Results: bigboxretailParcelSettlement_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailParcelSettlement_)
+export class bigboxretailParcelSettlementResolver extends ResolverBase {
+    @Query(() => RunbigboxretailParcelSettlementViewResult)
+    async RunbigboxretailParcelSettlementViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailParcelSettlementViewResult)
+    async RunbigboxretailParcelSettlementViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailParcelSettlementViewResult)
+    async RunbigboxretailParcelSettlementDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Parcel Settlements';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailParcelSettlement_, { nullable: true })
+    async bigboxretailParcelSettlement(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailParcelSettlement_ | null> {
+        this.CheckUserReadPermissions('Parcel Settlements', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwParcelSettlements')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Settlements', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Parcel Settlements', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => bigboxretailParcelSettlement_)
+    async CreatebigboxretailParcelSettlement(
+        @Arg('input', () => CreatebigboxretailParcelSettlementInput) input: CreatebigboxretailParcelSettlementInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Parcel Settlements', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => bigboxretailParcelSettlement_)
+    async UpdatebigboxretailParcelSettlement(
+        @Arg('input', () => UpdatebigboxretailParcelSettlementInput) input: UpdatebigboxretailParcelSettlementInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Parcel Settlements', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => bigboxretailParcelSettlement_)
+    async DeletebigboxretailParcelSettlement(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Parcel Settlements', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Parcel Transfers
+//****************************************************************************
+@ObjectType()
+export class bigboxretailParcelTransfer_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(36)
+    StoreID?: string;
+        
+    @Field({description: `The 18-digit Indiana state parcel number this transfer was recorded against, as printed on the record card.`}) 
+    @MaxLength(30)
+    StateParcel: string;
+        
+    @Field({description: `Indiana county whose record card this transfer was read from.`}) 
+    @MaxLength(50)
+    County: string;
+        
+    @Field({nullable: true, description: `Date of the recorded conveyance. NULL where the card carries the county null date 01/01/1900, which marks a transfer with no recorded date rather than a 1900 sale -- the row is retained so the conveyance is still visible.`}) 
+    SaleDate?: Date;
+        
+    @Field({nullable: true, description: `Grantee, or the owner name the card records against the transfer. Truncated by the card itself in most counties.`}) 
+    @MaxLength(200)
+    GranteeOrOwner?: string;
+        
+    @Field({nullable: true, description: `Instrument reference as printed in the cards Doc ID column. Some counties print text here (e.g. "PLAT TRACK") rather than a number.`}) 
+    @MaxLength(50)
+    DocID?: string;
+        
+    @Field({nullable: true, description: `Deed instrument code exactly as the card prints it, including the truncations narrow columns force -- "Qu" for quit claim, "Sh" for sheriff, "Li" for limited warranty. Not normalised, because the truncation is what the source says.`}) 
+    @MaxLength(10)
+    DeedCode?: string;
+        
+    @Field({nullable: true, description: `Recording book and page, or the countys instrument number.`}) 
+    @MaxLength(40)
+    BookPage?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Adjusted sale price as recorded. NULL where the card shows no price -- most notably Hamilton, whose transfer table has no price column at all.`}) 
+    SalePrice?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sale price divided by the building area attributed to the parcel. Meaningful only alongside CompQuality: an outlot conveyance recorded against a parcel whose square footage is the whole store produces a misleadingly low figure.`}) 
+    SalePSF?: number;
+        
+    @Field({nullable: true, description: `The V/I column: whether the property was Vacant or Improved at the time of sale. This is NOT a sale validity flag, and per this projects standing rule a county validity marker is never used to screen comparables.`}) 
+    @MaxLength(1)
+    VacantOrImproved?: string;
+        
+    @Field({nullable: true, description: `Whether this transfer is usable as a comparable sale: "usable", or "review" where the deed is not a market instrument or the $/SF falls outside the plausible band. Advisory -- it flags, it never excludes, and CompNote gives the reason.`}) 
+    @MaxLength(10)
+    CompQuality?: string;
+        
+    @Field({nullable: true, description: `Why a transfer was marked for review -- non-market instrument, unclassified deed code, missing building size, or a $/SF above or below the plausible band.`}) 
+    @MaxLength(300)
+    CompNote?: string;
+        
+    @Field({nullable: true, description: `Where the price was read from: the cards transfer table, or a free-text assessor note.`}) 
+    @MaxLength(30)
+    PriceSource?: string;
+        
+    @Field(() => Boolean, {description: `Set where the source note says the price covers more than this parcel (e.g. "MULTI PARCEL SALE ($4,450,000) INCLUDES 020.000"). Such a price does not belong to this parcel alone.`}) 
+    MultiParcel: boolean;
+        
+    @Field({description: `Record card the transfer was parsed from, relative to the projects county-records directory.`}) 
+    @MaxLength(300)
+    SourceFile: string;
+        
+    @Field({description: `When this row was loaded from the parsing pipeline.`}) 
+    ImportedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true, description: `How the county names the instrument when it does not print a deed code. Marion uses Sale / Straight / Split; Sale is the market conveyance. NULL where the county publishes a deed code instead, or publishes neither.`}) 
+    @MaxLength(20)
+    TransferType?: string;
+        
+    @Field({nullable: true, description: `Marion's own Valid Y/N marker on the transfer. Recorded for completeness and DELIBERATELY NEVER USED TO SCREEN COMPARABLES: it is an administrative marker used for trending, not a judgment about whether a sale is a usable comparable. Use CompQuality for that.`}) 
+    @MaxLength(1)
+    CountyValidFlag?: string;
+        
+    @Field({nullable: true, description: `Which card layout the row was read from: standard (the ~73-county Standard PRC), hamilton, marion, or note (a price quoted in assessor free text rather than a transfer table). Explains why some columns are empty -- Hamilton carries no deed code or V/I, Marion no deed code or book/page.`}) 
+    @MaxLength(20)
+    SourceTemplate?: string;
+        
+    @Field(() => Int, {nullable: true, description: `How many separate buildings stand on this parcel, from the latest card year only. Counting across years double-counts: one Best Buy parcel shows four "building" rows that are the same 50,000 sf store re-stated on four successive cards. More than one building means the sale price covers more than one, so the $/SF is a blend.`}) 
+    BuildingsOnParcel?: number;
+        
+    @Field(() => Boolean, {description: `Set where a sale on a clean single-building parcel priced above $100/SF - usually a net-leased credit tenant trading on its income stream rather than the real estate, which is the transaction type the dark-store argument exists to answer. DELIBERATELY A FLAG, NOT AN EXCLUSION: these rows still count toward the comparable set, because leased-fee is an argument to make with evidence rather than something to infer from a price. Setting the 10 flagged sales aside moves the usable median from $38.86 to $35.33/SF - which is why the decision belongs to the reader, not the parser.`}) 
+    PossibleLeasedFee: boolean;
+        
+    @Field({nullable: true}) 
+    @MaxLength(100)
+    Store?: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Parcel Transfers
+//****************************************************************************
+@InputType()
+export class CreatebigboxretailParcelTransferInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    StoreID: string | null;
+
+    @Field({ nullable: true })
+    StateParcel?: string;
+
+    @Field({ nullable: true })
+    County?: string;
+
+    @Field({ nullable: true })
+    SaleDate: Date | null;
+
+    @Field({ nullable: true })
+    GranteeOrOwner: string | null;
+
+    @Field({ nullable: true })
+    DocID: string | null;
+
+    @Field({ nullable: true })
+    DeedCode: string | null;
+
+    @Field({ nullable: true })
+    BookPage: string | null;
+
+    @Field(() => Float, { nullable: true })
+    SalePrice: number | null;
+
+    @Field(() => Float, { nullable: true })
+    SalePSF: number | null;
+
+    @Field({ nullable: true })
+    VacantOrImproved: string | null;
+
+    @Field({ nullable: true })
+    CompQuality: string | null;
+
+    @Field({ nullable: true })
+    CompNote: string | null;
+
+    @Field({ nullable: true })
+    PriceSource: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    MultiParcel?: boolean;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field({ nullable: true })
+    TransferType: string | null;
+
+    @Field({ nullable: true })
+    CountyValidFlag: string | null;
+
+    @Field({ nullable: true })
+    SourceTemplate: string | null;
+
+    @Field(() => Int, { nullable: true })
+    BuildingsOnParcel: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    PossibleLeasedFee?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Parcel Transfers
+//****************************************************************************
+@InputType()
+export class UpdatebigboxretailParcelTransferInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    StoreID?: string | null;
+
+    @Field({ nullable: true })
+    StateParcel?: string;
+
+    @Field({ nullable: true })
+    County?: string;
+
+    @Field({ nullable: true })
+    SaleDate?: Date | null;
+
+    @Field({ nullable: true })
+    GranteeOrOwner?: string | null;
+
+    @Field({ nullable: true })
+    DocID?: string | null;
+
+    @Field({ nullable: true })
+    DeedCode?: string | null;
+
+    @Field({ nullable: true })
+    BookPage?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    SalePrice?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    SalePSF?: number | null;
+
+    @Field({ nullable: true })
+    VacantOrImproved?: string | null;
+
+    @Field({ nullable: true })
+    CompQuality?: string | null;
+
+    @Field({ nullable: true })
+    CompNote?: string | null;
+
+    @Field({ nullable: true })
+    PriceSource?: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    MultiParcel?: boolean;
+
+    @Field({ nullable: true })
+    SourceFile?: string;
+
+    @Field({ nullable: true })
+    ImportedAt?: Date;
+
+    @Field({ nullable: true })
+    TransferType?: string | null;
+
+    @Field({ nullable: true })
+    CountyValidFlag?: string | null;
+
+    @Field({ nullable: true })
+    SourceTemplate?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    BuildingsOnParcel?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    PossibleLeasedFee?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Parcel Transfers
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailParcelTransferViewResult {
+    @Field(() => [bigboxretailParcelTransfer_])
+    Results: bigboxretailParcelTransfer_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailParcelTransfer_)
+export class bigboxretailParcelTransferResolver extends ResolverBase {
+    @Query(() => RunbigboxretailParcelTransferViewResult)
+    async RunbigboxretailParcelTransferViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailParcelTransferViewResult)
+    async RunbigboxretailParcelTransferViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailParcelTransferViewResult)
+    async RunbigboxretailParcelTransferDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Parcel Transfers';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailParcelTransfer_, { nullable: true })
+    async bigboxretailParcelTransfer(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailParcelTransfer_ | null> {
+        this.CheckUserReadPermissions('Parcel Transfers', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwParcelTransfers')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Transfers', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Parcel Transfers', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => bigboxretailParcelTransfer_)
+    async CreatebigboxretailParcelTransfer(
+        @Arg('input', () => CreatebigboxretailParcelTransferInput) input: CreatebigboxretailParcelTransferInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Parcel Transfers', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => bigboxretailParcelTransfer_)
+    async UpdatebigboxretailParcelTransfer(
+        @Arg('input', () => UpdatebigboxretailParcelTransferInput) input: UpdatebigboxretailParcelTransferInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Parcel Transfers', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => bigboxretailParcelTransfer_)
+    async DeletebigboxretailParcelTransfer(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Parcel Transfers', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
 // ENTITY CLASS for Parcels
 //****************************************************************************
 @ObjectType({ description: `One row per Indiana parcel, keyed on (CountyNumber, ParcelNumber) — the statewide 17-digit parcel number. Holds relatively stable characteristics; assessed values live in Assessment, one row per year.` })
@@ -8774,6 +11398,21 @@ export class indianataxParcel_ {
     
     @Field(() => [indianataxOwnerPortfolioParcel_])
     indianataxOwnerPortfolioParcels_ParcelIDArray: indianataxOwnerPortfolioParcel_[]; // Link to indianataxOwnerPortfolioParcels
+    
+    @Field(() => [indianataxTaxBill_])
+    indianataxTaxBills_ParcelIDArray: indianataxTaxBill_[]; // Link to indianataxTaxBills
+    
+    @Field(() => [indianataxCardValuationColumn_])
+    indianataxCardValuationColumns_ParcelIDArray: indianataxCardValuationColumn_[]; // Link to indianataxCardValuationColumns
+    
+    @Field(() => [indianataxCardNote_])
+    indianataxCardNotes_ParcelIDArray: indianataxCardNote_[]; // Link to indianataxCardNotes
+    
+    @Field(() => [indianataxCardSummary_])
+    indianataxCardSummaries_ParcelIDArray: indianataxCardSummary_[]; // Link to indianataxCardSummaries
+    
+    @Field(() => [indianataxCardImprovement_])
+    indianataxCardImprovements_ParcelIDArray: indianataxCardImprovement_[]; // Link to indianataxCardImprovements
     
 }
 
@@ -9200,6 +11839,56 @@ export class indianataxParcelResolver extends ResolverBase {
         return result;
     }
         
+    @FieldResolver(() => [indianataxTaxBill_])
+    async indianataxTaxBills_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Tax Bills', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxBills')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Bills', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Tax Bills', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardValuationColumn_])
+    async indianataxCardValuationColumns_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Valuation Columns', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardValuationColumns')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Valuation Columns', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Valuation Columns', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardNote_])
+    async indianataxCardNotes_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Notes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardNotes')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Notes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Notes', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardSummary_])
+    async indianataxCardSummaries_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Summaries', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardSummaries')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Summaries', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Summaries', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardImprovement_])
+    async indianataxCardImprovements_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Improvements', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardImprovements')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Improvements', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Improvements', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
     @Mutation(() => indianataxParcel_)
     async CreateindianataxParcel(
         @Arg('input', () => CreateindianataxParcelInput) input: CreateindianataxParcelInput,
@@ -9256,6 +11945,10 @@ export class indianataxPropertyClassMap_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({nullable: true, description: `DLGF statutory class for this property class code, from the code's leading digit per the Property Tax Management System Code List Manual (Code List 1): 100s Agricultural, 200s Mineral, 300s Industrial, 400s Commercial, 500s Residential, 600s/700s Exempt, 800s Utility. This is the statewide-roll taxonomy and the frame DLGF's own ratio study is published in. Distinct from TypeGroup, which is the valuation taxonomy used to build comparable pools for C&I appeal work -- see docs/proposals/property-class-map-statewide.md. Use StatutoryGroup for statewide/roll reporting and TypeGroup for comp selection; never substitute one for the other.`}) 
+    @MaxLength(20)
+    StatutoryGroup?: string;
+        
 }
 
 //****************************************************************************
@@ -9274,6 +11967,9 @@ export class CreateindianataxPropertyClassMapInput {
 
     @Field({ nullable: true })
     Notes: string | null;
+
+    @Field({ nullable: true })
+    StatutoryGroup: string | null;
 
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
@@ -9296,6 +11992,9 @@ export class UpdateindianataxPropertyClassMapInput {
 
     @Field({ nullable: true })
     Notes?: string | null;
+
+    @Field({ nullable: true })
+    StatutoryGroup?: string | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -11460,6 +14159,257 @@ export class indianataxResearchTaskResolver extends ResolverBase {
 }
 
 //****************************************************************************
+// ENTITY CLASS for Sale Reassessment Scenario Probabilities
+//****************************************************************************
+@ObjectType({ description: `Empirical post-sale reassessment scenario probabilities (OPP-2 Component A), one row per (county, property type, gap-to-price band, methodology version): what fraction of comparable arm\'s-length sales landing this far above their pre-sale AV got fully chased to price within 3 years (Worst Case) vs. partially reacted to (Most Likely) vs. saw no reaction (Best Case). Feeds OPP-1 Component B\'s probability-weighted tax-budget projection. Recomputed periodically by scripts/model-post-sale-reassessment.js -- not a live view.` })
+export class indianataxSaleReassessmentScenarioProbability_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field(() => Int, {description: `DLGF county number the sample was drawn from (49 = Marion).`}) 
+    CountyNumber: number;
+        
+    @Field({description: `The property type this row applies to, or 'All' for the county-wide (all types combined) fallback row used when a specific type's sample in this gap band is too thin.`}) 
+    @MaxLength(30)
+    PropertyTypeGroup: string;
+        
+    @Field({description: `How far the sale price landed above the parcel's pre-sale assessed value (e.g. '25-50%' = sale price was 25-50% above pre-sale AV). Banding by gap size (rather than a flat >10% threshold) removes a confound: ordinary trend alone closes a small gap over 3 years with no real assessor reaction involved, so a flat population overstates the full-chase probability for small gaps.`}) 
+    @MaxLength(10)
+    GapBand: string;
+        
+    @Field(() => Int, {description: `Number of qualifying sale x post-sale-assessment-year observations behind this row (with a meaningful gap to classify). Rows below the model's sample-size floor are flagged via LowSample, not excluded.`}) 
+    SampleSize: number;
+        
+    @Field(() => Float, {description: `Fraction (0.0-1.0) of the sample where the Assessor closed >=85% of the price-vs-AV gap within 3 years -- treated as a "full chase to price" Worst Case outcome.`}) 
+    PWorstCaseFullChase: number;
+        
+    @Field(() => Float, {nullable: true, description: `Median ChaseFraction among the Worst Case (>=85% closed) subset -- the representative magnitude to use for that bucket, not just the >=85% threshold itself.`}) 
+    WorstCaseMedianChaseFraction?: number;
+        
+    @Field(() => Float, {description: `Fraction (0.0-1.0) of the sample landing between the Worst Case and Best Case thresholds (a real but partial reaction) -- the Most Likely outcome.`}) 
+    PMostLikelyPartial: number;
+        
+    @Field(() => Float, {nullable: true, description: `Median ChaseFraction among the Most Likely (partial-reaction) subset.`}) 
+    MostLikelyMedianChaseFraction?: number;
+        
+    @Field(() => Float, {description: `Fraction (0.0-1.0) of the sample where the Assessor closed <=10% of the gap -- essentially no reaction to the sale. Best Case outcome.`}) 
+    PBestCaseNoReaction: number;
+        
+    @Field(() => Float, {nullable: true, description: `Median ChaseFraction among the Best Case (no-reaction) subset.`}) 
+    BestCaseMedianChaseFraction?: number;
+        
+    @Field(() => Boolean, {description: `True when SampleSize is below the model's minimum sample-size floor -- shown for transparency, not filtered out; a consumer should prefer the 'All' PropertyTypeGroup row for this gap band when this is set.`}) 
+    LowSample: boolean;
+        
+    @Field({description: `Version tag for the methodology that produced this row (e.g. "scenario-prob-v1-2026-09-04") -- lets the threshold/bucketing logic change over time without silently reinterpreting old rows.`}) 
+    @MaxLength(40)
+    MethodologyVersion: string;
+        
+    @Field({description: `When this row was last (re)computed. Not a live-updating view -- refreshed by re-running scripts/model-post-sale-reassessment.js.`}) 
+    ComputedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Sale Reassessment Scenario Probabilities
+//****************************************************************************
+@InputType()
+export class CreateindianataxSaleReassessmentScenarioProbabilityInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field({ nullable: true })
+    PropertyTypeGroup?: string;
+
+    @Field({ nullable: true })
+    GapBand?: string;
+
+    @Field(() => Int, { nullable: true })
+    SampleSize?: number;
+
+    @Field(() => Float, { nullable: true })
+    PWorstCaseFullChase?: number;
+
+    @Field(() => Float, { nullable: true })
+    WorstCaseMedianChaseFraction: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PMostLikelyPartial?: number;
+
+    @Field(() => Float, { nullable: true })
+    MostLikelyMedianChaseFraction: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PBestCaseNoReaction?: number;
+
+    @Field(() => Float, { nullable: true })
+    BestCaseMedianChaseFraction: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    LowSample?: boolean;
+
+    @Field({ nullable: true })
+    MethodologyVersion?: string;
+
+    @Field({ nullable: true })
+    ComputedAt?: Date;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Sale Reassessment Scenario Probabilities
+//****************************************************************************
+@InputType()
+export class UpdateindianataxSaleReassessmentScenarioProbabilityInput {
+    @Field()
+    ID: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field({ nullable: true })
+    PropertyTypeGroup?: string;
+
+    @Field({ nullable: true })
+    GapBand?: string;
+
+    @Field(() => Int, { nullable: true })
+    SampleSize?: number;
+
+    @Field(() => Float, { nullable: true })
+    PWorstCaseFullChase?: number;
+
+    @Field(() => Float, { nullable: true })
+    WorstCaseMedianChaseFraction?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PMostLikelyPartial?: number;
+
+    @Field(() => Float, { nullable: true })
+    MostLikelyMedianChaseFraction?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PBestCaseNoReaction?: number;
+
+    @Field(() => Float, { nullable: true })
+    BestCaseMedianChaseFraction?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    LowSample?: boolean;
+
+    @Field({ nullable: true })
+    MethodologyVersion?: string;
+
+    @Field({ nullable: true })
+    ComputedAt?: Date;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Sale Reassessment Scenario Probabilities
+//****************************************************************************
+@ObjectType()
+export class RunindianataxSaleReassessmentScenarioProbabilityViewResult {
+    @Field(() => [indianataxSaleReassessmentScenarioProbability_])
+    Results: indianataxSaleReassessmentScenarioProbability_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxSaleReassessmentScenarioProbability_)
+export class indianataxSaleReassessmentScenarioProbabilityResolver extends ResolverBase {
+    @Query(() => RunindianataxSaleReassessmentScenarioProbabilityViewResult)
+    async RunindianataxSaleReassessmentScenarioProbabilityViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxSaleReassessmentScenarioProbabilityViewResult)
+    async RunindianataxSaleReassessmentScenarioProbabilityViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxSaleReassessmentScenarioProbabilityViewResult)
+    async RunindianataxSaleReassessmentScenarioProbabilityDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Sale Reassessment Scenario Probabilities';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxSaleReassessmentScenarioProbability_, { nullable: true })
+    async indianataxSaleReassessmentScenarioProbability(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxSaleReassessmentScenarioProbability_ | null> {
+        this.CheckUserReadPermissions('Sale Reassessment Scenario Probabilities', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwSaleReassessmentScenarioProbabilities')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Sale Reassessment Scenario Probabilities', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Sale Reassessment Scenario Probabilities', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxSaleReassessmentScenarioProbability_)
+    async CreateindianataxSaleReassessmentScenarioProbability(
+        @Arg('input', () => CreateindianataxSaleReassessmentScenarioProbabilityInput) input: CreateindianataxSaleReassessmentScenarioProbabilityInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Sale Reassessment Scenario Probabilities', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxSaleReassessmentScenarioProbability_)
+    async UpdateindianataxSaleReassessmentScenarioProbability(
+        @Arg('input', () => UpdateindianataxSaleReassessmentScenarioProbabilityInput) input: UpdateindianataxSaleReassessmentScenarioProbabilityInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Sale Reassessment Scenario Probabilities', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxSaleReassessmentScenarioProbability_)
+    async DeleteindianataxSaleReassessmentScenarioProbability(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Sale Reassessment Scenario Probabilities', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
 // ENTITY CLASS for Sale Transactions
 //****************************************************************************
 @ObjectType({ description: `One observed real-estate sale -- the sales-comparison comp pool. Subject sales and off-portfolio comps both live here (ParcelID nullable). Populated from data already loaded (CountyAssessorSaleHistory + CoStarProperty), no new acquisition. Design: Indiana_Tax_Expert/docs/proposals/valuation-target-value.md.` })
@@ -12053,6 +15003,24 @@ export class indianataxSourceDocument_ {
     @Field(() => [indianataxValuationComp_])
     indianataxValuationComps_SourceDocumentIDArray: indianataxValuationComp_[]; // Link to indianataxValuationComps
     
+    @Field(() => [indianataxTaxAdjustment_])
+    indianataxTaxAdjustments_SourceDocumentIDArray: indianataxTaxAdjustment_[]; // Link to indianataxTaxAdjustments
+    
+    @Field(() => [indianataxTaxBill_])
+    indianataxTaxBills_SourceDocumentIDArray: indianataxTaxBill_[]; // Link to indianataxTaxBills
+    
+    @Field(() => [indianataxCardNote_])
+    indianataxCardNotes_SourceDocumentIDArray: indianataxCardNote_[]; // Link to indianataxCardNotes
+    
+    @Field(() => [indianataxCardValuationColumn_])
+    indianataxCardValuationColumns_SourceDocumentIDArray: indianataxCardValuationColumn_[]; // Link to indianataxCardValuationColumns
+    
+    @Field(() => [indianataxCardSummary_])
+    indianataxCardSummaries_SourceDocumentIDArray: indianataxCardSummary_[]; // Link to indianataxCardSummaries
+    
+    @Field(() => [indianataxCardImprovement_])
+    indianataxCardImprovements_SourceDocumentIDArray: indianataxCardImprovement_[]; // Link to indianataxCardImprovements
+    
 }
 
 //****************************************************************************
@@ -12427,6 +15395,66 @@ export class indianataxSourceDocumentResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwValuationComps')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Valuation Comps', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('Valuation Comps', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxTaxAdjustment_])
+    async indianataxTaxAdjustments_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Tax Adjustments', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxAdjustments')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Adjustments', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Tax Adjustments', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxTaxBill_])
+    async indianataxTaxBills_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Tax Bills', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxBills')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Bills', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Tax Bills', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardNote_])
+    async indianataxCardNotes_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Notes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardNotes')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Notes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Notes', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardValuationColumn_])
+    async indianataxCardValuationColumns_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Valuation Columns', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardValuationColumns')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Valuation Columns', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Valuation Columns', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardSummary_])
+    async indianataxCardSummaries_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Summaries', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardSummaries')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Summaries', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Summaries', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxCardImprovement_])
+    async indianataxCardImprovements_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Card Improvements', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwCardImprovements')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Card Improvements', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Card Improvements', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         
@@ -12947,6 +15975,983 @@ export class indianataxStatuteSectionResolver extends ResolverBase {
 }
 
 //****************************************************************************
+// ENTITY CLASS for Store Analysis
+//****************************************************************************
+@ObjectType()
+export class bigboxretailvwStoreAnalysis_ {
+    @Field({description: `Store primary key (big_box_retail.Store.ID). One row per PRIMARY roster row: the view is filtered to Store.IsPrimaryRow = 1, so the 37 duplicate roster rows (the same store carried under a second address) are excluded and each store's figures count exactly once.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `Retail brand operating at this address (Store.Brand). Called Occupant rather than Owner because the operator and the assessed owner are frequently different parties -- see AssessedOwner and TaxpayerOfRecord.`}) 
+    @MaxLength(100)
+    Occupant: string;
+        
+    @Field({nullable: true, description: `Owner name as carried on the county's assessment record for this store's parcels (Store.OwnerNameAssessed), pipe-joined when a multi-parcel store's parcels carry different owners. County assessment records lag conveyances, so this is the owner of record for assessment purposes, not necessarily the current titleholder.`}) 
+    @MaxLength(200)
+    AssessedOwner?: string;
+        
+    @Field({nullable: true, description: `Taxpayer of record from the DLGF tax-bill extract for the most recent pay year available, joined across this store's attribution-resolved parcels. This is the party the bill is actually sent to, and can differ from AssessedOwner (a net-leased tenant billed directly, for example).`}) 
+    @MaxLength(200)
+    TaxpayerOfRecord?: string;
+        
+    @Field({nullable: true, description: `Indiana county the store sits in. Determines the assessing and taxing jurisdiction, and which county source supplied the figures in this row.`}) 
+    @MaxLength(50)
+    County?: string;
+        
+    @Field({description: `City or town of the store's situs address.`}) 
+    @MaxLength(100)
+    City: string;
+        
+    @Field({description: `Situs street address of the store as carried on the roster. It is the roster address, not necessarily the address printed on the county's tax bill for the same parcel.`}) 
+    @MaxLength(200)
+    Address: string;
+        
+    @Field(() => Float, {nullable: true, description: `Total land area, in acres, across this store's attribution-resolved parcels.`}) 
+    Acres?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Year the primary structure was originally constructed. Named with "Year" deliberately: MJ Explorer decides how a number renders from its SQL type plus its field name, and only a name matching /year/i is rendered as a plain year rather than a comma-grouped integer. See Indiana_Tax_Expert/docs/NUMBER_FORMATTING.md.`}) 
+    YearBuilt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Building area used as the denominator of EVERY per-square-foot ratio in this view: COALESCE(Store.AttributedBuildingSqFt, Store.TotalBuildingSqFt). For the stores whose roster parcel list was narrowed by attribution it is the area of the resolved parcels only; for every other store it is the roster figure. See RosterSquareFeet and AttributedSquareFeet for which one is in play.`}) 
+    SquareFeet?: number;
+        
+    @Field({nullable: true, description: `How confidently this store's assessed value can be attributed to this brand's building. clean = one parcel, one brand. brand-parcel = several parcels, narrowed to the ground the brand owns or to its unshared parcels. summed = several parcels, one owner, none shared. review = several owners, none of them the brand -- the brand's building cannot be isolated from a landlord's outlot or a neighbour's. shared = a parcel carries more than one roster brand, so one assessment covers several stores. Only clean, brand-parcel and summed are uniformity-eligible.`}) 
+    @MaxLength(20)
+    AttributionTier?: string;
+        
+    @Field(() => Boolean, {nullable: true, description: `1 when this store's assessed value and building area describe the same thing well enough to use the store as a uniformity comparable (AttributionTier in clean, brand-parcel, summed). Every per-square-foot ratio in this view is blank when this is 0: a shared-parcel anchor's AV/SF cannot be honestly computed, so it is withheld rather than shown wrong.`}) 
+    UniformityEligible?: boolean;
+        
+    @Field(() => Boolean, {nullable: true, description: `1 when this store's parcels look like part of a larger economic unit -- typically adjoining vacant acreage under common ownership that an assessor or an appeal may treat as one property. A flag for human review, not a conclusion.`}) 
+    EconomicUnitReview?: boolean;
+        
+    @Field({nullable: true, description: `Heuristic inference of whether the store appears owner-occupied or leased/investor-held, from comparing the county's assessed owner name against the brand name ('likely owner-occupied' / 'likely leased/investor', or 'mixed' when a multi-parcel store's parcels disagree). This is an ownership-structure heuristic only -- it is NOT an occupancy or dark-store (vacant/operating) indicator, and no vacancy data feeds it.`}) 
+    @MaxLength(30)
+    OwnershipStructure?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for ASSESSMENT year 2021 (assessment date in 2021), summed across this store's attribution-resolved parcels. Mind the year convention: the AV columns are ASSESSMENT years and the adjacent Tax columns are PAY years -- the bill for assessment year 2021 is Tax2022, not Tax2021. Check AVComplete2021 before using this figure: an incomplete multi-parcel year still shows its PARTIAL sum here, and only the ratio is suppressed.`}) 
+    AV2021?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for ASSESSMENT year 2022 (assessment date in 2022), summed across this store's attribution-resolved parcels. Mind the year convention: the AV columns are ASSESSMENT years and the adjacent Tax columns are PAY years -- the bill for assessment year 2022 is Tax2023, not Tax2022. Check AVComplete2022 before using this figure: an incomplete multi-parcel year still shows its PARTIAL sum here, and only the ratio is suppressed.`}) 
+    AV2022?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for ASSESSMENT year 2023 (assessment date in 2023), summed across this store's attribution-resolved parcels. Mind the year convention: the AV columns are ASSESSMENT years and the adjacent Tax columns are PAY years -- the bill for assessment year 2023 is Tax2024, not Tax2023. Check AVComplete2023 before using this figure: an incomplete multi-parcel year still shows its PARTIAL sum here, and only the ratio is suppressed.`}) 
+    AV2023?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for ASSESSMENT year 2024 (assessment date in 2024), summed across this store's attribution-resolved parcels. Mind the year convention: the AV columns are ASSESSMENT years and the adjacent Tax columns are PAY years -- the bill for assessment year 2024 is Tax2025, not Tax2024. Check AVComplete2024 before using this figure: an incomplete multi-parcel year still shows its PARTIAL sum here, and only the ratio is suppressed.`}) 
+    AV2024?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for ASSESSMENT year 2025 (assessment date in 2025), summed across this store's attribution-resolved parcels. Mind the year convention: the AV columns are ASSESSMENT years and the adjacent Tax columns are PAY years -- the bill for assessment year 2025 is Tax2026, not Tax2025. Check AVComplete2025 before using this figure: an incomplete multi-parcel year still shows its PARTIAL sum here, and only the ratio is suppressed.`}) 
+    AV2025?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for ASSESSMENT year 2026 (assessment date in 2026), summed across this store's attribution-resolved parcels. Mind the year convention: the AV columns are ASSESSMENT years and the adjacent Tax columns are PAY years -- the bill for assessment year 2026 is Tax2027, not Tax2026. Check AVComplete2026 before using this figure: an incomplete multi-parcel year still shows its PARTIAL sum here, and only the ratio is suppressed.`}) 
+    AV2026?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total annual property tax billed in PAY year 2022 -- which is the bill for ASSESSMENT year 2021 -- summed across this store's attribution-resolved parcels. Do NOT read Tax2022 and AV2022 as the same year: they sit in adjacent columns and describe different years. Precedence prefers the county treasurer's currently billed figure over DLGF's as-originally-certified figure; see TaxSource2022. Check TaxComplete2022: an incomplete multi-parcel year still shows its PARTIAL sum here.`}) 
+    Tax2022?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total annual property tax billed in PAY year 2023 -- which is the bill for ASSESSMENT year 2022 -- summed across this store's attribution-resolved parcels. Do NOT read Tax2023 and AV2023 as the same year: they sit in adjacent columns and describe different years. Precedence prefers the county treasurer's currently billed figure over DLGF's as-originally-certified figure; see TaxSource2023. Check TaxComplete2023: an incomplete multi-parcel year still shows its PARTIAL sum here.`}) 
+    Tax2023?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total annual property tax billed in PAY year 2024 -- which is the bill for ASSESSMENT year 2023 -- summed across this store's attribution-resolved parcels. Do NOT read Tax2024 and AV2024 as the same year: they sit in adjacent columns and describe different years. Precedence prefers the county treasurer's currently billed figure over DLGF's as-originally-certified figure; see TaxSource2024. Check TaxComplete2024: an incomplete multi-parcel year still shows its PARTIAL sum here.`}) 
+    Tax2024?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total annual property tax billed in PAY year 2025 -- which is the bill for ASSESSMENT year 2024 -- summed across this store's attribution-resolved parcels. Do NOT read Tax2025 and AV2025 as the same year: they sit in adjacent columns and describe different years. Precedence prefers the county treasurer's currently billed figure over DLGF's as-originally-certified figure; see TaxSource2025. Check TaxComplete2025: an incomplete multi-parcel year still shows its PARTIAL sum here.`}) 
+    Tax2025?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total annual property tax billed in PAY year 2026 -- which is the bill for ASSESSMENT year 2025 -- summed across this store's attribution-resolved parcels. Do NOT read Tax2026 and AV2026 as the same year: they sit in adjacent columns and describe different years. Precedence prefers the county treasurer's currently billed figure over DLGF's as-originally-certified figure; see TaxSource2026. Check TaxComplete2026: an incomplete multi-parcel year still shows its PARTIAL sum here.`}) 
+    Tax2026?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot for ASSESSMENT year 2021: AV2021 / SquareFeet. Blank unless UniformityEligible = 1, AVComplete2021 = 1, and both AV2021 and SquareFeet are strictly positive -- the ratio is omitted rather than published wrong. The positive check matters: a county form that carried no assessed value for a year parses as $0, and $0.00/sf must never appear as a comparable.`}) 
+    AVPerSF2021?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot for ASSESSMENT year 2022: AV2022 / SquareFeet. Blank unless UniformityEligible = 1, AVComplete2022 = 1, and both AV2022 and SquareFeet are strictly positive -- the ratio is omitted rather than published wrong. The positive check matters: a county form that carried no assessed value for a year parses as $0, and $0.00/sf must never appear as a comparable.`}) 
+    AVPerSF2022?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot for ASSESSMENT year 2023: AV2023 / SquareFeet. Blank unless UniformityEligible = 1, AVComplete2023 = 1, and both AV2023 and SquareFeet are strictly positive -- the ratio is omitted rather than published wrong. The positive check matters: a county form that carried no assessed value for a year parses as $0, and $0.00/sf must never appear as a comparable.`}) 
+    AVPerSF2023?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot for ASSESSMENT year 2024: AV2024 / SquareFeet. Blank unless UniformityEligible = 1, AVComplete2024 = 1, and both AV2024 and SquareFeet are strictly positive -- the ratio is omitted rather than published wrong. The positive check matters: a county form that carried no assessed value for a year parses as $0, and $0.00/sf must never appear as a comparable.`}) 
+    AVPerSF2024?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot for ASSESSMENT year 2025: AV2025 / SquareFeet. Blank unless UniformityEligible = 1, AVComplete2025 = 1, and both AV2025 and SquareFeet are strictly positive -- the ratio is omitted rather than published wrong. The positive check matters: a county form that carried no assessed value for a year parses as $0, and $0.00/sf must never appear as a comparable.`}) 
+    AVPerSF2025?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot for ASSESSMENT year 2026: AV2026 / SquareFeet. Blank unless UniformityEligible = 1, AVComplete2026 = 1, and both AV2026 and SquareFeet are strictly positive -- the ratio is omitted rather than published wrong. The positive check matters: a county form that carried no assessed value for a year parses as $0, and $0.00/sf must never appear as a comparable.`}) 
+    AVPerSF2026?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Property tax per square foot for PAY year 2022 (the bill for ASSESSMENT year 2021): Tax2022 / SquareFeet. Blank unless UniformityEligible = 1, TaxComplete2022 = 1, and both Tax2022 and SquareFeet are strictly positive. Note this column is keyed on a PAY year while the AVPerSF columns are keyed on ASSESSMENT years, so TaxPerSF2022 and AVPerSF2022 are one year apart.`}) 
+    TaxPerSF2022?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Property tax per square foot for PAY year 2023 (the bill for ASSESSMENT year 2022): Tax2023 / SquareFeet. Blank unless UniformityEligible = 1, TaxComplete2023 = 1, and both Tax2023 and SquareFeet are strictly positive. Note this column is keyed on a PAY year while the AVPerSF columns are keyed on ASSESSMENT years, so TaxPerSF2023 and AVPerSF2023 are one year apart.`}) 
+    TaxPerSF2023?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Property tax per square foot for PAY year 2024 (the bill for ASSESSMENT year 2023): Tax2024 / SquareFeet. Blank unless UniformityEligible = 1, TaxComplete2024 = 1, and both Tax2024 and SquareFeet are strictly positive. Note this column is keyed on a PAY year while the AVPerSF columns are keyed on ASSESSMENT years, so TaxPerSF2024 and AVPerSF2024 are one year apart.`}) 
+    TaxPerSF2024?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Property tax per square foot for PAY year 2025 (the bill for ASSESSMENT year 2024): Tax2025 / SquareFeet. Blank unless UniformityEligible = 1, TaxComplete2025 = 1, and both Tax2025 and SquareFeet are strictly positive. Note this column is keyed on a PAY year while the AVPerSF columns are keyed on ASSESSMENT years, so TaxPerSF2025 and AVPerSF2025 are one year apart.`}) 
+    TaxPerSF2025?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Property tax per square foot for PAY year 2026 (the bill for ASSESSMENT year 2025): Tax2026 / SquareFeet. Blank unless UniformityEligible = 1, TaxComplete2026 = 1, and both Tax2026 and SquareFeet are strictly positive. Note this column is keyed on a PAY year while the AVPerSF columns are keyed on ASSESSMENT years, so TaxPerSF2026 and AVPerSF2026 are one year apart.`}) 
+    TaxPerSF2026?: number;
+        
+    @Field({nullable: true, description: `Which source supplied AV2021. For 2021 this is overwhelmingly dlgf_taxdata -- the DLGF tax bill's BILLING net assessed value, NOT a county property record card figure. It is a related but not identical measure to the PRC-sourced 2023+ values, so a 2021-to-2025 trend crosses a source seam and should be read as such. A [caveat:dlgf_net_av_may_overstate] suffix marks the 17 parcels whose DLGF net AV runs 7-43% above the treasurer's taxable AV.`}) 
+    @MaxLength(100)
+    AVSource2021?: string;
+        
+    @Field({nullable: true, description: `Which source supplied AV2022. For 2022 this is overwhelmingly dlgf_taxdata -- the DLGF tax bill's BILLING net assessed value, NOT a county property record card figure. It is a related but not identical measure to the PRC-sourced 2023+ values, so a 2021-to-2025 trend crosses a source seam and should be read as such. A [caveat:dlgf_net_av_may_overstate] suffix marks the 17 parcels whose DLGF net AV runs 7-43% above the treasurer's taxable AV.`}) 
+    @MaxLength(100)
+    AVSource2022?: string;
+        
+    @Field({nullable: true, description: `Which source supplied AV2023: county_prc (county property record card, the preferred source), hamilton_api, dlgf_crosswalk_2025, or dlgf_taxdata (DLGF BILLING net assessed value, the fallback -- a related but not identical measure to a PRC figure). Sources are ';'-joined when a multi-parcel store's parcels were satisfied differently. A [caveat:dlgf_net_av_may_overstate] suffix marks the 17 parcels whose DLGF net AV runs 7-43% above the treasurer's taxable AV.`}) 
+    @MaxLength(100)
+    AVSource2023?: string;
+        
+    @Field({nullable: true, description: `Which source supplied AV2024: county_prc (county property record card, the preferred source), hamilton_api, dlgf_crosswalk_2025, or dlgf_taxdata (DLGF BILLING net assessed value, the fallback -- a related but not identical measure to a PRC figure). Sources are ';'-joined when a multi-parcel store's parcels were satisfied differently. A [caveat:dlgf_net_av_may_overstate] suffix marks the 17 parcels whose DLGF net AV runs 7-43% above the treasurer's taxable AV.`}) 
+    @MaxLength(100)
+    AVSource2024?: string;
+        
+    @Field({nullable: true, description: `Which source supplied AV2025: county_prc (county property record card, the preferred source), hamilton_api, dlgf_crosswalk_2025, or dlgf_taxdata (DLGF BILLING net assessed value, the fallback -- a related but not identical measure to a PRC figure). Sources are ';'-joined when a multi-parcel store's parcels were satisfied differently. A [caveat:dlgf_net_av_may_overstate] suffix marks the 17 parcels whose DLGF net AV runs 7-43% above the treasurer's taxable AV.`}) 
+    @MaxLength(100)
+    AVSource2025?: string;
+        
+    @Field({nullable: true, description: `Which source supplied AV2026: county_prc (county property record card, the preferred source), hamilton_api, dlgf_crosswalk_2025, or dlgf_taxdata (DLGF BILLING net assessed value, the fallback -- a related but not identical measure to a PRC figure). Sources are ';'-joined when a multi-parcel store's parcels were satisfied differently. A [caveat:dlgf_net_av_may_overstate] suffix marks the 17 parcels whose DLGF net AV runs 7-43% above the treasurer's taxable AV.`}) 
+    @MaxLength(100)
+    AVSource2026?: string;
+        
+    @Field({nullable: true, description: `Which source supplied Tax2022: treasurer_scraped (the county treasurer's currently billed figure, preferred because counties post corrections after certification), marion_taxhist, hamilton_statement, or dlgf_taxdata (as originally certified -- the fallback, and the only source for pay years 2022 and 2023, which predate the scraping). A bracketed suffix records how a scraped bill's installments were reconciled against the bill's own stated annual total: [installments_repeat_annual] means the treasurer's page printed the annual figure in BOTH installment boxes, so the bill's stated total was used instead of their sum; [installments_disagree_with_bill_total] means the two installments summed to more or less than the stated annual (typically a fee or a delinquent prior-year balance riding on an installment) and the stated annual was used.`}) 
+    @MaxLength(100)
+    TaxSource2022?: string;
+        
+    @Field({nullable: true, description: `Which source supplied Tax2023: treasurer_scraped (the county treasurer's currently billed figure, preferred because counties post corrections after certification), marion_taxhist, hamilton_statement, or dlgf_taxdata (as originally certified -- the fallback, and the only source for pay years 2022 and 2023, which predate the scraping). A bracketed suffix records how a scraped bill's installments were reconciled against the bill's own stated annual total: [installments_repeat_annual] means the treasurer's page printed the annual figure in BOTH installment boxes, so the bill's stated total was used instead of their sum; [installments_disagree_with_bill_total] means the two installments summed to more or less than the stated annual (typically a fee or a delinquent prior-year balance riding on an installment) and the stated annual was used.`}) 
+    @MaxLength(100)
+    TaxSource2023?: string;
+        
+    @Field({nullable: true, description: `Which source supplied Tax2024: treasurer_scraped (the county treasurer's currently billed figure, preferred because counties post corrections after certification), marion_taxhist, hamilton_statement, or dlgf_taxdata (as originally certified -- the fallback, and the only source for pay years 2022 and 2023, which predate the scraping). A bracketed suffix records how a scraped bill's installments were reconciled against the bill's own stated annual total: [installments_repeat_annual] means the treasurer's page printed the annual figure in BOTH installment boxes, so the bill's stated total was used instead of their sum; [installments_disagree_with_bill_total] means the two installments summed to more or less than the stated annual (typically a fee or a delinquent prior-year balance riding on an installment) and the stated annual was used.`}) 
+    @MaxLength(100)
+    TaxSource2024?: string;
+        
+    @Field({nullable: true, description: `Which source supplied Tax2025: treasurer_scraped (the county treasurer's currently billed figure, preferred because counties post corrections after certification), marion_taxhist, hamilton_statement, or dlgf_taxdata (as originally certified -- the fallback, and the only source for pay years 2022 and 2023, which predate the scraping). A bracketed suffix records how a scraped bill's installments were reconciled against the bill's own stated annual total: [installments_repeat_annual] means the treasurer's page printed the annual figure in BOTH installment boxes, so the bill's stated total was used instead of their sum; [installments_disagree_with_bill_total] means the two installments summed to more or less than the stated annual (typically a fee or a delinquent prior-year balance riding on an installment) and the stated annual was used.`}) 
+    @MaxLength(100)
+    TaxSource2025?: string;
+        
+    @Field({nullable: true, description: `Which source supplied Tax2026: treasurer_scraped (the county treasurer's currently billed figure, preferred because counties post corrections after certification), marion_taxhist, hamilton_statement, or dlgf_taxdata (as originally certified -- the fallback, and the only source for pay years 2022 and 2023, which predate the scraping). A bracketed suffix records how a scraped bill's installments were reconciled against the bill's own stated annual total: [installments_repeat_annual] means the treasurer's page printed the annual figure in BOTH installment boxes, so the bill's stated total was used instead of their sum; [installments_disagree_with_bill_total] means the two installments summed to more or less than the stated annual (typically a fee or a delinquent prior-year balance riding on an installment) and the stated annual was used.`}) 
+    @MaxLength(100)
+    TaxSource2026?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Building area from the roster across ALL parcels originally mapped to this address, including any that attribution later excluded. Provenance only -- never used in a ratio. Where this differs from SquareFeet, AttributedSquareFeet is why.`}) 
+    RosterSquareFeet?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Building area of ONLY the attribution-resolved parcels. Populated for the stores whose parcel list was narrowed (a brand-owned box separated from the surrounding mall, say) and NULL for every store where the roster list already described the store. When non-NULL this is what SquareFeet uses.`}) 
+    AttributedSquareFeet?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Number of parcels making up this store after attribution resolution -- the denominator behind the AVComplete/TaxComplete flags. A store-year is complete only when all ParcelsTotal parcels reported a figure for that year.`}) 
+    ParcelsTotal?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported an assessed value for ASSESSMENT year 2021; 0 when only some did. AV2021 still shows the PARTIAL sum when this is 0 -- making that visible is exactly what this flag is for, because a partial sum is indistinguishable from a whole one in an exported sheet. AVPerSF2021 is suppressed whenever this is 0. NULL means the store has no 2021 assessment row at all.`}) 
+    AVComplete2021?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported an assessed value for ASSESSMENT year 2022; 0 when only some did. AV2022 still shows the PARTIAL sum when this is 0 -- making that visible is exactly what this flag is for, because a partial sum is indistinguishable from a whole one in an exported sheet. AVPerSF2022 is suppressed whenever this is 0. NULL means the store has no 2022 assessment row at all.`}) 
+    AVComplete2022?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported an assessed value for ASSESSMENT year 2023; 0 when only some did. AV2023 still shows the PARTIAL sum when this is 0 -- making that visible is exactly what this flag is for, because a partial sum is indistinguishable from a whole one in an exported sheet. AVPerSF2023 is suppressed whenever this is 0. NULL means the store has no 2023 assessment row at all.`}) 
+    AVComplete2023?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported an assessed value for ASSESSMENT year 2024; 0 when only some did. AV2024 still shows the PARTIAL sum when this is 0 -- making that visible is exactly what this flag is for, because a partial sum is indistinguishable from a whole one in an exported sheet. AVPerSF2024 is suppressed whenever this is 0. NULL means the store has no 2024 assessment row at all.`}) 
+    AVComplete2024?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported an assessed value for ASSESSMENT year 2025; 0 when only some did. AV2025 still shows the PARTIAL sum when this is 0 -- making that visible is exactly what this flag is for, because a partial sum is indistinguishable from a whole one in an exported sheet. AVPerSF2025 is suppressed whenever this is 0. NULL means the store has no 2025 assessment row at all.`}) 
+    AVComplete2025?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported an assessed value for ASSESSMENT year 2026; 0 when only some did. AV2026 still shows the PARTIAL sum when this is 0 -- making that visible is exactly what this flag is for, because a partial sum is indistinguishable from a whole one in an exported sheet. AVPerSF2026 is suppressed whenever this is 0. NULL means the store has no 2026 assessment row at all.`}) 
+    AVComplete2026?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported a tax figure for PAY year 2022; 0 when only some did. Tax2022 still shows the PARTIAL sum when this is 0, and TaxPerSF2022 is suppressed. NULL means the store has no 2022 tax row at all.`}) 
+    TaxComplete2022?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported a tax figure for PAY year 2023; 0 when only some did. Tax2023 still shows the PARTIAL sum when this is 0, and TaxPerSF2023 is suppressed. NULL means the store has no 2023 tax row at all.`}) 
+    TaxComplete2023?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported a tax figure for PAY year 2024; 0 when only some did. Tax2024 still shows the PARTIAL sum when this is 0, and TaxPerSF2024 is suppressed. NULL means the store has no 2024 tax row at all.`}) 
+    TaxComplete2024?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported a tax figure for PAY year 2025; 0 when only some did. Tax2025 still shows the PARTIAL sum when this is 0, and TaxPerSF2025 is suppressed. NULL means the store has no 2025 tax row at all.`}) 
+    TaxComplete2025?: number;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every one of this store's ParcelsTotal parcels reported a tax figure for PAY year 2026; 0 when only some did. Tax2026 still shows the PARTIAL sum when this is 0, and TaxPerSF2026 is suppressed. NULL means the store has no 2026 tax row at all.`}) 
+    TaxComplete2026?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Count of assessment years in which IC 6-1.1-15-17.2 puts the burden of proof on the assessor for this store: an increase over 5% not attributable to new construction, a use change, or a parcel split/combination. Counts only the actionable, usable band -- unverified and miscoded-construction bands are excluded, as are years already reduced to at or below the prior year. NULL means no such year was found.`}) 
+    BurdenShiftYears?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Most recent assessment year carrying a burden shift. The appeal cycle this store is live for.`}) 
+    LatestBurdenShiftYear?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of the assessed-value increases across this stores burden-shifted years. What reverting to the prior year would remove from the assessment, before any further market argument.`}) 
+    BurdenShiftAVAtStake?: number;
+        
+    @Field({nullable: true, description: `What winning the burden argument alone would achieve. "revert-and-done" -- the prior year is already at or below the $50/SF Indiana big-box benchmark, so reverting lands an acceptable value. "revert-then-argue" -- the prior year is still above benchmark, so the burden shift is the opening and market evidence is still needed underneath it.`}) 
+    @MaxLength(17)
+    BurdenShiftPosture?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Number of prior appeal settlements read from this stores record cards -- values the county has already conceded. NOT sale evidence: a settlement is an assessed value, and citing one as a comparable sale would be wrong.`}) 
+    SettlementCount?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Highest total assessed value the county has previously agreed to on this store, from an assessor note recording an agreement, stipulation, PTABOA reduction or Form 115 determination.`}) 
+    HighestSettlementAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Lowest settlement this store has on record expressed as a rate per square foot, where the assessors note stated one directly (e.g. "APPEAL ADJUSTED TO $44.00 SQ. FT."). The most directly usable form of a settlement, because it speaks in the same units as the benchmark.`}) 
+    LowestAgreedPSF?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Number of this stores own recorded transfers that pass the comparable screen -- a market deed instrument and a $/SF inside the plausible band. Transfers failing the screen (quit claims, sheriffs deeds, outlot conveyances, portfolio sales) are held in ParcelTransfer but excluded here.`}) 
+    UsableCompCount?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Lowest price per square foot among this stores usable recorded sales. Indiana imposes no statutory limit on comparable-sale recency, so an older sale is adjusted for market conditions rather than excluded.`}) 
+    LowestCompPSF?: number;
+        
+    @Field({nullable: true, description: `Date of the most recent usable recorded sale on this stores parcels.`}) 
+    LatestCompDate?: Date;
+        
+    @Field(() => Int, {nullable: true, description: `Recorded sales on this store's parcels whose price per square foot falls inside the plausible band but whose instrument the county does not publish -- Hamilton prints neither a deed code nor a transfer type. Real evidence without deed confirmation: worth reading before citing, and deliberately not counted in UsableCompCount or LowestCompPSF.`}) 
+    UnverifiedCompCount?: number;
+        
+}
+//****************************************************************************
+// RESOLVER for Store Analysis
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailvwStoreAnalysisViewResult {
+    @Field(() => [bigboxretailvwStoreAnalysis_])
+    Results: bigboxretailvwStoreAnalysis_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailvwStoreAnalysis_)
+export class bigboxretailvwStoreAnalysisResolver extends ResolverBase {
+    @Query(() => RunbigboxretailvwStoreAnalysisViewResult)
+    async RunbigboxretailvwStoreAnalysisViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailvwStoreAnalysisViewResult)
+    async RunbigboxretailvwStoreAnalysisViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailvwStoreAnalysisViewResult)
+    async RunbigboxretailvwStoreAnalysisDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Store Analysis';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailvwStoreAnalysis_, { nullable: true })
+    async bigboxretailvwStoreAnalysis(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailvwStoreAnalysis_ | null> {
+        this.CheckUserReadPermissions('Store Analysis', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreAnalysis')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Analysis', userPayload, EntityPermissionType.Read, 'AND');
+        this.createRecordAccessAuditLogRecord(provider, userPayload, 'Store Analysis', ID)
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Store Analysis', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Store Assessments
+//****************************************************************************
+@ObjectType({ description: `One row per Store per assessment year (2021-2026), holding that year\'s land/improvement/total assessed value as parsed from county PRC or billing records. Populated by Task 4 from Big_Box_Retail/states/indiana/data/county-records/parsed/store-assessment-years.csv.` })
+export class bigboxretailStoreAssessment_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    StoreID: string;
+        
+    @Field(() => Int, {description: `The assessment year this row's AV figures apply to.`}) 
+    AssessmentYear: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value of the land component for this assessment year.`}) 
+    LandAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value of the improvement component for this assessment year.`}) 
+    ImprovementAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value (land + improvement) for this assessment year, as reported by Source. Not guaranteed to equal LandAV + ImprovementAV when the source only publishes a total.`}) 
+    TotalAV?: number;
+        
+    @Field({nullable: true, description: `Which upstream record type this year's figures were parsed from (e.g. a PRC, a county assessor API, or -- for 2021-2022 -- TAXDATA's billing AV, a related but not identical measure to a PRC-derived assessed value).`}) 
+    @MaxLength(100)
+    Source?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Number of this store's parcels for which this year's AV was actually found/parsed.`}) 
+    ParcelsCovered?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Total number of parcels belonging to this store, for comparison against ParcelsCovered.`}) 
+    ParcelsTotal?: number;
+        
+    @Field(() => Boolean, {description: `True when ParcelsCovered = ParcelsTotal for this year -- i.e. every one of the store's parcels has a value for this year, so a per-year total or ratio built from it is not silently understated by a missing parcel. vwStoreAnalysis gates every AVPerSF ratio on this flag.`}) 
+    IsComplete: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(100)
+    Store: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Store Assessments
+//****************************************************************************
+@InputType()
+export class CreatebigboxretailStoreAssessmentInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    StoreID?: string;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field(() => Float, { nullable: true })
+    LandAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAV: number | null;
+
+    @Field({ nullable: true })
+    Source: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsCovered: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsTotal: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsComplete?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Store Assessments
+//****************************************************************************
+@InputType()
+export class UpdatebigboxretailStoreAssessmentInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    StoreID?: string;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field(() => Float, { nullable: true })
+    LandAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    ImprovementAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAV?: number | null;
+
+    @Field({ nullable: true })
+    Source?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsCovered?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsTotal?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsComplete?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Store Assessments
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailStoreAssessmentViewResult {
+    @Field(() => [bigboxretailStoreAssessment_])
+    Results: bigboxretailStoreAssessment_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailStoreAssessment_)
+export class bigboxretailStoreAssessmentResolver extends ResolverBase {
+    @Query(() => RunbigboxretailStoreAssessmentViewResult)
+    async RunbigboxretailStoreAssessmentViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailStoreAssessmentViewResult)
+    async RunbigboxretailStoreAssessmentViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailStoreAssessmentViewResult)
+    async RunbigboxretailStoreAssessmentDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Store Assessments';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailStoreAssessment_, { nullable: true })
+    async bigboxretailStoreAssessment(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailStoreAssessment_ | null> {
+        this.CheckUserReadPermissions('Store Assessments', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreAssessments')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Assessments', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Store Assessments', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => bigboxretailStoreAssessment_)
+    async CreatebigboxretailStoreAssessment(
+        @Arg('input', () => CreatebigboxretailStoreAssessmentInput) input: CreatebigboxretailStoreAssessmentInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Store Assessments', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => bigboxretailStoreAssessment_)
+    async UpdatebigboxretailStoreAssessment(
+        @Arg('input', () => UpdatebigboxretailStoreAssessmentInput) input: UpdatebigboxretailStoreAssessmentInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Store Assessments', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => bigboxretailStoreAssessment_)
+    async DeletebigboxretailStoreAssessment(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Store Assessments', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Store Taxes
+//****************************************************************************
+@ObjectType({ description: `One row per Store per pay year (2022-2026), holding that year\'s installment, total tax, and rate figures as parsed from county treasurer/TAXDATA records. Populated by Task 4 from Big_Box_Retail/states/indiana/data/county-records/parsed/store-tax-years.csv.` })
+export class bigboxretailStoreTax_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    StoreID: string;
+        
+    @Field(() => Int, {description: `The calendar year in which this row's tax installments are billed/paid (Indiana taxes are billed in arrears -- PayYear N bills AssessmentYear N-1's value).`}) 
+    PayYear: number;
+        
+    @Field(() => Int, {nullable: true, description: `The assessment year this tax bill is based on, when known from the source record.`}) 
+    AssessmentYear?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Spring installment amount billed for this pay year.`}) 
+    SpringInstallment?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Fall installment amount billed for this pay year.`}) 
+    FallInstallment?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total tax billed for this pay year (typically SpringInstallment + FallInstallment, as reported by Source).`}) 
+    AnnualTax?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Effective tax rate applied for this pay year, as reported by Source (dollars of tax per $100 of net assessed value, or the source's equivalent).`}) 
+    TaxRate?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Gross tax due for this pay year before credits/deductions, as reported by Source.`}) 
+    GrossTaxDue?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Net assessed value (after exemptions/deductions) used to compute this pay year's tax bill, as reported by Source.`}) 
+    NetAV?: number;
+        
+    @Field({nullable: true, description: `Which upstream record type this pay year's figures were parsed from (e.g. county treasurer record or TAXDATA billing extract).`}) 
+    @MaxLength(100)
+    Source?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Number of this store's parcels for which this pay year's tax was actually found/parsed.`}) 
+    ParcelsCovered?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Total number of parcels belonging to this store, for comparison against ParcelsCovered.`}) 
+    ParcelsTotal?: number;
+        
+    @Field(() => Boolean, {description: `True when ParcelsCovered = ParcelsTotal for this pay year -- i.e. every one of the store's parcels has a value for this year, so a per-year total or ratio built from it is not silently understated by a missing parcel. vwStoreAnalysis gates every TaxPerSF ratio on this flag.`}) 
+    IsComplete: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(100)
+    Store: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Store Taxes
+//****************************************************************************
+@InputType()
+export class CreatebigboxretailStoreTaxInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    StoreID?: string;
+
+    @Field(() => Int, { nullable: true })
+    PayYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear: number | null;
+
+    @Field(() => Float, { nullable: true })
+    SpringInstallment: number | null;
+
+    @Field(() => Float, { nullable: true })
+    FallInstallment: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AnnualTax: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TaxRate: number | null;
+
+    @Field(() => Float, { nullable: true })
+    GrossTaxDue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NetAV: number | null;
+
+    @Field({ nullable: true })
+    Source: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsCovered: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsTotal: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsComplete?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Store Taxes
+//****************************************************************************
+@InputType()
+export class UpdatebigboxretailStoreTaxInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    StoreID?: string;
+
+    @Field(() => Int, { nullable: true })
+    PayYear?: number;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    SpringInstallment?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    FallInstallment?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AnnualTax?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TaxRate?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    GrossTaxDue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NetAV?: number | null;
+
+    @Field({ nullable: true })
+    Source?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsCovered?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    ParcelsTotal?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsComplete?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Store Taxes
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailStoreTaxViewResult {
+    @Field(() => [bigboxretailStoreTax_])
+    Results: bigboxretailStoreTax_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailStoreTax_)
+export class bigboxretailStoreTaxResolver extends ResolverBase {
+    @Query(() => RunbigboxretailStoreTaxViewResult)
+    async RunbigboxretailStoreTaxViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailStoreTaxViewResult)
+    async RunbigboxretailStoreTaxViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailStoreTaxViewResult)
+    async RunbigboxretailStoreTaxDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Store Taxes';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailStoreTax_, { nullable: true })
+    async bigboxretailStoreTax(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailStoreTax_ | null> {
+        this.CheckUserReadPermissions('Store Taxes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreTaxes')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Taxes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Store Taxes', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => bigboxretailStoreTax_)
+    async CreatebigboxretailStoreTax(
+        @Arg('input', () => CreatebigboxretailStoreTaxInput) input: CreatebigboxretailStoreTaxInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Store Taxes', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => bigboxretailStoreTax_)
+    async UpdatebigboxretailStoreTax(
+        @Arg('input', () => UpdatebigboxretailStoreTaxInput) input: UpdatebigboxretailStoreTaxInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Store Taxes', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => bigboxretailStoreTax_)
+    async DeletebigboxretailStoreTax(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Store Taxes', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Store Year
+//****************************************************************************
+@ObjectType()
+export class bigboxretailvwStoreYear_ {
+    @Field({description: `Surrogate key of the store this row belongs to. Joins to Stores; hidden in the grid because the store is already named by Occupant and Address.`}) 
+    @MaxLength(36)
+    StoreID: string;
+        
+    @Field(() => Int, {description: `The assessment year this row describes. This is the filter the view exists for — one row per store per year, instead of the same measure spelled into 8 columns per year as vwStoreAnalysis must.`}) 
+    AssessmentYear: number;
+        
+    @Field({description: `The retail brand operating the store.`}) 
+    @MaxLength(100)
+    Occupant: string;
+        
+    @Field({nullable: true, description: `Indiana county the store sits in. Determines the assessor, the record-card layout and the local tax rate, so it is a first-class filter rather than a label.`}) 
+    @MaxLength(50)
+    County?: string;
+        
+    @Field({description: `City or town of the store, as carried on the roster.`}) 
+    @MaxLength(100)
+    City: string;
+        
+    @Field({description: `Street address of the store. With Occupant and City this is the key the parsing pipeline matches on, since the roster carries no single stable store identifier.`}) 
+    @MaxLength(200)
+    Address: string;
+        
+    @Field({nullable: true, description: `Owner of record on the assessment.`}) 
+    @MaxLength(200)
+    AssessedOwner?: string;
+        
+    @Field({nullable: true, description: `Taxpayer named on the DLGF record — often a landlord entity rather than the retailer.`}) 
+    @MaxLength(200)
+    TaxpayerOfRecord?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Building area used as the denominator for every ratio here: the attribution-resolved figure where the stores parcel list was narrowed, otherwise the roster total.`}) 
+    SquareFeet?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Year the primary structure was originally constructed. Named with "Year" deliberately — see the note on vwStoreAnalysis.YearBuilt and Indiana_Tax_Expert/docs/NUMBER_FORMATTING.md.`}) 
+    YearBuilt?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Deeded acreage of the store site.`}) 
+    Acres?: number;
+        
+    @Field({nullable: true, description: `How confidently this stores parcel set was resolved.`}) 
+    @MaxLength(20)
+    AttributionTier?: string;
+        
+    @Field(() => Boolean, {nullable: true, description: `Whether this store may publish per-square-foot ratios; gates AVPerSF and TaxPerSF.`}) 
+    UniformityEligible?: boolean;
+        
+    @Field({nullable: true, description: `Owner-occupied vs leased/investor, derived by testing the deeded owner against the store brand. NOT an occupancy or dark-store signal.`}) 
+    @MaxLength(30)
+    OwnershipStructure?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Land component of the assessed value for this year.`}) 
+    LandAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Improvement component of the assessed value for this year.`}) 
+    ImprovementAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value for this store in this assessment year, rolled up from its attributed parcels.`}) 
+    TotalAV?: number;
+        
+    @Field({nullable: true, description: `Which source supplied this years assessed value — the county record card, the treasurer, or the DLGF extract. 2021-2022 come from billing AV rather than a PRC, a related but not identical measure.`}) 
+    @MaxLength(100)
+    AVSource?: string;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every attributed parcel reported a value for this year. A partial sum is not comparable with a complete one, and AVPerSF is suppressed when this is 0.`}) 
+    AVComplete?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Assessed value per square foot — the number to read against the $50/SF Indiana big-box benchmark. Suppressed unless the year is complete AND the store is uniformity-eligible, so a shared or review-tier store never publishes a per-brand ratio it cannot support.`}) 
+    AVPerSF?: number;
+        
+    @Field(() => Int, {nullable: true, description: `The pay year for this assessment year. Indiana bills in arrears: assessment year N is paid in year N+1.`}) 
+    TaxPayYear?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total tax billed for this assessment year, in its pay year.`}) 
+    AnnualTax?: number;
+        
+    @Field({nullable: true, description: `Which source supplied the tax figure. The treasurers posted figure is preferred over DLGFs "as originally certified" where both exist.`}) 
+    @MaxLength(100)
+    TaxSource?: string;
+        
+    @Field(() => Int, {nullable: true, description: `1 when every attributed parcel reported tax for this pay year. TaxPerSF is suppressed when 0.`}) 
+    TaxComplete?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Tax per square foot for this year, under the same completeness and uniformity gate as AVPerSF.`}) 
+    TaxPerSF?: number;
+        
+    @Field(() => Int, {nullable: true, description: `How many of this stores parcels had the burden of proof shifted to the assessor in this year under IC 6-1.1-15-17.2 — an increase over 5% not attributable to new construction, a use change or a split. Counts only the usable, actionable band. NULL means none.`}) 
+    BurdenShiftParcels?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The assessed-value increase across those parcels: what reverting to the prior year would remove, before any further market argument.`}) 
+    BurdenShiftAVIncrease?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The largest percentage increase among this stores burden-shifted parcels this year.`}) 
+    BurdenShiftPctIncrease?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The prior years assessed value per square foot — the value a successful burden argument reverts to, and therefore the number that decides whether that argument alone is sufficient.`}) 
+    BurdenShiftPriorAVPSF?: number;
+        
+    @Field({nullable: true, description: `What winning the burden argument alone achieves this year. "revert-and-done" — the prior year is already at or below the $50/SF benchmark. "revert-then-argue" — it is not, so the shift is the opening and market evidence is still needed beneath it.`}) 
+    @MaxLength(17)
+    BurdenShiftPosture?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Recorded transfers of this stores parcels that OCCURRED in this year and carry a price. ⚠️ This is not a comparable-sales screen: Indiana imposes no statutory limit on comparable-sale recency, so a sale in another year remains usable evidence, adjusted for remoteness rather than excluded.`}) 
+    SalesInYear?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Highest recorded price among this years transfers of this stores parcels.`}) 
+    HighestSalePrice?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Lowest price per square foot among this years transfers that pass the comparable screen or are in-band but from a county publishing no instrument type.`}) 
+    LowestSalePSF?: number;
+        
+    @Field({nullable: true, description: `Date of the most recent priced transfer in this year.`}) 
+    LatestSaleDate?: Date;
+        
+    @Field(() => Int, {nullable: true, description: `⚠️ STORE-level, not year-level, and repeated on every year row. Prior appeal settlements read from this stores record cards. They are NOT joined by year because the notes they come from are not reliably year-stamped — they often carry only the notes own date and frequently state several years at once. Attaching one to a year with a regex would be a guess.`}) 
+    SettlementCount?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Highest total assessed value the county has previously agreed to on this store. Store-level; see SettlementCount for why it is not year-keyed. An assessed value, never a sale price.`}) 
+    HighestSettlementAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Lowest prior settlement expressed as a rate per square foot, where the assessors note stated one directly. Store-level; the most directly usable form, because it is already in benchmark units.`}) 
+    LowestAgreedPSF?: number;
+        
+    @Field(() => Int, {nullable: true, description: `How many of this store's prior settlements were reached at a PRELIMINARY INFORMAL CONFERENCE (Form 134) - before any hearing. Read this first: it is the stage that actually produces reductions, and a store with a history here has a county that has settled with it before rather than litigated. Store-level, repeated on every year row.`}) 
+    PriorConferenceSettlements?: number;
+        
+    @Field(() => Int, {nullable: true, description: `How many of this store's prior appeals went to a PTABOA determination (Form 115) - the board ruled rather than the parties settling. Store-level, repeated on every year row.`}) 
+    PriorBoardDeterminations?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total assessed value a settlement fixed for THIS assessment year, where the note stated the year unambiguously. Sparse by design - only 4 of 123 settlements survive the strictness required to date one safely, since a wrong year files a concession against an assessment it never touched. Where this is NULL the store may still have settlements: see SettlementCount, which is store-level.`}) 
+    SettledAVThisYear?: number;
+        
+    @Field({nullable: true, description: `How the settlement covering this specific assessment year was disposed of, in words. Same sparsity caveat as SettledAVThisYear.`}) 
+    @MaxLength(60)
+    DispositionThisYear?: string;
+        
+}
+//****************************************************************************
+// RESOLVER for Store Year
+//****************************************************************************
+@ObjectType()
+export class RunbigboxretailvwStoreYearViewResult {
+    @Field(() => [bigboxretailvwStoreYear_])
+    Results: bigboxretailvwStoreYear_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(bigboxretailvwStoreYear_)
+export class bigboxretailvwStoreYearResolver extends ResolverBase {
+    @Query(() => RunbigboxretailvwStoreYearViewResult)
+    async RunbigboxretailvwStoreYearViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailvwStoreYearViewResult)
+    async RunbigboxretailvwStoreYearViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunbigboxretailvwStoreYearViewResult)
+    async RunbigboxretailvwStoreYearDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Store Year';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => bigboxretailvwStoreYear_, { nullable: true })
+    async bigboxretailvwStoreYear(@Arg('StoreID', () => String) StoreID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<bigboxretailvwStoreYear_ | null> {
+        this.CheckUserReadPermissions('Store Year', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreYear')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Year', userPayload, EntityPermissionType.Read, 'AND');
+        this.createRecordAccessAuditLogRecord(provider, userPayload, 'Store Year', StoreID)
+        const rows = await provider.ExecuteSQL(sSQL, [StoreID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Store Year', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+}
+
+//****************************************************************************
 // ENTITY CLASS for Stores
 //****************************************************************************
 @ObjectType({ description: `One row per address/owner-confirmed big-box retail store, imported from the separate Big Box Retail research project\'s Indiana roster (Big_Box_Retail/states/indiana/data/indiana-bigbox-roster.csv). Deliberately isolated from indiana_tax -- no foreign keys either direction. See docs/superpowers/specs/2026-09-04-big-box-retail-mj-import-design.md.` })
@@ -13043,12 +17048,74 @@ export class bigboxretailStore_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field(() => Float, {nullable: true, description: `Deeded acreage for the store site, first available of PRC, county API, treasurer record, DLGF crosswalk.`}) 
+    Acres?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Year the primary improvement was originally constructed, per county assessment record.`}) 
+    YearBuilt?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Effective year used by the assessor for depreciation/condition purposes, distinct from actual YearBuilt when the improvement has been substantially renovated.`}) 
+    EffectiveYear?: number;
+        
+    @Field({nullable: true, description: `Name of the party the county assessment record shows as owner, which may differ from TaxpayerName (e.g. a captive real estate subsidiary vs. the operating retailer).`}) 
+    @MaxLength(200)
+    OwnerNameAssessed?: string;
+        
+    @Field({nullable: true, description: `Name the tax bill/treasurer record lists as the taxpayer of record for this parcel.`}) 
+    @MaxLength(200)
+    TaxpayerName?: string;
+        
+    @Field({nullable: true, description: `Confidence tier of the owner/taxpayer attribution for this store, assigned by the county-record parsing pipeline (e.g. confirmed, probable, unconfirmed).`}) 
+    @MaxLength(20)
+    AttributionTier?: string;
+        
+    @Field(() => Boolean, {nullable: true, description: `True when this store has a sufficient comparable pool to support a uniformity/equity appeal analysis, per the pipeline's eligibility screen.`}) 
+    UniformityEligible?: boolean;
+        
+    @Field(() => Boolean, {nullable: true, description: `True when this store's parcel(s) require manual economic-unit review (e.g. shared parking, cross-easements, or split-parcel improvements) before its assessment figures can be trusted standalone.`}) 
+    EconomicUnitReview?: boolean;
+        
+    @Field(() => Float, {nullable: true, description: `Acreage of any vacant sibling parcel(s) associated with this store site (e.g. an outparcel or excess land parcel under common ownership), tracked separately from the store's own Acres.`}) 
+    SiblingVacantAcres?: number;
+        
+    @Field({nullable: true, description: `Heuristic inference of whether this store appears owner-occupied or leased/investor-held, derived by comparing the county's assessed owner name against the store's brand name ('likely owner-occupied' / 'likely leased/investor'), or 'mixed' when a multi-parcel store's parcels disagree. This is an ownership-structure heuristic only -- it is NOT an occupancy or dark-store (vacant/operating) indicator, and no vacancy data feeds it.`}) 
+    @MaxLength(30)
+    OwnershipStructure?: string;
+        
+    @Field(() => Boolean, {nullable: true, description: `True when this row is the primary, de-duplicated row for its store; false/null for rows superseded by a better-attributed duplicate. vwStoreAnalysis filters to IsPrimaryRow = 1 so a store with multiple roster rows (e.g. from re-runs of the matching pipeline) is not double-counted.`}) 
+    IsPrimaryRow?: boolean;
+        
+    @Field({nullable: true, description: `Identifies the primary Store row this row duplicates, when IsPrimaryRow is false (e.g. by that row's ID or a stable natural key), for traceability of the dedup decision.`}) 
+    @MaxLength(200)
+    DuplicateOf?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Total building area, in square feet, of ONLY the parcels attribution resolved to this store -- populated for the stores whose roster parcel list was narrowed (e.g. a brand-owned box separated from the surrounding mall or a neighbouring tenant's ground), and NULL for every store where the roster list already described the store. NULL means "use TotalBuildingSqFt". vwStoreAnalysis.SquareFeet is COALESCE(AttributedBuildingSqFt, TotalBuildingSqFt), so every per-square-foot ratio divides the attribution-resolved assessed value by the matching attribution-resolved area.`}) 
+    AttributedBuildingSqFt?: number;
+        
     @Field(() => Float, {nullable: true}) 
     _mj__Latitude?: number;
         
     @Field(() => Float, {nullable: true}) 
     _mj__Longitude?: number;
         
+    @Field(() => [bigboxretailStoreAssessment_])
+    bigboxretailStoreAssessments_StoreIDArray: bigboxretailStoreAssessment_[]; // Link to bigboxretailStoreAssessments
+    
+    @Field(() => [bigboxretailStoreTax_])
+    bigboxretailStoreTaxes_StoreIDArray: bigboxretailStoreTax_[]; // Link to bigboxretailStoreTaxes
+    
+    @Field(() => [bigboxretailParcelSettlement_])
+    bigboxretailParcelSettlements_StoreIDArray: bigboxretailParcelSettlement_[]; // Link to bigboxretailParcelSettlements
+    
+    @Field(() => [bigboxretailParcelTransfer_])
+    bigboxretailParcelTransfers_StoreIDArray: bigboxretailParcelTransfer_[]; // Link to bigboxretailParcelTransfers
+    
+    @Field(() => [bigboxretailParcelBurdenShift_])
+    bigboxretailParcelBurdenShifts_StoreIDArray: bigboxretailParcelBurdenShift_[]; // Link to bigboxretailParcelBurdenShifts
+    
+    @Field(() => [bigboxretailvwStoreYear_])
+    bigboxretailStoreYear_StoreIDArray: bigboxretailvwStoreYear_[]; // Link to bigboxretailStoreYear
+    
 }
 
 //****************************************************************************
@@ -13127,6 +17194,45 @@ export class CreatebigboxretailStoreInput {
 
     @Field({ nullable: true })
     ImportedAt?: Date;
+
+    @Field(() => Float, { nullable: true })
+    Acres: number | null;
+
+    @Field(() => Int, { nullable: true })
+    YearBuilt: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveYear: number | null;
+
+    @Field({ nullable: true })
+    OwnerNameAssessed: string | null;
+
+    @Field({ nullable: true })
+    TaxpayerName: string | null;
+
+    @Field({ nullable: true })
+    AttributionTier: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    UniformityEligible: boolean | null;
+
+    @Field(() => Boolean, { nullable: true })
+    EconomicUnitReview: boolean | null;
+
+    @Field(() => Float, { nullable: true })
+    SiblingVacantAcres: number | null;
+
+    @Field({ nullable: true })
+    OwnershipStructure: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsPrimaryRow: boolean | null;
+
+    @Field({ nullable: true })
+    DuplicateOf: string | null;
+
+    @Field(() => Int, { nullable: true })
+    AttributedBuildingSqFt: number | null;
 
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
@@ -13210,6 +17316,45 @@ export class UpdatebigboxretailStoreInput {
     @Field({ nullable: true })
     ImportedAt?: Date;
 
+    @Field(() => Float, { nullable: true })
+    Acres?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    YearBuilt?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    EffectiveYear?: number | null;
+
+    @Field({ nullable: true })
+    OwnerNameAssessed?: string | null;
+
+    @Field({ nullable: true })
+    TaxpayerName?: string | null;
+
+    @Field({ nullable: true })
+    AttributionTier?: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    UniformityEligible?: boolean | null;
+
+    @Field(() => Boolean, { nullable: true })
+    EconomicUnitReview?: boolean | null;
+
+    @Field(() => Float, { nullable: true })
+    SiblingVacantAcres?: number | null;
+
+    @Field({ nullable: true })
+    OwnershipStructure?: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsPrimaryRow?: boolean | null;
+
+    @Field({ nullable: true })
+    DuplicateOf?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    AttributedBuildingSqFt?: number | null;
+
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
 
@@ -13274,6 +17419,66 @@ export class bigboxretailStoreResolver extends ResolverBase {
         return result;
     }
     
+    @FieldResolver(() => [bigboxretailStoreAssessment_])
+    async bigboxretailStoreAssessments_StoreIDArray(@Root() bigboxretailstore_: bigboxretailStore_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Store Assessments', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreAssessments')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Assessments', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [bigboxretailstore_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Store Assessments', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [bigboxretailStoreTax_])
+    async bigboxretailStoreTaxes_StoreIDArray(@Root() bigboxretailstore_: bigboxretailStore_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Store Taxes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreTaxes')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Taxes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [bigboxretailstore_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Store Taxes', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [bigboxretailParcelSettlement_])
+    async bigboxretailParcelSettlements_StoreIDArray(@Root() bigboxretailstore_: bigboxretailStore_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Parcel Settlements', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwParcelSettlements')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Settlements', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [bigboxretailstore_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Parcel Settlements', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [bigboxretailParcelTransfer_])
+    async bigboxretailParcelTransfers_StoreIDArray(@Root() bigboxretailstore_: bigboxretailStore_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Parcel Transfers', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwParcelTransfers')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Transfers', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [bigboxretailstore_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Parcel Transfers', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [bigboxretailParcelBurdenShift_])
+    async bigboxretailParcelBurdenShifts_StoreIDArray(@Root() bigboxretailstore_: bigboxretailStore_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Parcel Burden Shifts', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwParcelBurdenShifts')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Burden Shifts', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [bigboxretailstore_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Parcel Burden Shifts', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [bigboxretailvwStoreYear_])
+    async bigboxretailStoreYear_StoreIDArray(@Root() bigboxretailstore_: bigboxretailStore_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Store Year', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('big_box_retail', 'vwStoreYear')} WHERE ${provider.QuoteIdentifier('StoreID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Store Year', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [bigboxretailstore_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Store Year', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
     @Mutation(() => bigboxretailStore_)
     async CreatebigboxretailStore(
         @Arg('input', () => CreatebigboxretailStoreInput) input: CreatebigboxretailStoreInput,
@@ -13299,6 +17504,598 @@ export class bigboxretailStoreResolver extends ResolverBase {
         const provider = GetReadWriteProvider(providers);
         const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
         return this.DeleteRecord('Stores', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Tax Adjustments
+//****************************************************************************
+@ObjectType({ description: `One row per adjustment per tax bill, from the DLGF ADJMENTS export. Type \'D\'/\'E\' (deductions/exemptions) reduce ASSESSED VALUE and are already reflected in TaxBill.NetAssessedValue. Type \'C\' (credits) reduce TAX and are what bridges GrossTaxDue to TotalPropertyTaxDue. Linked to the tax bill, not directly to the parcel -- DLGF\'s own wording is "by tax bill".` })
+export class indianataxTaxAdjustment_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    TaxBillID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field(() => Int) 
+    AdjustmentInstanceNumber: number;
+        
+    @Field() 
+    @MaxLength(1)
+    AdjustmentType: string;
+        
+    @Field() 
+    @MaxLength(2)
+    AdjustmentCode: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    TotalAdjustmentAmount?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    AmountSubjectTo1Pct?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    AmountSubjectTo2Pct?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    AmountSubjectTo3Pct?: number;
+        
+    @Field(() => Int, {nullable: true, description: `Starting pay year of the adjustment. Load-bearing with NumberOfYears for abatements (code 16) and TIF (code 17): a known start and term is what makes burn-off PROJECTABLE rather than assumed permanent, which is the single highest-value behaviour the bill-shaped projection unlocks.`}) 
+    StartingYear?: number;
+        
+    @Field(() => Int, {nullable: true}) 
+    NumberOfYears?: number;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(25)
+    TaxBill: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Tax Adjustments
+//****************************************************************************
+@InputType()
+export class CreateindianataxTaxAdjustmentInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    TaxBillID?: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field(() => Int, { nullable: true })
+    AdjustmentInstanceNumber?: number;
+
+    @Field({ nullable: true })
+    AdjustmentType?: string;
+
+    @Field({ nullable: true })
+    AdjustmentCode?: string;
+
+    @Field(() => Float, { nullable: true })
+    TotalAdjustmentAmount: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AmountSubjectTo1Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AmountSubjectTo2Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AmountSubjectTo3Pct: number | null;
+
+    @Field(() => Int, { nullable: true })
+    StartingYear: number | null;
+
+    @Field(() => Int, { nullable: true })
+    NumberOfYears: number | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Tax Adjustments
+//****************************************************************************
+@InputType()
+export class UpdateindianataxTaxAdjustmentInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    TaxBillID?: string;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field(() => Int, { nullable: true })
+    AdjustmentInstanceNumber?: number;
+
+    @Field({ nullable: true })
+    AdjustmentType?: string;
+
+    @Field({ nullable: true })
+    AdjustmentCode?: string;
+
+    @Field(() => Float, { nullable: true })
+    TotalAdjustmentAmount?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AmountSubjectTo1Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AmountSubjectTo2Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AmountSubjectTo3Pct?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    StartingYear?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    NumberOfYears?: number | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Tax Adjustments
+//****************************************************************************
+@ObjectType()
+export class RunindianataxTaxAdjustmentViewResult {
+    @Field(() => [indianataxTaxAdjustment_])
+    Results: indianataxTaxAdjustment_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxTaxAdjustment_)
+export class indianataxTaxAdjustmentResolver extends ResolverBase {
+    @Query(() => RunindianataxTaxAdjustmentViewResult)
+    async RunindianataxTaxAdjustmentViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxAdjustmentViewResult)
+    async RunindianataxTaxAdjustmentViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxAdjustmentViewResult)
+    async RunindianataxTaxAdjustmentDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Tax Adjustments';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxTaxAdjustment_, { nullable: true })
+    async indianataxTaxAdjustment(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxTaxAdjustment_ | null> {
+        this.CheckUserReadPermissions('Tax Adjustments', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxAdjustments')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Adjustments', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Tax Adjustments', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxTaxAdjustment_)
+    async CreateindianataxTaxAdjustment(
+        @Arg('input', () => CreateindianataxTaxAdjustmentInput) input: CreateindianataxTaxAdjustmentInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Tax Adjustments', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxTaxAdjustment_)
+    async UpdateindianataxTaxAdjustment(
+        @Arg('input', () => UpdateindianataxTaxAdjustmentInput) input: UpdateindianataxTaxAdjustmentInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Tax Adjustments', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxTaxAdjustment_)
+    async DeleteindianataxTaxAdjustment(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Tax Adjustments', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Tax Bills
+//****************************************************************************
+@ObjectType({ description: `What a taxpayer was actually BILLED for a pay year, from the DLGF Gateway TAXDATA/TAXBILL export (50 IAC 26). Distinct from TaxHistoryYear, which is PRC-sourced assessment detail: this table is the billing authority. Marion County only at present. One row per parcel per pay year per property type (a taxpayer may have both a real-property and a personal-property bill).` })
+export class indianataxTaxBill_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({nullable: true, description: `Nullable by design. A TAXDATA row may describe PERSONAL property, which has no row in Parcel. The loader records the unmatched count rather than failing -- an unmatched bill is expected, not an error.`}) 
+    @MaxLength(36)
+    ParcelID?: string;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field() 
+    @MaxLength(25)
+    StateParcelNumber: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(25)
+    AuditorTaxID?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(1)
+    PropertyTypeCode?: string;
+        
+    @Field(() => Int) 
+    CountyNumber: number;
+        
+    @Field(() => Int) 
+    PayYear: number;
+        
+    @Field({nullable: true}) 
+    @MaxLength(80)
+    TaxpayerName?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(3)
+    LocalTaxDistrictNumber?: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    GrossAssessedValue?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Net assessed value AFTER deductions and exemptions. GrossTaxDue is computed on THIS, not on GrossAssessedValue -- NetAssessedValue x LocalTaxRate / 100 = GrossTaxDue, exact on 172,720/172,720 records. Using gross here is one of the two ways the pre-2026-09 projection engine overstated tax.`}) 
+    NetAssessedValue?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    LocalTaxRate?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    GrossTaxDue?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    LocalTaxRelief?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The circuit-breaker cap SAVINGS reported on TS-1 line 4b -- NOT the cap ceiling, and NOT an independently subtractable term. Do NOT compute TotalPropertyTaxDue as GrossTaxDue - LocalTaxRelief - PropertyTaxCapSavings: that holds on only 57.8% of records and goes negative on real ones. The bridge is GrossTaxDue - SUM(TaxAdjustment where AdjustmentType = 'C'). The cap CEILING is derived from AVSubjectTo1Pct/2Pct/3Pct at the statutory 1/2/3 percent.`}) 
+    PropertyTaxCapSavings?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    TotalPropertyTaxDue?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total of the bill's Table 4 (Other Charges/Adjustments -- storm water, special assessments). DLGF carries the TOTAL only; the itemisation is not in the export and requires the county bill.`}) 
+    TotalOtherCharges?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Gross AV rolled into the three statutory circuit-breaker classes, summed from the eleven cap-bucket fields at positions 485-652 (TS-1 lines 1a / 1b / 1c). These are what the cap CEILING is computed from. NULL, never 0, when every contributing source field is blank.`}) 
+    AVSubjectTo1Pct?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    AVSubjectTo2Pct?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    AVSubjectTo3Pct?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    AVTIF?: number;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true, description: `Residential/commercial discriminator derived from the circuit-breaker cap buckets (AVSubjectTo1Pct/2Pct/3Pct), which are the statutory classification DLGF applies on the bill itself. 'Homestead' = 1% cap (owner-occupied residential); 'OtherResidential' = 2% cap (rental, apartment, farmland, mobile home land); 'NonResidential' = 3% cap (commercial, industrial, personal property); 'Mixed' = no single bucket holds 90% of classified AV, which is a real condition for mixed-use, not a data problem. NULL when the bill has no classified AV at all (exempt or fully abated). Filter residential as IN ('Homestead','OtherResidential'). Preferred over joining PropertyClassMap, which needs Parcel.PropertyClassCode and so cannot classify the ~95% of Marion bills with no Parcel row.`}) 
+    @MaxLength(20)
+    StatutoryCapClass?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(30)
+    Parcel?: string;
+        
+    @Field(() => [indianataxTaxAdjustment_])
+    indianataxTaxAdjustments_TaxBillIDArray: indianataxTaxAdjustment_[]; // Link to indianataxTaxAdjustments
+    
+}
+
+//****************************************************************************
+// INPUT TYPE for Tax Bills
+//****************************************************************************
+@InputType()
+export class CreateindianataxTaxBillInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    ParcelID: string | null;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    StateParcelNumber?: string;
+
+    @Field({ nullable: true })
+    AuditorTaxID: string | null;
+
+    @Field({ nullable: true })
+    PropertyTypeCode: string | null;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field(() => Int, { nullable: true })
+    PayYear?: number;
+
+    @Field({ nullable: true })
+    TaxpayerName: string | null;
+
+    @Field({ nullable: true })
+    LocalTaxDistrictNumber: string | null;
+
+    @Field(() => Float, { nullable: true })
+    GrossAssessedValue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NetAssessedValue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LocalTaxRate: number | null;
+
+    @Field(() => Float, { nullable: true })
+    GrossTaxDue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LocalTaxRelief: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PropertyTaxCapSavings: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalPropertyTaxDue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalOtherCharges: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVSubjectTo1Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVSubjectTo2Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVSubjectTo3Pct: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVTIF: number | null;
+
+    @Field({ nullable: true })
+    StatutoryCapClass: string | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Tax Bills
+//****************************************************************************
+@InputType()
+export class UpdateindianataxTaxBillInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string | null;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    StateParcelNumber?: string;
+
+    @Field({ nullable: true })
+    AuditorTaxID?: string | null;
+
+    @Field({ nullable: true })
+    PropertyTypeCode?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field(() => Int, { nullable: true })
+    PayYear?: number;
+
+    @Field({ nullable: true })
+    TaxpayerName?: string | null;
+
+    @Field({ nullable: true })
+    LocalTaxDistrictNumber?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    GrossAssessedValue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    NetAssessedValue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LocalTaxRate?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    GrossTaxDue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    LocalTaxRelief?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PropertyTaxCapSavings?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalPropertyTaxDue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalOtherCharges?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVSubjectTo1Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVSubjectTo2Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVSubjectTo3Pct?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVTIF?: number | null;
+
+    @Field({ nullable: true })
+    StatutoryCapClass?: string | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Tax Bills
+//****************************************************************************
+@ObjectType()
+export class RunindianataxTaxBillViewResult {
+    @Field(() => [indianataxTaxBill_])
+    Results: indianataxTaxBill_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxTaxBill_)
+export class indianataxTaxBillResolver extends ResolverBase {
+    @Query(() => RunindianataxTaxBillViewResult)
+    async RunindianataxTaxBillViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxBillViewResult)
+    async RunindianataxTaxBillViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxBillViewResult)
+    async RunindianataxTaxBillDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Tax Bills';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxTaxBill_, { nullable: true })
+    async indianataxTaxBill(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxTaxBill_ | null> {
+        this.CheckUserReadPermissions('Tax Bills', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxBills')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Bills', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Tax Bills', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @FieldResolver(() => [indianataxTaxAdjustment_])
+    async indianataxTaxAdjustments_TaxBillIDArray(@Root() indianataxtaxbill_: indianataxTaxBill_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Tax Adjustments', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxAdjustments')} WHERE ${provider.QuoteIdentifier('TaxBillID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Adjustments', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxtaxbill_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Tax Adjustments', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @Mutation(() => indianataxTaxBill_)
+    async CreateindianataxTaxBill(
+        @Arg('input', () => CreateindianataxTaxBillInput) input: CreateindianataxTaxBillInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Tax Bills', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxTaxBill_)
+    async UpdateindianataxTaxBill(
+        @Arg('input', () => UpdateindianataxTaxBillInput) input: UpdateindianataxTaxBillInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Tax Bills', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxTaxBill_)
+    async DeleteindianataxTaxBill(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Tax Bills', key, options, provider, userPayload, pubSub);
     }
     
 }

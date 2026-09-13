@@ -10,17 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Chunk Details Section -->
+    <!-- Property Reference Section -->
     <mj-collapsible-panel
-        SectionKey="chunkDetails"
-        SectionName="Chunk Details"
-        Icon="fa fa-align-left"
+        SectionKey="propertyReference"
+        SectionName="Property Reference"
+        Icon="fa fa-link"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="ContentItemID"
+            FieldName="CountyAssessorRecordID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -29,48 +29,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Sequence"
-            Type="number"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Modality"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="SegmentTitle"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="SegmenterKey"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="ParentChunkID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="RootParentChunkID"
+            FieldName="CardNumber"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -78,51 +37,49 @@
 
     </mj-collapsible-panel>
 
-    <!-- Chunk Content Section -->
+    <!-- Structure Characteristics Section -->
     <mj-collapsible-panel
-        SectionKey="chunkContent"
-        SectionName="Chunk Content"
-        Icon="fa fa-info-circle"
+        SectionKey="structureCharacteristics"
+        SectionName="Structure Characteristics"
+        Icon="fa fa-cube"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Text"
-            Type="textarea"
+            FieldName="Use"
+            Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Description"
-            Type="textarea"
+            FieldName="Grade"
+            Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Transcript"
-            Type="textarea"
+            FieldName="YearConstructed"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Vector Integration Section -->
-    <mj-collapsible-panel
-        SectionKey="vectorIntegration"
-        SectionName="Vector Integration"
-        Icon="fa fa-info-circle"
-        [Form]="this"
-        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="false"
-            FieldName="VectorRecordID"
+            [ShowLabel]="true"
+            FieldName="EffectiveYear"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Condition"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -130,85 +87,59 @@
 
     </mj-collapsible-panel>
 
-    <!-- Lifecycle Status Section -->
+    <!-- Structure Measurements Section -->
     <mj-collapsible-panel
-        SectionKey="lifecycleStatus"
-        SectionName="Lifecycle Status"
-        Icon="fa fa-flag"
+        SectionKey="structureMeasurements"
+        SectionName="Structure Measurements"
+        Icon="fa fa-ruler-combined"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="EmbeddingStatus"
-            Type="select"
+            FieldName="SizeOrArea"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="TaggingStatus"
-            Type="select"
+            FieldName="PctComplete"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="DeleteStatus"
-            Type="select"
+            FieldName="Quantity"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="SizeText"
+            Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
 
     </mj-collapsible-panel>
 
-    <!-- Lifecycle Timestamps Section -->
+    <!-- Assessment Valuation Section -->
     <mj-collapsible-panel
-        SectionKey="lifecycleTimestamps"
-        SectionName="Lifecycle Timestamps"
-        Icon="fa fa-calendar"
+        SectionKey="assessmentValuation"
+        SectionName="Assessment Valuation"
+        Icon="fa fa-dollar-sign"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="LastEmbeddedAt"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="LastTaggedAt"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="LastDeletedAt"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Provenance Section -->
-    <mj-collapsible-panel
-        SectionKey="provenance"
-        SectionName="Provenance"
-        Icon="fa fa-map-marked-alt"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="StartOffset"
+            FieldName="ReproductionCost"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -216,7 +147,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="EndOffset"
+            FieldName="DepreciationObsolescence"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -224,7 +155,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="StartMs"
+            FieldName="RemainderValue"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -232,7 +163,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="EndMs"
+            FieldName="TrendFactor"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -240,21 +171,51 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="PageNumber"
+            FieldName="TrueTaxValue"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Details Section -->
-    <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
-        [Form]="this"
-        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AbnormalObsolescencePct"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="NeighborhoodFactor"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Cap1Pct"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Cap2Pct"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Cap3Pct"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -285,35 +246,6 @@
     </mj-collapsible-panel>
 
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-fields" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
-
-    <!-- ========================================
-         RELATED ENTITY PANELS
-         ======================================== -->
-
-    <!-- Content Item Chunks Section -->
-    <mj-collapsible-panel
-        SectionKey="mJContentItemChunks"
-        SectionName="Content Item Chunks"
-        Icon="fa fa-layer-group"
-        Variant="related-entity"
-        [Form]="this"
-        [FormContext]="formContext"
-        [BadgeCount]="GetSectionRowCount('mJContentItemChunks')"
-        [DefaultExpanded]="false">
-        @if (record.IsSaved) {
-        <div>
-            <mj-explorer-entity-data-grid
-                [Params]="BuildRelationshipViewParamsByEntityName('MJ: Content Item Chunks','ParentChunkID')"
-                [NewRecordValues]="NewRecordValues('MJ: Content Item Chunks')"
-                [AllowLoad]="IsSectionExpanded('mJContentItemChunks')"
-                [ShowToolbar]="false"
-                (Navigate)="OnFormNavigate($event)"
-                (AfterDataLoad)="SetSectionRowCount('mJContentItemChunks', $event.totalRowCount)"
-                >
-            </mj-explorer-entity-data-grid>
-        </div>
-        }
-    </mj-collapsible-panel>
 
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>

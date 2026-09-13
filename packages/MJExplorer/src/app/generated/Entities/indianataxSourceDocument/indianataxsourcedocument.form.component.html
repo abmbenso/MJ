@@ -1,0 +1,852 @@
+<mj-record-form-container [Record]="record" [FormComponent]="this"
+    (Navigate)="OnFormNavigate($event)"
+    (DeleteRequested)="OnDeleteRequested()"
+    (FavoriteToggled)="OnFavoriteToggled()"
+    (HistoryRequested)="OnHistoryRequested()"
+    (ListManagementRequested)="OnListManagementRequested()">
+
+    <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="before-fields" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
+
+    <!-- ========================================
+         FIELD PANELS
+         ======================================== -->
+    <!-- Details Section -->
+    <mj-collapsible-panel
+        SectionKey="details"
+        SectionName="Details"
+        Icon="fa fa-align-left"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="DocumentType"
+            Type="select"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Title"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="SourceURL"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RetrievedAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ContentHash"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RawFilePath"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ExtractedText"
+            Type="textarea"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ExtractionNotes"
+            Type="textarea"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_CreatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="DocumentDate"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="LastVerifiedAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-fields" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
+
+    <!-- ========================================
+         RELATED ENTITY PANELS
+         ======================================== -->
+
+    <!-- Statute Sections Section -->
+    <mj-collapsible-panel
+        SectionKey="statuteSections"
+        SectionName="Statute Sections"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('statuteSections')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Statute Sections','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Statute Sections')"
+                [AllowLoad]="IsSectionExpanded('statuteSections')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('statuteSections', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Board Decisions Section -->
+    <mj-collapsible-panel
+        SectionKey="boardDecisions"
+        SectionName="Board Decisions"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('boardDecisions')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Board Decisions','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Board Decisions')"
+                [AllowLoad]="IsSectionExpanded('boardDecisions')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('boardDecisions', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- PTABOA Appeals (Source Document) Section -->
+    <mj-collapsible-panel
+        SectionKey="pTABOAAppealsSourceDocumentID"
+        SectionName="PTABOA Appeals (Source Document)"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('pTABOAAppealsSourceDocumentID')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('PTABOA Appeals','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('PTABOA Appeals')"
+                [AllowLoad]="IsSectionExpanded('pTABOAAppealsSourceDocumentID')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('pTABOAAppealsSourceDocumentID', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Document Catalogs Section -->
+    <mj-collapsible-panel
+        SectionKey="documentCatalogs"
+        SectionName="Document Catalogs"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('documentCatalogs')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Document Catalogs','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Document Catalogs')"
+                [AllowLoad]="IsSectionExpanded('documentCatalogs')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('documentCatalogs', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Appeal Stages Section -->
+    <mj-collapsible-panel
+        SectionKey="appealStages"
+        SectionName="Appeal Stages"
+        Icon="fa fa-sitemap"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('appealStages')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Appeal Stages','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Appeal Stages')"
+                [AllowLoad]="IsSectionExpanded('appealStages')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('appealStages', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Research Tasks Section -->
+    <mj-collapsible-panel
+        SectionKey="researchTasks"
+        SectionName="Research Tasks"
+        Icon="fa fa-flask"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('researchTasks')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Research Tasks','RelatedSourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Research Tasks')"
+                [AllowLoad]="IsSectionExpanded('researchTasks')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('researchTasks', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- County Assessor Records (Source Document ID) Section -->
+    <mj-collapsible-panel
+        SectionKey="countyAssessorRecordsSourceDocumentID"
+        SectionName="County Assessor Records (Source Document ID)"
+        Icon="fa fa-map"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('countyAssessorRecordsSourceDocumentID')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('County Assessor Records','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('County Assessor Records')"
+                [AllowLoad]="IsSectionExpanded('countyAssessorRecordsSourceDocumentID')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('countyAssessorRecordsSourceDocumentID', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- County Assessor Records (Tax History Source Document ID) Section -->
+    <mj-collapsible-panel
+        SectionKey="countyAssessorRecordsTaxHistorySourceDocumentID"
+        SectionName="County Assessor Records (Tax History Source Document ID)"
+        Icon="fa fa-map"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('countyAssessorRecordsTaxHistorySourceDocumentID')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('County Assessor Records','TaxHistorySourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('County Assessor Records')"
+                [AllowLoad]="IsSectionExpanded('countyAssessorRecordsTaxHistorySourceDocumentID')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('countyAssessorRecordsTaxHistorySourceDocumentID', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Document Acquisitions Section -->
+    <mj-collapsible-panel
+        SectionKey="documentAcquisitions"
+        SectionName="Document Acquisitions"
+        Icon="fa fa-file-download"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('documentAcquisitions')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Document Acquisitions','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Document Acquisitions')"
+                [AllowLoad]="IsSectionExpanded('documentAcquisitions')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('documentAcquisitions', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Tax History Years Section -->
+    <mj-collapsible-panel
+        SectionKey="taxHistoryYears"
+        SectionName="Tax History Years"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('taxHistoryYears')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Tax History Years','TaxHistorySourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Tax History Years')"
+                [AllowLoad]="IsSectionExpanded('taxHistoryYears')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('taxHistoryYears', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- PTABOA Appeals (Final Determination Document) Section -->
+    <mj-collapsible-panel
+        SectionKey="pTABOAAppealsFinalDeterminationSourceDocumentID"
+        SectionName="PTABOA Appeals (Final Determination Document)"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('pTABOAAppealsFinalDeterminationSourceDocumentID')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('PTABOA Appeals','FinalDeterminationSourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('PTABOA Appeals')"
+                [AllowLoad]="IsSectionExpanded('pTABOAAppealsFinalDeterminationSourceDocumentID')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('pTABOAAppealsFinalDeterminationSourceDocumentID', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Form Catalogs Section -->
+    <mj-collapsible-panel
+        SectionKey="formCatalogs"
+        SectionName="Form Catalogs"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('formCatalogs')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Form Catalogs','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Form Catalogs')"
+                [AllowLoad]="IsSectionExpanded('formCatalogs')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('formCatalogs', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Appeal Stage Playbook Notes Section -->
+    <mj-collapsible-panel
+        SectionKey="appealStagePlaybookNotes"
+        SectionName="Appeal Stage Playbook Notes"
+        Icon="fa fa-lightbulb"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('appealStagePlaybookNotes')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Appeal Stage Playbook Notes','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Appeal Stage Playbook Notes')"
+                [AllowLoad]="IsSectionExpanded('appealStagePlaybookNotes')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('appealStagePlaybookNotes', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Jurisdiction Deadline Anchors Section -->
+    <mj-collapsible-panel
+        SectionKey="jurisdictionDeadlineAnchors"
+        SectionName="Jurisdiction Deadline Anchors"
+        Icon="fa fa-calendar-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('jurisdictionDeadlineAnchors')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Jurisdiction Deadline Anchors','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Jurisdiction Deadline Anchors')"
+                [AllowLoad]="IsSectionExpanded('jurisdictionDeadlineAnchors')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('jurisdictionDeadlineAnchors', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Sale Transactions Section -->
+    <mj-collapsible-panel
+        SectionKey="saleTransactions"
+        SectionName="Sale Transactions"
+        Icon="fa fa-home"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('saleTransactions')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Sale Transactions','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Sale Transactions')"
+                [AllowLoad]="IsSectionExpanded('saleTransactions')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('saleTransactions', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Assessments Section -->
+    <mj-collapsible-panel
+        SectionKey="assessments"
+        SectionName="Assessments"
+        Icon="fa fa-file-invoice"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('assessments')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Assessments','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Assessments')"
+                [AllowLoad]="IsSectionExpanded('assessments')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('assessments', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Co Star Income Inputs Section -->
+    <mj-collapsible-panel
+        SectionKey="coStarIncomeInputs"
+        SectionName="Co Star Income Inputs"
+        Icon="fa fa-building"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('coStarIncomeInputs')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Co Star Income Inputs','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Co Star Income Inputs')"
+                [AllowLoad]="IsSectionExpanded('coStarIncomeInputs')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('coStarIncomeInputs', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Co Star Properties Section -->
+    <mj-collapsible-panel
+        SectionKey="coStarProperties"
+        SectionName="Co Star Properties"
+        Icon="fa fa-building"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('coStarProperties')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Co Star Properties','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Co Star Properties')"
+                [AllowLoad]="IsSectionExpanded('coStarProperties')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('coStarProperties', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- DLGF Building Details Section -->
+    <mj-collapsible-panel
+        SectionKey="dLGFBuildingDetails"
+        SectionName="DLGF Building Details"
+        Icon="fa fa-building"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('dLGFBuildingDetails')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('DLGF Building Details','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('DLGF Building Details')"
+                [AllowLoad]="IsSectionExpanded('dLGFBuildingDetails')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('dLGFBuildingDetails', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- DLGF Lands Section -->
+    <mj-collapsible-panel
+        SectionKey="dLGFLands"
+        SectionName="DLGF Lands"
+        Icon="fa fa-map"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('dLGFLands')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('DLGF Lands','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('DLGF Lands')"
+                [AllowLoad]="IsSectionExpanded('dLGFLands')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('dLGFLands', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- DLGF Buildings Section -->
+    <mj-collapsible-panel
+        SectionKey="dLGFBuildings"
+        SectionName="DLGF Buildings"
+        Icon="fa fa-building"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('dLGFBuildings')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('DLGF Buildings','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('DLGF Buildings')"
+                [AllowLoad]="IsSectionExpanded('dLGFBuildings')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('dLGFBuildings', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- DLGF Improvements Section -->
+    <mj-collapsible-panel
+        SectionKey="dLGFImprovements"
+        SectionName="DLGF Improvements"
+        Icon="fa fa-building"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('dLGFImprovements')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('DLGF Improvements','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('DLGF Improvements')"
+                [AllowLoad]="IsSectionExpanded('dLGFImprovements')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('dLGFImprovements', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Valuation Comps Section -->
+    <mj-collapsible-panel
+        SectionKey="valuationComps"
+        SectionName="Valuation Comps"
+        Icon="fa fa-chart-line"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('valuationComps')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Valuation Comps','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Valuation Comps')"
+                [AllowLoad]="IsSectionExpanded('valuationComps')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('valuationComps', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Tax Adjustments Section -->
+    <mj-collapsible-panel
+        SectionKey="taxAdjustments"
+        SectionName="Tax Adjustments"
+        Icon="fa fa-receipt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('taxAdjustments')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Tax Adjustments','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Tax Adjustments')"
+                [AllowLoad]="IsSectionExpanded('taxAdjustments')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('taxAdjustments', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Tax Bills Section -->
+    <mj-collapsible-panel
+        SectionKey="taxBills"
+        SectionName="Tax Bills"
+        Icon="fa fa-file-invoice-dollar"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('taxBills')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Tax Bills','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Tax Bills')"
+                [AllowLoad]="IsSectionExpanded('taxBills')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('taxBills', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Card Notes Section -->
+    <mj-collapsible-panel
+        SectionKey="cardNotes"
+        SectionName="Card Notes"
+        Icon="fa fa-sticky-note"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('cardNotes')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Card Notes','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Card Notes')"
+                [AllowLoad]="IsSectionExpanded('cardNotes')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('cardNotes', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Card Valuation Columns Section -->
+    <mj-collapsible-panel
+        SectionKey="cardValuationColumns"
+        SectionName="Card Valuation Columns"
+        Icon="fa fa-file-invoice"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('cardValuationColumns')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Card Valuation Columns','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Card Valuation Columns')"
+                [AllowLoad]="IsSectionExpanded('cardValuationColumns')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('cardValuationColumns', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Card Summaries Section -->
+    <mj-collapsible-panel
+        SectionKey="cardSummaries"
+        SectionName="Card Summaries"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('cardSummaries')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Card Summaries','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Card Summaries')"
+                [AllowLoad]="IsSectionExpanded('cardSummaries')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('cardSummaries', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Card Improvements Section -->
+    <mj-collapsible-panel
+        SectionKey="cardImprovements"
+        SectionName="Card Improvements"
+        Icon="fa fa-home"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('cardImprovements')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Card Improvements','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Card Improvements')"
+                [AllowLoad]="IsSectionExpanded('cardImprovements')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('cardImprovements', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
+</mj-record-form-container>
+        
