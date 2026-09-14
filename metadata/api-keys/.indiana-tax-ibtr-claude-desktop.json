@@ -1,0 +1,16 @@
+[
+  {
+    "fields": {
+      "Hash": "8d4cfbbfe357ba696d90cb0df48afedb7a14f70b33e72eb43862a6ea48a57329",
+      "KeyPrefix": "mj_sk_",
+      "UserID": "@lookup:MJ: Users.Email=abmbenso@gmail.com",
+      "CreatedByUserID": "@lookup:MJ: Users.Email=abmbenso@gmail.com",
+      "Label": "IBTR library - Claude Desktop (localhost MCP, read-only)",
+      "Description": "Created 2026-09-13 for the IBTR decisions library pilot. Raw key lives in MJ/.env (MJ_MCP_CLIENT_API_KEY) and in the Claude Desktop config env on this machine only.",
+      "Status": "Active"
+    },
+    "primaryKey": {
+      "ID": "6B7609EF-E6B6-4B55-B15C-C83708834730"
+    }
+  }
+]

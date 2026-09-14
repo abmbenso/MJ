@@ -1,0 +1,19 @@
+[
+  {
+    "fields": {
+      "Name": "IBTR Appeals Search",
+      "EntityID": "@lookup:MJ: Entities.Name=IBTR Appeals",
+      "TypeID": "@lookup:MJ: Entity Document Types.Name=Search",
+      "Status": "Active",
+      "VectorDatabaseID": "@lookup:MJ: Vector Databases.Name=Simple Vector Service Provider",
+      "VectorIndexID": "@lookup:MJ: Vector Indexes.Name=Default - SVS + gte-small (Local)",
+      "AIModelID": "@lookup:MJ: AI Models.Name=gte-small (Local)",
+      "TemplateText": "@file:templates/indiana-tax-ibtr-appeals-search.njk",
+      "PotentialMatchThreshold": 0.7,
+      "AbsoluteMatchThreshold": 0.95
+    },
+    "primaryKey": {
+      "ID": "99C879A1-5383-4327-A8E3-1CEFA7489F2D"
+    }
+  }
+]

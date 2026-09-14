@@ -1,0 +1,54 @@
+[
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=IBTR library - Claude Desktop (localhost MCP, read-only)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=entity:read",
+      "ResourcePattern": "*",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "3256B188-DB5E-4C76-9BF8-F0683B18CD47"
+    }
+  },
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=IBTR library - Claude Desktop (localhost MCP, read-only)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=view:run",
+      "ResourcePattern": "*",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "253C7D5E-8A18-44A9-ABBD-B346282EEAD0"
+    }
+  },
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=IBTR library - Claude Desktop (localhost MCP, read-only)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=agent:execute",
+      "ResourcePattern": "*",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "CD691851-2AAD-476B-8794-30A540BB4915"
+    }
+  },
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=IBTR library - Claude Desktop (localhost MCP, read-only)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=agent:monitor",
+      "ResourcePattern": "*",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "60E1B744-990A-4AD8-BD74-E0C60C569066"
+    }
+  }
+]

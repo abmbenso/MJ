@@ -247,7 +247,7 @@ module.exports = {
   mcpServerSettings: {
     port: 3100,
     enableMCPServer: true,
-    systemApiKey: 'MY_API_KEY_FOR_MCP_SERVER',
+    systemApiKey: process.env.MCP_SYSTEM_API_KEY || 'MY_API_KEY_FOR_MCP_SERVER',
 
     // Authentication configuration
     // Supports: 'apiKey' (default), 'oauth', 'both', 'none'
