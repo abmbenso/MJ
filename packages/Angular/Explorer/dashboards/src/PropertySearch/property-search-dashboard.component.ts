@@ -22,6 +22,7 @@ import {
   PropertySearchFilters,
   DEFAULT_PROPERTY_SEARCH_FILTERS,
   PROPERTY_SEARCH_RESULT_CAP,
+  resetFiltersForCountyChange,
   buildPropertySearchAgentContext,
   classifySearchTerm,
   escapeSqlLiteral,
@@ -40,6 +41,20 @@ import {
   RATIO_METRIC_DEFS,
   UNIT_OF_COMPARISON_DEFS,
 } from './property-search-agent-context';
+import {
+  CountyOption,
+  countyCardSource,
+  countySourceTier,
+  buildCountyOptions,
+  tallyCIParcels,
+  pickAssessmentRow,
+  dataSourceLabel,
+  isDlgfSourced,
+  DLGF_NOTATION,
+  buildVerifyLink,
+  CI_ROSTER_PARCEL_FILTER,
+} from './property-search-county';
+import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
 
 /** Parses CountyAssessorRecord.Acreage (NVARCHAR(10), legacy ArcGIS-sourced text) into a number, or null for blank/non-numeric/non-positive values -- the analytics panel's per-acre calculations need a real number, not the raw string RunView('simple') returns. */
@@ -151,6 +166,53 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
 
   /** Populated once by loadAssessmentYearsIfNeeded(); empty until then (year toggle hidden). */
   public AvailableAssessmentYears: number[] = [];
+
+  /** All 92 counties, labelled with their C&I count and source tier. Loaded once in loadData(). */
+  public CountyOptions: CountyOption[] = [];
+
+  public get SelectedCountyNumber(): number {
+    return this.filters.countyNumber;
+  }
+
+  public get SelectedCounty(): CountyOption | null {
+    return this.CountyOptions.find((c) => c.CountyNumber === this.filters.countyNumber) ?? null;
+  }
+
+  /** True when the selected county's own record cards are loaded (CountyAssessorRecord path). */
+  public get CountyHasCardData(): boolean {
+    return countyCardSource(this.filters.countyNumber) != null;
+  }
+
+  /** True when ANY row on screen is DLGF-sourced -- the condition spec §6 sets for the notation. */
+  public get HasDlgfRows(): boolean {
+    return this.MergedResults.some((r) => isDlgfSourced(r.DataSource));
+  }
+  public readonly DlgfNotation = DLGF_NOTATION;
+
+  public onCountyChange(countyNumber: number): void {
+    if (!Number.isFinite(countyNumber) || countyNumber === this.filters.countyNumber) return;
+    // Everything downstream of the county is county-scoped: the year list, the sub-class
+    // options, and the results. resetFiltersForCountyChange also clears propertySubClass /
+    // sqFtMin / sqFtMax -- carrying those across a county switch silently zeros out the new
+    // county's result set (see its own doc comment) -- but NOT the search term, which the
+    // user set deliberately.
+    this.filters = resetFiltersForCountyChange(this.filters, countyNumber);
+    this.subClassOptionsCache = [];
+    void this.reloadForCounty();
+  }
+
+  private async reloadForCounty(): Promise<void> {
+    this.IsLoading = true;
+    this.cdr.markForCheck();
+    try {
+      await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded()]);
+      await this.runSearchInternal();
+    } finally {
+      this.IsLoading = false;
+      this.publishAgentContext();
+      this.cdr.markForCheck();
+    }
+  }
 
   /** List-view column visibility -- persisted per-account via UserInfoEngine (never localStorage, per this codebase's standing rule). */
   public VisibleColumnKeys = new Set<string>(PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS);
@@ -265,7 +327,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   public resetFilters(): void {
-    this.filters = { ...DEFAULT_PROPERTY_SEARCH_FILTERS };
+    this.filters = { ...DEFAULT_PROPERTY_SEARCH_FILTERS, countyNumber: this.filters.countyNumber, assessmentYear: this.filters.assessmentYear };
     this.cdr.markForCheck();
     this.runSearch();
   }
@@ -449,6 +511,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'PropertySubClassDescription', displayName: 'Property Sub Class' },
       { name: 'AssessmentYear', displayName: 'Assessment Year', dataType: 'number' },
       { name: 'AssessmentSource', displayName: 'Assessment Source' },
+      { name: 'DataSource', displayName: 'Data Source' },
+      { name: 'VerifyURL', displayName: 'Verify (county document)' },
       { name: 'EstimatedSqFt', displayName: 'Building Sq Ft', dataType: 'number' },
       { name: 'EstimatedSqFtExGarage', displayName: 'Building Sq Ft (County XG)', dataType: 'number' },
       { name: 'SqFtSource', displayName: 'Sq Ft Source' },
@@ -481,8 +545,14 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       YearBuiltDisplay: formatYearBuilt(r.YearBuilt, r.CoStarYearBuilt),
       ...buildRatioExportValues(r),
     }));
+    // Spec §6 asks for the notation as a header LINE as well as a column. The shared export
+    // dialog exports a row array with no banner concept, so the line is a leading row whose
+    // first column carries the text -- visible as line 1 in CSV/Excel and as element 0 in JSON.
+    const rowsToExport = this.HasDlgfRows
+      ? [{ Address: `SOURCE NOTE: ${DLGF_NOTATION}` } as Record<string, unknown>, ...exportRows]
+      : exportRows;
     this.ExportDialogConfig = {
-      data: exportRows,
+      data: rowsToExport,
       columns,
       defaultFileName: 'property-search-results',
       availableFormats: ['excel', 'csv', 'json'],
@@ -501,8 +571,11 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   public openParcelRecord(parcel: MergedParcelRow): void {
-    const compositeKey = new CompositeKey([{ FieldName: 'ID', Value: parcel.CountyAssessorRecordID }]);
-    this.navigationService.OpenEntityRecord('County Assessor Records', compositeKey);
+    // A DLGF-only row has no CountyAssessorRecord to open -- the Parcel itself is the record.
+    const entityName = parcel.CountyAssessorRecordID ? 'County Assessor Records' : 'Parcels';
+    const id = parcel.CountyAssessorRecordID ?? parcel.ParcelID;
+    const compositeKey = new CompositeKey([{ FieldName: 'ID', Value: id }]);
+    this.navigationService.OpenEntityRecord(entityName, compositeKey);
   }
 
   // NOTE: a "chat with the agent about this parcel" action was planned but
@@ -574,6 +647,13 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       this.publishAgentContext();
       this.cdr.markForCheck();
     }
+    // The county dropdown's full option list carries a live ~203k-row C&I tally
+    // (loadCountyOptionsIfNeeded) -- fire-and-forget AFTER the first search has already resolved
+    // and NotifyLoadComplete has already fired (BaseDashboard calls it right after loadData()
+    // returns), so Marion's default open never waits on it. The instance cache inside
+    // loadCountyOptionsIfNeeded still applies, so this only ever runs once. The combobox shows a
+    // brief loading placeholder (see the template's @if(CountyOptions.length)) until this fills in.
+    void this.loadCountyOptionsIfNeeded().then(() => this.cdr.markForCheck());
   }
 
   public runSearch(): void {
@@ -589,56 +669,113 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   /**
-   * Distinct assessment years actually present for MARION parcels specifically
-   * (indiana_tax.Assessment also carries other counties' bulk-loaded data --
-   * confirmed one statewide source alone has 200K+ rows, far more than
-   * Marion's ~19,859 parcels -- so this is scoped via a subquery against
+   * Distinct assessment years actually present for the SELECTED county's parcels specifically
+   * (indiana_tax.Assessment also carries every other county's bulk-loaded data --
+   * confirmed one statewide source alone has 200K+ rows, far more than any one
+   * county's parcel count -- so this is scoped via a subquery against
    * vwParcels rather than a bare DISTINCT AssessmentYear, which could offer a
-   * year that returns zero Marion results and looks like a dead end).
+   * year that returns zero results for this county and looks like a dead end).
    * A stable, load-once list (like subClassOptionsCache) -- NOT re-derived
    * from the current filtered candidate set, so the year picker doesn't
    * shrink/flicker as other filters narrow the results.
    */
+  /** Years cached PER COUNTY -- switching counties must not show another county's years. */
+  private assessmentYearsByCounty = new Map<number, number[]>();
+
   private async loadAssessmentYearsIfNeeded(): Promise<void> {
-    if (this.AvailableAssessmentYears.length) return;
+    const county = this.filters.countyNumber;
+    const cached = this.assessmentYearsByCounty.get(county);
+    if (cached) {
+      this.AvailableAssessmentYears = cached;
+      if (!cached.includes(this.filters.assessmentYear)) this.filters = { ...this.filters, assessmentYear: cached[0] };
+      return;
+    }
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const result = await rv.RunView<{ AssessmentYear: number }>({
       EntityName: 'Assessments',
       Fields: ['AssessmentYear'],
-      ExtraFilter: `ParcelID IN (SELECT ID FROM indiana_tax.vwParcels WHERE CountyNumber = 49)`,
+      ExtraFilter: `ParcelID IN (SELECT ID FROM indiana_tax.vwParcels WHERE CountyNumber = ${county})`,
       OrderBy: 'AssessmentYear DESC',
-      // Same truncation bug class as loadSubClassOptionsIfNeeded's MaxRows
-      // comment, caught BEFORE shipping this time by checking the real row
-      // count first: this is a per-ROW query (one row per Assessment record,
-      // not per distinct year) and Marion-scoped Assessment rows already
-      // number 51,062 (confirmed 2026-08-24) -- each parcel can have up to
-      // 2 sources (MarionPRC + a statewide fallback) across up to 3 years.
-      // Ordered DESC, so an insufficient cap here would silently make older
-      // years (2024 first, eventually 2025) invisible in the year toggle,
-      // never erroring, just quietly missing. Ceiling: ~19,859 parcels x up
-      // to 5 (source x year combinations) = ~99,295 -- 150000 gives headroom
-      // as PRC coverage keeps growing.
-      MaxRows: 150000,
+      // Per-ROW query (one row per Assessment record, not per distinct year), so the cap must
+      // cover the biggest county's parcels x sources x years: Lake 15,001 parcels x 4 published
+      // card years x up to 2 sources = ~120,000; Marion ~19,859 x 5 = ~99,295. 200000 gives
+      // headroom as PRC coverage grows. Ordered DESC, so a short cap would silently hide the
+      // OLDER years -- never an error, just a quietly missing option.
+      MaxRows: 200000,
       ResultType: 'simple',
     });
     if (!result.Success) return;
     const years = Array.from(new Set((result.Results ?? []).map((r) => r.AssessmentYear))).sort((a, b) => b - a);
     if (!years.length) return;
+    this.assessmentYearsByCounty.set(county, years);
     this.AvailableAssessmentYears = years;
-    // Default to the most recent year once real data is known, replacing the
-    // FALLBACK_ASSESSMENT_YEAR guess DEFAULT_PROPERTY_SEARCH_FILTERS started with.
-    if (!years.includes(this.filters.assessmentYear)) {
-      this.filters = { ...this.filters, assessmentYear: years[0] };
-    }
+    if (!years.includes(this.filters.assessmentYear)) this.filters = { ...this.filters, assessmentYear: years[0] };
+  }
+
+  /**
+   * The 92 counties plus a live C&I (class 300-499) tally per county, for the dropdown's
+   * labels. The tally is a one-column fetch over Parcels aggregated client-side -- MJ's
+   * RunView has no GROUP BY (data-access.md "Client-Side Data Aggregation"), and the same
+   * shape is already what loadAssessmentYearsIfNeeded does.
+   */
+  private async loadCountyOptionsIfNeeded(): Promise<void> {
+    if (this.CountyOptions.length) return;
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    // Two stages, deliberately NOT one RunViews batch: the 92-row county list is what the
+    // control needs to appear, and the per-county C&I tally below is a ~203k-row fetch that
+    // took over two minutes on the dev box (click-through, 2026-09-13). Batched together the
+    // control read "Loading counties..." until the tally returned; names first, counts after.
+    const countyResult = await rv.RunView<Record<string, unknown>>({
+      EntityName: 'Counties',
+      Fields: ['CountyNumber', 'Name', 'Slug'],
+      OrderBy: 'Name',
+      // Exactly 92 rows by construction (one per Indiana county); 200 is headroom, not a guess.
+      MaxRows: 200,
+      ResultType: 'simple',
+    });
+    if (!countyResult.Success) return;
+    const counties = countyResult.Results ?? [];
+    this.CountyOptions = buildCountyOptions(counties, new Map<number, number>());
+    this.cdr.markForCheck();
+    const parcelResult = await rv.RunView<Record<string, unknown>>({
+      EntityName: 'Parcels',
+      Fields: ['CountyNumber'],
+      // NOT CI_CLASS_CODE_FILTER on Parcels: Parcel.PropertyClassCode is NULL everywhere, the
+      // class code lives on the AY2025 DLGF Assessment row -- see CI_ROSTER_PARCEL_FILTER.
+      ExtraFilter: CI_ROSTER_PARCEL_FILTER,
+      // Per-ROW query deduped client-side, the same truncation bug class as
+      // loadSubClassOptionsIfNeeded/loadAssessmentYearsIfNeeded. The C&I universe is
+      // 182,265 parcels outside Marion (proposals/multi-county-ci-intake.md §2) plus
+      // Marion's ~20,722 = ~203,000. 300000 gives headroom as AY2026 lands. Silent
+      // truncation here would UNDERCOUNT the alphabetically-later counties' labels,
+      // never error -- which is exactly how this component was bitten before.
+      MaxRows: 300000,
+      ResultType: 'simple',
+    });
+    if (!parcelResult.Success) return;
+    this.CountyOptions = buildCountyOptions(counties, tallyCIParcels(parcelResult.Results ?? []));
   }
 
   private async loadSubClassOptionsIfNeeded(): Promise<void> {
     if (this.subClassOptionsCache.length) return;
+    if (!this.CountyHasCardData) {
+      const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+      const result = await rv.RunView<Record<string, unknown>>({
+        EntityName: 'Property Class Maps',
+        Fields: ['Code', 'Label'],
+        OrderBy: 'Code',
+        // One row per 3-digit DLGF class code; the table is ~100 rows. 1000 is headroom.
+        MaxRows: 1000,
+        ResultType: 'simple',
+      });
+      if (result.Success) this.subClassOptionsCache = buildClassCodeSubClassOptions(result.Results ?? []);
+      return;
+    }
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const result = await rv.RunView<{ PropertySubClassDescription: string }>({
       EntityName: 'County Assessor Records',
       Fields: ['PropertySubClassDescription'],
-      ExtraFilter: `PropertySubClassDescription IS NOT NULL`,
+      ExtraFilter: `CountyNumber = ${this.filters.countyNumber} AND PropertySubClassDescription IS NOT NULL`,
       OrderBy: 'PropertySubClassDescription',
       // MaxRows must cover every CountyAssessorRecord row (not just the number
       // of distinct values) -- this is a per-ROW query deduped client-side, and
@@ -682,6 +819,11 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   private async runSearchInternal(): Promise<void> {
+    // A county with no loaded record cards reads Parcel + Assessment instead (spec §6).
+    if (!this.CountyHasCardData) {
+      await this.runDlgfSearchInternal();
+      return;
+    }
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const term = this.filters.searchTerm.trim();
     const kind = term ? classifySearchTerm(term) : null;
@@ -697,6 +839,9 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         EntityName: 'Parcels',
         Fields: ['ID'],
         ExtraFilter: `ParcelNumber = '${esc}' OR GISParcelNumber = '${esc}'`,
+        // A parcel number is unique statewide and a GIS number within a county;
+        // 100 is generous headroom. Explicit so this never inherits the entity cap.
+        MaxRows: 100,
         ResultType: 'simple',
       });
       parcelIdConstraint = idResult.Success ? (idResult.Results ?? []).map((r) => r.ID) : [];
@@ -766,18 +911,32 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         EntityName: 'Parcels',
         Fields: ['ID', 'ParcelNumber', 'GISParcelNumber', 'Address', 'OwnerName', 'Latitude', 'Longitude', 'BoundaryGeoJSON'],
         ExtraFilter: `ID IN (${parcelIdList})`,
+        // One row per id in the list; the list is at most RESULT_CAP long. Explicit
+        // so the query never sits exactly on the entity's own default cap.
+        MaxRows: this.RESULT_CAP,
         ResultType: 'simple',
       },
       {
         EntityName: 'Assessments',
         Fields: ['ParcelID', 'Source', 'OriginalLandAV', 'OriginalImprovementAV', 'OriginalTotalAV'],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${this.filters.assessmentYear}`,
+        // SEVERAL rows per parcel-year: the county-card row (LakePRC / MarionPRC /
+        // StJosephPRC) AND the statewide row (dlgf_gdb_2025 / marion_foia_2026) both
+        // exist for the same parcel and year. Without an explicit cap this inherited
+        // the entity's 1,000-row default and silently truncated at RESULT_CAP parcels
+        // x 2 sources -- on Lake AY2025 that left 550 of 1,000 parcels reading "No
+        // assessment on file" and 181 falling back to the DLGF row although every one
+        // of them has a card (caught in the Plan B click-through, 2026-09-13). The
+        // same MaxRows bug class this component has hit three times before.
+        MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
       {
         EntityName: 'Tax History Years',
         Fields: ['ParcelID', 'ColumnOrdinal', 'NetAnnualTax', 'TaxRate'],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND TaxYear = ${this.filters.assessmentYear}`,
+        // Several ColumnOrdinal rows can exist per parcel-year; same reason as above.
+        MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
       {
@@ -841,18 +1000,19 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       for (const p of parcelResult.Results ?? []) parcelById.set(p['ID'] as string, p);
     }
 
-    // Per parcel, prefer the MarionPRC-sourced row over the year's statewide
-    // fallback (marion_foia_2026 / dlgf_gdb_2025) -- matches this project's
-    // established data-integrity priority (PRC is the highest-confidence
-    // source). 2024 currently has no statewide fallback at all, so a parcel
-    // not yet PRC-fetched will have no entry here for that year -- shown as
-    // null/"No data", not silently substituted from another year.
+    // Per parcel, prefer the county's own PRC-sourced row over the year's
+    // statewide fallback (marion_foia_2026 / dlgf_gdb_2025) -- matches this
+    // project's established data-integrity priority (county PRC is the
+    // highest-confidence source), via the one shared precedence rule
+    // (spec §4.3, pickAssessmentRow). 2024 currently has no statewide
+    // fallback at all, so a parcel not yet PRC-fetched will have no entry
+    // here for that year -- shown as null/"No data", not silently
+    // substituted from another year.
     const assessmentByParcel = new Map<string, Record<string, unknown>>();
     if (assessmentResult.Success) {
       for (const a of assessmentResult.Results ?? []) {
         const pid = a['ParcelID'] as string;
-        const existing = assessmentByParcel.get(pid);
-        if (!existing || a['Source'] === 'MarionPRC') assessmentByParcel.set(pid, a);
+        assessmentByParcel.set(pid, pickAssessmentRow(assessmentByParcel.get(pid), a, this.filters.countyNumber));
       }
     }
 
@@ -931,6 +1091,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       const assessment = assessmentByParcel.get(parcelID);
       const taxHistory = taxHistoryByParcel.get(parcelID);
       const lastSale = lastSaleByCar.get(car['ID'] as string);
+      const rowAssessmentYear = assessment ? this.filters.assessmentYear : null;
       merged.push({
         ID: p['ID'] as string,
         ParcelID: parcelID,
@@ -965,8 +1126,20 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         AssessedLandAV: (assessment?.['OriginalLandAV'] as number) ?? null,
         AssessedImprovementAV: (assessment?.['OriginalImprovementAV'] as number) ?? null,
         AssessedTotalAV: (assessment?.['OriginalTotalAV'] as number) ?? null,
-        AssessmentYear: assessment ? this.filters.assessmentYear : null,
+        // null (not this.filters.assessmentYear) when this row has no Assessment for the
+        // selected year -- also feeds VerifyURL below, so a row with no data for this year
+        // never claims a card link for a year it doesn't actually have (buildVerifyLink's
+        // xSoft Engage branch requires a non-null assessmentYear; "not on file" otherwise).
+        AssessmentYear: rowAssessmentYear,
         AssessmentSource: (assessment?.['Source'] as string) ?? null,
+        DataSource: dataSourceLabel((assessment?.['Source'] as string) ?? null, this.filters.countyNumber),
+        VerifyURL: buildVerifyLink({
+          countyNumber: this.filters.countyNumber,
+          slug: this.SelectedCounty?.Slug ?? '',
+          parcelNumber: (p['ParcelNumber'] as string) ?? null,
+          gisParcelNumber: (p['GISParcelNumber'] as string) ?? null,
+          assessmentYear: rowAssessmentYear,
+        }).url,
         TotalTax: (taxHistory?.['NetAnnualTax'] as number) ?? null,
         TaxRate: (taxHistory?.['TaxRate'] as number) ?? null,
         PTABOAValue: ptaboaValueByParcel.get(parcelID) ?? null,
@@ -987,9 +1160,25 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.IsTruncated = carResult.Results.length >= this.RESULT_CAP;
   }
 
+  /** The DLGF-only path. All of its logic lives in property-search-dlgf.ts; this only wires it. */
+  private async runDlgfSearchInternal(): Promise<void> {
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const { rows, isTruncated } = await fetchDlgfParcelRows(rv, {
+      countyNumber: this.filters.countyNumber,
+      slug: this.SelectedCounty?.Slug ?? '',
+      assessmentYear: this.filters.assessmentYear,
+      searchTerm: this.filters.searchTerm,
+      propertyClassCode: this.filters.propertySubClass,
+      resultCap: this.RESULT_CAP,
+    });
+    this.MergedResults = rows;
+    this.IsTruncated = isTruncated;
+  }
+
   private buildCarExtraFilter(term: string, kind: ReturnType<typeof classifySearchTerm> | null, parcelIdConstraint: string[] | null): string {
     const clauses: string[] = [];
 
+    clauses.push(`CountyNumber = ${this.filters.countyNumber}`);
     if (this.filters.propertySubClass) {
       clauses.push(`PropertySubClassDescription = '${escapeSqlLiteral(this.filters.propertySubClass)}'`);
     }
@@ -1027,6 +1216,9 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         visibleColumns: Array.from(this.VisibleColumnKeys),
         selectedParcelAddress: this.SelectedParcel?.Address ?? null,
         isLoading: this.IsLoading,
+        countyName: this.SelectedCounty?.Name ?? null,
+        countySourceTier: countySourceTier(this.filters.countyNumber),
+        hasDlgfRows: this.HasDlgfRows,
       })
     );
     this.navigationService.SetAgentClientTools(this, this.buildAgentTools());
@@ -1093,7 +1285,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       },
       {
         Name: 'ClearParcelFilters',
-        Description: `Clear all active search terms and filters, returning to the default top-${this.RESULT_CAP}-by-assessed-value view (assessment year selection is preserved -- use SwitchAssessmentYear to change that separately).`,
+        Description: `Clear all active search terms and filters, returning to the default top-${this.RESULT_CAP}-by-assessed-value view (the selected county and assessment year are preserved -- use SwitchCounty / SwitchAssessmentYear to change those separately).`,
         ParameterSchema: { type: 'object', properties: {} },
         Handler: async () => {
           this.resetFilters();
@@ -1132,6 +1324,29 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         },
       },
       {
+        // SAFETY BOUNDARY: this tool only changes which county is SELECTED (the query
+        // scope) -- same as any other filter tool in this file. No mutation.
+        Name: 'SwitchCounty',
+        Description:
+          'Switch which Indiana county is searched. Accepts a county name (e.g. "Lake") or its DLGF county number (e.g. 45). Counties whose record cards are loaded show county-card data; every other county shows DLGF statewide data for assessment year 2025, labelled as such.',
+        ParameterSchema: { type: 'object', properties: { county: { type: ['string', 'number'] } }, required: ['county'] },
+        Handler: async (params) => {
+          const raw = String(params['county'] ?? '').trim();
+          if (!raw) return { Success: false, ErrorMessage: 'No county given.' };
+          const byNumber = Number(raw);
+          const match =
+            this.CountyOptions.find((c) => c.CountyNumber === byNumber) ??
+            this.CountyOptions.find((c) => c.Name.toLowerCase() === raw.toLowerCase()) ??
+            this.CountyOptions.find((c) => c.Name.toLowerCase().includes(raw.toLowerCase()));
+          if (!match) {
+            const available = this.CountyOptions.slice(0, 25).map((c) => c.Name).join(', ');
+            return { Success: false, ErrorMessage: `No county matching '${raw}'. Available: ${available}${this.CountyOptions.length > 25 ? ', …' : ''}` };
+          }
+          this.onCountyChange(match.CountyNumber);
+          return { Success: true };
+        },
+      },
+      {
         Name: 'SwitchMapRenderMode',
         Description: "Switch the map between 'point' (clustered pins) and 'boundary' (actual parcel outlines).",
         ParameterSchema: { type: 'object', properties: { mode: { type: 'string', enum: ['point', 'boundary'] } }, required: ['mode'] },
@@ -1146,11 +1361,11 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       },
       {
         Name: 'OpenParcelRecord',
-        Description: 'Open the full County Assessor Record for a parcel, by its ID, for viewing (read-only navigation).',
+        Description: 'Open the full County Assessor Record for a parcel, by its County Assessor Record ID or its Parcel ID, for viewing (read-only navigation).',
         ParameterSchema: { type: 'object', properties: { parcelRecordId: { type: 'string' } }, required: ['parcelRecordId'] },
         Handler: async (params) => {
           const id = String(params['parcelRecordId'] ?? '');
-          const match = this.MergedResults.find((r) => r.CountyAssessorRecordID === id);
+          const match = this.MergedResults.find((r) => r.CountyAssessorRecordID === id || r.ParcelID === id);
           if (!match) {
             return { Success: false, ErrorMessage: `No parcel with ID '${id}' in the current result set.` };
           }

@@ -10,6 +10,7 @@ import {
   buildSubClassAppealRows,
   formatCurrency,
 } from './property-search-agent-context';
+import { MARION_COUNTY_NUMBER } from './property-search-county';
 
 ModuleRegistry.registerModules([AllCommunityModule]);
 
@@ -47,13 +48,20 @@ function formatPercentCell(params: { value: number | null }): string {
   changeDetection: ChangeDetectionStrategy.OnPush,
 })
 export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
+  /**
+   * The host template declares [Active]="true" BEFORE [CountyNumber] / [HasCardData] /
+   * [AssessmentYear], and Angular applies bindings in declaration order -- so on creation this
+   * setter fires while the other inputs still hold their defaults (Marion, card data, this
+   * year). The first load is therefore DEFERRED through scheduleRefresh()'s microtask, which
+   * runs only after every binding of the cycle has been applied. Loading synchronously here
+   * fetched Marion's 20,722 record cards for whichever county was actually selected (caught in
+   * the Plan B click-through, 2026-09-13: Analytics on Lake rolled up Marion's sub-classes).
+   */
   @Input()
   set Active(value: boolean) {
     const wasActive = this._active;
     this._active = value;
-    if (value && !wasActive && !this._loadedOnce) {
-      void this.loadAll();
-    }
+    if (value && !wasActive && !this._loadedOnce) this.scheduleRefresh();
   }
   get Active(): boolean {
     return this._active;
@@ -73,6 +81,43 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
     return this._assessmentYear;
   }
   private _assessmentYear = new Date().getFullYear();
+
+  /**
+   * County / card-data changes refresh whenever the surface is active -- NOT only once a prior
+   * load has finished. Gating on _loadedOnce silently dropped any switch that arrived while a
+   * fetch was still in flight (a 20k-row fetch takes seconds), leaving the previous county's
+   * rows under the new county's number. A superseded fetch is discarded by loadSeq instead.
+   */
+  @Input()
+  set CountyNumber(value: number) {
+    const changed = value !== this._countyNumber;
+    this._countyNumber = value;
+    if (changed && this._active) this.scheduleRefresh();
+  }
+  get CountyNumber(): number {
+    return this._countyNumber;
+  }
+  private _countyNumber = MARION_COUNTY_NUMBER;
+
+  /**
+   * False for a DLGF-only county: there are no CountyAssessorRecord rows to roll up. MUST be a
+   * setter (not a plain field) -- Angular applies template bindings in declaration order, and
+   * the host template sets [CountyNumber] before [HasCardData], so on a county switch
+   * CountyNumber's setter can fire and reload BEFORE HasCardData's own binding has updated to
+   * match. Both setters route through scheduleRefresh() (a microtask-coalesced Refresh()), so
+   * whichever binding lands first the actual reload runs once, after both inputs are current --
+   * the component reaches the right state regardless of binding order.
+   */
+  @Input()
+  set HasCardData(value: boolean) {
+    const changed = value !== this._hasCardData;
+    this._hasCardData = value;
+    if (changed && this._active) this.scheduleRefresh();
+  }
+  get HasCardData(): boolean {
+    return this._hasCardData;
+  }
+  private _hasCardData = true;
 
   public IsLoading = false;
   public AssessmentRows: SubClassAssessmentRow[] = [];
@@ -102,6 +147,30 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
     super();
   }
 
+  /**
+   * Coalesces CountyNumber + HasCardData changes that land in the same change-detection cycle
+   * into exactly one Refresh() call, deferred to a microtask so it runs only after every input
+   * setter for this cycle has already updated its own backing field -- see HasCardData's doc
+   * comment above for why this matters.
+   */
+  private refreshScheduled = false;
+  private scheduleRefresh(): void {
+    if (this.refreshScheduled) return;
+    this.refreshScheduled = true;
+    void Promise.resolve().then(() => {
+      this.refreshScheduled = false;
+      this.Refresh();
+    });
+  }
+
+  /**
+   * Monotonic load token. Every loadAll() takes the next value and, after each await, drops
+   * its results if a newer load has started since -- so the rows on screen always belong to
+   * the inputs that were current when the LATEST load began, never to an older in-flight fetch
+   * that happened to land last.
+   */
+  private loadSeq = 0;
+
   public Refresh(): void {
     this.carRowsCache = null;
     this.appealRowsCache = null;
@@ -110,6 +179,15 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
   }
 
   private async loadAll(): Promise<void> {
+    const seq = ++this.loadSeq;
+    if (!this.HasCardData) {
+      this.AssessmentRows = [];
+      this.AppealRows = [];
+      this.IsLoading = false;
+      this._loadedOnce = true;
+      this.cdr.markForCheck();
+      return;
+    }
     this.IsLoading = true;
     this.cdr.markForCheck();
 
@@ -118,19 +196,25 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
       {
         EntityName: 'County Assessor Records',
         Fields: ['ParcelID', 'PropertySubClassDescription', 'SqFtSource', 'EstimatedSqFt'],
-        // Full C&I universe, not the main dashboard's filtered/capped result
-        // set -- ~19,859 parcels as of 2026-08-26, comfortably under this ceiling.
+        ExtraFilter: `CountyNumber = ${this.CountyNumber}`,
+        // Full C&I universe for the SELECTED county, not the main dashboard's filtered/capped
+        // result set -- Marion's own count was ~19,859 parcels as of 2026-08-26; 25000 gives
+        // headroom for any county with card data (this branch only runs when HasCardData is true).
         MaxRows: 25000,
         ResultType: 'simple',
       },
       {
         EntityName: 'PTABOA Appeals',
         Fields: ['ParcelID', 'CaseNumber', 'HearingDate', 'BeforeTotalAV', 'AfterTotalAV', 'RecordKind'],
-        // All 1,223 appeals on file -- generous headroom, not year-scoped.
+        ExtraFilter: `ParcelID IN (SELECT ID FROM indiana_tax.vwParcels WHERE CountyNumber = ${this.CountyNumber})`,
+        // All appeals on file for the selected county (Marion's own count was 1,223 as of
+        // 2026-08-26) -- generous headroom, not year-scoped.
         MaxRows: 5000,
         ResultType: 'simple',
       },
     ]);
+
+    if (seq !== this.loadSeq) return; // superseded by a later county / card-data change
 
     this.carRowsCache = carResult.Success ? (carResult.Results ?? []) : [];
     this.appealRowsCache = appealResult.Success ? (appealResult.Results ?? []) : [];
@@ -154,6 +238,7 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
 
   private async loadAssessmentAnalytics(): Promise<void> {
     if (!this.carRowsCache) return; // loadAll() hasn't populated the shared CAR cache yet
+    const seq = this.loadSeq;
     this.IsLoading = true;
     this.cdr.markForCheck();
 
@@ -161,7 +246,7 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
     const result = await rv.RunView<Record<string, unknown>>({
       EntityName: 'Assessments',
       Fields: ['ParcelID', 'Source', 'OriginalTotalAV'],
-      ExtraFilter: `AssessmentYear = ${this.AssessmentYear} AND ParcelID IN (SELECT ID FROM indiana_tax.vwParcels WHERE CountyNumber = 49)`,
+      ExtraFilter: `AssessmentYear = ${this.AssessmentYear} AND ParcelID IN (SELECT ID FROM indiana_tax.vwParcels WHERE CountyNumber = ${this.CountyNumber})`,
       // A full year's worth of statewide Assessment rows across all sources
       // can approach ~40,000 (up to 2 sources x ~19,859 parcels) -- see
       // loadAssessmentYearsIfNeeded's own comment in the host dashboard for
@@ -170,7 +255,9 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
       ResultType: 'simple',
     });
 
-    this.AssessmentRows = result.Success ? buildSubClassAssessmentRows(this.carRowsCache, result.Results ?? []) : [];
+    if (seq !== this.loadSeq || !this.carRowsCache) return; // a newer load owns the screen now
+
+    this.AssessmentRows = result.Success ? buildSubClassAssessmentRows(this.carRowsCache, result.Results ?? [], this.CountyNumber) : [];
     this.IsLoading = false;
     this.cdr.markForCheck();
   }

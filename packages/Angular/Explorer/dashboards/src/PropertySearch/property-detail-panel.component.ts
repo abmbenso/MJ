@@ -85,6 +85,14 @@ export class PropertyDetailPanelComponent {
     return this.Parcel?.Address ?? this.Parcel?.ParcelNumber ?? 'Parcel';
   }
 
+  /** Inputs, not county logic -- the panel stays presentational (spec §6). */
+  public get DataSourceLabel(): string {
+    return this.Parcel?.DataSource ?? 'No assessment on file';
+  }
+  public get VerifyURL(): string | null {
+    return this.Parcel?.VerifyURL ?? null;
+  }
+
   public get SqFtConfidence(): SqFtConfidenceBadge {
     switch (this.Parcel?.SqFtSource) {
       case 'PropertyRecordCard':

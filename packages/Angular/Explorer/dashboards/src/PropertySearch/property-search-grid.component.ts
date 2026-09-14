@@ -38,6 +38,15 @@ function formatTaxRate(params: { value: number | null }): string {
   return params.value == null ? '—' : `${params.value.toFixed(4)}%`;
 }
 
+/** Minimal HTML escaper for the VerifyLink cellRenderer below -- AG Grid's cellRenderer here returns
+ * a raw HTML string (not a DOM node/component), so an unescaped VerifyURL interpolated into an
+ * href attribute would let a hostile value break out of the attribute and inject markup. VerifyURL
+ * is always tool-built today (buildVerifyLink/prcUrl/xsoftCardUrl), but escaping here is defense in
+ * depth against any future source of that value. */
+function escapeHtmlAttribute(value: string): string {
+  return value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;').replace(/'/g, '&#39;');
+}
+
 /** Plain date formatter for LastSaleDate -- 'date' SQL type comes through RunView('simple') as an ISO string, not a Date instance. */
 function formatDate(params: { value: string | null }): string {
   if (!params.value) return '—';
@@ -54,10 +63,10 @@ function formatLastSalePrice(params: { value: number | null; data?: MergedParcel
   return `${formatted}${suffix}`;
 }
 
-/** Year column: the year itself, with the source's confidence folded in as a suffix -- MarionPRC (this project's highest-confidence source) vs. a statewide fallback vs. no data at all for this parcel/year. */
+/** Year column: the year itself, with the source's confidence folded in as a suffix -- a county's own record card (this project's highest-confidence source) vs. a statewide/FOIA fallback vs. no data at all for this parcel/year. */
 function formatAssessmentYear(params: { value: number | null; data?: MergedParcelRow }): string {
   if (params.value == null) return 'No data';
-  return params.data?.AssessmentSource === 'MarionPRC' ? `${params.value} ✓` : String(params.value);
+  return params.data?.DataSource === 'County record card' ? `${params.value} ✓` : String(params.value);
 }
 
 /** Own YearBuilt (Tax History Report-sourced) preferred, CoStarYearBuilt shown as an explicitly-marked fallback -- see formatYearBuilt's own doc comment for why the "(CoStar)" suffix matters here specifically. */
@@ -93,6 +102,34 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
     defaultVisible: true,
     locked: true,
     colDef: { field: 'Address', headerName: 'Address', flex: 2, minWidth: 220, tooltipField: 'Address' },
+  },
+  {
+    key: 'DataSource',
+    label: 'Source',
+    defaultVisible: true,
+    locked: true,
+    colDef: {
+      field: 'DataSource',
+      headerName: 'Source',
+      width: 170,
+      headerTooltip: 'Where this row’s assessed values came from. "County record card" = the county’s own PRC (highest confidence). "County FOIA list" = a county-provided list. "DLGF statewide file" = the state’s AY2025 file, as initially determined — not the county’s card.',
+    },
+  },
+  {
+    key: 'VerifyLink',
+    label: 'Verify',
+    defaultVisible: true,
+    locked: true,
+    colDef: {
+      colId: 'VerifyLink',
+      headerName: 'Verify',
+      width: 110,
+      sortable: false,
+      valueGetter: (p) => (p.data ? (p.data.VerifyURL ?? null) : null),
+      cellRenderer: (p: { value: string | null }) =>
+        p.value ? `<a href="${escapeHtmlAttribute(p.value)}" target="_blank" rel="noopener noreferrer">Card ↗</a>` : 'not on file',
+      headerTooltip: 'Opens the county’s own record card for this parcel. "not on file" = no link can be built from the parcel number for this county — verify at the county.',
+    },
   },
   {
     key: 'ParcelNumber',
@@ -245,7 +282,7 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
       width: 110,
       type: 'numericColumn',
       valueFormatter: formatAssessmentYear,
-      headerTooltip: 'Assessment year shown. ✓ = MarionPRC-verified (highest confidence); no checkmark = statewide fallback source; "No data" = not yet available for this parcel/year.',
+      headerTooltip: 'Assessment year shown. ✓ = from the county\'s own record card (highest confidence); no checkmark = a statewide/FOIA fallback source — see the Source column; "No data" = nothing on file for this parcel/year.',
     },
   },
   {

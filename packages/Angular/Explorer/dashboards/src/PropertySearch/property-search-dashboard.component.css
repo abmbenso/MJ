@@ -22,6 +22,17 @@ mj-property-search-grid {
   border: 1px solid var(--mj-border-default);
 }
 
+.county-select {
+  min-width: 260px;
+}
+
+.county-select-loading {
+  display: inline-flex;
+  align-items: center;
+  color: var(--mj-text-secondary);
+  font-size: 0.875rem;
+}
+
 .sqft-range-row {
   display: flex;
   align-items: center;

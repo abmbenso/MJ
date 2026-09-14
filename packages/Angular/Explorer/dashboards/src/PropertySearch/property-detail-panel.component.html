@@ -10,6 +10,15 @@
         }
       </div>
 
+      <div class="detail-verify">
+        @if (VerifyURL) {
+          <a [href]="VerifyURL" target="_blank" rel="noopener noreferrer">County record card &#8599;</a>
+        } @else {
+          <span class="detail-subvalue">Record card not on file — verify at the county</span>
+        }
+        <span class="detail-subvalue">Source: {{ DataSourceLabel }}</span>
+      </div>
+
       <div class="detail-section">
         <div class="detail-label">Owner</div>
         <div class="detail-value">{{ Parcel.OwnerName || 'Unknown' }}</div>
@@ -35,7 +44,7 @@
         <div class="detail-label">
           Assessed Values
           @if (Parcel.AssessmentYear) {
-            <span class="detail-subvalue">&mdash; {{ Parcel.AssessmentYear }}{{ Parcel.AssessmentSource === 'MarionPRC' ? ' (verified)' : '' }}</span>
+            <span class="detail-subvalue">&mdash; {{ Parcel.AssessmentYear }} ({{ DataSourceLabel }})</span>
           } @else {
             <span class="detail-subvalue">&mdash; no data for the selected year</span>
           }

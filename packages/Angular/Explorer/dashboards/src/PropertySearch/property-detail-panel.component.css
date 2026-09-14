@@ -35,6 +35,17 @@
   color: var(--mj-text-secondary);
 }
 
+.detail-verify {
+  display: flex;
+  flex-direction: column;
+  gap: var(--mj-space-1);
+  font-size: 0.8125rem;
+}
+
+.detail-verify a {
+  color: var(--mj-text-link);
+}
+
 .detail-value-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);

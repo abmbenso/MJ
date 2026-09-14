@@ -1,5 +1,9 @@
 <div class="analytics-body">
-  @if (IsLoading && !AssessmentRows.length && !AppealRows.length) {
+  @if (!HasCardData) {
+    <mj-empty-state Icon="fa-solid fa-file-circle-question" Title="No record cards for this county"
+      Message="Sub-class analytics are built from the county's own property record cards. This county is on the DLGF statewide file only — see the source note on the Map and List views.">
+    </mj-empty-state>
+  } @else if (IsLoading && !AssessmentRows.length && !AppealRows.length) {
     <mj-loading text="Loading sub class analytics..."></mj-loading>
   } @else {
     <div class="analytics-section">

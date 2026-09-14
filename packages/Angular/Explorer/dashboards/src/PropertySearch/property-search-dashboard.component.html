@@ -2,7 +2,7 @@
   <mj-page-header
     Title="Property Search"
     Icon="fa-solid fa-map-location-dot"
-    Subtitle="Search and map Marion County commercial and industrial parcels">
+    Subtitle="Search and map Indiana commercial and industrial parcels, county by county">
 
     <div meta>
       @if (MergedResults.length) {
@@ -21,6 +21,22 @@
     </div>
 
     <div toolbar>
+      @if (CountyOptions.length) {
+        <mj-combobox
+          class="county-select"
+          [Data]="CountyOptions"
+          TextField="Label"
+          ValueField="CountyNumber"
+          [ValuePrimitive]="true"
+          [Filterable]="true"
+          Placeholder="County"
+          [ngModel]="SelectedCountyNumber"
+          (ngModelChange)="onCountyChange($any($event))">
+        </mj-combobox>
+      } @else {
+        <span class="county-select county-select-loading">Loading counties&hellip;</span>
+      }
+
       <mj-page-search
         Placeholder="Search by address, owner, parcel #, or subclass code (e.g. 411)..."
         [Value]="SearchTerm"
@@ -36,16 +52,18 @@
           [Values]="ParcelFilterValues"
           (ValuesChange)="onFilterValuesChange($event)"
           (Reset)="resetFilters()">
-          <mj-filter-field Label="Building Sq Ft" Icon="fa-solid fa-ruler-combined">
-            <div class="sqft-range-row">
-              <mj-numeric-input [Min]="0" Placeholder="Min" [ngModel]="SqFtMin" (ngModelChange)="onSqFtMinChange($event)"></mj-numeric-input>
-              <span class="sqft-range-sep">&ndash;</span>
-              <mj-numeric-input [Min]="0" Placeholder="Max" [ngModel]="SqFtMax" (ngModelChange)="onSqFtMaxChange($event)"></mj-numeric-input>
-            </div>
-            <p class="sqft-range-note">
-              Building sqft is unverified for many parcels &mdash; see the confidence badge on each parcel's detail panel.
-            </p>
-          </mj-filter-field>
+          @if (CountyHasCardData) {
+            <mj-filter-field Label="Building Sq Ft" Icon="fa-solid fa-ruler-combined">
+              <div class="sqft-range-row">
+                <mj-numeric-input [Min]="0" Placeholder="Min" [ngModel]="SqFtMin" (ngModelChange)="onSqFtMinChange($event)"></mj-numeric-input>
+                <span class="sqft-range-sep">&ndash;</span>
+                <mj-numeric-input [Min]="0" Placeholder="Max" [ngModel]="SqFtMax" (ngModelChange)="onSqFtMaxChange($event)"></mj-numeric-input>
+              </div>
+              <p class="sqft-range-note">
+                Building sqft is unverified for many parcels &mdash; see the confidence badge on each parcel's detail panel.
+              </p>
+            </mj-filter-field>
+          }
         </mj-filter-panel>
       </mj-filter-popover>
 
@@ -103,11 +121,17 @@
           <mj-property-subclass-analytics
             [Provider]="Provider"
             [Active]="true"
+            [CountyNumber]="SelectedCountyNumber"
+            [HasCardData]="CountyHasCardData"
             [AssessmentYear]="SelectedAssessmentYear">
           </mj-property-subclass-analytics>
         } @else {
           @if (MergedResults.length) {
             <mj-property-search-analytics-panel [Rows]="MergedResults"></mj-property-search-analytics-panel>
+          }
+
+          @if (HasDlgfRows) {
+            <mj-alert Variant="warning" Icon="fa-solid fa-triangle-exclamation" [Message]="DlgfNotation"></mj-alert>
           }
 
           @if (IsTruncated) {

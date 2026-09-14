@@ -18,6 +18,7 @@ import {
   MJEmptyStateComponent,
   MJAlertComponent,
   MjSlidePanelComponent,
+  MJComboboxComponent,
 } from '@memberjunction/ng-ui-components';
 import { SharedGenericModule } from '@memberjunction/ng-shared-generic';
 import { MapViewModule } from '@memberjunction/ng-map-view';
@@ -64,6 +65,7 @@ import { PropertySearchAnalyticsPanelComponent } from './PropertySearch/property
     MJEmptyStateComponent,
     MJAlertComponent,
     MjSlidePanelComponent,
+    MJComboboxComponent,
     SharedGenericModule,
     MapViewModule,
     AgGridModule,

@@ -8,6 +8,7 @@
  * here writes to the database — search/filter tools only change what's
  * QUERIED and displayed; OpenParcelRecord opens a record for VIEWING only.
  */
+import { MARION_COUNTY_NUMBER, ParcelDataSource, CountySourceTier, pickAssessmentRow } from './property-search-county';
 
 /** A single merged parcel row (CountyAssessorRecord fields + joined Parcel geometry/identity fields). */
 export interface MergedParcelRow {
@@ -21,7 +22,9 @@ export interface MergedParcelRow {
   // CountyAssessorRecord's own primary key -- required separately from ID/
   // ParcelID (both of which are the Parcel's ID) for anything that opens the
   // County Assessor Records entity specifically, e.g. openParcelRecord().
-  CountyAssessorRecordID: string;
+  // NULL for a DLGF-only county, which has no CountyAssessorRecord row at
+  // all. Callers that open a record must branch on it.
+  CountyAssessorRecordID: string | null;
   Address: string | null;
   ParcelNumber: string | null;
   GISParcelNumber: string | null;
@@ -63,9 +66,10 @@ export interface MergedParcelRow {
   // same number. See migration V202608272230.
   CoStarRBA: number | null;
   // Assessed values AS OF AssessmentYear (below) -- sourced from
-  // indiana_tax.Assessment (preferring Source='MarionPRC' when a row exists
-  // for that parcel+year, falling back to the year's statewide source
-  // otherwise), NOT CountyAssessorRecord's own undifferentiated snapshot.
+  // indiana_tax.Assessment via pickAssessmentRow's per-county precedence
+  // (the selected county's own card source, e.g. LakePRC/MarionPRC/
+  // StJosephPRC, beats a FOIA list, which beats the DLGF statewide fallback),
+  // NOT CountyAssessorRecord's own undifferentiated snapshot.
   // Null (not a stale substitute) when no Assessment row exists for this
   // parcel at the selected year -- most commonly 2024, which currently has
   // no statewide fallback and only exists for already-PRC-fetched parcels.
@@ -74,6 +78,10 @@ export interface MergedParcelRow {
   AssessedTotalAV: number | null;
   AssessmentYear: number | null;
   AssessmentSource: string | null;
+  /** Which source the AV on this row actually came from, in words (spec §6: "every merged row carries a DataSource value"). */
+  DataSource: ParcelDataSource;
+  /** The route to the county's own record card for this parcel, from buildVerifyLink(...).url -- null when none can be built (see the Verify column's "not on file" cell). */
+  VerifyURL: string | null;
   // Sourced from indiana_tax.TaxHistoryYear at TaxYear = AssessmentYear (the
   // two year fields are confirmed 1:1 aligned, not off-by-one) -- NOT
   // CountyAssessorRecord's own current-year-only snapshot, so these track the
@@ -119,6 +127,8 @@ export interface MergedParcelRow {
 }
 
 export interface PropertySearchFilters {
+  /** Which county's parcels are searched. Defaults to Marion, so the pre-county-filter behaviour is unchanged (spec §6). */
+  countyNumber: number;
   searchTerm: string;
   // Single-select, not multi -- there are 80 distinct PropertySubClassDescription
   // values in the live data (confirmed 2026-08-24), far too many for a chip
@@ -139,12 +149,26 @@ export interface PropertySearchFilters {
 export const FALLBACK_ASSESSMENT_YEAR = 2026;
 
 export const DEFAULT_PROPERTY_SEARCH_FILTERS: PropertySearchFilters = {
+  countyNumber: MARION_COUNTY_NUMBER,
   searchTerm: '',
   propertySubClass: null,
   sqFtMin: null,
   sqFtMax: null,
   assessmentYear: FALLBACK_ASSESSMENT_YEAR,
 };
+
+/**
+ * Filters that must be cleared on a county switch: propertySubClass and the sqft range are
+ * scoped to the PRIOR county's own dropdown values/units (a Marion sub-class name, or a sqft
+ * range meaningful for Marion's building stock, silently becomes a zero-row filter against
+ * another county's data) -- see property-search-dashboard.component.ts's onCountyChange. The
+ * search term is NOT reset -- the user set it deliberately and it may still apply (e.g. an
+ * owner name search spanning counties); assessmentYear is reset separately once the new
+ * county's own year list loads (loadAssessmentYearsIfNeeded).
+ */
+export function resetFiltersForCountyChange(filters: PropertySearchFilters, countyNumber: number): PropertySearchFilters {
+  return { ...filters, countyNumber, propertySubClass: null, sqFtMin: null, sqFtMax: null };
+}
 
 /**
  * Result cap shared by both map render modes — see
@@ -166,12 +190,19 @@ export interface PropertySearchAgentContextInput {
   visibleColumns: string[];
   selectedParcelAddress: string | null;
   isLoading: boolean;
+  countyName: string | null;
+  countySourceTier: CountySourceTier;
+  hasDlgfRows: boolean;
 }
 
 /** Builds the ~18-field context object published via NavigationService.SetAgentContext. */
 export function buildPropertySearchAgentContext(input: PropertySearchAgentContextInput): Record<string, unknown> {
   const stats = computePropertySearchSummaryStats(input.rows);
   return {
+    CountyNumber: input.filters.countyNumber,
+    CountyName: input.countyName,
+    CountySourceTier: input.countySourceTier,
+    HasDlgfRows: input.hasDlgfRows,
     SearchTerm: input.filters.searchTerm || null,
     SubClassFilter: input.filters.propertySubClass,
     SqFtMin: input.filters.sqFtMin,
@@ -735,14 +766,15 @@ export interface SubClassAppealAnalytics {
  */
 export function buildSubClassAssessmentRows(
   carRows: Record<string, unknown>[],
-  assessmentRows: Record<string, unknown>[]
+  assessmentRows: Record<string, unknown>[],
+  countyNumber: number
 ): SubClassAssessmentRow[] {
-  // Prefer MarionPRC per parcel -- same data-integrity rule as the main dashboard's own assessmentByParcel map.
+  // Prefer the county's own card source per parcel (pickAssessmentRow, spec §4.3) -- same
+  // data-integrity rule as the main dashboard's own assessmentByParcel map.
   const assessmentByParcel = new Map<string, Record<string, unknown>>();
   for (const a of assessmentRows) {
     const pid = a['ParcelID'] as string;
-    const existing = assessmentByParcel.get(pid);
-    if (!existing || a['Source'] === 'MarionPRC') assessmentByParcel.set(pid, a);
+    assessmentByParcel.set(pid, pickAssessmentRow(assessmentByParcel.get(pid), a, countyNumber));
   }
 
   interface Bucket {

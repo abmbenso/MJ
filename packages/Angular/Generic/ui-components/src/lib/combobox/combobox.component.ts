@@ -127,8 +127,11 @@ export class MJComboboxComponent implements ControlValueAccessor, OnDestroy {
   @Input()
   set Data(value: Record<string, unknown>[] | string[] | readonly unknown[] | null) {
     this._data = value;
-    // Re-resolve display text when data arrives after writeValue
-    if (this.SelectedValue != null && !this.InputText) {
+    // Re-resolve display text when data arrives after writeValue -- AND when the data is
+    // replaced while a value is selected and the list is closed (a host that first shows
+    // placeholder labels and later swaps in the final ones, e.g. "Marion — count unavailable"
+    // → "Marion — 19,885 C&I"). Never while the list is open: the user may be typing a filter.
+    if (this.SelectedValue != null && (!this.InputText || !this.IsOpen)) {
       this.InputText = this.getDisplayText();
     }
   }
