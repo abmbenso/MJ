@@ -20,6 +20,7 @@ export const DLGF_SOURCE = 'dlgf_gdb_2025';
 export const MARION_FOIA_SOURCE = 'marion_foia_2026';
 
 export const COUNTY_CARD_SOURCE: Readonly<Record<number, string>> = Object.freeze({
+  2: 'AllenPRC',
   45: 'LakePRC',
   49: 'MarionPRC',
   71: 'StJosephPRC',
@@ -171,6 +172,15 @@ export interface CountyVerifyLink {
  */
 export const XSOFT_ENGAGE_SLUGS: ReadonlySet<string> = new Set(['lake', 'stjoseph']);
 
+/**
+ * Counties on a single-static-URL vendor CONFIRMED at intake stage S0 -- one route per parcel,
+ * no year in the path (Allen's acimap.us; scripts/lib/acimap.js). Unlike XSOFT_ENGAGE_SLUGS, the
+ * link built here does NOT depend on target.assessmentYear -- the same URL answers for every
+ * year on screen, because the vendor itself publishes only its current card (see
+ * data/county_intake/allen/PILOT_FINDINGS.md's "genuinely different vendor shape").
+ */
+export const SINGLE_URL_VENDOR_SLUGS: ReadonlySet<string> = new Set(['allen']);
+
 /** "45-07-06-207-002.000-023" from the 18-digit state parcel number. Null when it isn't 18 digits. */
 export function toDashedStateParcel(parcelNumber: string | null): string | null {
   const d = (parcelNumber ?? '').replace(/\D/g, '');
@@ -180,6 +190,11 @@ export function toDashedStateParcel(parcelNumber: string | null): string | null 
 
 export function xsoftCardUrl(slug: string, dashedParcel: string, year: number): string {
   return `https://engageblob.blob.core.windows.net/${slug}/pdf/${year}/${dashedParcel}.pdf`;
+}
+
+/** Allen's own site: one static, year-less URL per parcel -- the 18-digit number as-is, no dashing. */
+export function acimapCardUrl(parcelNumber: string): string {
+  return `https://acimap.us/website/prc/${parcelNumber}.pdf`;
 }
 
 /**
@@ -203,6 +218,14 @@ export function buildVerifyLink(target: VerifyLinkTarget): CountyVerifyLink {
     const dashed = toDashedStateParcel(target.parcelNumber);
     return dashed
       ? { label: `Record Card (AY${target.assessmentYear})`, url: xsoftCardUrl(target.slug, dashed, target.assessmentYear), note: 'xSoft Engage' }
+      : noRoute();
+  }
+  if (SINGLE_URL_VENDOR_SLUGS.has(target.slug)) {
+    const digits = (target.parcelNumber ?? '').replace(/\D/g, '');
+    // The label carries no "(AYxxxx)" -- unlike the xSoft link, this one is NOT scoped to the
+    // year on screen; it is the vendor's one current card, whatever year that happens to be.
+    return digits.length === 18
+      ? { label: 'Record Card (current)', url: acimapCardUrl(digits), note: "the county's own site" }
       : noRoute();
   }
   return noRoute();

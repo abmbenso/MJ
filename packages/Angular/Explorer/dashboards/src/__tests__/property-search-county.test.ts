@@ -16,8 +16,10 @@ import {
   CI_CLASS_CODE_FILTER,
   CI_ROSTER_PARCEL_FILTER,
   XSOFT_ENGAGE_SLUGS,
+  SINGLE_URL_VENDOR_SLUGS,
   toDashedStateParcel,
   xsoftCardUrl,
+  acimapCardUrl,
   buildVerifyLink,
 } from '../PropertySearch/property-search-county';
 
@@ -28,7 +30,8 @@ import {
  */
 
 describe('county identity + source tier', () => {
-  it('knows the card source for the three onboarded counties, null otherwise', () => {
+  it('knows the card source for the four onboarded counties, null otherwise', () => {
+    expect(countyCardSource(2)).toBe('AllenPRC');
     expect(countyCardSource(45)).toBe('LakePRC');
     expect(countyCardSource(49)).toBe('MarionPRC');
     expect(countyCardSource(71)).toBe('StJosephPRC');
@@ -36,6 +39,7 @@ describe('county identity + source tier', () => {
   });
 
   it('tiers a county PRC county as County PRC, everything else as DLGF only', () => {
+    expect(countySourceTier(2)).toBe('County PRC');
     expect(countySourceTier(45)).toBe('County PRC');
     expect(countySourceTier(49)).toBe('County PRC');
     expect(countySourceTier(71)).toBe('County PRC');
@@ -46,7 +50,7 @@ describe('county identity + source tier', () => {
     expect(MARION_COUNTY_NUMBER).toBe(49);
     expect(DLGF_SOURCE).toBe('dlgf_gdb_2025');
     expect(MARION_FOIA_SOURCE).toBe('marion_foia_2026');
-    expect(COUNTY_CARD_SOURCE).toEqual({ 45: 'LakePRC', 49: 'MarionPRC', 71: 'StJosephPRC' });
+    expect(COUNTY_CARD_SOURCE).toEqual({ 2: 'AllenPRC', 45: 'LakePRC', 49: 'MarionPRC', 71: 'StJosephPRC' });
   });
 });
 
@@ -323,5 +327,54 @@ describe('buildVerifyLink', () => {
     });
     expect(link.url).toBeNull();
     expect(link.note).toBe('not on file — verify at the county');
+  });
+
+  it('Allen (single-URL vendor) with an 18-digit parcel -> the acimap.us URL, year-independent', () => {
+    const link = buildVerifyLink({
+      countyNumber: 2,
+      slug: 'allen',
+      parcelNumber: '021617100003000048',
+      gisParcelNumber: null,
+      assessmentYear: 2024, // deliberately NOT the card's current year -- the link ignores it
+    });
+    expect(link.url).toBe('https://acimap.us/website/prc/021617100003000048.pdf');
+    expect(link.label).toBe('Record Card (current)');
+    expect(link.note).toBe("the county's own site");
+  });
+
+  it('Allen with no assessment year at all still builds the link (unlike the xSoft branch)', () => {
+    const link = buildVerifyLink({
+      countyNumber: 2,
+      slug: 'allen',
+      parcelNumber: '021617100003000048',
+      gisParcelNumber: null,
+      assessmentYear: null,
+    });
+    expect(link.url).toBe('https://acimap.us/website/prc/021617100003000048.pdf');
+  });
+
+  it('Allen with an unparsable parcel number -> null url, not a broken link', () => {
+    const link = buildVerifyLink({
+      countyNumber: 2,
+      slug: 'allen',
+      parcelNumber: 'not-a-parcel',
+      gisParcelNumber: null,
+      assessmentYear: null,
+    });
+    expect(link.url).toBeNull();
+    expect(link.note).toBe('not on file — verify at the county');
+  });
+});
+
+describe('SINGLE_URL_VENDOR_SLUGS', () => {
+  it('carries the one S0-confirmed slug', () => {
+    expect(SINGLE_URL_VENDOR_SLUGS.has('allen')).toBe(true);
+    expect(SINGLE_URL_VENDOR_SLUGS.has('lake')).toBe(false);
+  });
+});
+
+describe('acimapCardUrl', () => {
+  it('builds the static, year-less, undashed URL', () => {
+    expect(acimapCardUrl('021617100003000048')).toBe('https://acimap.us/website/prc/021617100003000048.pdf');
   });
 });
