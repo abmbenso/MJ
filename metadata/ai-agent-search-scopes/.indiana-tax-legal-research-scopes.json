@@ -1,0 +1,26 @@
+[
+  {
+    "fields": {
+      "AgentID": "@lookup:MJ: AI Agents.Name=Legal Research",
+      "SearchScopeID": "@lookup:MJ: Search Scopes.Name=IBTR Decisions",
+      "Phase": "Both",
+      "Status": "Active",
+      "Priority": 1,
+      "MaxResults": 8,
+      "IsDefault": false
+    },
+    "primaryKey": { "ID": "238DED80-895E-4624-93FB-93C48AB45F6D" }
+  },
+  {
+    "fields": {
+      "AgentID": "@lookup:MJ: AI Agents.Name=Legal Research",
+      "SearchScopeID": "@lookup:MJ: Search Scopes.Name=Legal Authority",
+      "Phase": "Both",
+      "Status": "Active",
+      "Priority": 1,
+      "MaxResults": 8,
+      "IsDefault": true
+    },
+    "primaryKey": { "ID": "ACFCECF1-E1BC-4BB6-B3CF-4C65826A6CD1" }
+  }
+]
