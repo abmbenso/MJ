@@ -1,0 +1,35 @@
+[
+  {
+    "fields": {
+      "Name": "Legal Research",
+      "CategoryID": "@lookup:MJ: AI Agent Categories.Name=Indiana Tax Expert?create&Description=Agents for the Indiana Property Tax Expert application",
+      "Description": "Searches Indiana property tax statute, rules, the Assessment Manual, DLGF Guidelines, IBTR/Tax Court procedural rules, and IBTR/Tax Court decisions, answering with inline citations. Read-only: no record-mutation tools.",
+      "TypeID": "@lookup:MJ: AI Agent Types.Name=Loop",
+      "Status": "Active",
+      "ExecutionOrder": 0,
+      "ExposeAsAction": false,
+      "ModelSelectionMode": "Agent",
+      "AgentTypePromptParams": {},
+      "IconClass": "fa-solid fa-book-open-reader",
+      "SearchScopeAccess": "Assigned"
+    },
+    "primaryKey": {
+      "ID": "6B93AF27-F6AD-4346-8AC1-E43CBEAC9843"
+    },
+    "relatedEntities": {
+      "MJ: AI Agent Prompts": [
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "PromptID": "@lookup:MJ: AI Prompts.Name=Legal Research - Main Prompt",
+            "ExecutionOrder": 0,
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "A4240A36-82E5-4BD1-937B-D1DF7F513AA4"
+          }
+        }
+      ]
+    }
+  }
+]
