@@ -33,6 +33,10 @@
     @if (loading) {
       <mj-loading text="Searching Indiana property tax law..."></mj-loading>
     } @else {
+      @if (errorMessage) {
+        <mj-alert Variant="error" Title="Search unavailable" [Message]="errorMessage"></mj-alert>
+      }
+
       @if (answerText) {
         <div class="lr-answer">
           <p class="lr-answer-text">{{ answerText }}</p>
@@ -74,7 +78,7 @@
             </div>
           }
         </div>
-      } @else if (query.trim() && !answerText) {
+      } @else if (query.trim() && !answerText && !errorMessage) {
         <mj-empty-state
           Icon="fa-solid fa-book-open"
           Title="No sources found"

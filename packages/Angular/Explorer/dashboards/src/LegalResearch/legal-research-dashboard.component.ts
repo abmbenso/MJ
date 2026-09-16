@@ -11,18 +11,7 @@ import { AIEngineBase } from '@memberjunction/ai-engine-base';
 import { SearchService, SearchResultItem } from '@memberjunction/ng-search';
 import { AgentToolResult, validateStringParam } from '../shared/agent-tool-validation';
 import { classifyQuery } from './query-classifier';
-
-/** Matches the `[CITE: <citation key>]` inline marker the Legal Research agent's own
- * system prompt (metadata/prompts/templates/indiana-legal-research/system-prompt.md)
- * is instructed to emit after every substantive claim. */
-const CITE_RE = /\[CITE:\s*([^\]]+)\]/g;
-
-/** One `[CITE: ...]` token pulled out of an agent answer -- unresolved until the user
- * clicks it, then hydrated from Legal Authority Sections (see openCitation). */
-interface CitationChip {
-  key: string;
-  resolved?: { heading: string; text: string };
-}
+import { CitationChip, deriveAgentAnswer } from './legal-research-answer';
 
 /**
  * Legal Research — federated search (IBTR Decisions + Legal Authority Search Scopes)
@@ -53,6 +42,10 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
   public answerText = '';
   public answerChips: CitationChip[] = [];
   public activeChip: CitationChip | null = null;
+  /** Set on a search failure, an agent-answer failure, or a Search Scope resolution
+   * failure (see loadData/runSearch/runAgentAnswer) -- distinguishes a real error from
+   * a genuine empty result, which the template must never render identically. */
+  public errorMessage: string | null = null;
 
   private search = inject(SearchService);
   private cdr = inject(ChangeDetectorRef);
@@ -94,6 +87,28 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
     const scopes = await this.search.LoadScopes();
     this.ibtrScopeId = scopes.find((s) => s.Name === 'IBTR Decisions')?.ID ?? null;
     this.legalAuthorityScopeId = scopes.find((s) => s.Name === 'Legal Authority')?.ID ?? null;
+
+    // Per SearchRequest's own contract, an empty/omitted ScopeIDs means an
+    // UNCONSTRAINED search over the entire system (all entities, not just legal
+    // sources) -- not a narrower "no scope" search. If either Search Scope fails
+    // to resolve by name (rename, deactivation, a permission change), runSearch()
+    // must refuse to silently fall back to that unconstrained search and instead
+    // show the user a real error. See runSearch()'s guard below.
+    this.errorMessage = this.describeScopeResolutionFailure();
+  }
+
+  /** Non-null exactly when either bound Search Scope failed to resolve by name --
+   * shared by loadData() (initial state) and runSearch()'s guard (re-derived on
+   * every attempt, so a prior clearSearch() can never leave this silently unset). */
+  private describeScopeResolutionFailure(): string | null {
+    if (this.ibtrScopeId && this.legalAuthorityScopeId) return null;
+    const missing = [
+      !this.ibtrScopeId ? 'IBTR Decisions' : null,
+      !this.legalAuthorityScopeId ? 'Legal Authority' : null,
+    ]
+      .filter((name): name is string => !!name)
+      .join(', ');
+    return `Legal Research search scope unavailable (could not resolve: ${missing}). Search is disabled until this is fixed.`;
   }
 
   ngAfterViewInit(): void {
@@ -107,7 +122,23 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
     const trimmed = this.query.trim();
     if (!trimmed) return;
 
+    const scopeFailure = this.describeScopeResolutionFailure();
+    if (scopeFailure) {
+      // Refuse to run what would otherwise be an unconstrained, system-wide
+      // search silently presented as "Legal Research" results. Re-derived (not
+      // just reused from loadData()) so a prior clearSearch() can't have left
+      // this silently unset.
+      this.errorMessage = scopeFailure;
+      this.sourceResults = [];
+      this.answerText = '';
+      this.answerChips = [];
+      this.activeChip = null;
+      this.cdr.markForCheck();
+      return;
+    }
+
     this.loading = true;
+    this.errorMessage = null;
     this.answerText = '';
     this.answerChips = [];
     this.activeChip = null;
@@ -122,7 +153,15 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
         IncludeSources: ['vector', 'fulltext', 'entity'],
         ScopeIDs: scopeIDs,
       });
-      this.sourceResults = response.Success ? response.Results : [];
+      if (response.Success) {
+        this.sourceResults = response.Results;
+      } else {
+        // A server error, a down search provider, or a permission failure must
+        // never render identically to a genuine empty result -- see the template's
+        // errorMessage-vs-empty-state branch.
+        this.sourceResults = [];
+        this.errorMessage = response.ErrorMessage || 'The search failed. Please try again.';
+      }
 
       if (classifyQuery(trimmed) === 'question') {
         await this.runAgentAnswer(trimmed);
@@ -140,6 +179,7 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
     this.answerText = '';
     this.answerChips = [];
     this.activeChip = null;
+    this.errorMessage = null;
     this.publishAgentContext();
     this.cdr.markForCheck();
   }
@@ -154,22 +194,19 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
       agent,
       conversationMessages: [{ role: 'user', content: query }],
     });
-    if (!result.success || typeof result.payload !== 'string') return;
 
-    this.answerChips = this.parseCitationChips(result.payload);
-    this.answerText = result.payload.replace(CITE_RE, '').trim();
-  }
-
-  private parseCitationChips(text: string): CitationChip[] {
-    const chips: CitationChip[] = [];
-    const seen = new Set<string>();
-    for (const match of text.matchAll(CITE_RE)) {
-      const key = match[1].trim();
-      if (!key || seen.has(key)) continue;
-      seen.add(key);
-      chips.push({ key });
+    // The user-facing prose for a Loop-type agent lands on `agentRun.Message`, NOT on
+    // `result.payload` -- payload is a structured-data field for agents that mutate
+    // structured state via tools. Legal Research has no such tools, so payload is
+    // always undefined. See legal-research-answer.ts's deriveAgentAnswer doc comment
+    // for the full citation trail (base-agent.ts, ai-test-harness.component.ts) and
+    // its test for a real, live-captured mock of this exact shape.
+    const answer = deriveAgentAnswer(result);
+    this.answerText = answer.answerText;
+    this.answerChips = answer.answerChips;
+    if (answer.errorMessage) {
+      this.errorMessage = answer.errorMessage;
     }
-    return chips;
   }
 
   // ───── Citations + source records ─────

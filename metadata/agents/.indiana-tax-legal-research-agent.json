@@ -29,6 +29,18 @@
             "ID": "A4240A36-82E5-4BD1-937B-D1DF7F513AA4"
           }
         }
+      ],
+      "MJ: AI Agent Actions": [
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=Scoped Search",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "C0910584-0AED-4812-816E-37B2A6B62450"
+          }
+        }
       ]
     }
   }

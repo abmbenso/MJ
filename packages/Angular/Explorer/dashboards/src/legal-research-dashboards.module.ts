@@ -8,6 +8,7 @@ import {
   MJPageBodyComponent,
   MJStatBadgeComponent,
   MJEmptyStateComponent,
+  MJAlertComponent,
 } from '@memberjunction/ng-ui-components';
 import { SharedGenericModule } from '@memberjunction/ng-shared-generic';
 
@@ -32,6 +33,7 @@ import { LegalResearchDashboardComponent } from './LegalResearch/legal-research-
     MJPageBodyComponent,
     MJStatBadgeComponent,
     MJEmptyStateComponent,
+    MJAlertComponent,
     SharedGenericModule,
   ],
   exports: [LegalResearchDashboardComponent],
