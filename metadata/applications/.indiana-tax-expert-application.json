@@ -35,6 +35,13 @@
           "ResourceType": "Custom",
           "DriverClass": "TaxBillProjectionResource",
           "isDefault": false
+        },
+        {
+          "Label": "Legal Research",
+          "Icon": "fa-solid fa-book-open-reader",
+          "ResourceType": "Custom",
+          "DriverClass": "LegalResearchResource",
+          "isDefault": false
         }
       ]
     },
@@ -43,10 +50,6 @@
     },
     "primaryKey": {
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
-    },
-    "sync": {
-      "lastModified": "2026-09-08T23:04:57.177Z",
-      "checksum": "063a2ab9cfef878e6049bbfe83d237d9bf2d70ef290484469f1505ff28905e6d"
     }
   }
 ]
