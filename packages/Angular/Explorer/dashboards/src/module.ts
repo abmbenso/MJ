@@ -19,6 +19,7 @@ import { DatabaseDesignerDashboardsModule } from './DatabaseDesigner/database-de
 import { PropertySearchDashboardsModule } from './property-search-dashboards.module';
 import { OwnerProspectsDashboardsModule } from './owner-prospects-dashboards.module';
 import { TaxBudgetProjectionDashboardsModule } from './tax-budget-projection-dashboards.module';
+import { LegalResearchDashboardsModule } from './legal-research-dashboards.module';
 // Existing standalone modules
 import { MCPModule } from './MCP';
 import { IntegrationModule } from './Integration/integration.module';
@@ -61,6 +62,7 @@ import { NgTreesModule } from '@memberjunction/ng-trees';
     PropertySearchDashboardsModule,
     OwnerProspectsDashboardsModule,
     TaxBudgetProjectionDashboardsModule,
+    LegalResearchDashboardsModule,
     MCPModule,
     IntegrationModule,
     // External generic modules (re-exported for backward compatibility)
@@ -93,6 +95,7 @@ import { NgTreesModule } from '@memberjunction/ng-trees';
     PropertySearchDashboardsModule,
     OwnerProspectsDashboardsModule,
     TaxBudgetProjectionDashboardsModule,
+    LegalResearchDashboardsModule,
     MCPModule,
     IntegrationModule,
     // External generic modules (re-exported for backward compatibility)
