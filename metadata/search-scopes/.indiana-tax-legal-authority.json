@@ -8,74 +8,16 @@
       "IsDefault": false,
       "Status": "Active"
     },
-    "primaryKey": {
-      "ID": "E3C4E6EF-8E2F-4E22-A904-597CC31E3EB0"
-    },
+    "primaryKey": { "ID": "E3C4E6EF-8E2F-4E22-A904-597CC31E3EB0" },
     "relatedEntities": {
       "MJ: Search Scope Entities": [
-        {
-          "fields": {
-            "SearchScopeID": "@parent:ID",
-            "EntityID": "@lookup:MJ: Entities.Name=Legal Authority Sections",
-            "ExtraFilter": ""
-          },
-          "primaryKey": {
-            "ID": "AEBCB875-E659-4C68-8EC5-5E02CDE5BC70"
-          },
-          "sync": {
-            "lastModified": "2026-09-16T04:02:50.456Z",
-            "checksum": "65ae64a729c42ae4bdf66c021a4be0b5eb7604c59dec55421dfd1dd22123ea7b"
-          }
-        },
-        {
-          "fields": {
-            "SearchScopeID": "@parent:ID",
-            "EntityID": "@lookup:MJ: Entities.Name=Legal Authority Chunks",
-            "ExtraFilter": ""
-          },
-          "primaryKey": {
-            "ID": "5AB05605-482D-4290-A914-20829AF48A14"
-          },
-          "sync": {
-            "lastModified": "2026-09-16T04:02:50.475Z",
-            "checksum": "8d0a3ac7c9e86769d8b8e5e1bbec2156b15b14d29a3076d01d44934c8c82dd81"
-          }
-        }
+        { "fields": { "SearchScopeID": "@parent:ID", "EntityID": "@lookup:MJ: Entities.Name=Legal Authority Sections", "ExtraFilter": "" }, "primaryKey": { "ID": "AEBCB875-E659-4C68-8EC5-5E02CDE5BC70" } },
+        { "fields": { "SearchScopeID": "@parent:ID", "EntityID": "@lookup:MJ: Entities.Name=Legal Authority Chunks", "ExtraFilter": "" }, "primaryKey": { "ID": "5AB05605-482D-4290-A914-20829AF48A14" } }
       ],
       "MJ: Search Scope Providers": [
-        {
-          "fields": {
-            "SearchScopeID": "@parent:ID",
-            "SearchProviderID": "@lookup:MJ: Search Providers.Name=Semantic",
-            "Enabled": true
-          },
-          "primaryKey": {
-            "ID": "B27DBD0B-D8DF-4225-98D3-906616F706FE"
-          },
-          "sync": {
-            "lastModified": "2026-09-16T04:02:50.336Z",
-            "checksum": "6363d5fa3e9ada7373dd253bc6f1db12838dab6695d7311dc70e86133567b3e7"
-          }
-        },
-        {
-          "fields": {
-            "SearchScopeID": "@parent:ID",
-            "SearchProviderID": "@lookup:MJ: Search Providers.Name=Database Full-Text",
-            "Enabled": true
-          },
-          "primaryKey": {
-            "ID": "B1562442-BD9D-4E54-A25C-2CB5EE5B6918"
-          },
-          "sync": {
-            "lastModified": "2026-09-16T04:02:50.375Z",
-            "checksum": "fd85344ee62d0cf22f04b01e1f3f59ce31e2bea94dbff344a3f9ffed633e2952"
-          }
-        }
+        { "fields": { "SearchScopeID": "@parent:ID", "SearchProviderID": "@lookup:MJ: Search Providers.Name=Semantic", "Enabled": true }, "primaryKey": { "ID": "B27DBD0B-D8DF-4225-98D3-906616F706FE" } },
+        { "fields": { "SearchScopeID": "@parent:ID", "SearchProviderID": "@lookup:MJ: Search Providers.Name=Database Full-Text", "Enabled": true }, "primaryKey": { "ID": "B1562442-BD9D-4E54-A25C-2CB5EE5B6918" } }
       ]
-    },
-    "sync": {
-      "lastModified": "2026-09-16T04:02:50.288Z",
-      "checksum": "6e59ffa078054e2f3e7199bc5d42c474380fba6488cd635a871adf24c8c979b5"
     }
   }
 ]
