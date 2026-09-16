@@ -1,0 +1,30 @@
+{
+  "entity": "MJ: Search Scope Permissions",
+  "filePattern": "**/.*.json",
+  "defaults": {},
+  "pull": {
+    "createNewFileIfNotFound": true,
+    "newFileName": ".search-scope-permissions.json",
+    "appendRecordsToExistingFile": true,
+    "updateExistingRecords": true,
+    "preserveFields": [],
+    "excludeFields": [],
+    "mergeStrategy": "merge",
+    "backupBeforeUpdate": true,
+    "backupDirectory": ".backups",
+    "filter": "",
+    "externalizeFields": [],
+    "ignoreNullFields": true,
+    "ignoreVirtualFields": true,
+    "lookupFields": {
+      "SearchScopeID": {
+        "entity": "MJ: Search Scopes",
+        "field": "Name"
+      },
+      "RoleID": {
+        "entity": "MJ: Roles",
+        "field": "Name"
+      }
+    }
+  }
+}

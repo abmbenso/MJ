@@ -1,0 +1,20 @@
+[
+  {
+    "fields": {
+      "SearchScopeID": "@lookup:MJ: Search Scopes.Name=IBTR Decisions",
+      "UserID": null,
+      "RoleID": "@lookup:MJ: Roles.Name=UI",
+      "PermissionLevel": "Search"
+    },
+    "primaryKey": { "ID": "0D884E3D-5BE7-4DF7-89C7-D7F0F84AAAA0" }
+  },
+  {
+    "fields": {
+      "SearchScopeID": "@lookup:MJ: Search Scopes.Name=Legal Authority",
+      "UserID": null,
+      "RoleID": "@lookup:MJ: Roles.Name=UI",
+      "PermissionLevel": "Search"
+    },
+    "primaryKey": { "ID": "F3ED80E4-4512-41DD-8EA9-68680D6962B9" }
+  }
+]
