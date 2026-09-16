@@ -71,9 +71,23 @@ export class LegalResearchDashboardComponent extends BaseDashboard implements Af
   // ngAfterViewInit, which the illustrative draft of this component mistakenly did.
 
   protected initDashboard(): void {
-    // Multi-provider: scope this dashboard's search calls to whatever provider it was
-    // given (falls back to the global default provider when none is passed in).
-    this.search.Provider = this.ProviderToUse;
+    // Nothing to do synchronously -- loadData() below does the one thing this
+    // dashboard needs at startup (loading the two Search Scope IDs). Required
+    // override (BaseDashboard.initDashboard is abstract).
+    //
+    // NOTE: this used to also set `this.search.Provider = this.ProviderToUse`.
+    // Removed per code review: SearchService is `@Injectable({ providedIn: 'root' })`
+    // -- a process-wide singleton, the only place in this codebase that ever set
+    // that field -- so doing so here would silently redirect every OTHER
+    // consumer of the shared SearchService (e.g. the global search omnibar) to
+    // this dashboard's provider for the rest of the session, with no reset in
+    // ngOnDestroy. It was also a no-op in the current single-provider
+    // deployment: SearchService.LoadScopes() hardcodes Metadata.Provider
+    // internally regardless (see its own `// global-provider-ok` comment), so
+    // the line never even made scope-loading provider-aware. If this dashboard
+    // is ever embedded under a genuinely non-default provider, SearchService
+    // itself needs a per-call provider parameter -- not a component reaching in
+    // and mutating shared singleton state.
   }
 
   protected async loadData(): Promise<void> {
