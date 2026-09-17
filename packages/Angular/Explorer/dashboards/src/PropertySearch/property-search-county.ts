@@ -24,6 +24,24 @@ export const COUNTY_CARD_SOURCE: Readonly<Record<number, string>> = Object.freez
   45: 'LakePRC',
   49: 'MarionPRC',
   71: 'StJosephPRC',
+  // xSoft Engage wave 2, added 2026-09-16 -- the same vendor as Lake/St. Joseph, a runbook re-run.
+  82: 'VanderburghPRC',
+  10: 'ClarkPRC',
+  64: 'PorterPRC',
+  32: 'HendricksPRC',
+  17: 'DeKalbPRC',
+  87: 'WarrickPRC',
+  42: 'KnoxPRC',
+  73: 'ShelbyPRC',
+  14: 'DaviessPRC',
+  68: 'RandolphPRC',
+  65: 'PoseyPRC',
+  23: 'FountainPRC',
+  // Elkhart, added 2026-09-16 -- Elevate Maps' open S3 bucket, a second single-static-URL
+  // vendor alongside Allen's acimap.us (SINGLE_URL_VENDOR_SLUGS below). Card is AY2024, one
+  // year behind the DLGF roster -- no per-year conflict (Assessment is keyed per parcel-year;
+  // AY2025 still reads DLGF because Elkhart's card has no row for that year).
+  20: 'ElkhartPRC',
 });
 
 export function countyCardSource(countyNumber: number): string | null {
@@ -170,7 +188,7 @@ export interface CountyVerifyLink {
  * A county joins this set when its S0 gate passes -- never on the assumption that a vendor
  * generalises, because a 404 masquerading as a verification route is worse than no link.
  */
-export const XSOFT_ENGAGE_SLUGS: ReadonlySet<string> = new Set(['lake', 'stjoseph']);
+export const XSOFT_ENGAGE_SLUGS: ReadonlySet<string> = new Set(['lake', 'stjoseph', 'vanderburgh', 'clark', 'porter', 'hendricks', 'dekalb', 'warrick', 'knox', 'shelby', 'daviess', 'randolph', 'posey', 'fountain']);
 
 /**
  * Counties on a single-static-URL vendor CONFIRMED at intake stage S0 -- one route per parcel,
@@ -179,7 +197,7 @@ export const XSOFT_ENGAGE_SLUGS: ReadonlySet<string> = new Set(['lake', 'stjosep
  * year on screen, because the vendor itself publishes only its current card (see
  * data/county_intake/allen/PILOT_FINDINGS.md's "genuinely different vendor shape").
  */
-export const SINGLE_URL_VENDOR_SLUGS: ReadonlySet<string> = new Set(['allen']);
+export const SINGLE_URL_VENDOR_SLUGS: ReadonlySet<string> = new Set(['allen', 'elkhart']);
 
 /** "45-07-06-207-002.000-023" from the 18-digit state parcel number. Null when it isn't 18 digits. */
 export function toDashedStateParcel(parcelNumber: string | null): string | null {
@@ -195,6 +213,12 @@ export function xsoftCardUrl(slug: string, dashedParcel: string, year: number): 
 /** Allen's own site: one static, year-less URL per parcel -- the 18-digit number as-is, no dashing. */
 export function acimapCardUrl(parcelNumber: string): string {
   return `https://acimap.us/website/prc/${parcelNumber}.pdf`;
+}
+
+/** Elkhart's own site (Elevate Maps' open S3 bucket): one static, year-less URL per parcel --
+ *  dashed, unlike acimap.us. */
+export function elevateMapsCardUrl(dashedParcel: string): string {
+  return `https://s3.amazonaws.com/assets.elevatemaps.io/ElkhartIN/PRC/${dashedParcel}.pdf`;
 }
 
 /**
@@ -222,11 +246,11 @@ export function buildVerifyLink(target: VerifyLinkTarget): CountyVerifyLink {
   }
   if (SINGLE_URL_VENDOR_SLUGS.has(target.slug)) {
     const digits = (target.parcelNumber ?? '').replace(/\D/g, '');
+    if (digits.length !== 18) return noRoute();
     // The label carries no "(AYxxxx)" -- unlike the xSoft link, this one is NOT scoped to the
     // year on screen; it is the vendor's one current card, whatever year that happens to be.
-    return digits.length === 18
-      ? { label: 'Record Card (current)', url: acimapCardUrl(digits), note: "the county's own site" }
-      : noRoute();
+    const url = target.slug === 'elkhart' ? elevateMapsCardUrl(toDashedStateParcel(digits) ?? '') : acimapCardUrl(digits);
+    return { label: 'Record Card (current)', url, note: "the county's own site" };
   }
   return noRoute();
 }

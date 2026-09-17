@@ -20,6 +20,7 @@ import {
   toDashedStateParcel,
   xsoftCardUrl,
   acimapCardUrl,
+  elevateMapsCardUrl,
   buildVerifyLink,
 } from '../PropertySearch/property-search-county';
 
@@ -30,11 +31,24 @@ import {
  */
 
 describe('county identity + source tier', () => {
-  it('knows the card source for the four onboarded counties, null otherwise', () => {
+  it('knows the card source for the sixteen onboarded counties, null otherwise', () => {
     expect(countyCardSource(2)).toBe('AllenPRC');
     expect(countyCardSource(45)).toBe('LakePRC');
     expect(countyCardSource(49)).toBe('MarionPRC');
     expect(countyCardSource(71)).toBe('StJosephPRC');
+    expect(countyCardSource(82)).toBe('VanderburghPRC');
+    expect(countyCardSource(10)).toBe('ClarkPRC');
+    expect(countyCardSource(64)).toBe('PorterPRC');
+    expect(countyCardSource(32)).toBe('HendricksPRC');
+    expect(countyCardSource(17)).toBe('DeKalbPRC');
+    expect(countyCardSource(87)).toBe('WarrickPRC');
+    expect(countyCardSource(42)).toBe('KnoxPRC');
+    expect(countyCardSource(73)).toBe('ShelbyPRC');
+    expect(countyCardSource(14)).toBe('DaviessPRC');
+    expect(countyCardSource(68)).toBe('RandolphPRC');
+    expect(countyCardSource(65)).toBe('PoseyPRC');
+    expect(countyCardSource(23)).toBe('FountainPRC');
+    expect(countyCardSource(20)).toBe('ElkhartPRC');
     expect(countyCardSource(1)).toBeNull();
   });
 
@@ -50,7 +64,12 @@ describe('county identity + source tier', () => {
     expect(MARION_COUNTY_NUMBER).toBe(49);
     expect(DLGF_SOURCE).toBe('dlgf_gdb_2025');
     expect(MARION_FOIA_SOURCE).toBe('marion_foia_2026');
-    expect(COUNTY_CARD_SOURCE).toEqual({ 2: 'AllenPRC', 45: 'LakePRC', 49: 'MarionPRC', 71: 'StJosephPRC' });
+    expect(COUNTY_CARD_SOURCE).toEqual({
+      2: 'AllenPRC', 45: 'LakePRC', 49: 'MarionPRC', 71: 'StJosephPRC',
+      82: 'VanderburghPRC', 10: 'ClarkPRC', 64: 'PorterPRC', 32: 'HendricksPRC', 17: 'DeKalbPRC',
+      87: 'WarrickPRC', 42: 'KnoxPRC', 73: 'ShelbyPRC', 14: 'DaviessPRC', 68: 'RandolphPRC',
+      65: 'PoseyPRC', 23: 'FountainPRC', 20: 'ElkhartPRC',
+    });
   });
 });
 
@@ -221,10 +240,22 @@ describe('CI_ROSTER_PARCEL_FILTER', () => {
 });
 
 describe('XSOFT_ENGAGE_SLUGS', () => {
-  it('carries the two S0-confirmed slugs', () => {
-    expect(XSOFT_ENGAGE_SLUGS.has('lake')).toBe(true);
-    expect(XSOFT_ENGAGE_SLUGS.has('stjoseph')).toBe(true);
+  it('carries all fourteen S0-confirmed slugs', () => {
+    for (const slug of ['lake', 'stjoseph', 'vanderburgh', 'clark', 'porter', 'hendricks', 'dekalb',
+                         'warrick', 'knox', 'shelby', 'daviess', 'randolph', 'posey', 'fountain']) {
+      expect(XSOFT_ENGAGE_SLUGS.has(slug)).toBe(true);
+    }
     expect(XSOFT_ENGAGE_SLUGS.has('hamilton')).toBe(false);
+    expect(XSOFT_ENGAGE_SLUGS.has('allen')).toBe(false); // Allen is SINGLE_URL_VENDOR_SLUGS, not xSoft
+    expect(XSOFT_ENGAGE_SLUGS.has('elkhart')).toBe(false); // so is Elkhart
+  });
+});
+
+describe('SINGLE_URL_VENDOR_SLUGS', () => {
+  it('carries both single-static-URL vendor slugs', () => {
+    expect(SINGLE_URL_VENDOR_SLUGS.has('allen')).toBe(true);
+    expect(SINGLE_URL_VENDOR_SLUGS.has('elkhart')).toBe(true);
+    expect(SINGLE_URL_VENDOR_SLUGS.has('lake')).toBe(false);
   });
 });
 
@@ -364,17 +395,43 @@ describe('buildVerifyLink', () => {
     expect(link.url).toBeNull();
     expect(link.note).toBe('not on file — verify at the county');
   });
-});
 
-describe('SINGLE_URL_VENDOR_SLUGS', () => {
-  it('carries the one S0-confirmed slug', () => {
-    expect(SINGLE_URL_VENDOR_SLUGS.has('allen')).toBe(true);
-    expect(SINGLE_URL_VENDOR_SLUGS.has('lake')).toBe(false);
+  it('Elkhart (single-URL vendor, second vendor) with an 18-digit parcel -> the dashed Elevate Maps URL', () => {
+    const link = buildVerifyLink({
+      countyNumber: 20,
+      slug: 'elkhart',
+      parcelNumber: '200319200010000030',
+      gisParcelNumber: null,
+      assessmentYear: 2025, // deliberately not the card's own AY2024 -- the link ignores it
+    });
+    expect(link.url).toBe('https://s3.amazonaws.com/assets.elevatemaps.io/ElkhartIN/PRC/20-03-19-200-010.000-030.pdf');
+    expect(link.label).toBe('Record Card (current)');
+    expect(link.note).toBe("the county's own site");
+  });
+
+  it('Elkhart with an unparsable parcel number -> null url, not a broken link', () => {
+    const link = buildVerifyLink({
+      countyNumber: 20,
+      slug: 'elkhart',
+      parcelNumber: 'not-a-parcel',
+      gisParcelNumber: null,
+      assessmentYear: null,
+    });
+    expect(link.url).toBeNull();
+    expect(link.note).toBe('not on file — verify at the county');
   });
 });
 
 describe('acimapCardUrl', () => {
   it('builds the static, year-less, undashed URL', () => {
     expect(acimapCardUrl('021617100003000048')).toBe('https://acimap.us/website/prc/021617100003000048.pdf');
+  });
+});
+
+describe('elevateMapsCardUrl', () => {
+  it('builds the static, year-less, DASHED URL (unlike acimap.us)', () => {
+    expect(elevateMapsCardUrl('20-03-19-200-010.000-030')).toBe(
+      'https://s3.amazonaws.com/assets.elevatemaps.io/ElkhartIN/PRC/20-03-19-200-010.000-030.pdf',
+    );
   });
 });
