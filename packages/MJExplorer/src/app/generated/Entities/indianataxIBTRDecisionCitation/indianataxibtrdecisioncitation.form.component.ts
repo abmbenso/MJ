@@ -15,7 +15,10 @@ export class indianataxIBTRDecisionCitationFormComponent extends BaseFormCompone
     override async ngOnInit() {
         await super.ngOnInit();
         this.initSections([
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true }
+            { sectionKey: 'citationIdentification', sectionName: 'Citation Identification', isExpanded: true },
+            { sectionKey: 'authorityDetails', sectionName: 'Authority Details', isExpanded: true },
+            { sectionKey: 'citationMetrics', sectionName: 'Citation Metrics', isExpanded: true },
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }
 }
