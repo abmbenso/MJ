@@ -28,7 +28,8 @@ export class MJTemplateFormComponent extends BaseFormComponent {
             { sectionKey: 'mJUserNotificationTypesSMSTemplateID', sectionName: 'User Notification Types (SMS Template)', isExpanded: false },
             { sectionKey: 'mJAIAgentSearchScopes', sectionName: 'AI Agent Search Scopes', isExpanded: false },
             { sectionKey: 'mJEntityDocuments', sectionName: 'Entity Documents', isExpanded: false },
-            { sectionKey: 'mJUserRoutines', sectionName: 'User Routines', isExpanded: false }
+            { sectionKey: 'mJUserRoutines', sectionName: 'User Routines', isExpanded: false },
+            { sectionKey: 'aPRARequests', sectionName: 'APRA Requests', isExpanded: false }
         ]);
     }
 }
