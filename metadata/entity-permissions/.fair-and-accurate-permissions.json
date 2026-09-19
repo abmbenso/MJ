@@ -1,0 +1,54 @@
+[
+  {
+    "fields": {
+      "EntityID": "@lookup:MJ: Entities.Name=Parcels",
+      "RoleID": "@lookup:MJ: Roles.Name=Fair And Accurate Public",
+      "CanRead": true,
+      "CanCreate": false,
+      "CanUpdate": false,
+      "CanDelete": false
+    },
+    "primaryKey": {
+      "ID": "3DD72B0B-9AF6-4DD3-8C51-DB7ABD067301"
+    }
+  },
+  {
+    "fields": {
+      "EntityID": "@lookup:MJ: Entities.Name=Assessments",
+      "RoleID": "@lookup:MJ: Roles.Name=Fair And Accurate Public",
+      "CanRead": true,
+      "CanCreate": false,
+      "CanUpdate": false,
+      "CanDelete": false
+    },
+    "primaryKey": {
+      "ID": "6DDEC6D2-4018-405B-82FF-353A095C2336"
+    }
+  },
+  {
+    "fields": {
+      "EntityID": "@lookup:MJ: Entities.Name=Valuation Analysis",
+      "RoleID": "@lookup:MJ: Roles.Name=Fair And Accurate Public",
+      "CanRead": true,
+      "CanCreate": false,
+      "CanUpdate": false,
+      "CanDelete": false
+    },
+    "primaryKey": {
+      "ID": "76C9135A-1AC5-4AF2-BC84-D74CEFA1DD94"
+    }
+  },
+  {
+    "fields": {
+      "EntityID": "@lookup:MJ: Entities.Name=Valuation Comps",
+      "RoleID": "@lookup:MJ: Roles.Name=Fair And Accurate Public",
+      "CanRead": true,
+      "CanCreate": false,
+      "CanUpdate": false,
+      "CanDelete": false
+    },
+    "primaryKey": {
+      "ID": "87EC09A7-917F-427C-81F1-9A99485D51D9"
+    }
+  }
+]
