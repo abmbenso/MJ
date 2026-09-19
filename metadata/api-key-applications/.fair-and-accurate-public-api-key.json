@@ -1,0 +1,15 @@
+[
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=Fair and Accurate public website (read Parcels/Assessments/Valuation, create-only Leads)",
+      "ApplicationID": "@lookup:MJ: API Applications.Name=MJAPI"
+    },
+    "primaryKey": {
+      "ID": "C7754438-DED4-4B65-8D2A-F311E03332A5"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:38:04.198Z",
+      "checksum": "2389cb572e46c6eef91b92977c42b433dce29f0d320026697e197c95e33b0db5"
+    }
+  }
+]

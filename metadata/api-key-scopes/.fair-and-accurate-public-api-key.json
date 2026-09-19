@@ -1,0 +1,53 @@
+[
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=Fair and Accurate public website (read Parcels/Assessments/Valuation, create-only Leads)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=view:run",
+      "ResourcePattern": "Parcels,Assessments,Valuation Analysis,Valuation Comps",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "E732ABD9-AB27-466A-8A4B-FB4DE291FCE9"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:38:24.972Z",
+      "checksum": "d66a60ae405b690ef2e4a6960ddb5aacf0a3f09027efb3833b015a3ba0d08502"
+    }
+  },
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=Fair and Accurate public website (read Parcels/Assessments/Valuation, create-only Leads)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=entity:read",
+      "ResourcePattern": "Parcels,Assessments,Valuation Analysis,Valuation Comps",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "06CD9A84-B521-4C0A-9B89-8293E9569014"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:38:24.989Z",
+      "checksum": "c0a2a0d129c25c98f5b9a577e4c7c1c4a697e0b4792405aa8f16f6cf35424800"
+    }
+  },
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=Fair and Accurate public website (read Parcels/Assessments/Valuation, create-only Leads)",
+      "ScopeID": "@lookup:MJ: API Scopes.FullPath=entity:create",
+      "ResourcePattern": "Fair And Accurate Leads",
+      "PatternType": "Include",
+      "IsDeny": false,
+      "Priority": 1
+    },
+    "primaryKey": {
+      "ID": "7F775B5D-9D17-4D30-9BC3-EA601439022A"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:38:25.006Z",
+      "checksum": "d57a8310248080210e6373a7083099ea14f692060b6f4ca6989ae96b7ec42965"
+    }
+  }
+]

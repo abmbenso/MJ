@@ -1,0 +1,15 @@
+[
+  {
+    "fields": {
+      "UserID": "@lookup:MJ: Users.Email=fair-and-accurate-public-api@service.memberjunction.local",
+      "RoleID": "@lookup:MJ: Roles.Name=Fair And Accurate Public"
+    },
+    "primaryKey": {
+      "ID": "801AA867-42A7-48F7-9A08-14FBAE73CE24"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:36:58.282Z",
+      "checksum": "5044d0a8184091c75310499d3592e231529c12266fc20dcc497187d503afa751"
+    }
+  }
+]

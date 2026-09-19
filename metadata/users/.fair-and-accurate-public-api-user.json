@@ -1,0 +1,19 @@
+[
+  {
+    "fields": {
+      "Name": "Fair And Accurate Public API",
+      "FirstName": "Fair And Accurate",
+      "LastName": "Public API",
+      "Email": "fair-and-accurate-public-api@service.memberjunction.local",
+      "Type": "User",
+      "IsActive": true
+    },
+    "primaryKey": {
+      "ID": "80DCFB51-E81B-4C86-88D9-56DEAFCD35FD"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:36:49.451Z",
+      "checksum": "5cdb70460681cf80ecc25a7be0af16bb3a1e1581b58a4d5912a650cc2c6c5ffb"
+    }
+  }
+]
