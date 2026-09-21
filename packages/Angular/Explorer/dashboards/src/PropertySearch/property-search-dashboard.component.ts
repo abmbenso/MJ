@@ -56,6 +56,7 @@ import {
 } from './property-search-county';
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
+import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers } from './property-search-appeal-layers';
 
 /** Parses CountyAssessorRecord.Acreage (NVARCHAR(10), legacy ArcGIS-sourced text) into a number, or null for blank/non-numeric/non-positive values -- the analytics panel's per-acre calculations need a real number, not the raw string RunView('simple') returns. */
 function parseAcreage(raw: string | null): number | null {
@@ -146,6 +147,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   public IsLoading = false;
   public MergedResults: MergedParcelRow[] = [];
   public IsTruncated = false;
+  /** Set when the card / IBTR / Tax Court layer queries failed -- the layer columns are then blank because the load failed, not because nothing exists, and the banner says so (spec §12). */
+  public AppealLayerError: string | null = null;
   public ActiveRenderMode: PropertySearchRenderMode = 'point';
   public SelectedParcel: MergedParcelRow | null = null;
   public DetailPanelVisible = false;
@@ -415,6 +418,19 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.cdr.markForCheck();
   }
 
+  /** Card / IBTR / Tax Court layers for whichever path built the rows (spec §12). A failure never blocks the search: the rows come back with empty layers and AppealLayerError set. */
+  private async withAppealLayers(rows: MergedParcelRow[], includeCard: boolean): Promise<MergedParcelRow[]> {
+    this.AppealLayerError = null;
+    try {
+      const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+      const layers = await fetchAppealLayers(rv, rows.map((r) => r.ParcelID), this.filters.assessmentYear, includeCard);
+      return applyAppealLayers(rows, layers);
+    } catch (e) {
+      this.AppealLayerError = `Card, IBTR and Tax Court columns could not be loaded (${e instanceof Error ? e.message : 'unknown error'}). Blank here means "not loaded", not "none".`;
+      return rows;
+    }
+  }
+
   /**
    * Fetches this parcel's multi-year assessment/tax-liability trend
    * (indiana_tax.TaxHistoryYear, for Value Trend / Tax Liability Trend) and
@@ -529,6 +545,16 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'PTABOAValue', displayName: 'PTABOA Value', dataType: 'currency' },
       { name: 'PTABOADate', displayName: 'PTABOA Date', dataType: 'date' },
       { name: 'PTABOAAppealType', displayName: 'Appeal Type' },
+      { name: 'CardAppealForm', displayName: 'Card Appeal Form', dataType: 'number' },
+      { name: 'CardOriginalAV', displayName: 'Card Original AV', dataType: 'currency' },
+      { name: 'CardRevisedAV', displayName: 'Card Revised AV', dataType: 'currency' },
+      { name: 'CardAppealDate', displayName: 'Card Appeal Date', dataType: 'date' },
+      { name: 'IBTRDecisionDate', displayName: 'IBTR Decision Date', dataType: 'date' },
+      { name: 'IBTRAssessmentYear', displayName: 'IBTR Year', dataType: 'number' },
+      { name: 'IBTRDisposition', displayName: 'IBTR Disposition' },
+      { name: 'IBTRValue', displayName: 'IBTR Value', dataType: 'currency' },
+      { name: 'IBTRDecisionCount', displayName: 'IBTR Decisions', dataType: 'number' },
+      { name: 'TaxCourtDecision', displayName: 'Tax Court' },
       { name: 'LastSaleDate', displayName: 'Last Sale Date', dataType: 'date' },
       { name: 'LastSalePrice', displayName: 'Last Sale Price', dataType: 'currency' },
       { name: 'LastSaleIsValid', displayName: 'Last Sale Valid?', dataType: 'boolean' },
@@ -1145,6 +1171,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         PTABOAValue: ptaboaValueByParcel.get(parcelID) ?? null,
         PTABOADate: ptaboaDateByParcel.get(parcelID) ?? null,
         PTABOAAppealType: ptaboaAppealTypeByParcel.get(parcelID) ?? null,
+        ...EMPTY_APPEAL_LAYERS,
         LastSaleDate: (lastSale?.['SaleDate'] as string) ?? null,
         LastSalePrice: (lastSale?.['SaleAmount'] as number) ?? null,
         LastSaleIsValid: lastSale ? ((lastSale['IsValidSale'] as boolean) ?? null) : null,
@@ -1156,7 +1183,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       });
     }
 
-    this.MergedResults = merged;
+    this.MergedResults = await this.withAppealLayers(merged, true);
     this.IsTruncated = carResult.Results.length >= this.RESULT_CAP;
   }
 
@@ -1171,7 +1198,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       propertyClassCode: this.filters.propertySubClass,
       resultCap: this.RESULT_CAP,
     });
-    this.MergedResults = rows;
+    this.MergedResults = await this.withAppealLayers(rows, false);
     this.IsTruncated = isTruncated;
   }
 

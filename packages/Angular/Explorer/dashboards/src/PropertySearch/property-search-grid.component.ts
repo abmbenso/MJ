@@ -91,7 +91,7 @@ export interface PropertySearchColumnConfig {
 }
 
 /** Fixed display order for the Columns popover's category subheadings -- see PropertySearchColumnConfig.category. */
-export const PROPERTY_SEARCH_COLUMN_CATEGORIES = ['Property', 'Size & Units', 'Value per Unit', 'Assessment & Taxation', 'Appeals (PTABOA)', 'Sales'] as const;
+export const PROPERTY_SEARCH_COLUMN_CATEGORIES = ['Property', 'Size & Units', 'Value per Unit', 'Assessment & Taxation', 'Appeals (PTABOA)', 'Appeals (Card)', 'Appeals (IBTR)', 'Appeals (Tax Court)', 'Sales'] as const;
 export type PropertySearchColumnCategory = (typeof PROPERTY_SEARCH_COLUMN_CATEGORIES)[number];
 
 /** Single source of truth for every column this grid can show. Exported so the host dashboard can build its Columns popover from the same list. */
@@ -350,6 +350,137 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
       headerName: 'Appeal Type',
       width: 120,
       headerTooltip: '"130S" = subjective/market-value appeal (the most directly informative type for assessed-value accuracy). "130O" = objective/mathematical-error appeal. "136"/"136C" = charitable/nonprofit Exemption request -- NOT a valuation dispute. From the same appeal as PTABOA Value/Date, for the selected assessment year.',
+    },
+  },
+  {
+    key: 'CardAppealForm',
+    label: 'Card Appeal Form',
+    defaultVisible: false,
+    category: 'Appeals (Card)',
+    colDef: {
+      field: 'CardAppealForm',
+      headerName: 'Card Appeal Form',
+      width: 140,
+      type: 'numericColumn',
+      headerTooltip: 'The form behind the revision the county printed on its own record card for the selected assessment year: 130 (taxpayer appeal), 134 (informal settlement), 115 (PTABOA determination), 133 (correction of error), 113, 131. Blank means the card shows no revision for that year. County-card counties only.',
+    },
+  },
+  {
+    key: 'CardOriginalAV',
+    label: 'Card Original AV',
+    defaultVisible: false,
+    category: 'Appeals (Card)',
+    colDef: {
+      field: 'CardOriginalAV',
+      headerName: 'Card Original AV',
+      width: 150,
+      type: 'numericColumn',
+      valueFormatter: formatCurrency,
+      headerTooltip: 'Total assessed value as first certified for the selected year, read from the record card -- the figure the revision replaced. Shown only when the card also prints a revision for that year.',
+    },
+  },
+  {
+    key: 'CardRevisedAV',
+    label: 'Card Revised AV',
+    defaultVisible: false,
+    category: 'Appeals (Card)',
+    colDef: {
+      field: 'CardRevisedAV',
+      headerName: 'Card Revised AV',
+      width: 150,
+      type: 'numericColumn',
+      valueFormatter: formatCurrency,
+      headerTooltip: 'Total assessed value after the newest revision the record card prints for the selected year (see Card Appeal Form for which form produced it).',
+    },
+  },
+  {
+    key: 'CardAppealDate',
+    label: 'Card Appeal Date',
+    defaultVisible: false,
+    category: 'Appeals (Card)',
+    colDef: {
+      field: 'CardAppealDate',
+      headerName: 'Card Appeal Date',
+      width: 140,
+      valueFormatter: formatDate,
+      headerTooltip: 'The as-of date the record card prints beside the revised value for the selected year.',
+    },
+  },
+  {
+    key: 'IBTRDecisionDate',
+    label: 'IBTR Decision Date',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'IBTRDecisionDate',
+      headerName: 'IBTR Decision Date',
+      width: 150,
+      valueFormatter: formatDate,
+      headerTooltip: 'Date of this parcel\'s NEWEST Indiana Board of Tax Review disposition, from the Board\'s POPLAR docket (2002 onward). NOT tied to the selected year: a Board decision trails its assessment year by years -- see IBTR Year.',
+    },
+  },
+  {
+    key: 'IBTRAssessmentYear',
+    label: 'IBTR Year',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'IBTRAssessmentYear',
+      headerName: 'IBTR Year',
+      width: 110,
+      type: 'numericColumn',
+      headerTooltip: 'The assessment year the newest Board disposition concerned (it is usually several years before the decision date).',
+    },
+  },
+  {
+    key: 'IBTRDisposition',
+    label: 'IBTR Disposition',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'IBTRDisposition',
+      headerName: 'IBTR Disposition',
+      width: 190,
+      headerTooltip: 'How the newest Board appeal ended: Board Determination, Settlement - stipulation, Settlement - withdrawal, Dismissal, or Remand. A determination is not necessarily a reduction -- open the parcel for the decision.',
+    },
+  },
+  {
+    key: 'IBTRValue',
+    label: 'IBTR Value',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'IBTRValue',
+      headerName: 'IBTR Value',
+      width: 150,
+      type: 'numericColumn',
+      valueFormatter: formatCurrency,
+      headerTooltip: 'The value the Board set in that newest decision, where it has been extracted from the written determination. Extracted for only a small share of decisions so far -- blank means "not extracted", not "unchanged".',
+    },
+  },
+  {
+    key: 'IBTRDecisionCount',
+    label: 'IBTR Decisions',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'IBTRDecisionCount',
+      headerName: 'IBTR Decisions',
+      width: 140,
+      type: 'numericColumn',
+      headerTooltip: 'How many Board dispositions the docket holds for this parcel, all years. Blank means none matched this parcel; appeals docketed under an old or malformed parcel number may not be matched.',
+    },
+  },
+  {
+    key: 'TaxCourtDecision',
+    label: 'Tax Court',
+    defaultVisible: false,
+    category: 'Appeals (Tax Court)',
+    colDef: {
+      field: 'TaxCourtDecision',
+      headerName: 'Tax Court',
+      width: 110,
+      headerTooltip: 'Y when an Indiana Tax Court case appears to review one of this parcel\'s Board decisions. The link is a taxpayer-name match (score 0.95 or higher) in the same county within 75 days of the Board decision -- a lead to verify, not a citation. Open the parcel for the case.',
     },
   },
   {

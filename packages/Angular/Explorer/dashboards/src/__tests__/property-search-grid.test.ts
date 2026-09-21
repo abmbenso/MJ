@@ -45,3 +45,21 @@ describe('VerifyLink cellRenderer', () => {
     expect(verifyLinkRenderer()({ value: null })).toBe('not on file');
   });
 });
+
+describe('appeal-layer columns (spec §12)', () => {
+  const expected: Record<string, string> = {
+    CardAppealForm: 'Appeals (Card)', CardOriginalAV: 'Appeals (Card)', CardRevisedAV: 'Appeals (Card)', CardAppealDate: 'Appeals (Card)',
+    IBTRDecisionDate: 'Appeals (IBTR)', IBTRAssessmentYear: 'Appeals (IBTR)', IBTRDisposition: 'Appeals (IBTR)', IBTRValue: 'Appeals (IBTR)', IBTRDecisionCount: 'Appeals (IBTR)',
+    TaxCourtDecision: 'Appeals (Tax Court)',
+  };
+  it('defines every layer column, in its category, hidden by default, with a tooltip', () => {
+    for (const [key, category] of Object.entries(expected)) {
+      const col = PROPERTY_SEARCH_GRID_COLUMNS.find((c) => c.key === key);
+      expect(col, key).toBeDefined();
+      expect(col!.category).toBe(category);
+      expect(col!.defaultVisible).toBe(false);
+      expect(col!.colDef.field).toBe(key);
+      expect(String(col!.colDef.headerTooltip ?? '').length).toBeGreaterThan(40);
+    }
+  });
+});

@@ -9,9 +9,13 @@
  * QUERIED and displayed; OpenParcelRecord opens a record for VIEWING only.
  */
 import { MARION_COUNTY_NUMBER, ParcelDataSource, CountySourceTier, pickAssessmentRow } from './property-search-county';
+// Type-only: property-search-appeal-layers.ts imports escapeSqlLiteral from THIS file, so a
+// value import back here would be a cycle -- `import type` is erased at compile time and never
+// executes, so it can't participate in a runtime cycle.
+import type { AppealLayerFields } from './property-search-appeal-layers';
 
 /** A single merged parcel row (CountyAssessorRecord fields + joined Parcel geometry/identity fields). */
-export interface MergedParcelRow {
+export interface MergedParcelRow extends AppealLayerFields {
   // Index signature so this satisfies <mj-map-view>'s [Records]: Record<string, unknown>[] input.
   [key: string]: unknown;
   // The Parcel's own ID -- deliberately what <mj-map-view> keys markers by,

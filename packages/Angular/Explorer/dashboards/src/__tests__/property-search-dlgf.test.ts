@@ -168,6 +168,13 @@ describe('buildDlgfMergedRows', () => {
     const { rows } = buildDlgfMergedRows(assessmentRows, parcelRows, [], 29, 'hamilton', 2025, 2000);
     expect(rows[0].VerifyURL).toBeNull();
   });
+
+  it('starts every DLGF row at the empty appeal layers (Tax Court N, everything else null)', () => {
+    const { rows } = buildDlgfMergedRows(
+      [{ ParcelID: 'P1', Source: 'dlgf_gdb_2025', PropertyClassCode: '429', OriginalLandAV: 1, OriginalImprovementAV: 2, OriginalTotalAV: 3 }],
+      [{ ID: 'P1', ParcelNumber: '180000000000000001', Address: '1 Main' }], [], 18, 'delaware', 2025, 10);
+    expect(rows[0]).toMatchObject({ TaxCourtDecision: 'N', IBTRDecisionCount: null, CardRevisedAV: null });
+  });
 });
 
 describe('buildClassCodeSubClassOptions', () => {
