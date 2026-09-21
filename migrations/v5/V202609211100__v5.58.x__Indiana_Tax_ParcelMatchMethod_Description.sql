@@ -1,0 +1,5 @@
+-- indiana_tax.IBTRAppeal.ParcelMatchMethod: the column description written by
+-- V202609210715 predates the per-row house-number corroboration that replaced §12.3's
+-- aggregate gate (proposal §12 amendment (a)). It still reads as though a unique
+-- GISParcelNumber inside the county were enough. Restate what the code actually does.
+EXEC sp_updateextendedproperty @name=N'MS_Description', @value=N'How ParcelID was resolved: StateParcel18 (the docketed number normalises to an 18-digit state parcel number held in Parcel.ParcelNumber) or CountyLocalNumber (its digits equal Parcel.GISParcelNumber inside the same county, that key is unique there, AND the docketed address and the parcel address carry the same house number; counties where the local-number scheme does not line up are skipped — list in Indiana_Tax_Expert scripts/lib/ibtr-parcel-match.js). NULL exactly when ParcelID is NULL. indiana_tax.Parcel is C&I only, so most residential appeals match nothing by design.', @level0type=N'SCHEMA', @level0name=N'indiana_tax', @level1type=N'TABLE', @level1name=N'IBTRAppeal', @level2type=N'COLUMN', @level2name=N'ParcelMatchMethod';
