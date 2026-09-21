@@ -1,0 +1,26 @@
+@if (Mode === 'cost') {
+  <section class="ac-card">
+    <div class="ac-head"><h3>Cost analysis</h3><button mjButton variant="icon" size="sm" title="Print this section" (click)="PrintRequested.emit()"><i class="fa-solid fa-print"></i></button></div>
+    @if (Subject?.valuation?.CostProxyValue != null) {
+      <p class="ac-big">{{ Subject!.valuation!.CostProxyValue | currency:'USD':'symbol':'1.0-0' }}</p>
+      <p class="ac-note">{{ Subject!.valuation!.CostProxyNote ?? "The county's own replacement-cost figure from the record card, less its depreciation, plus land." }} A sanity anchor, never the argument: a cost figure above the assessment does not support an appeal. Marshall &amp; Swift is licensed for the practice's own use, so no third-party cost default is applied here.</p>
+    } @else { <p class="ac-note">No county cost figure on file for this parcel.</p> }
+  </section>
+} @else {
+  <section class="ac-card">
+    <div class="ac-head"><h3>Assessment comps</h3><p class="ac-big">{{ Indication.value == null ? 'Not provided' : (Indication.value | currency:'USD':'symbol':'1.0-0') }}</p><button mjButton variant="icon" size="sm" title="Print this section" (click)="PrintRequested.emit()"><i class="fa-solid fa-print"></i></button></div>
+    <p class="ac-note">{{ Indication.basis }} · Track: {{ Subject?.compSet?.HeadlineTrack ?? '—' }} · Subject {{ Subject?.compSet?.SubjectPerUnitEffective ?? '—' }} {{ Subject?.compSet?.UnitOfComparison }}</p>
+    @for (bucket of ['Neighborhood', 'County']; track bucket) {
+      <h4>{{ bucket }} list ({{ members($any(bucket)).length }})</h4>
+      <div class="ac-scroll"><table class="ac-table">
+        <thead><tr><th>Comp parcel</th><th class="num">SF</th><th>Grade</th><th class="num">Original AV</th><th class="num">Appealed AV</th><th>Level</th><th class="num">% chg</th><th>Representative</th><th class="num">Effective /unit</th><th class="num">Score</th></tr></thead>
+        <tbody>
+          @for (m of members($any(bucket)); track m.ID) {
+            <tr [class.selected]="m.IsSelected"><td class="mono">{{ compLabel(m.ComparableParcelID) }}</td><td class="num">{{ m.ComparableBuildingSqFt | number }}</td><td>{{ m.ComparableGradeCode }}</td><td class="num">{{ m.OriginalAV | currency:'USD':'symbol':'1.0-0' }}</td><td class="num">{{ m.AppealedAV == null ? '—' : (m.AppealedAV | currency:'USD':'symbol':'1.0-0') }}</td><td>{{ m.AppealLevel ?? '' }}</td><td class="num">{{ m.AppealPctChange == null ? '' : m.AppealPctChange + '%' }}</td><td>{{ m.AppealRepresentative ?? '' }}</td><td class="num">{{ m.EffectivePerUnit | number:'1.2-2' }}</td><td class="num">{{ m.SimilarityScore | number:'1.2-2' }}</td></tr>
+          }
+        </tbody>
+      </table></div>
+    }
+    <p class="ac-note">Appeal status travels with every comparable (`indiana-tax-ptaboa-outcomes`). Selection editing is a later plan; the batch selection is shown.</p>
+  </section>
+}

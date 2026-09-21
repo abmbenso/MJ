@@ -16,6 +16,13 @@
           "isDefault": true
         },
         {
+          "Label": "Analyze a Property",
+          "Icon": "fa-solid fa-scale-balanced",
+          "ResourceType": "Custom",
+          "DriverClass": "AppealWorkbenchResource",
+          "isDefault": false
+        },
+        {
           "Label": "Owner Prospects",
           "Icon": "fa-solid fa-bullseye",
           "ResourceType": "Custom",
@@ -35,6 +42,13 @@
           "ResourceType": "Custom",
           "DriverClass": "TaxBillProjectionResource",
           "isDefault": false
+        },
+        {
+          "Label": "Legal Research",
+          "Icon": "fa-solid fa-book-open-reader",
+          "ResourceType": "Custom",
+          "DriverClass": "LegalResearchResource",
+          "isDefault": false
         }
       ]
     },
@@ -45,8 +59,8 @@
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
     },
     "sync": {
-      "lastModified": "2026-09-08T23:04:57.177Z",
-      "checksum": "063a2ab9cfef878e6049bbfe83d237d9bf2d70ef290484469f1505ff28905e6d"
+      "lastModified": "2026-09-16T15:32:13.782Z",
+      "checksum": "1e0bffee3a08840f4a8561ba4b73fd7db8ddac5acbc855d2c6843e7bb839bbde"
     }
   }
 ]

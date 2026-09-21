@@ -1,0 +1,23 @@
+<div class="dc-print-bar">
+  <button mjButton variant="secondary" size="sm" title="Print this section" (click)="PrintRequested.emit()"><i class="fa-solid fa-print"></i> Print</button>
+</div>
+<section class="dc-card">
+  <h3>This property's own appeals (PTABOA)</h3>
+  @if (!Ptaboa.length) { <p class="dc-note">None on file for this parcel.</p> }
+  @else { <table class="dc-table"><thead><tr><th>Hearing</th><th>Status</th><th>Circumstances</th></tr></thead><tbody>
+    @for (p of Ptaboa; track p.ID) { <tr><td>{{ p.HearingDate | date:'mediumDate' }}</td><td>{{ p.DecisionStatus }}</td><td class="basis">{{ p.Circumstances }}</td></tr> }
+  </tbody></table> }
+</section>
+<section class="dc-card">
+  <h3>Comparable properties' outcomes</h3>
+  @if (!CompOutcomes.length) { <p class="dc-note">No appealed comparables in the assessment-comp set.</p> }
+  @else { <table class="dc-table"><thead><tr><th>Parcel</th><th class="num">Original AV</th><th class="num">Appealed AV</th><th>Level</th><th class="num">% chg</th><th>Representative</th></tr></thead><tbody>
+    @for (m of CompOutcomes; track m.ID) { <tr><td class="mono">{{ compLabel(m.ComparableParcelID) }}</td><td class="num">{{ m.OriginalAV | currency:'USD':'symbol':'1.0-0' }}</td><td class="num">{{ m.AppealedAV | currency:'USD':'symbol':'1.0-0' }}</td><td>{{ m.AppealLevel }}</td><td class="num">{{ m.AppealPctChange == null ? '' : m.AppealPctChange + '%' }}</td><td>{{ m.AppealRepresentative }}</td></tr> }
+  </tbody></table> }
+  <p class="dc-note">The preliminary conference wins, not the hearing (`indiana-tax-ptaboa-outcomes`); a neighbour's win is support, never the verdict — the subject's own near-date sale governs (`feedback-proximate-sale-beats-neighbour-precedent`).</p>
+</section>
+<section class="dc-card">
+  <h3>Indiana Board of Tax Review — this parcel</h3>
+  @if (!Ibtr.length) { <p class="dc-note">No IBTR determination links to this parcel. Property-type search across the 10,249-decision corpus is Legal → Decisions (Plan 4).</p> }
+  @else { @for (d of Ibtr; track d.ID) { <article class="dc-decision"><h4>{{ d.PetitionNumber }} · {{ d.DispositionType }} · {{ d.DecisionDate | date:'mediumDate' }}</h4><p>{{ d.Summary ?? 'No model summary on file.' }}</p></article> } }
+</section>

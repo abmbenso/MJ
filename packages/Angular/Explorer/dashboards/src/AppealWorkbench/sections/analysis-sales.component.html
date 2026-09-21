@@ -1,0 +1,112 @@
+<section class="sa-card">
+  <div class="sa-head">
+    <h3>Sales analysis</h3>
+    <p class="sa-big">{{ Subject?.valuation?.SalesIndicatedValue == null ? 'Not provided' : (Subject!.valuation!.SalesIndicatedValue | currency:'USD':'symbol':'1.0-0') }}</p>
+    <button mjButton variant="icon" size="sm" title="Print this section" (click)="PrintRequested.emit()"><i class="fa-solid fa-print"></i></button>
+  </div>
+  <p class="sa-note">{{ Subject?.valuation?.SalesMethodNote ?? 'No batch sales indication on file.' }} Adjustments are live percentages on price per unit (size, age, grade, time); check the box to include a comp in the subject-indicated median. Engine run {{ Subject?.valuation?.MethodologyVersion }} · {{ Subject?.valuation?.GeneratedAt }}.</p>
+
+  <div class="sa-summary-row">
+    <div>
+      <p class="sa-summary-label">Unadjusted (median raw $/unit × subject)</p>
+      <p class="sa-summary-fig">{{ Indication.unadjustedValue == null ? 'Not provided' : (Indication.unadjustedValue | currency:'USD':'symbol':'1.0-0') }}</p>
+    </div>
+    <div>
+      <p class="sa-summary-label">Adjusted indicated value (live)</p>
+      <p class="sa-summary-fig sa-summary-fig-primary">{{ Indication.value == null ? 'Not provided' : (Indication.value | currency:'USD':'symbol':'1.0-0') }}</p>
+    </div>
+    <div>
+      <p class="sa-summary-label">Included comps</p>
+      <p class="sa-summary-fig">{{ Indication.comps }}</p>
+    </div>
+  </div>
+  @if (Indication.belowMinimum) {
+    <p class="sa-warn-banner"><i class="fa-solid fa-triangle-exclamation"></i> Fewer than {{ MinimumComps }} comps included — this indication is not yet credible.</p>
+  }
+
+  <div class="sa-presets" role="group" aria-label="Comp selection preset">
+    <button mjButton [variant]="ActivePreset === 'leastAdjusted' ? 'primary' : 'secondary'" size="sm" [attr.aria-pressed]="ActivePreset === 'leastAdjusted'" (click)="ApplyPreset('leastAdjusted')">Least adjusted</button>
+    <button mjButton [variant]="ActivePreset === 'mostSimilar' ? 'primary' : 'secondary'" size="sm" [attr.aria-pressed]="ActivePreset === 'mostSimilar'" (click)="ApplyPreset('mostSimilar')">Most similar</button>
+    <button mjButton [variant]="ActivePreset === 'sameSubmarket' ? 'primary' : 'secondary'" size="sm" [attr.aria-pressed]="ActivePreset === 'sameSubmarket'" (click)="ApplyPreset('sameSubmarket')">Same submarket</button>
+    <button mjButton [variant]="ActivePreset === 'all' ? 'primary' : 'secondary'" size="sm" [attr.aria-pressed]="ActivePreset === 'all'" (click)="ApplyPreset('all')">All</button>
+    <button mjButton [variant]="ActivePreset === 'none' ? 'primary' : 'secondary'" size="sm" [attr.aria-pressed]="ActivePreset === 'none'" (click)="ApplyPreset('none')">None</button>
+  </div>
+
+  <div class="sa-scroll">
+    <table class="sa-table">
+      <thead>
+        <tr>
+          <th class="chk"></th>
+          <th class="sortable" [class.sorted]="SortColumn === 'CompAddress'" (click)="SetSort('CompAddress')">Comp</th>
+          <th class="sortable" [class.sorted]="SortColumn === 'SaleDate'" (click)="SetSort('SaleDate')">Sold</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'RawPerUnit'" (click)="SetSort('RawPerUnit')">Raw $/unit</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'sizeAdjPct'" (click)="SetSort('sizeAdjPct')">Size</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'ageAdjPct'" (click)="SetSort('ageAdjPct')">Age</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'gradeAdjPct'" (click)="SetSort('gradeAdjPct')">Grade</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'timeAdjPct'" (click)="SetSort('timeAdjPct')">Time</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'netAdjPct'" (click)="SetSort('netAdjPct')">Net</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'grossAdjPct'" (click)="SetSort('grossAdjPct')">Gross</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'adjustedPerUnit'" (click)="SetSort('adjustedPerUnit')">Adjusted $/unit</th>
+          <th class="num sortable" [class.sorted]="SortColumn === 'subjectIndicatedValue'" (click)="SetSort('subjectIndicatedValue')">Subject-indicated</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (r of SortableRows; track r.SaleTransactionID) {
+          <tr [class]="'row-' + r.state">
+            <td class="chk"><input type="checkbox" [checked]="r.state === 'included'" [attr.aria-label]="'Include ' + (r.CompAddress ?? r.SaleTransactionID)" (change)="ToggleRow(r.SaleTransactionID, $any($event.target).checked)"></td>
+            <td>{{ r.CompAddress }} <span class="sa-sub">{{ r.CompSubmarket }}</span></td>
+            <td>{{ r.SaleDate | date:'MMM y' }}</td>
+            <td class="num">{{ r.rawPerUnit | number:'1.2-2' }}</td>
+            <td class="num">{{ r.sizeAdjPct | percent:'1.1-1' }}</td>
+            <td class="num">{{ r.ageAdjPct | percent:'1.1-1' }}</td>
+            <td class="num">{{ r.gradeAdjPct | percent:'1.1-1' }}</td>
+            <td class="num">{{ r.timeAdjPct | percent:'1.1-1' }}</td>
+            <td class="num">{{ r.netAdjPct | percent:'1.1-1' }}</td>
+            <td class="num">{{ r.grossAdjPct | percent:'1.1-1' }} @if (r.grossAdjustmentWarning) { <span class="sa-warn">high</span> }</td>
+            <td class="num">{{ r.adjustedPerUnit | number:'1.2-2' }}</td>
+            <td class="num">{{ r.subjectIndicatedValue | currency:'USD':'symbol':'1.0-0' }}</td>
+          </tr>
+        }
+        @empty { <tr><td class="sa-empty" colspan="12">No candidate comps for this analysis.</td></tr> }
+      </tbody>
+    </table>
+  </div>
+
+  @if (RejectedRows.length) {
+    <div class="sa-rejected">
+      <p class="sa-note">Rejected — genuine data-quality drops, excluded from selection:</p>
+      <ul class="sa-rejected-list">
+        @for (r of RejectedRows; track r.SaleTransactionID) { <li>{{ r.CompAddress }} <span class="sa-sub">({{ r.DropReason }})</span></li> }
+      </ul>
+    </div>
+  }
+  <p class="sa-note">Commercial comps use percentage adjustments to price per unit; residential will use dollar adjustments to total price (the user's 2026-09-10 rule).</p>
+</section>
+
+<section class="sa-card">
+  <h3>Adjustment coefficients</h3>
+  <p class="sa-note">Toggling a factor or editing its rate becomes an Analyst override and recomputes every comp above live.</p>
+  <p class="sa-note">Age is measured from the parcel's recorded year built, not a true effective year (not yet available) — coarser than the effective-age standard used elsewhere in this project.</p>
+  <div class="sa-scroll">
+    <table class="sa-table">
+      <thead>
+        <tr>
+          <th>Factor</th>
+          <th class="chk">Enabled</th>
+          <th class="num">Rate</th>
+          <th>Source</th>
+        </tr>
+      </thead>
+      <tbody>
+        @for (f of Factors; track f.EnabledKey) {
+          <tr>
+            <td>{{ f.Label }}</td>
+            <td class="chk"><input type="checkbox" [checked]="f.Enabled.Value === 1" [attr.aria-label]="f.Label + ' adjustment enabled'" (change)="OnCoefficientEdit(f.EnabledKey, $any($event.target).checked)"></td>
+            <td class="num"><input class="sa-coeff-input" type="number" step="0.001" [value]="f.Rate.Value" [attr.aria-label]="f.Label + ' rate'" (change)="OnCoefficientEdit(f.RateKey, $any($event.target).valueAsNumber)"></td>
+            <td><span class="chip" [class]="'chip c-' + f.Source">{{ f.Source }}</span></td>
+          </tr>
+        }
+      </tbody>
+    </table>
+  </div>
+</section>

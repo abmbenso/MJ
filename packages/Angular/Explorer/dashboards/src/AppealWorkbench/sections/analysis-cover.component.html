@@ -1,0 +1,78 @@
+@if (Subject && Analysis) {
+  <div class="cv-print-bar">
+    <button mjButton variant="secondary" size="sm" (click)="PrintPackageRequested.emit()"><i class="fa-solid fa-print"></i> Print Package</button>
+  </div>
+  <section class="cv-grid">
+    <div class="cv-card">
+      <h3>Property summary</h3>
+      <dl class="cv-kv">
+        <dt>Parcel</dt><dd class="mono">{{ Subject.parcel.GISParcelNumber }} · {{ Subject.parcel.ParcelNumber }}</dd>
+        <dt>Address</dt><dd>{{ Subject.parcel.Address }}</dd>
+        <dt>Owner</dt><dd>{{ Subject.parcel.OwnerName ?? '—' }}</dd>
+        <dt>Class</dt><dd>{{ Subject.record?.PropertyClass ?? Subject.parcel.PropertyClassCode }} · {{ Subject.record?.PropertySubClassDescription ?? '' }} · {{ Subject.typeGroup }}</dd>
+        <dt>Size</dt><dd>{{ Subject.record?.EstimatedSqFt | number }} SF · {{ Subject.record?.Acreage ?? '—' }} ac · built {{ Subject.record?.YearBuilt ?? '—' }}</dd>
+        <dt>Neighborhood</dt><dd class="mono">{{ Subject.record?.Neighborhood ?? '—' }}</dd>
+      </dl>
+    </div>
+    <div class="cv-card">
+      <h3>Assessment summary</h3>
+      <table class="cv-table">
+        <thead><tr><th>Year</th><th class="num">Original</th><th class="num">As finally determined</th><th class="num">Change</th></tr></thead>
+        <tbody>
+          @for (r of Summary; track r.year) {
+            <tr><td>{{ r.year }}</td><td class="num">{{ r.original == null ? '—' : (r.original | currency:'USD':'symbol':'1.0-0') }}</td><td class="num">{{ r.final == null ? '—' : (r.final | currency:'USD':'symbol':'1.0-0') }}</td><td class="num" [class.up]="(r.changePct ?? 0) > 0">{{ r.changePct == null ? '—' : (r.changePct | percent:'1.1-1') }}</td></tr>
+          }
+        </tbody>
+      </table>
+      <p class="cv-note">
+        @if (Analysis.BurdenOnAssessor === true) { <strong>Burden on the assessor:</strong> the assessment rose more than 5% over the prior value as finally determined (IC 6-1.1-15-17.2). Confirm no new construction, use or zoning change. }
+        @else if (Analysis.BurdenOnAssessor === false) { The assessment rose 5% or less; the taxpayer carries the burden. }
+        @else { Prior value as finally determined is not on file; burden not determined. }
+      </p>
+    </div>
+  </section>
+
+  <section class="cv-card">
+    <div class="cv-head">
+      <h3>Indicated and requested value</h3>
+      <label class="cv-policy">Ask policy
+        <select [value]="Analysis.AskPolicy" [disabled]="Busy" (change)="OnPolicy($any($event.target).value)">
+          <option value="Lowest">Lowest supported value</option>
+          <option value="SecondLowest">Second-lowest supported value</option>
+        </select>
+      </label>
+    </div>
+    <table class="cv-table ladder">
+      <thead><tr><th>Approach</th><th class="num">Indicated value</th><th class="num">vs. AV</th><th>Credible</th><th>Supports</th><th>Basis</th></tr></thead>
+      <tbody>
+        @for (l of Ladder; track l.row.Approach) {
+          <tr [class.muted]="l.row.Status !== 'Computed'" [class.ask]="l.isAsk">
+            <td>{{ l.label }}@if (l.isFloor) { <span class="tag">floor</span> }@if (l.isAsk) { <span class="tag ask">ask</span> }</td>
+            <td class="num">{{ l.row.Status === 'Computed' && l.row.IndicatedValue != null ? (l.row.IndicatedValue | currency:'USD':'symbol':'1.0-0') : (l.row.Status === 'NotProvided' ? 'Not provided' : 'Excluded') }}</td>
+            <td class="num">{{ l.pct == null ? '—' : ((l.pct - 1) | percent:'1.1-1') }}</td>
+            <td>{{ l.row.Status === 'Computed' ? (l.credible ? 'Yes' : 'No') : '—' }}</td>
+            <td>{{ l.row.Status === 'Computed' ? (l.supports ? 'Yes' : 'No') : '—' }}</td>
+            <td class="basis">{{ l.row.Rationale }}</td>
+          </tr>
+        }
+      </tbody>
+    </table>
+    <dl class="cv-facts">
+      <div><dt>{{ Analysis.AssessmentYear }} assessment</dt><dd>{{ Analysis.CurrentTotalAV == null ? '—' : (Analysis.CurrentTotalAV | currency:'USD':'symbol':'1.0-0') }}</dd></div>
+      <div><dt>Floor</dt><dd>{{ Analysis.FloorValue == null ? '—' : (Analysis.FloorValue | currency:'USD':'symbol':'1.0-0') }}</dd><dd class="sub">{{ Analysis.FloorApproach ?? '' }}</dd></div>
+      <div><dt>Ask</dt><dd>{{ Analysis.RequestedValue == null ? '—' : (Analysis.RequestedValue | currency:'USD':'symbol':'1.0-0') }}</dd><dd class="sub">{{ AskPctBelow == null ? '' : (AskPctBelow | percent:'1.1-1') + ' below AV' }}</dd></div>
+      <div><dt>Recommendation</dt><dd>{{ Analysis.Recommendation ?? '—' }}</dd></div>
+      <div><dt>Est. saving at the ask</dt><dd>{{ Savings?.atAsk?.savings == null ? '—' : (Savings!.atAsk.savings | currency:'USD':'symbol':'1.0-0') }}<small>/yr</small></dd><dd class="sub">{{ Savings?.atAsk?.basis === 'cap' ? 'at the 3% cap' : (Savings?.atAsk?.rate != null ? 'at ' + (Savings!.atAsk.rate | percent:'1.2-2') : 'no tax rate on file') }}</dd></div>
+    </dl>
+    <p class="cv-note">Credible = within 50%–120% of the assessment; supports = credible and below it; ask = {{ Analysis.AskPolicy === 'Lowest' ? 'the lowest' : 'the second-lowest' }} supporting value; an appeal needs the ask at least 5% below the assessment. Rule owner: appeal-rules.ts.</p>
+  </section>
+
+  <section class="cv-card">
+    <div class="cv-head"><h3>Comments</h3>
+      <label class="cv-policy">Status
+        <select [value]="Analysis.Status" [disabled]="Busy" (change)="OnStatus($any($event.target).value)"><option value="Draft">Draft</option><option value="Final">Final</option></select>
+      </label>
+    </div>
+    <textarea class="cv-comments" rows="4" [value]="Analysis.Comments ?? ''" [disabled]="Busy" placeholder="1) … 2) …" (change)="OnComments($any($event.target).value)"></textarea>
+  </section>
+}

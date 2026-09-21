@@ -1,0 +1,10 @@
+<section class="tx-card">
+  <div class="tx-head"><h3>Tax projection</h3><button mjButton variant="icon" size="sm" title="Print this section" (click)="PrintRequested.emit()"><i class="fa-solid fa-print"></i></button><button mjButton variant="secondary" size="sm" [disabled]="!Subject" (click)="OpenProjection.emit()"><i class="fa-solid fa-arrow-up-right-from-square"></i> Open in Tax Bill Projection</button></div>
+  <dl class="tx-facts">
+    <div><dt>District rate</dt><dd>{{ Rate == null ? 'Not on file' : (Rate | number:'1.4-4') + ' per $100' }}</dd></div>
+    <div><dt>Circuit-breaker cap</dt><dd>{{ Cap | percent:'1.0-0' }} of gross AV (commercial)</dd></div>
+    <div><dt>Saving at the ask</dt><dd>{{ Savings?.atAsk?.savings == null ? '—' : (Savings!.atAsk.savings | currency:'USD':'symbol':'1.0-0') }}<small>/yr</small></dd><dd class="sub">{{ Savings?.atAsk?.basis === 'cap' ? 'bill is at the cap: ΔAV × (3% + referendum)' : (Savings?.atAsk?.basis === 'rate' ? 'bill is below the cap: ΔAV × rate' : '') }}</dd></div>
+    <div><dt>Saving at the floor</dt><dd>{{ Savings?.atFloor?.savings == null ? '—' : (Savings!.atFloor.savings | currency:'USD':'symbol':'1.0-0') }}<small>/yr</small></dd></div>
+  </dl>
+  <p class="tx-note">An estimate at the marginal rate: the lesser of the district rate and the cap plus any referendum rate (the referendum rate is not yet read here, so a capped bill's saving is understated by ΔAV × referendum). The full five-year bill, referendum and all, is the Tax Bill Projection V2 dashboard, opened above for this parcel. Rule owner: appeal-rules.ts estimateSavings; the cap mechanics: `indiana-tax-circuit-breaker`.</p>
+</section>

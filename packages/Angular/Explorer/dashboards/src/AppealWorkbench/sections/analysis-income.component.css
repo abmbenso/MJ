@@ -1,0 +1,21 @@
+:host { display: grid; gap: var(--mj-space-4); }
+.in-card { background: var(--mj-bg-surface); border: 1px solid var(--mj-border-default); border-radius: var(--mj-radius-md); padding: var(--mj-space-4); display: grid; gap: var(--mj-space-3); }
+.in-card h3 { margin: 0; font-size: var(--mj-text-base); color: var(--mj-text-primary); }
+.in-head { display: flex; align-items: center; justify-content: space-between; gap: var(--mj-space-3); }
+.in-actions { display: flex; gap: var(--mj-space-2); }
+.in-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.in-table th { text-align: left; color: var(--mj-text-secondary); font-weight: 500; padding: var(--mj-space-1) var(--mj-space-2); border-bottom: 1px solid var(--mj-border-default); }
+.in-table td { padding: var(--mj-space-1) var(--mj-space-2); border-bottom: 1px solid var(--mj-border-subtle); color: var(--mj-text-primary); }
+.in-table .num { text-align: right; }
+.in-table .basis { color: var(--mj-text-secondary); font-size: var(--mj-text-sm); }
+.in-note { margin: 0; color: var(--mj-text-secondary); font-size: var(--mj-text-sm); }
+.in-legend { margin: 0; color: var(--mj-text-secondary); font-size: var(--mj-text-sm); }
+
+.chip { font-size: var(--mj-text-xs); letter-spacing: .04em; text-transform: uppercase; padding: 0 var(--mj-space-1); border-radius: var(--mj-radius-sm); }
+.c-County { background: var(--mj-bg-surface-hover); color: var(--mj-text-secondary); }
+.c-Market { background: var(--mj-brand-accent-subtle); color: var(--mj-brand-primary); }
+.c-Default { background: var(--mj-status-warning-bg); color: var(--mj-status-warning); }
+.c-Analyst { background: var(--mj-brand-primary); color: var(--mj-brand-on-primary); }
+.in-input { width: 110px; text-align: right; font: inherit; font-variant-numeric: tabular-nums; color: var(--mj-text-primary); background: var(--mj-bg-surface); border: 1px solid var(--mj-border-default); border-radius: var(--mj-radius-sm); padding: var(--mj-space-1); }
+tr.dirty td { background: var(--mj-brand-accent-subtle); }
+tr.tot td { font-weight: 600; border-top: 1px solid var(--mj-border-default); } tr.val td { font-weight: 700; color: var(--mj-brand-primary); }

@@ -1,0 +1,78 @@
+<mj-page-layout>
+  <mj-page-header Title="Analyze a Property" Icon="fa-solid fa-scale-balanced" Subtitle="Walk the approaches to value; every input shows where it came from">
+    <div meta>
+      @if (Analysis) { <mj-stat-badge Icon="fa-solid fa-flag" [Label]="Analysis.Recommendation ?? 'Not computed'" [Variant]="Analysis.Recommendation === 'Appeal' ? 'success' : 'default'" /> }
+    </div>
+    <div actions>
+      @if (Subject) {
+        <button mjButton variant="secondary" size="sm" [disabled]="IsSaving || IncomeDirty > 0" [title]="IncomeDirty > 0 ? 'Save or revert the income edits first' : null" (click)="NewAnalysis()"><i class="fa-solid fa-plus"></i> New analysis</button>
+        <button mjButton variant="secondary" size="sm" [disabled]="IsSaving || !Analysis || IncomeDirty > 0" [title]="IncomeDirty > 0 ? 'Save or revert the income edits first' : 'Save the Sales tab\'s comp inclusions and coefficient edits'" (click)="SaveAssumptions([])"><i class="fa-solid fa-floppy-disk"></i> Save</button>
+        <button mjButton variant="primary" size="sm" [disabled]="IsSaving || !Analysis || IncomeDirty > 0" [title]="IncomeDirty > 0 ? 'Save or revert the income edits first' : null" (click)="Recompute()"><i class="fa-solid fa-rotate"></i> Recompute</button>
+      }
+    </div>
+    <div toolbar>
+      <div class="wb-search">
+        <mj-page-search [Value]="SearchTerm" Placeholder="Address, GIS parcel or state parcel number" (ValueChange)="OnSearchTermChange($event)" />
+        @if (SearchResults.length) {
+          <ul class="wb-hits" role="listbox">
+            @for (hit of SearchResults; track hit.ID) { <li role="option" (click)="SelectParcel(hit)"><span class="mono">{{ hit.GISParcelNumber }}</span> {{ hit.Address }}</li> }
+          </ul>
+        }
+      </div>
+      @if (Analyses.length > 1) {
+        <select class="wb-picker" [value]="Analysis?.ID" (change)="OpenAnalysis($any($event.target).value)" aria-label="Analysis">
+          @for (a of Analyses; track a.ID) { <option [value]="a.ID">{{ a.Name }} · {{ a.Status }}</option> }
+        </select>
+      }
+      @if (Analysis) { <mj-tab-nav [Tabs]="Tabs" [ActiveKey]="ActiveSection" (TabChange)="OnSectionChange($any($event))"></mj-tab-nav> }
+    </div>
+  </mj-page-header>
+
+  <mj-page-body>
+    @if (LoadError) { <mj-alert Variant="error" [Message]="LoadError" Dismissible (Dismissed)="DismissNotice()"></mj-alert> }
+    @if (Notice) { <mj-alert Variant="info" [Message]="Notice" Dismissible (Dismissed)="DismissNotice()"></mj-alert> }
+    @if (IsLoading) { <mj-loading text="Loading…"></mj-loading> }
+    @else if (!Subject) { <mj-empty-state Icon="fa-solid fa-magnifying-glass" Title="Pick a Marion County property" Message="Type an address or parcel number above." /> }
+    @else if (!Analysis) { <mj-empty-state Icon="fa-solid fa-file-circle-plus" Title="No analysis yet for this property" Message="Start one: the county record, the market data on file and the batch engines fill in the first pass." /> }
+    @else {
+      <div class="wb-body">
+        @switch (ActiveSection) {
+          @case ('cover') {
+            <mj-analysis-cover [Subject]="Subject" [Analysis]="Analysis" [Indications]="Indications" [Reconciled]="Reconciled" [Savings]="Savings" [Busy]="IsSaving"
+              (AskPolicyChange)="SetAskPolicy($event)" (CommentsChange)="SaveHeader({ Comments: $event })" (StatusChange)="SaveHeader({ Status: $event })"
+              (PrintPackageRequested)="OpenPrintPackageDialog()"></mj-analysis-cover>
+          }
+          @case ('sales') {
+            <mj-analysis-sales [Subject]="Subject" [Analysis]="Analysis" [SalesAssumptions]="SalesAssumptionsWorking" [Decisions]="SalesDecisions"
+              (DecisionsChanged)="OnSalesDecisionsChanged($event)" (AssumptionsChanged)="OnSalesAssumptionsChanged($event)"
+              (PrintRequested)="printSections(printOne('Sales'))"></mj-analysis-sales>
+          }
+          @case ('income') {
+            <mj-analysis-income [Assumptions]="Assumptions" [Subject]="Subject" [Busy]="IsSaving" (Save)="SaveAssumptions($event)" (DirtyChange)="IncomeDirty = $event"
+              (PrintRequested)="printSections(printOne('Income'))"></mj-analysis-income>
+          }
+          @case ('comps') { <mj-analysis-assessment-comps [Subject]="Subject" [Analysis]="Analysis" Mode="comps" (PrintRequested)="printSections(printOne('AssessmentComps'))"></mj-analysis-assessment-comps> }
+          @case ('cost') { <mj-analysis-assessment-comps [Subject]="Subject" [Analysis]="Analysis" Mode="cost" (PrintRequested)="printSections(printOne('Cost'))"></mj-analysis-assessment-comps> }
+          @case ('tax') { <mj-analysis-tax [Analysis]="Analysis" [Subject]="Subject" [Savings]="Savings" (OpenProjection)="OpenTaxProjection()" (PrintRequested)="printSections(printOne('Tax'))"></mj-analysis-tax> }
+          @case ('decisions') { <mj-analysis-decisions [Subject]="Subject" (PrintRequested)="printSections(printOne('Decisions'))"></mj-analysis-decisions> }
+        }
+      </div>
+    }
+  </mj-page-body>
+
+  <mj-dialog [Visible]="PrintDialogVisible" Title="Print Package" Size="sm" (Close)="CancelPrintPackage()">
+    @if (PrintDialogSections.length) {
+      <ul class="wb-print-list">
+        @for (s of PrintDialogSections; track s.key) {
+          <li><label><input type="checkbox" class="mj-checkbox" [checked]="s.checked" (change)="TogglePrintSection(s.key, $any($event.target).checked)"> {{ s.label }}</label></li>
+        }
+      </ul>
+    } @else {
+      <p>Nothing to print yet -- recompute the analysis first.</p>
+    }
+    <mj-dialog-actions>
+      <button mjButton variant="primary" size="sm" [disabled]="!PrintDialogSections.length" (click)="ConfirmPrintPackage()"><i class="fa-solid fa-print"></i> Print / Save as PDF</button>
+      <button mjButton variant="secondary" size="sm" (click)="CancelPrintPackage()">Cancel</button>
+    </mj-dialog-actions>
+  </mj-dialog>
+</mj-page-layout>

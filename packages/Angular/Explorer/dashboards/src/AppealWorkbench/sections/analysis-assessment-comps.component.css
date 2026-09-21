@@ -1,0 +1,13 @@
+:host { display: grid; gap: var(--mj-space-4); }
+.ac-card { background: var(--mj-bg-surface); border: 1px solid var(--mj-border-default); border-radius: var(--mj-radius-md); padding: var(--mj-space-4); display: grid; gap: var(--mj-space-3); }
+.ac-card h3 { margin: 0; font-size: var(--mj-text-base); color: var(--mj-text-primary); }
+.ac-head { display: flex; align-items: center; justify-content: space-between; gap: var(--mj-space-3); }
+.mono { font-family: var(--mj-font-family-mono); }
+.ac-table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.ac-table th { text-align: left; color: var(--mj-text-secondary); font-weight: 500; padding: var(--mj-space-1) var(--mj-space-2); border-bottom: 1px solid var(--mj-border-default); }
+.ac-table td { padding: var(--mj-space-1) var(--mj-space-2); border-bottom: 1px solid var(--mj-border-subtle); color: var(--mj-text-primary); }
+.ac-table .num { text-align: right; }
+.ac-note { margin: 0; color: var(--mj-text-secondary); font-size: var(--mj-text-sm); }
+.ac-scroll { overflow-x: auto; }
+.ac-big { font-size: var(--mj-text-xl); font-weight: 700; margin: 0; }
+tr.selected td { font-weight: 600; }
