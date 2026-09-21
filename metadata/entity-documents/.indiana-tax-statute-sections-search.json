@@ -1,0 +1,23 @@
+[
+  {
+    "fields": {
+      "Name": "Statute Sections Search",
+      "EntityID": "@lookup:MJ: Entities.Name=Statute Sections",
+      "TypeID": "@lookup:MJ: Entity Document Types.Name=Search",
+      "Status": "Active",
+      "VectorDatabaseID": "@lookup:MJ: Vector Databases.Name=Simple Vector Service Provider",
+      "VectorIndexID": "@lookup:MJ: Vector Indexes.Name=Default - SVS + gte-small (Local)",
+      "AIModelID": "@lookup:MJ: AI Models.Name=gte-small (Local)",
+      "TemplateText": "@file:templates/indiana-tax-statute-sections-search.njk",
+      "PotentialMatchThreshold": 0.7,
+      "AbsoluteMatchThreshold": 0.95
+    },
+    "primaryKey": {
+      "ID": "66009DE3-6EA0-4A5C-8894-68AD4C0FC8C5"
+    },
+    "sync": {
+      "lastModified": "2026-08-21T15:18:02.437Z",
+      "checksum": "a99b462732bddeef3dd7ff380b7e51af1061c91bd9a10165f72a3c9103b0ec17"
+    }
+  }
+]

@@ -24,6 +24,7 @@ import {
   DEFAULT_PROPERTY_SEARCH_FILTERS,
   PROPERTY_SEARCH_RESULT_CAP,
   resetFiltersForCountyChange,
+  PROPERTY_SEARCH_BOUNDARY_RENDER_CAP,
   buildPropertySearchAgentContext,
   classifySearchTerm,
   escapeSqlLiteral,
@@ -119,11 +120,16 @@ interface AgentClientTool {
  * documented joined-SQL-view mechanism) was considered and rejected: it has
  * zero production precedent anywhere in this repo.
  *
- * MAP CAP: geo-maps' `boundary` render mode has no clustering (unlike
- * `point`, which uses Leaflet markerClusterGroup) — 750 records is a
- * comfortable ceiling for unclustered polygon rendering and is applied
- * identically to both render modes so switching modes never changes how many
- * results are shown (only how they're drawn).
+ * RESULT CAPS: the backend query (and List view / Export / Point-mode map)
+ * are bounded by RESULT_CAP (5000, measured — see
+ * PROPERTY_SEARCH_RESULT_CAP's own doc comment). Boundary-mode map rendering
+ * is bounded SEPARATELY and more tightly by BOUNDARY_RENDER_CAP (2000,
+ * unmeasured but unchanged from before this cap was raised) — geo-maps'
+ * `boundary` mode has no clustering (unlike `point`, which uses Leaflet's
+ * markerClusterGroup and scales past RESULT_CAP without issue), so raising
+ * the backend cap for List view's sake doesn't also throw more unclustered
+ * polygons at boundary rendering. See MapDisplayRows below for where that
+ * slice happens.
  */
 @Component({
   standalone: false,
@@ -215,6 +221,31 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     }
   }
 
+  /**
+   * indiana_tax.OwnerPortfolioRun.ID where IsLatest = 1 -- cached once by
+   * loadLatestOwnerPortfolioRunIfNeeded() so every search doesn't re-look it
+   * up. null until loaded, and stays null if the portfolio pipeline has never
+   * been run (OwnerEntity/TaxRep are then simply absent from every row --
+   * this dashboard degrades gracefully rather than erroring). Needed because
+   * indiana_tax.OwnerPortfolioParcel keeps one row per parcel PER RUN (history
+   * is never overwritten) -- without scoping to the latest run, a parcel with
+   * N historical portfolio builds would merge as N duplicate rows.
+   */
+  private latestOwnerPortfolioRunID: string | null = null;
+  private ownerPortfolioRunLoadAttempted = false;
+
+  /**
+   * The AG Grid's own displayed-row count in List view, reported via
+   * (FilteredRowCountChanged) whenever a column filter (or sort/rowData
+   * change) alters what's actually on screen there -- see that output's own
+   * doc comment on PropertySearchGridComponent. null before the grid has
+   * reported anything (Map/Analytics view, or List view before first paint).
+   * Consumed by ParcelCountBadgeValue below, NOT read directly by the
+   * template, so the "is this stale/irrelevant right now" logic lives in one
+   * place.
+   */
+  public ListViewFilteredRowCount: number | null = null;
+
   /** List-view column visibility -- persisted per-account via UserInfoEngine (never localStorage, per this codebase's standing rule). */
   public VisibleColumnKeys = new Set<string>(PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS);
   public readonly GridColumnOptions = PROPERTY_SEARCH_GRID_COLUMNS.filter((c) => !c.locked);
@@ -225,6 +256,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   })).filter((group) => group.columns.length > 0);
 
   public readonly RESULT_CAP = PROPERTY_SEARCH_RESULT_CAP;
+  public readonly BOUNDARY_RENDER_CAP = PROPERTY_SEARCH_BOUNDARY_RENDER_CAP;
 
   /** UserInfoEngine setting key, versioned so a future shape change can migrate cleanly rather than misreading an old value. */
   private static readonly COLUMNS_SETTING_KEY = 'mj.propertySearch.gridColumns.v1';
@@ -249,9 +281,65 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   // Computed client-side over the already-loaded MergedResults -- no extra
   // query. Updates live as filters/search narrow the result set.
 
-  /** Count of the current result set with no map coordinates -- still included everywhere else (stats, List, Export), just invisible on the Map view. Surfaced so that gap is visible, not silent. */
+  /**
+   * Count with no map coordinates, WITHIN what the map is actually drawing
+   * (MapDisplayRows, not the full MergedResults) -- these rows are still
+   * included everywhere else (stats, List, Export), just invisible on the
+   * Map view. Scoped to MapDisplayRows (not MergedResults) so this stays
+   * accurate in boundary mode, where the map draws only the top
+   * BOUNDARY_RENDER_CAP rows -- counting missing-geometry rows outside that
+   * slice would overstate a gap the user can't even see reflected on screen.
+   */
   public get RowsWithoutGeometryCount(): number {
-    return this.MergedResults.filter((r) => r.Latitude == null || r.Longitude == null).length;
+    return this.MapDisplayRows.filter((r) => r.Latitude == null || r.Longitude == null).length;
+  }
+
+  /**
+   * What <mj-map-view> actually renders. Point mode (Leaflet clustering) and
+   * every non-map surface (List, Export, summary stats) use the full
+   * MergedResults, up to RESULT_CAP. Boundary/outline mode -- unclustered
+   * polygon drawing, a different and unmeasured rendering cost -- is sliced
+   * down further to BOUNDARY_RENDER_CAP, which is smaller than RESULT_CAP
+   * (see that constant's own doc comment for why raising RESULT_CAP for List
+   * view's sake shouldn't also throw more polygons at boundary rendering).
+   * MergedResults is already ORDER BY AssessedTotalAV DESC from the CAR
+   * query, so this slice keeps the same "top N by value" framing as
+   * IsTruncated uses for the overall result cap.
+   */
+  public get MapDisplayRows(): MergedParcelRow[] {
+    if (this.ActiveRenderMode !== 'boundary' || this.MergedResults.length <= this.BOUNDARY_RENDER_CAP) {
+      return this.MergedResults;
+    }
+    return this.MergedResults.slice(0, this.BOUNDARY_RENDER_CAP);
+  }
+
+  /** True when boundary mode is showing FEWER parcels than the full search result specifically because of BOUNDARY_RENDER_CAP -- a narrower, map-rendering-specific truncation than IsTruncated (the overall RESULT_CAP), and can be true even when IsTruncated is false. */
+  public get IsBoundaryRenderTruncated(): boolean {
+    return this.ActiveRenderMode === 'boundary' && this.MergedResults.length > this.BOUNDARY_RENDER_CAP;
+  }
+
+  /**
+   * Value for the header's parcel-count badge. In List view, once a column
+   * filter has narrowed what the grid actually shows, this renders "X of Y"
+   * (X = the grid's own filtered count, Y = the full search result) instead
+   * of silently continuing to show Y alone -- the mismatch a plain
+   * MergedResults.length would otherwise produce the moment someone filters
+   * the grid down. Falls back to the plain total whenever there's nothing to
+   * reconcile against (Map/Analytics view, no active grid filter, or List
+   * view before the grid's first report).
+   */
+  public get ParcelCountBadgeValue(): string | number {
+    const total = this.MergedResults.length;
+    if (this.ActiveViewMode === 'list' && this.ListViewFilteredRowCount != null && this.ListViewFilteredRowCount !== total) {
+      return `${this.ListViewFilteredRowCount} of ${total}`;
+    }
+    return total;
+  }
+
+  /** (FilteredRowCountChanged) handler from <mj-property-search-grid> -- see ListViewFilteredRowCount's own doc comment. */
+  public onGridFilteredRowCountChanged(count: number): void {
+    this.ListViewFilteredRowCount = count;
+    this.cdr.markForCheck();
   }
 
   public get FormattedTotalAssessedValue(): string {
@@ -508,6 +596,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'ParcelNumber', displayName: 'Parcel #' },
       { name: 'GISParcelNumber', displayName: 'GIS Parcel #' },
       { name: 'OwnerName', displayName: 'Owner' },
+      { name: 'OwnerEntity', displayName: 'Owner Entity' },
       { name: 'PropertyClass', displayName: 'Property Class' },
       { name: 'PropertySubClassDescription', displayName: 'Property Sub Class' },
       { name: 'AssessmentYear', displayName: 'Assessment Year', dataType: 'number' },
@@ -530,6 +619,12 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'PTABOAValue', displayName: 'PTABOA Value', dataType: 'currency' },
       { name: 'PTABOADate', displayName: 'PTABOA Date', dataType: 'date' },
       { name: 'PTABOAAppealType', displayName: 'Appeal Type' },
+      { name: 'TaxRep', displayName: 'Rep' },
+      { name: 'Recommendation', displayName: 'Recommendation' },
+      { name: 'ConfidenceTier', displayName: 'Confidence' },
+      { name: 'SupportingApproachCount', displayName: 'Supporting Approaches', dataType: 'number' },
+      { name: 'EstSavingsAtAsk', displayName: 'Est. Savings (Ask)', dataType: 'currency' },
+      { name: 'AVYoYPct', displayName: 'AV YoY %', dataType: 'number' },
       { name: 'LastSaleDate', displayName: 'Last Sale Date', dataType: 'date' },
       { name: 'LastSalePrice', displayName: 'Last Sale Price', dataType: 'currency' },
       { name: 'LastSaleIsValid', displayName: 'Last Sale Valid?', dataType: 'boolean' },
@@ -646,7 +741,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.IsLoading = true;
     this.cdr.markForCheck();
     try {
-      await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded()]);
+      await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded(), this.loadLatestOwnerPortfolioRunIfNeeded()]);
       await this.runSearchInternal();
     } finally {
       this.IsLoading = false;
@@ -760,6 +855,31 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     });
     if (!parcelResult.Success) return;
     this.CountyOptions = buildCountyOptions(counties, tallyCIParcels(parcelResult.Results ?? []));
+  }
+
+  /**
+   * Looks up the current indiana_tax.OwnerPortfolioRun (IsLatest = 1) once and
+   * caches its ID -- see latestOwnerPortfolioRunID's own doc comment for why
+   * this matters (OwnerPortfolioParcel keeps every historical run's rows).
+   * Load-once like loadAssessmentYearsIfNeeded/loadSubClassOptionsIfNeeded,
+   * but guarded by an attempted-flag rather than an empty-array check: a
+   * genuinely empty result (no run yet) is itself the cached answer, not a
+   * signal to retry on every search.
+   */
+  private async loadLatestOwnerPortfolioRunIfNeeded(): Promise<void> {
+    if (this.ownerPortfolioRunLoadAttempted) return;
+    this.ownerPortfolioRunLoadAttempted = true;
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const result = await rv.RunView<{ ID: string }>({
+      EntityName: 'Owner Portfolio Runs',
+      Fields: ['ID'],
+      ExtraFilter: 'IsLatest = 1',
+      MaxRows: 1,
+      ResultType: 'simple',
+    });
+    if (result.Success && result.Results?.length) {
+      this.latestOwnerPortfolioRunID = result.Results[0].ID;
+    }
   }
 
   private async loadSubClassOptionsIfNeeded(): Promise<void> {
@@ -879,11 +999,25 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       // GrossAssessment (the Tax History billed figure) leads: it reconciles to
       // the noticed value and is year-consistent. AssessedTotalAV is a stale
       // ArcGIS assessor-layer snapshot -- not year-aligned to TaxYear and wrong
-      // for ~1,300 C&I parcels (OPP-33) -- kept only as a NULLS-last tiebreak so
-      // not-yet-PRC-fetched parcels (no GrossAssessment) still order sensibly.
-      // The AV actually displayed/analysed comes from Assessment via the merge
-      // below, never from this fetch ordering.
-      OrderBy: 'GrossAssessment DESC, AssessedTotalAV DESC',
+      // for ~1,300 C&I parcels (OPP-33) -- used as the ranking value ONLY when
+      // GrossAssessment is null, via COALESCE, NOT as a plain second ORDER BY
+      // key. `GrossAssessment DESC, AssessedTotalAV DESC` (the old form) sorts
+      // ALL null-GrossAssessment rows to the very bottom as a group, no matter
+      // how large their AssessedTotalAV is -- SQL Server puts NULLs last in a
+      // DESC sort, and the second key only breaks ties within rows that share
+      // the first key's value, so it can never rescue a null-first-key row.
+      // Found live 2026-09-12 chasing a "why does filtering Owner Entity for
+      // Eli Lilly show fewer parcels than the Owner Prospects rollup" report:
+      // one of their parcels (231 Virginia Ave, $48.4M AssessedTotalAV) has a
+      // null GrossAssessment and was landing dead last in the sort instead of
+      // near the top where its actual value belongs -- one of 62 parcels
+      // county-wide with a null GrossAssessment whose AssessedTotalAV alone
+      // would place them above this search's current RESULT_CAP cutoff.
+      // COALESCE ranks every row by whichever figure it actually has, so a
+      // parcel's absence from Tax History data no longer buries it regardless
+      // of size. The AV actually displayed/analysed still comes from
+      // Assessment via the merge below, never from this fetch ordering.
+      OrderBy: 'COALESCE(GrossAssessment, AssessedTotalAV) DESC, AssessedTotalAV DESC',
       MaxRows: this.RESULT_CAP,
       ResultType: 'simple',
     });
@@ -912,13 +1046,29 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     // and sale history are independent of each other (all four only depend
     // on ids already known from carResult above) -- batch as one RunViews
     // call rather than sequential RunView calls.
-    const [parcelResult, assessmentResult, taxHistoryResult, saleHistoryResult, ptaboaDateResult, parkingSegmentResult] = await rv.RunViews<Record<string, unknown>>([
+    const [parcelResult, assessmentResult, taxHistoryResult, saleHistoryResult, ptaboaDateResult, parkingSegmentResult, ownerPortfolioResult] = await rv.RunViews<Record<string, unknown>>([
       {
         EntityName: 'Parcels',
         Fields: ['ID', 'ParcelNumber', 'GISParcelNumber', 'Address', 'OwnerName', 'Latitude', 'Longitude', 'BoundaryGeoJSON'],
         ExtraFilter: `ID IN (${parcelIdList})`,
-        // One row per id in the list; the list is at most RESULT_CAP long. Explicit
-        // so the query never sits exactly on the entity's own default cap.
+        // MISSING MaxRows here was a real, pre-existing occurrence of this
+        // project's documented silent-truncation bug class (see
+        // loadSubClassOptionsIfNeeded/loadAssessmentYearsIfNeeded's own
+        // MaxRows comments) -- found live 2026-09-12: Parcels.UserViewMaxRows
+        // is 1000 (a CodeGen default never customized, true of EVERY entity
+        // this dashboard queries), so with no explicit MaxRows this query
+        // silently fell back to that 1000-row entity default regardless of
+        // RESULT_CAP's own value. carResult (the CAR query, which DOES set
+        // MaxRows explicitly) would correctly fetch up to RESULT_CAP rows,
+        // but the merge loop below silently dropped every one of those rows
+        // whose Parcel didn't make it into this query's arbitrary first-1000
+        // -- exactly what the user saw: the header badge and List view stuck
+        // at 1000 parcels no matter how many times RESULT_CAP itself was
+        // raised (2000, then 5000), because THIS query, not RESULT_CAP, was
+        // the actual bottleneck the whole time. One row per parcel expected
+        // (Parcels.ID is a primary key), so MaxRows must be >= RESULT_CAP --
+        // tied directly to it (not a separate hardcoded number) so this can
+        // never drift out of sync with RESULT_CAP again.
         MaxRows: this.RESULT_CAP,
         ResultType: 'simple',
       },
@@ -926,14 +1076,28 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         EntityName: 'Assessments',
         Fields: ['ParcelID', 'Source', 'OriginalLandAV', 'OriginalImprovementAV', 'OriginalTotalAV'],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${this.filters.assessmentYear}`,
-        // SEVERAL rows per parcel-year: the county-card row (LakePRC / MarionPRC /
-        // StJosephPRC) AND the statewide row (dlgf_gdb_2025 / marion_foia_2026) both
-        // exist for the same parcel and year. Without an explicit cap this inherited
-        // the entity's 1,000-row default and silently truncated at RESULT_CAP parcels
-        // x 2 sources -- on Lake AY2025 that left 550 of 1,000 parcels reading "No
-        // assessment on file" and 181 falling back to the DLGF row although every one
-        // of them has a card (caught in the Plan B click-through, 2026-09-13). The
-        // same MaxRows bug class this component has hit three times before.
+        // No MaxRows here was the same silent-truncation bug class this batch's
+        // other queries already guard against (see County Assessor Sale
+        // Histories / PTABOA Appeals / County Assessor Improvement Segments
+        // below) -- an unset MaxRows falls back to the entity's
+        // UserViewMaxRows (or the provider's own default) which silently
+        // truncated this query, leaving most parcels with no matching row in
+        // assessmentByParcel below -- the real cause of the List View's
+        // "No data" bug reported 2026-09-03 (confirmed live: parcel 1055259
+        // has correct 2026 Assessment data in the DB but showed "No data" in
+        // the grid).
+        //
+        // Consolidation 2026-09-21: expressed as RESULT_CAP * 4 (= 20000 at 5000) so it scales;
+        // the multi-county branch found up to 2 sources per parcel-year (county card + statewide)
+        // and this cap must hold for any county.
+        // RESULT_CAP parcels x up to 2 sources (MarionPRC + a statewide
+        // fallback) for the selected year is the theoretical max -- measured
+        // live 2026-09-11 at RESULT_CAP=5000: 9,794-9,961 rows depending on
+        // year (2025/2026 run closest to the old 10000 ceiling with
+        // essentially zero headroom). Raised to 20000 -- 2x the theoretical
+        // max, not just past the last observed number -- since this scales
+        // directly with RESULT_CAP and needs real margin if RESULT_CAP is
+        // ever nudged again without someone re-deriving this from scratch.
         MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
@@ -941,7 +1105,14 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         EntityName: 'Tax History Years',
         Fields: ['ParcelID', 'ColumnOrdinal', 'NetAnnualTax', 'TaxRate'],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND TaxYear = ${this.filters.assessmentYear}`,
-        // Several ColumnOrdinal rows can exist per parcel-year; same reason as above.
+        // Same gap as Assessments above -- no MaxRows meant this was exposed
+        // to the identical silent-truncation risk. Measured live 2026-09-11
+        // at RESULT_CAP=5000: max ~4,584 rows across years (well under the
+        // old 10000 -- most parcels don't yet have Tax History Report data
+        // for every year), but raised alongside Assessments to 20000 anyway
+        // since it scales with the same RESULT_CAP and shouldn't need its
+        // own re-derivation the next time that constant moves.
+        // Expressed as RESULT_CAP * 4 so it scales with the cap (consolidation 2026-09-21).
         MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
@@ -958,13 +1129,20 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         // DESC as the tiebreak reliably picks the transaction that's actually
         // informative, without needing to interpret IsValidSale's own meaning.
         OrderBy: 'SaleDate DESC, SaleAmount DESC',
-        // Flat generous ceiling rather than scaling off carResult.Results.length --
-        // the WHOLE indiana_tax.CountyAssessorSaleHistory table is 7,722 rows
-        // (confirmed 2026-08-25), so this comfortably covers even a full
-        // RESULT_CAP-sized batch without risking the silent-truncation bug
-        // class this project has hit twice before (see loadSubClassOptionsIfNeeded/
-        // loadAssessmentYearsIfNeeded's own MaxRows comments).
-        MaxRows: 10000,
+        // The "whole table is small enough to not need to scale this"
+        // reasoning this comment used to rely on went stale: the table was
+        // 7,722 rows on 2026-08-25 and had grown to 46,873 by 2026-09-11 --
+        // a 6x increase in under a month as more counties'/years' sale
+        // history gets ingested, with no reason to expect it to stop. That
+        // growth had ALREADY made the old 10000 ceiling unsafe: measured live
+        // at RESULT_CAP=5000 (the top 5000 parcels by assessed value, which
+        // skew toward older commercial buildings with deeper sale histories),
+        // this query returns 11,904 rows -- past the old ceiling before this
+        // fix, meaning some parcels' sale history was ALREADY being silently
+        // truncated. Raised to 30000, well past both the measured number and
+        // the whole-table total, and no longer reasoned from "the table is
+        // small" -- reasoned from "it isn't, and keeps growing."
+        MaxRows: 30000,
         ResultType: 'simple',
       },
       {
@@ -981,7 +1159,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${this.filters.assessmentYear}`,
         // Latest hearing wins when a parcel has more than one appeal case for
         // the same year (confirmed real: the same case can appear on two
-        // agendas, e.g. a "scheduled" pass then a "final" pass).
+        // agendas, e.g. a "scheduled" pass then a "final" pass). Measured
+        // live 2026-09-11 at RESULT_CAP=5000: max 283 rows (2024, the busiest
+        // appeal year in the data) -- 10000 remains comfortable headroom,
+        // left unchanged.
         OrderBy: 'HearingDate DESC',
         MaxRows: 10000,
         ResultType: 'simple',
@@ -991,11 +1172,42 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         // parking deck as a Building segment, so CountyAssessorRecord.
         // EstimatedSqFt includes it. Summed per CountyAssessorRecordID below
         // and subtracted to give EstimatedSqFtExGarage (the "(County XG)" SF
-        // the rest of the tool's $/SF math already uses). Only ~838 such
-        // segments across ~546 Marion C&I CARs exist, so this is a small add.
+        // the rest of the tool's $/SF math already uses). Only 838 such
+        // segments exist county-wide (confirmed 2026-09-11) -- measured at
+        // RESULT_CAP=5000: 520 rows, comfortably under 10000, left unchanged.
         EntityName: 'County Assessor Improvement Segments',
         Fields: ['CountyAssessorRecordID', 'TotalSqFt'],
         ExtraFilter: `CountyAssessorRecordID IN (${carIdList}) AND [Use] IN ('Parking', 'Pkg Garage', 'Com Garage')`,
+        MaxRows: 10000,
+        ResultType: 'simple',
+      },
+      {
+        // OwnerEntity (the resolved owner -- see MergedParcelRow's doc comment
+        // for why this differs from OwnerName) + TaxRep (existing-rep flag) +
+        // the engine's own appeal-opportunity signals (Recommendation/
+        // ConfidenceTier/SupportingApproachCount/EstSavingsAtAsk/AVYoYPct),
+        // all sourced from the Owner Prospects pipeline's persisted rollup.
+        // Scoped to the LATEST run only -- see latestOwnerPortfolioRunID's doc
+        // comment -- via a subquery rather than a plain field filter, because
+        // OwnerPortfolioParcel/vwOwnerPortfolioParcels doesn't expose RunID
+        // itself (it's one hop up, on the parent OwnerPortfolio). When the
+        // portfolio pipeline has never run, latestOwnerPortfolioRunID is null
+        // and this filter is deliberately unsatisfiable (`1=0`) rather than
+        // omitted -- an empty, well-formed result the merge below already
+        // treats as "no data for this parcel", not a thrown error or a
+        // silently-unscoped (all-runs) fetch.
+        EntityName: 'Owner Portfolio Parcels',
+        Fields: ['ParcelID', 'OwnerPortfolio', 'ExistingRep', 'Recommendation', 'ConfidenceTier', 'SupportingApproachCount', 'EstSavingsAtAsk', 'AVYoYPct'],
+        ExtraFilter: this.latestOwnerPortfolioRunID
+          ? `ParcelID IN (${parcelIdList}) AND OwnerPortfolioID IN (SELECT ID FROM indiana_tax.OwnerPortfolio WHERE RunID = '${escapeSqlLiteral(this.latestOwnerPortfolioRunID)}')`
+          : '1=0',
+        // One row per parcel per run at most, so this query's true row count
+        // is always exactly the number of parcels fetched above -- it must
+        // stay >= RESULT_CAP (currently 5000; confirmed exactly at cap in
+        // testing) or it will start silently dropping Owner Entity/Rep/
+        // Recommendation data for the overflow. Left at 10000 (2x headroom
+        // over the current RESULT_CAP) -- MUST be revisited again if
+        // RESULT_CAP is ever raised past 10000.
         MaxRows: 10000,
         ResultType: 'simple',
       },
@@ -1085,6 +1297,17 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       }
     }
 
+    // Owner Portfolio Parcels is already scoped to (at most) one row per
+    // parcel via the latest-run subquery above, keyed by ParcelID -- a plain
+    // "first write wins" map is correct here (there's nothing to compare).
+    const ownerPortfolioByParcel = new Map<string, Record<string, unknown>>();
+    if (ownerPortfolioResult.Success) {
+      for (const o of ownerPortfolioResult.Results ?? []) {
+        const pid = o['ParcelID'] as string;
+        if (!ownerPortfolioByParcel.has(pid)) ownerPortfolioByParcel.set(pid, o);
+      }
+    }
+
     const merged: MergedParcelRow[] = [];
     for (const car of carResult.Results) {
       const parcelID = car['ParcelID'] as string;
@@ -1098,6 +1321,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       const taxHistory = taxHistoryByParcel.get(parcelID);
       const lastSale = lastSaleByCar.get(car['ID'] as string);
       const rowAssessmentYear = assessment ? this.filters.assessmentYear : null;
+      const ownerPortfolio = ownerPortfolioByParcel.get(parcelID);
       merged.push({
         ID: p['ID'] as string,
         ParcelID: parcelID,
@@ -1159,6 +1383,16 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         Latitude: (p['Latitude'] as number) ?? null,
         Longitude: (p['Longitude'] as number) ?? null,
         BoundaryGeoJSON: (p['BoundaryGeoJSON'] as string) ?? null,
+        // OwnerEntity/TaxRep/Recommendation/ConfidenceTier/SupportingApproachCount/
+        // EstSavingsAtAsk/AVYoYPct -- see MergedParcelRow's own doc comments for
+        // why these are distinct from OwnerName/PTABOAValue above.
+        OwnerEntity: (ownerPortfolio?.['OwnerPortfolio'] as string) ?? null,
+        TaxRep: (ownerPortfolio?.['ExistingRep'] as string) ?? null,
+        Recommendation: (ownerPortfolio?.['Recommendation'] as string) ?? null,
+        ConfidenceTier: (ownerPortfolio?.['ConfidenceTier'] as string) ?? null,
+        SupportingApproachCount: (ownerPortfolio?.['SupportingApproachCount'] as number) ?? null,
+        EstSavingsAtAsk: (ownerPortfolio?.['EstSavingsAtAsk'] as number) ?? null,
+        AVYoYPct: (ownerPortfolio?.['AVYoYPct'] as number) ?? null,
       });
     }
 

@@ -12,6 +12,20 @@
         "ResourceType": "User Views",
         "RecordID": "DF0F833D-0F8A-4334-BCE4-A5B35DA11B95",
         "isDefault": true
+      },
+      {
+        "Label": "Analysis",
+        "Icon": "fa-solid fa-chart-column",
+        "ResourceType": "User Views",
+        "RecordID": "66127631-8F91-4691-8F8E-C9B54437522E",
+        "isDefault": false
+      },
+      {
+        "Label": "By Year",
+        "Icon": "fa-solid fa-calendar-days",
+        "ResourceType": "User Views",
+        "RecordID": "B46A068B-90D5-4C89-BCE3-E691F28A36E6",
+        "isDefault": false
       }
     ]
   },
@@ -22,7 +36,7 @@
     "ID": "9260B6AA-D342-4CF5-B300-BD8EB1DF6469"
   },
   "sync": {
-    "lastModified": "2026-09-16T15:31:22.894Z",
-    "checksum": "10a1feabbcad56149b6e9a185eeb0cb0249f95e56b5c06116b785d2024d7739f"
+    "lastModified": "2026-09-16T11:15:55.038Z",
+    "checksum": "d47815892722488eec6d103b3fe26380c95e0f111c3f4f06b8030c139829bee0"
   }
 }

@@ -80,54 +80,75 @@
   color: var(--mj-brand-primary);
 }
 
-.analytics-panel-table-wrap {
+/* Ribbon: a horizontally-scrolling row of metric cards -- wide content
+   (Year Built + size + 4 ratio metrics) scrolls in its own container rather
+   than ever widening the page body, per this app's responsive convention. */
+.analytics-ribbon-wrap {
   overflow-x: auto;
 }
 
-.analytics-panel-table {
-  width: 100%;
-  border-collapse: collapse;
-  font-size: 0.8125rem;
+.analytics-ribbon {
+  display: flex;
+  gap: var(--mj-space-3);
   font-variant-numeric: tabular-nums;
 }
 
-.analytics-panel-table th,
-.analytics-panel-table td {
-  padding: var(--mj-space-2) var(--mj-space-2);
-  text-align: right;
+.analytics-metric-card {
+  flex: 0 0 auto;
+  min-width: 9.5rem;
+  padding: var(--mj-space-2) var(--mj-space-3);
+  border: 1px solid var(--mj-border-subtle);
+  border-radius: var(--mj-radius-sm);
+  background: var(--mj-bg-surface-card);
+}
+
+.analytics-metric-card-title {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--mj-text-secondary);
+  white-space: nowrap;
+  margin-bottom: var(--mj-space-2);
+}
+
+.analytics-metric-card-stats {
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: var(--mj-space-1);
+}
+
+.analytics-stat-row {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: var(--mj-space-2);
+}
+
+.analytics-stat-row dt {
+  font-size: 0.75rem;
+  color: var(--mj-text-muted);
+}
+
+.analytics-stat-row dd {
+  margin: 0;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--mj-text-primary);
   white-space: nowrap;
 }
 
-.analytics-panel-table thead th {
-  color: var(--mj-text-secondary);
-  font-weight: 600;
-  border-bottom: 1px solid var(--mj-border-default);
-}
-
-.analytics-panel-table tbody th[scope='row'] {
-  text-align: left;
-  font-weight: 500;
-  color: var(--mj-text-primary);
-  white-space: normal;
-}
-
-.analytics-panel-table thead th:first-child,
-.analytics-panel-table tbody th[scope='row'] {
-  text-align: left;
-}
-
-.analytics-panel-no-data {
-  color: var(--mj-text-muted);
-  text-align: left !important;
+.analytics-metric-card-sample {
+  margin-top: var(--mj-space-2);
+  padding-top: var(--mj-space-1);
+  border-top: 1px solid var(--mj-border-subtle);
+  font-size: 0.6875rem;
   font-style: italic;
+  color: var(--mj-text-muted);
+  white-space: nowrap;
 }
 
-.analytics-panel-sample-row td {
-  padding-top: 0;
-  padding-bottom: var(--mj-space-2);
-  text-align: left;
+.analytics-metric-card-no-data {
   color: var(--mj-text-muted);
-  font-size: 0.75rem;
   font-style: italic;
-  border-bottom: 1px solid var(--mj-border-subtle);
+  font-size: 0.8125rem;
 }

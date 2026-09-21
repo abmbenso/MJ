@@ -22,38 +22,43 @@
         </p>
       }
 
-      <div class="analytics-panel-table-wrap">
-        <table class="analytics-panel-table">
-          <thead>
-            <tr>
-              <th scope="col">Metric</th>
-              <th scope="col">Average</th>
-              <th scope="col">Median</th>
-              <th scope="col">Minimum</th>
-              <th scope="col">Maximum</th>
-            </tr>
-          </thead>
-          <tbody>
-            @for (row of MetricRows; track row.label) {
-              <tr>
-                <th scope="row">{{ row.label }}</th>
-                @if (row.stats) {
-                  <td>{{ formatStat(row.stats.avg, row.isCurrency) }}</td>
-                  <td>{{ formatStat(row.stats.median, row.isCurrency) }}</td>
-                  <td>{{ formatStat(row.stats.min, row.isCurrency) }}</td>
-                  <td>{{ formatStat(row.stats.max, row.isCurrency) }}</td>
-                } @else {
-                  <td colspan="4" class="analytics-panel-no-data">No data for this unit</td>
-                }
-              </tr>
+      <!-- Ribbon: one card per metric (Year Built, size, then the $/unit
+           ratios), each stacking Min/Max/Median/Average vertically -- the
+           transpose of this panel's original metric-per-row table, so a
+           metric lines up with its own column header the way the List
+           view's grid columns do, and Min/Max/Median/Average read as one
+           fixed vertical stack per card rather than one column each. -->
+      <div class="analytics-ribbon-wrap">
+        <div class="analytics-ribbon">
+          @for (row of MetricRows; track row.label) {
+            <div class="analytics-metric-card">
+              <div class="analytics-metric-card-title">{{ row.label }}</div>
               @if (row.stats) {
-                <tr class="analytics-panel-sample-row">
-                  <td colspan="5">based on {{ row.stats.sampleSize }} of {{ Rows.length }} parcels</td>
-                </tr>
+                <dl class="analytics-metric-card-stats">
+                  <div class="analytics-stat-row">
+                    <dt>Min</dt>
+                    <dd>{{ formatStat(row.stats.min, row.formatKind) }}</dd>
+                  </div>
+                  <div class="analytics-stat-row">
+                    <dt>Max</dt>
+                    <dd>{{ formatStat(row.stats.max, row.formatKind) }}</dd>
+                  </div>
+                  <div class="analytics-stat-row">
+                    <dt>Median</dt>
+                    <dd>{{ formatStat(row.stats.median, row.formatKind) }}</dd>
+                  </div>
+                  <div class="analytics-stat-row">
+                    <dt>Average</dt>
+                    <dd>{{ formatStat(row.stats.avg, row.formatKind) }}</dd>
+                  </div>
+                </dl>
+                <div class="analytics-metric-card-sample">{{ row.stats.sampleSize }} of {{ Rows.length }}</div>
+              } @else {
+                <div class="analytics-metric-card-no-data">No data</div>
               }
-            }
-          </tbody>
-        </table>
+            </div>
+          }
+        </div>
       </div>
     </div>
   }

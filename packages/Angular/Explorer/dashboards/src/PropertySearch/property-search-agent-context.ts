@@ -124,6 +124,58 @@ export interface MergedParcelRow {
   Latitude: number | null;
   Longitude: number | null;
   BoundaryGeoJSON: string | null;
+  // The RESOLVED owner entity -- indiana_tax.OwnerPortfolio.Label (CoStar true
+  // owner -> shared mailing address -> cleaned raw name, the same rollup
+  // build-owner-portfolios.js uses for the Owner Prospects artifact), NOT
+  // OwnerName above (CountyAssessorRecord's raw, as-recorded string, which can
+  // vary parcel-to-parcel for one real owner -- "BIRGE & HELD ASSET MGMT LLC
+  // %XYZ" vs "BIRGE & HELD REAL ESTATE INVESTMENT LLC" resolve to one
+  // OwnerEntity, "Birge & Held ..."). Sourced from the LATEST
+  // OwnerPortfolioRun only (indiana_tax.OwnerPortfolioParcel keeps every
+  // historical run's row per parcel, not just the current one) -- null when
+  // this parcel isn't in that run (shouldn't happen for a PRC-fetched Marion
+  // C&I parcel, but the portfolio build is a separate pipeline from this
+  // dashboard's own data, so don't assume 100% coverage).
+  OwnerEntity: string | null;
+  // The tax representative ON RECORD for this SPECIFIC parcel --
+  // indiana_tax.OwnerPortfolioParcel.ExistingRep, inferred from any PTABOA
+  // reduction won on the parcel (see build-owner-portfolios.js). Null means
+  // no rep is on record for this parcel specifically -- a "fresh" prospect
+  // signal -- NOT that the owner's whole portfolio is unrepresented (a
+  // different owned parcel can carry a rep while this one doesn't).
+  TaxRep: string | null;
+  // The valuation engine's own verdict for THIS parcel -- 'Appeal' | 'Monitor'
+  // | 'No Appeal' | null (indiana_tax.OwnerPortfolioParcel.Recommendation, the
+  // same field build-owner-portfolios.js's engine writes; confirmed live
+  // values 2026-09-11). Sourced from the same latest-run query as OwnerEntity/
+  // TaxRep above -- null under the identical two conditions (portfolio
+  // pipeline never run, or this parcel not yet in it).
+  Recommendation: string | null;
+  // How strongly the engine backs that Recommendation -- 'High' | 'Medium' |
+  // 'Low' | null. A 'No Appeal'/High pair is a confident pass, not a gap in
+  // coverage; null means the engine didn't score this parcel at all (distinct
+  // from a real Low tier).
+  ConfidenceTier: string | null;
+  // Count of independent valuation approaches (sales comparison / income /
+  // cost) that corroborate the recommendation -- 0 for a 'No Appeal' row
+  // (nothing to corroborate), 2+ is the strongest signal a real reduction
+  // case exists.
+  SupportingApproachCount: number | null;
+  // Estimated annual tax dollars at stake if appealed to the engine's "ask"
+  // value (indiana_tax.OwnerPortfolioParcel.EstSavingsAtAsk) -- null both when
+  // there's no recommendation to appeal AND when the pipeline/parcel simply
+  // isn't in the latest run; the grid can't distinguish those two nulls from
+  // this field alone (Recommendation being null too indicates the latter).
+  EstSavingsAtAsk: number | null;
+  // Year-over-year change in this parcel's assessed value, as a PERCENTAGE
+  // (e.g. 19.2 means +19.2%), computed by the SAME portfolio-build pipeline
+  // (indiana_tax.OwnerPortfolioParcel.AVYoYPct) -- independent of, and not
+  // guaranteed to match to the decimal, any client-side trend calculation
+  // elsewhere in this dashboard. Past +5% is legally significant in Indiana:
+  // IC 6-1.1-15-17.2 shifts the burden of proof to the assessor that year
+  // (see the project's "5% burden-shifting rule" memo) -- not just "a big
+  // jump," a specific statutory threshold worth flagging visually.
+  AVYoYPct: number | null;
 }
 
 export interface PropertySearchFilters {
@@ -171,14 +223,52 @@ export function resetFiltersForCountyChange(filters: PropertySearchFilters, coun
 }
 
 /**
- * Result cap shared by both map render modes — see
- * property-search-dashboard.component.ts header comment for the reasoning.
- * Raised from 750 to 2000 on 2026-08-24 (untested-but-reasoned increase, not
- * a measured ceiling — `boundary` mode's unclustered-polygon rendering is the
- * real constraint here, not List view or Export, which both scale much
- * higher without issue). Revisit if boundary mode feels sluggish at this size.
+ * Ceiling on how many parcels one search fetches: the CountyAssessorRecord
+ * query itself, every joined RunViews query keyed off that result (Assessment/
+ * Tax History/PTABOA/Sale History/Owner Portfolio), List view, Export, and
+ * Point-mode map rendering (Leaflet's markerClusterGroup scales fine well
+ * past this). Boundary-mode map rendering is a DIFFERENT, tighter constraint
+ * -- see PROPERTY_SEARCH_BOUNDARY_RENDER_CAP below -- because unclustered
+ * polygon drawing doesn't share List/Export/clustered-point rendering's
+ * headroom.
+ *
+ * Raised 2000 -> 5000 on 2026-09-11, this time backed by an actual measured
+ * stress test against the live DB (not a guess): at 5000 rows the full
+ * CAR+Parcel+Assessment+OwnerPortfolio batch completed in ~2.25s with a ~8MB
+ * payload -- 10,000 rows already cost ~7.3s / ~15MB, a clearly worse-than-
+ * linear curve (SQL Server's cost for parsing/matching each query's giant
+ * literal `ID IN (...)` list, not an indexed join, is what degrades). Going
+ * to the full county (20,722 C&I parcels) measured ~20.7s for only 4 of the
+ * 7 queries in the batch -- not attempted here. Getting meaningfully past
+ * 5000 without a real slowdown needs those queries re-architected around an
+ * indexed join scoped by county rather than a literal ID list, not another
+ * constant bump.
+ *
+ * Raising this value ALSO requires checking every hardcoded MaxRows in the
+ * runSearchInternal() RunViews batch (property-search-dashboard.component.ts)
+ * scales to match -- several were sized under the OLD 2000 assumption and one
+ * (County Assessor Sale Histories) was resting on a table-row-count comment
+ * that had already gone stale by 6x. See that method's own MaxRows comments,
+ * each now re-measured against the live DB as of this same date.
  */
-export const PROPERTY_SEARCH_RESULT_CAP = 2000;
+export const PROPERTY_SEARCH_RESULT_CAP = 5000;
+
+/**
+ * A SEPARATE, deliberately unraised cap for boundary/outline map rendering
+ * specifically -- geo-maps' `boundary` mode has no clustering (unlike
+ * `point`, which uses Leaflet's markerClusterGroup and comfortably handles
+ * PROPERTY_SEARCH_RESULT_CAP-sized result sets), so drawing 5000 unclustered
+ * polygons was never measured and isn't assumed safe just because the
+ * backend query cost is. This constant is the PRE-2026-09-11 value of
+ * PROPERTY_SEARCH_RESULT_CAP itself (already in real use, unmeasured but not
+ * newly risky either) -- kept exactly where it was rather than raised
+ * alongside the general cap. The dashboard slices MergedResults (already
+ * sorted by AssessedTotalAV DESC) to this length ONLY when actually rendering
+ * boundary mode; List view, Export, and Point mode all still see the full
+ * up-to-PROPERTY_SEARCH_RESULT_CAP result set. Revisit (raise, or replace
+ * with a real measurement) if boundary mode is ever profiled directly.
+ */
+export const PROPERTY_SEARCH_BOUNDARY_RENDER_CAP = 2000;
 
 export interface PropertySearchAgentContextInput {
   filters: PropertySearchFilters;
@@ -640,6 +730,8 @@ function summarize(values: number[]): MetricStats | null {
 
 export interface ResultSetAnalytics {
   unit: ComparisonUnit;
+  /** Blended YearBuilt ?? CoStarYearBuilt (same provenance-fallback formatYearBuilt uses for display) -- independent of the unit-of-comparison toggle below, since a parcel's construction year has nothing to do with which denominator its $ figures are divided by. A row contributes here even when it has no usable SF/acre/unit denominator for the current toggle. */
+  yearBuilt: MetricStats | null;
   /** The raw denominator's own distribution (e.g. "Building Sq Ft" or "Acres") -- always meaningful physical size/count regardless of what ratios below are being compared per. */
   size: MetricStats | null;
   assessedValuePerUnit: MetricStats | null;
@@ -658,6 +750,7 @@ export interface ResultSetAnalytics {
  * sample sizes would misrepresent confidence.
  */
 export function computeResultSetAnalytics(rows: MergedParcelRow[], unit: ComparisonUnit): ResultSetAnalytics {
+  const years: number[] = [];
   const sizes: number[] = [];
   const avPerUnit: number[] = [];
   const taxPerUnit: number[] = [];
@@ -665,6 +758,12 @@ export function computeResultSetAnalytics(rows: MergedParcelRow[], unit: Compari
   const salePricePerUnit: number[] = [];
 
   for (const row of rows) {
+    // Collected unconditionally -- see yearBuilt's own doc comment on
+    // ResultSetAnalytics for why this must NOT be gated on denominatorFor()
+    // below (a parcel can have a known build year with no verified SF).
+    const yearBuilt = row.YearBuilt ?? row.CoStarYearBuilt;
+    if (yearBuilt != null) years.push(yearBuilt);
+
     const denom = denominatorFor(row, unit);
     if (denom == null) continue;
     sizes.push(denom);
@@ -676,6 +775,7 @@ export function computeResultSetAnalytics(rows: MergedParcelRow[], unit: Compari
 
   return {
     unit,
+    yearBuilt: summarize(years),
     size: summarize(sizes),
     assessedValuePerUnit: summarize(avPerUnit),
     totalTaxPerUnit: summarize(taxPerUnit),

@@ -657,4 +657,69 @@ describe('AnthropicLLM', () => {
             expect(result.statusText).toBe('cancelled');
         });
     });
+
+    describe('max_tokens fallback (regression: createStreamingRequest used to omit it entirely)', () => {
+        // Before resolveMaxTokensAndThinking() existed, createStreamingRequest set
+        // `max_tokens: params.maxOutputTokens` with no fallback — a caller that left
+        // maxOutputTokens unset (undefined) produced `max_tokens: undefined`, which the SDK drops
+        // from the request body, and Anthropic's API rejects with "max_tokens: Field required" on
+        // every single call. nonStreamingChatCompletion already guarded against this with
+        // `params.maxOutputTokens || 32000`; these tests pin both paths to the same guarantee.
+        const paramsWithoutMaxOutputTokens = {
+            messages: [{ role: ChatMessageRole.user, content: 'Hello' }],
+            model: 'claude-sonnet-4-20250514',
+            enableCaching: false
+        };
+
+        it('nonStreamingChatCompletion falls back to 32000 when maxOutputTokens is unset', async () => {
+            const finalMessage = vi.fn().mockResolvedValue({
+                content: [{ type: 'text', text: 'response' }],
+                usage: { input_tokens: 10, output_tokens: 5 },
+                stop_reason: 'end_turn'
+            });
+            mockStream.mockReturnValue({ on: vi.fn().mockReturnValue({ finalMessage }) });
+
+            await (instance as ReturnType<typeof Object.create>)['nonStreamingChatCompletion'](paramsWithoutMaxOutputTokens);
+
+            const createParams = mockStream.mock.calls[0][0];
+            expect(createParams.max_tokens).toBe(32000);
+        });
+
+        it('createStreamingRequest falls back to 32000 when maxOutputTokens is unset', async () => {
+            mockCreate.mockResolvedValue({});
+
+            await (instance as ReturnType<typeof Object.create>)['createStreamingRequest'](paramsWithoutMaxOutputTokens);
+
+            const createParams = mockCreate.mock.calls[0][0];
+            expect(createParams.max_tokens).toBe(32000);
+            expect(createParams.max_tokens).not.toBeUndefined();
+        });
+
+        it('createStreamingRequest still honors an explicit maxOutputTokens', async () => {
+            mockCreate.mockResolvedValue({});
+
+            await (instance as ReturnType<typeof Object.create>)['createStreamingRequest']({
+                ...paramsWithoutMaxOutputTokens,
+                maxOutputTokens: 4096
+            });
+
+            expect(mockCreate.mock.calls[0][0].max_tokens).toBe(4096);
+        });
+
+        it('createStreamingRequest bumps max_tokens above the thinking budget, matching nonStreamingChatCompletion', async () => {
+            mockCreate.mockResolvedValue({});
+
+            await (instance as ReturnType<typeof Object.create>)['createStreamingRequest']({
+                ...paramsWithoutMaxOutputTokens,
+                maxOutputTokens: 1000,
+                effortLevel: 'high',
+                reasoningBudgetTokens: 2000
+            });
+
+            const createParams = mockCreate.mock.calls[0][0];
+            expect(createParams.thinking).toEqual({ type: 'enabled', budget_tokens: 2000 });
+            // max_tokens (1000) was below the thinking budget (2000); must be bumped above it.
+            expect(createParams.max_tokens).toBeGreaterThan(2000);
+        });
+    });
 });

@@ -338,6 +338,12 @@ function checkAvailableDiskSpace(numGB = 2) {
           const output = execSync(command).toString();
           const lines = output.trim().split('\n');
           freeSpace = parseInt(lines[1].trim());
+      } else if (os.platform() === 'darwin') {
+          // BSD df (macOS) doesn't support GNU's --output=avail; parse the
+          // standard "1024-blocks" table instead (4th column = Avail).
+          const command = `df -k / | tail -1`;
+          const cols = execSync(command).toString().trim().split(/\s+/);
+          freeSpace = parseInt(cols[3], 10) * 1024;
       } else {
           // For Unix-like systems, check the root directory
           const command = `df -k --output=avail / | tail -1`;

@@ -1,0 +1,17 @@
+[
+  {
+    "fields": {
+      "ApplicationID": null,
+      "Name": "Conversations.DefaultAgentID",
+      "Value": "@lookup:MJ: AI Agents.Name=Indiana Property Tax Expert",
+      "Comments": "Global default conversation-manager agent. Used by @memberjunction/conversations-runtime's DefaultAgentResolver as step 3 of the resolution chain (explicit widget input → app-scoped Application Setting → THIS global setting → code-const Sage fallback). An app-scoped row with the same Name takes precedence for that application. Rewritten from the stock Sage default to the Indiana Property Tax Expert on 2026-08-22: this MJ instance is a dedicated single-purpose deployment for the Indiana property tax project, not a shared multi-tenant platform, so every new conversation should land on that agent by default. Deployments wanting a different system-wide default agent rewrite the Value to a different @lookup reference (e.g. another agent's Name); deployments wanting a per-app default add a new row with the appropriate ApplicationID."
+    },
+    "primaryKey": {
+      "ID": "CDE69927-4649-46BC-B4BB-8ECF11187FD1"
+    },
+    "sync": {
+      "lastModified": "2026-08-22T13:06:34.406Z",
+      "checksum": "ae3c5ccca4fdcaf94a88a1041a2ab7b83961ddddebd5d080c22b1c8cfa8f1ed9"
+    }
+  }
+]
