@@ -262,7 +262,7 @@
             <div class="appeal-circumstances">
               Tax Court{{ c.isHighConfidence ? '' : ' (candidate — weak name match)' }}:
               @if (c.opinionURL) { <a [href]="c.opinionURL" target="_blank" rel="noopener noreferrer">{{ c.caseName }}</a> } @else { {{ c.caseName }} }
-              — {{ c.docketNumber }}, {{ c.lastDecisionDate ?? 'undated' }}. Name match {{ c.nameScore.toFixed(2) }}; verify before citing.
+              — {{ c.docketNumber }}, {{ c.lastDecisionDate ?? 'undated' }}. Name match {{ c.nameScore.toFixed(3) }}; verify before citing.
             </div>
           }
           @if (AppealLayers.cardNotes.length) {

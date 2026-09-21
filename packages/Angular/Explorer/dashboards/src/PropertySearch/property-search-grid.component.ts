@@ -455,7 +455,7 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
       width: 150,
       type: 'numericColumn',
       valueFormatter: formatCurrency,
-      headerTooltip: 'The value the Board set in that newest decision, where it has been extracted from the written determination. Extracted for only a small share of decisions so far -- blank means "not extracted", not "unchanged".',
+      headerTooltip: 'The value the Board set in that newest decision, where it has been extracted from the written determination AND can be attributed to that decision unambiguously (one determination often prints several petitions\' and several years\' figures). Extracted for only a small share of decisions so far -- blank means "not extracted" or "not unambiguous", never "unchanged".',
     },
   },
   {
@@ -480,7 +480,7 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
       field: 'TaxCourtDecision',
       headerName: 'Tax Court',
       width: 110,
-      headerTooltip: 'Y when an Indiana Tax Court case appears to review one of this parcel\'s Board decisions. The link is a taxpayer-name match (score 0.95 or higher) in the same county within 75 days of the Board decision -- a lead to verify, not a citation. Open the parcel for the case.',
+      headerTooltip: 'Y = an Indiana Tax Court case appears to review one of this parcel\'s Board decisions -- a taxpayer-name match (score 0.95 or higher) in the same county within 75 days of the decision, a lead to verify rather than a citation; open the parcel for the case. N = this parcel has Board decisions and none of them carries a qualifying link. Blank = no Board decision is matched to this parcel at all, or the appeal layers did not load (the banner above says which).',
     },
   },
   {
