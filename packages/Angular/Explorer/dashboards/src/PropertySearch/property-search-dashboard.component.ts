@@ -7,6 +7,7 @@ import { FilterFieldConfig } from '@memberjunction/ng-ui-components';
 import { MapMarkerClickEvent } from '@memberjunction/ng-map-view';
 import { ExportDialogConfig, ExportDialogResult } from '@memberjunction/ng-export-service';
 import { ExportColumn } from '@memberjunction/export-engine';
+import { INDIANA_APP_ID } from '../AppealWorkbench/appeal-workbench.component';
 
 /**
  * This dashboard only ever uses point/boundary rendering (see the class
@@ -576,6 +577,11 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     const id = parcel.CountyAssessorRecordID ?? parcel.ParcelID;
     const compositeKey = new CompositeKey([{ FieldName: 'ID', Value: id }]);
     this.navigationService.OpenEntityRecord(entityName, compositeKey);
+  }
+
+  /** Hand the selected parcel to Analyze a Property (Appeal Workbench Plan 1). SwitchToApp applies the params before a cached component reattaches, so the intent survives. */
+  public async openAnalyze(parcel: MergedParcelRow): Promise<void> {
+    await this.navigationService.SwitchToApp(INDIANA_APP_ID, 'Analyze a Property', { parcel: parcel.ParcelID, analysis: null, section: 'cover' });
   }
 
   // NOTE: a "chat with the agent about this parcel" action was planned but

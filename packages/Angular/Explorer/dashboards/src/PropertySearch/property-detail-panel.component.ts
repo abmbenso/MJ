@@ -56,6 +56,7 @@ export class PropertyDetailPanelComponent {
 
   @Output() Close = new EventEmitter<void>();
   @Output() OpenRecord = new EventEmitter<MergedParcelRow>();
+  @Output() Analyze = new EventEmitter<MergedParcelRow>();
 
   /** Local, ephemeral view preference (not an @Input) -- purely a display slice of the already-fetched TrendRows, no re-fetch involved, so it doesn't need to round-trip through the host. Persists across parcel selections within the session, matching the ActiveViewMode/ActiveRenderMode precedent elsewhere in this dashboard. */
   public TrendYearsOption: TrendYearsOption = DEFAULT_TREND_YEARS;
@@ -121,6 +122,10 @@ export class PropertyDetailPanelComponent {
 
   public onOpenRecord(): void {
     if (this.Parcel) this.OpenRecord.emit(this.Parcel);
+  }
+
+  public onAnalyze(): void {
+    if (this.Parcel) this.Analyze.emit(this.Parcel);
   }
 
   // ───── Appeal History ─────

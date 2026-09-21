@@ -183,7 +183,8 @@
           [IsAppealsLoading]="IsAppealsLoading"
           [CoStarMatches]="SelectedParcelCoStarMatches"
           (Close)="closeDetailPanel()"
-          (OpenRecord)="openParcelRecord($event)">
+          (OpenRecord)="openParcelRecord($event)"
+          (Analyze)="openAnalyze($event)">
         </mj-property-detail-panel>
       </div>
     }
