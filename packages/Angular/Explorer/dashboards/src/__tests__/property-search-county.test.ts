@@ -31,7 +31,7 @@ import {
  */
 
 describe('county identity + source tier', () => {
-  it('knows the card source for the sixteen onboarded counties, null otherwise', () => {
+  it('knows the card source for the seventeen onboarded counties, null otherwise', () => {
     expect(countyCardSource(2)).toBe('AllenPRC');
     expect(countyCardSource(45)).toBe('LakePRC');
     expect(countyCardSource(49)).toBe('MarionPRC');
@@ -49,6 +49,7 @@ describe('county identity + source tier', () => {
     expect(countyCardSource(65)).toBe('PoseyPRC');
     expect(countyCardSource(23)).toBe('FountainPRC');
     expect(countyCardSource(20)).toBe('ElkhartPRC');
+    expect(countyCardSource(88)).toBe('WashingtonPRC');
     expect(countyCardSource(1)).toBeNull();
   });
 
@@ -68,7 +69,7 @@ describe('county identity + source tier', () => {
       2: 'AllenPRC', 45: 'LakePRC', 49: 'MarionPRC', 71: 'StJosephPRC',
       82: 'VanderburghPRC', 10: 'ClarkPRC', 64: 'PorterPRC', 32: 'HendricksPRC', 17: 'DeKalbPRC',
       87: 'WarrickPRC', 42: 'KnoxPRC', 73: 'ShelbyPRC', 14: 'DaviessPRC', 68: 'RandolphPRC',
-      65: 'PoseyPRC', 23: 'FountainPRC', 20: 'ElkhartPRC',
+      65: 'PoseyPRC', 23: 'FountainPRC', 20: 'ElkhartPRC', 88: 'WashingtonPRC',
     });
   });
 });
@@ -240,9 +241,9 @@ describe('CI_ROSTER_PARCEL_FILTER', () => {
 });
 
 describe('XSOFT_ENGAGE_SLUGS', () => {
-  it('carries all fourteen S0-confirmed slugs', () => {
+  it('carries all fifteen S0-confirmed slugs', () => {
     for (const slug of ['lake', 'stjoseph', 'vanderburgh', 'clark', 'porter', 'hendricks', 'dekalb',
-                         'warrick', 'knox', 'shelby', 'daviess', 'randolph', 'posey', 'fountain']) {
+                         'warrick', 'knox', 'shelby', 'daviess', 'randolph', 'posey', 'fountain', 'washington']) {
       expect(XSOFT_ENGAGE_SLUGS.has(slug)).toBe(true);
     }
     expect(XSOFT_ENGAGE_SLUGS.has('hamilton')).toBe(false);
@@ -346,6 +347,19 @@ describe('buildVerifyLink', () => {
     });
     expect(link.url).toBeNull();
     expect(link.note).toBe('not on file — verify at the county');
+  });
+
+  it('Washington (xSoft, card year ahead of the DLGF roster) with an 18-digit parcel -> the xSoft Engage blob URL for the requested year', () => {
+    const link = buildVerifyLink({
+      countyNumber: 88,
+      slug: 'washington',
+      parcelNumber: '882418224004000022',
+      gisParcelNumber: null,
+      assessmentYear: 2026,
+    });
+    expect(link.url).toBe('https://engageblob.blob.core.windows.net/washington/pdf/2026/88-24-18-224-004.000-022.pdf');
+    expect(link.label).toBe('Record Card (AY2026)');
+    expect(link.note).toBe('xSoft Engage');
   });
 
   it('an xSoft county with an unparsable parcel number -> null url, not a broken link', () => {

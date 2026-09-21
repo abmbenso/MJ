@@ -42,6 +42,11 @@ export const COUNTY_CARD_SOURCE: Readonly<Record<number, string>> = Object.freez
   // year behind the DLGF roster -- no per-year conflict (Assessment is keyed per parcel-year;
   // AY2025 still reads DLGF because Elkhart's card has no row for that year).
   20: 'ElkhartPRC',
+  // Washington, found by the 2026-09-21 S0 sweep -- xSoft Engage, same vendor/runbook as Lake
+  // and St. Joseph (XSOFT_ENGAGE_SLUGS below). Card runs AY2024-2026, one year AHEAD of the
+  // DLGF AY2025 roster -- like St. Joseph, not a conflict: the xSoft branch is year-addressed,
+  // so it simply serves whichever assessment year the caller asks for.
+  88: 'WashingtonPRC',
 });
 
 export function countyCardSource(countyNumber: number): string | null {
@@ -188,7 +193,7 @@ export interface CountyVerifyLink {
  * A county joins this set when its S0 gate passes -- never on the assumption that a vendor
  * generalises, because a 404 masquerading as a verification route is worse than no link.
  */
-export const XSOFT_ENGAGE_SLUGS: ReadonlySet<string> = new Set(['lake', 'stjoseph', 'vanderburgh', 'clark', 'porter', 'hendricks', 'dekalb', 'warrick', 'knox', 'shelby', 'daviess', 'randolph', 'posey', 'fountain']);
+export const XSOFT_ENGAGE_SLUGS: ReadonlySet<string> = new Set(['lake', 'stjoseph', 'vanderburgh', 'clark', 'porter', 'hendricks', 'dekalb', 'warrick', 'knox', 'shelby', 'daviess', 'randolph', 'posey', 'fountain', 'washington']);
 
 /**
  * Counties on a single-static-URL vendor CONFIRMED at intake stage S0 -- one route per parcel,
