@@ -6,7 +6,7 @@
 
     <div meta>
       @if (MergedResults.length) {
-        <mj-stat-badge [Count]="MergedResults.length" [Label]="IsTruncated ? 'parcels shown (capped)' : 'parcels'"
+        <mj-stat-badge [Count]="ParcelCountBadgeValue" [Label]="IsTruncated ? 'parcels shown (capped)' : 'parcels'"
           Icon="fa-solid fa-circle-info" [Variant]="IsTruncated ? 'warning' : 'default'" />
         <mj-stat-badge [Count]="FormattedTotalAssessedValue" Label="total assessed value" Icon="fa-solid fa-sack-dollar" />
         <mj-stat-badge [Count]="FormattedAvgPricePerSqFt" [Label]="AvgPricePerSqFtSubLabel" Icon="fa-solid fa-ruler-combined" />
@@ -116,9 +116,15 @@
             </mj-alert>
           }
 
+          @if (IsBoundaryRenderTruncated) {
+            <mj-alert Variant="info" Icon="fa-solid fa-draw-polygon"
+              Message="Outline mode draws the top {{ BOUNDARY_RENDER_CAP }} of {{ MergedResults.length }} matching parcels — switch to Pins or List view to see the rest.">
+            </mj-alert>
+          }
+
           @if (ActiveViewMode === 'map' && RowsWithoutGeometryCount > 0) {
             <mj-alert Variant="warning" Icon="fa-solid fa-map-pin"
-              Message="{{ RowsWithoutGeometryCount }} of {{ MergedResults.length }} parcels have no map coordinates and aren't plotted — switch to List view to see all of them.">
+              Message="{{ RowsWithoutGeometryCount }} of {{ MapDisplayRows.length }} parcels have no map coordinates and aren't plotted — switch to List view to see all of them.">
             </mj-alert>
           }
 
@@ -132,12 +138,12 @@
             @if (ParcelsEntity) {
               <mj-map-view
                 [Entity]="ParcelsEntity"
-                [Records]="MergedResults"
+                [Records]="MapDisplayRows"
                 LatitudeField="Latitude"
                 LongitudeField="Longitude"
                 BoundaryField="BoundaryGeoJSON"
                 [RenderMode]="ActiveRenderMode"
-                [TotalRecordCount]="MergedResults.length"
+                [TotalRecordCount]="MapDisplayRows.length"
                 (MarkerClick)="onMarkerClick($event)">
               </mj-map-view>
             }
@@ -145,7 +151,8 @@
             <mj-property-search-grid
               [Rows]="MergedResults"
               [VisibleColumnKeys]="VisibleColumnKeys"
-              (RowClicked)="onGridRowClicked($event)">
+              (RowClicked)="onGridRowClicked($event)"
+              (FilteredRowCountChanged)="onGridFilteredRowCountChanged($event)">
             </mj-property-search-grid>
           }
         }

@@ -1,0 +1,25 @@
+{
+  "description": "Soft PK/FK, virtual entity, and IS-A relationship configuration for CodeGen. Read by CodeGen from the path configured as `additionalSchemaInfo` in mj.config.cjs. See config/database-metadata-config.template.json for the full field reference.",
+  "version": "1.0",
+  "VirtualEntities": [
+    {
+      "ViewName": "vwStoreAnalysis",
+      "SchemaName": "big_box_retail",
+      "EntityName": "Store Analysis",
+      "Description": "Per-store, per-year pivot of StoreAssessment (AV 2021-2026) and StoreTax (Tax 2022-2026) for the Big Box Retail analysis dashboard. Read-only; filtered to primary (de-duplicated) Store rows.",
+      "PrimaryKey": [
+        "ID"
+      ]
+    },
+    {
+      "ViewName": "vwStoreYear",
+      "SchemaName": "big_box_retail",
+      "EntityName": "Store Year",
+      "Description": "One row per store per assessment year \u2014 the long counterpart to Store Analysis, which spells the same measures into 44 year-suffixed columns. Year is an ordinary filterable column here, a new assessment year needs no schema change, and event-shaped evidence (sales, burden shifts) fits naturally where a wide layout would leave it ~95% NULL. Read-only; primary Store rows only.",
+      "PrimaryKey": [
+        "StoreID",
+        "AssessmentYear"
+      ]
+    }
+  ]
+}

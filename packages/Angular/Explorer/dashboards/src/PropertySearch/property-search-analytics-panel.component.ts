@@ -11,11 +11,14 @@ import {
   formatCurrency,
 } from './property-search-agent-context';
 
-/** One row of the metric table: a label, its MetricStats (or null if nothing qualified), and whether its values are dollar amounts (currency-formatted) or a plain count (the raw size/count row). */
+/** How a MetricRow's numbers should be formatted -- 'currency' for $ ratios, 'year' for the Year Built card (rounded whole year, no thousands separator -- "1987", never "1,987" or "1987.3"), 'plain' for a raw size/count (Building Sq Ft, Acres, ...). */
+type MetricFormatKind = 'currency' | 'year' | 'plain';
+
+/** One card in the analytics ribbon: a label, its MetricStats (or null if nothing qualified), and how to format its numbers. */
 interface MetricRow {
   label: string;
   stats: MetricStats | null;
-  isCurrency: boolean;
+  formatKind: MetricFormatKind;
 }
 
 /**
@@ -96,20 +99,36 @@ export class PropertySearchAnalyticsPanelComponent {
     door: 'Self-Storage Doors',
   };
 
-  /** The five metric rows for the current unit, in display order. The raw size/count row first (always a meaningful physical size regardless of what's being compared per), then the four $-per-unit ratios. */
+  /**
+   * The ribbon's cards, in display order: Year Built first (unit-independent
+   * -- see ResultSetAnalytics.yearBuilt's doc comment), then the raw size/
+   * count for the current unit (always a meaningful physical size regardless
+   * of what's being compared per), then the four $-per-unit ratios.
+   */
   public get MetricRows(): MetricRow[] {
     const a = this.Analytics;
     const unitLabel = COMPARISON_UNIT_LABELS[this.SelectedUnit];
     return [
-      { label: PropertySearchAnalyticsPanelComponent.SIZE_ROW_LABELS[this.SelectedUnit], stats: a.size, isCurrency: false },
-      { label: `Assessed Value / ${unitLabel}`, stats: a.assessedValuePerUnit, isCurrency: true },
-      { label: `Total Tax / ${unitLabel}`, stats: a.totalTaxPerUnit, isCurrency: true },
-      { label: `PTABOA Value / ${unitLabel}`, stats: a.ptaboaValuePerUnit, isCurrency: true },
-      { label: `Sale Price / ${unitLabel}`, stats: a.salePricePerUnit, isCurrency: true },
+      { label: 'Year Built', stats: a.yearBuilt, formatKind: 'year' },
+      { label: PropertySearchAnalyticsPanelComponent.SIZE_ROW_LABELS[this.SelectedUnit], stats: a.size, formatKind: 'plain' },
+      { label: `Assessed Value / ${unitLabel}`, stats: a.assessedValuePerUnit, formatKind: 'currency' },
+      { label: `Total Tax / ${unitLabel}`, stats: a.totalTaxPerUnit, formatKind: 'currency' },
+      { label: `PTABOA Value / ${unitLabel}`, stats: a.ptaboaValuePerUnit, formatKind: 'currency' },
+      { label: `Sale Price / ${unitLabel}`, stats: a.salePricePerUnit, formatKind: 'currency' },
     ];
   }
 
-  public formatStat(value: number, isCurrency: boolean): string {
-    return isCurrency ? formatCurrency(Math.round(value)) : value.toLocaleString('en-US', { maximumFractionDigits: 1 });
+  public formatStat(value: number, formatKind: MetricFormatKind): string {
+    switch (formatKind) {
+      case 'currency':
+        return formatCurrency(Math.round(value));
+      case 'year':
+        // A fractional average/median year (e.g. 1987.3) is real information
+        // about the fleet's vintage, but reads oddly with a decimal or a
+        // thousands separator -- rounded to a whole year, no grouping.
+        return String(Math.round(value));
+      case 'plain':
+        return value.toLocaleString('en-US', { maximumFractionDigits: 1 });
+    }
   }
 }

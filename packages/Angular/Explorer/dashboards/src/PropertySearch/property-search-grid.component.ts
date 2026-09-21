@@ -66,6 +66,25 @@ function formatYearBuiltCell(params: { data?: MergedParcelRow }): string {
   return v ?? '—';
 }
 
+/** Signed percentage for AVYoYPct -- the sign itself is the signal (a drop is not a flag-on-sight case), so it's always shown explicitly rather than relying on a bare "-" prefix reading. */
+function formatAVYoYPct(params: { value: number | null }): string {
+  if (params.value == null) return '—';
+  const sign = params.value > 0 ? '+' : '';
+  return `${sign}${params.value.toFixed(1)}%`;
+}
+
+/** Row-level cellClassRules for the Recommendation column -- semantic color (good/warning/neutral) so a scan of the list surfaces "Appeal" rows without reading every cell, per this codebase's dashboard UI convention of encoding state in form as well as text. Kept separate from the accent hue used elsewhere in the app. */
+const RECOMMENDATION_CELL_CLASS_RULES: NonNullable<ColDef<MergedParcelRow>['cellClassRules']> = {
+  'psg-rec-appeal': (p) => p.value === 'Appeal',
+  'psg-rec-monitor': (p) => p.value === 'Monitor',
+  'psg-rec-no': (p) => p.value === 'No Appeal',
+};
+
+/** Flags AVYoYPct past the 5% threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor -- a specific statutory line, not just "a big jump" (see this project's "5% burden-shifting rule" memo). */
+const AV_YOY_CELL_CLASS_RULES: NonNullable<ColDef<MergedParcelRow>['cellClassRules']> = {
+  'psg-yoy-flag': (p) => typeof p.value === 'number' && p.value > 5,
+};
+
 /** One entry in the column registry -- the single source of truth for both AG Grid's ColumnDefs and the host dashboard's "Columns" visibility popover, so the two never drift out of sync. */
 export interface PropertySearchColumnConfig {
   /** Matches ColDef.colId (or field name, when colId isn't set explicitly). */
@@ -82,11 +101,52 @@ export interface PropertySearchColumnConfig {
 }
 
 /** Fixed display order for the Columns popover's category subheadings -- see PropertySearchColumnConfig.category. */
-export const PROPERTY_SEARCH_COLUMN_CATEGORIES = ['Property', 'Size & Units', 'Value per Unit', 'Assessment & Taxation', 'Appeals (PTABOA)', 'Sales'] as const;
+export const PROPERTY_SEARCH_COLUMN_CATEGORIES = ['Property', 'Size & Units', 'Value per Unit', 'Assessment & Taxation', 'Appeals (PTABOA)', 'Appeal Opportunity', 'Sales'] as const;
 export type PropertySearchColumnCategory = (typeof PROPERTY_SEARCH_COLUMN_CATEGORIES)[number];
 
-/** Single source of truth for every column this grid can show. Exported so the host dashboard can build its Columns popover from the same list. */
-export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
+/**
+ * Applies this grid's default per-column filter + the shared floating-filter
+ * UX to a column config, unless its colDef already opts in/out explicitly
+ * (`filter: 'someOtherFilter'` or `filter: false`). Centralized here rather
+ * than repeated on every column entry below (~40, including the
+ * buildRatioColumns()-generated ones) so every column gets a consistent
+ * AG Grid Community filter for free -- a numeric column (`type:
+ * 'numericColumn'`) gets agNumberColumnFilter (equals/greater than/less
+ * than/in range/blank), everything else gets agTextColumnFilter (contains/
+ * equals/starts with/ends with/blank). Both are the built-in filter menu a
+ * column's header filter icon already opens in AG Grid Community -- no extra
+ * wiring needed for the "choose an operator" dropdown itself. floatingFilter
+ * adds the always-visible quick-filter input row under the header (the same
+ * UX as the reference Marion Residential Roll artifact); maxNumConditions: 1
+ * keeps the popup to a single condition (no AND/OR builder), matching that
+ * same reference and this grid's otherwise-simple filtering model.
+ */
+function withDefaultFilter(config: PropertySearchColumnConfig): PropertySearchColumnConfig {
+  const { colDef } = config;
+  if (colDef.filter !== undefined) return config;
+  const filter = colDef.type === 'numericColumn' ? 'agNumberColumnFilter' : 'agTextColumnFilter';
+  return {
+    ...config,
+    colDef: {
+      ...colDef,
+      filter,
+      floatingFilter: true,
+      filterParams: { buttons: ['reset'], maxNumConditions: 1 },
+    },
+  };
+}
+
+/**
+ * The raw column list, explicitly typed so every entry below is checked
+ * against PropertySearchColumnConfig (category values, ColDef<MergedParcelRow>
+ * generics on valueGetter's `p`, etc.) -- kept as its own const rather than
+ * inlining the array literal into the exported `.map(withDefaultFilter)` call
+ * below, because TypeScript only applies that contextual typing to an array
+ * literal assigned directly to a typed variable, not to one passed through
+ * `.map()` first (which infers each element's type from itself and widens
+ * `category` to `string`, `p` to `any`, etc.).
+ */
+const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
   {
     key: 'Address',
     label: 'Address',
@@ -114,6 +174,20 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
     defaultVisible: true,
     category: 'Property',
     colDef: { field: 'OwnerName', headerName: 'Owner', flex: 1, minWidth: 180, tooltipField: 'OwnerName' },
+  },
+  {
+    key: 'OwnerEntity',
+    label: 'Owner Entity',
+    defaultVisible: false,
+    category: 'Property',
+    colDef: {
+      field: 'OwnerEntity',
+      headerName: 'Owner Entity',
+      flex: 1,
+      minWidth: 180,
+      tooltipField: 'OwnerEntity',
+      headerTooltip: 'The RESOLVED owner (CoStar true owner -> shared mailing address -> cleaned name, from the Owner Prospects rollup) -- e.g. "Eli Lilly & Co." / "Birge & Held ...". Different from the plain "Owner" column, which is the county\'s raw as-recorded string and can vary parcel-to-parcel for one real owner. Blank means this parcel isn\'t in the current Owner Prospects run yet.',
+    },
   },
   {
     key: 'PropertySubClassDescription',
@@ -316,6 +390,96 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
     },
   },
   {
+    key: 'TaxRep',
+    label: 'Rep',
+    defaultVisible: false,
+    category: 'Appeals (PTABOA)',
+    colDef: {
+      field: 'TaxRep',
+      headerName: 'Rep',
+      width: 160,
+      tooltipField: 'TaxRep',
+      // No cell renderer/badge here deliberately -- "empty" itself IS the
+      // signal (a fresh, unrepresented prospect), so a blank cell needs no
+      // decoration; adding one would visually compete with the "flag good
+      // opportunities" columns below rather than support them.
+      headerTooltip: 'The tax representative on record for THIS parcel specifically (inferred from a past PTABOA reduction, indiana_tax.OwnerPortfolioParcel.ExistingRep). Blank = no rep on record for this parcel -- a fresh-prospect signal. NOT the same as the owner’s portfolio-wide rep status -- a different parcel the same owner holds can carry a rep while this one doesn’t.',
+    },
+  },
+  // ── Appeal Opportunity: the valuation engine's own triage signals for THIS
+  // parcel, from the same Owner Prospects rollup as Owner Entity/Rep above.
+  // Grouped as their own category (not folded into Appeals (PTABOA), which is
+  // historical appeal record, not a forward-looking recommendation) so a user
+  // can turn on just the opportunity-scoring columns without wading through
+  // PTABOA history fields they don't need for triage.
+  {
+    key: 'Recommendation',
+    label: 'Recommendation',
+    defaultVisible: false,
+    category: 'Appeal Opportunity',
+    colDef: {
+      field: 'Recommendation',
+      headerName: 'Recommendation',
+      width: 130,
+      cellClassRules: RECOMMENDATION_CELL_CLASS_RULES,
+      headerTooltip: "The valuation engine's own verdict for this parcel -- Appeal / Monitor / No Appeal (indiana_tax.OwnerPortfolioParcel.Recommendation). Blank means this parcel isn't in the current Owner Prospects run yet, not that the engine looked and found nothing.",
+    },
+  },
+  {
+    key: 'ConfidenceTier',
+    label: 'Confidence',
+    defaultVisible: false,
+    category: 'Appeal Opportunity',
+    colDef: {
+      field: 'ConfidenceTier',
+      headerName: 'Confidence',
+      width: 110,
+      headerTooltip: 'How strongly the engine backs Recommendation -- High / Medium / Low. Pair with Recommendation = Appeal to find the strongest cases first.',
+    },
+  },
+  {
+    key: 'SupportingApproachCount',
+    label: 'Supporting Approaches',
+    defaultVisible: false,
+    category: 'Appeal Opportunity',
+    colDef: {
+      field: 'SupportingApproachCount',
+      headerName: 'Approaches',
+      width: 110,
+      type: 'numericColumn',
+      headerTooltip: 'Count of independent valuation approaches (sales comparison / income / cost) corroborating the recommendation. 2+ is a strong, multi-method case; 0 is typical for a "No Appeal" row, not a data gap.',
+    },
+  },
+  {
+    key: 'EstSavingsAtAsk',
+    label: 'Est. Savings (Ask)',
+    defaultVisible: false,
+    category: 'Appeal Opportunity',
+    colDef: {
+      field: 'EstSavingsAtAsk',
+      headerName: 'Est. Savings',
+      width: 130,
+      type: 'numericColumn',
+      valueFormatter: formatCurrency,
+      headerTooltip: "Estimated annual tax dollars at stake if appealed to the engine's \"ask\" value (indiana_tax.OwnerPortfolioParcel.EstSavingsAtAsk). Sort descending to find the biggest-dollar opportunities first.",
+    },
+  },
+  {
+    key: 'AVYoYPct',
+    label: 'AV YoY %',
+    defaultVisible: false,
+    category: 'Appeal Opportunity',
+    colDef: {
+      field: 'AVYoYPct',
+      headerName: 'AV YoY %',
+      width: 110,
+      type: 'numericColumn',
+      valueFormatter: formatAVYoYPct,
+      cellClassRules: AV_YOY_CELL_CLASS_RULES,
+      headerTooltip: "Year-over-year change in this parcel's assessed value. Highlighted past +5% -- the threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor, not just an arbitrary \"big jump.\"",
+    },
+  },
+  {
     key: 'LastSaleDate',
     label: 'Last Sale Date',
     defaultVisible: false,
@@ -344,6 +508,9 @@ export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = [
   },
   ...buildRatioColumns(),
 ];
+
+/** Single source of truth for every column this grid can show. Exported so the host dashboard can build its Columns popover from the same list. */
+export const PROPERTY_SEARCH_GRID_COLUMNS: PropertySearchColumnConfig[] = PROPERTY_SEARCH_GRID_COLUMNS_BASE.map(withDefaultFilter);
 
 /**
  * Generates every {RATIO_METRIC_DEFS} / {UNIT_OF_COMPARISON_DEFS} combination
@@ -401,7 +568,12 @@ export const PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS: string[] = PROPERTY_SEARCH
  *
  * Column visibility is host-driven (VisibleColumnKeys) rather than AG Grid's
  * own Columns tool panel, which is an Enterprise-only feature -- this repo
- * only has ag-grid-community.
+ * only has ag-grid-community. Per-column filtering (the header filter icon's
+ * operator menu -- contains/equals/starts with for text, equals/greater
+ * than/less than/in range for numbers -- plus an always-visible
+ * floating-filter input row) IS a Community feature and is on for every
+ * column via withDefaultFilter() above, sourced automatically from
+ * PROPERTY_SEARCH_GRID_COLUMNS' colDef.type -- no per-column opt-in needed.
  */
 @Component({
   standalone: false,
@@ -437,6 +609,16 @@ export class PropertySearchGridComponent {
   private gridApi: GridApi<MergedParcelRow> | null = null;
 
   @Output() RowClicked = new EventEmitter<MergedParcelRow>();
+  /**
+   * The grid's own row count AFTER its column filters (and sort/rowData
+   * changes) are applied -- fired from GridOptions.onModelUpdated below,
+   * which AG Grid calls after filtering, sorting, or a rowData swap. The host
+   * dashboard uses this to keep its header parcel-count badge honest once a
+   * user narrows the List view with a column filter -- without it, that badge
+   * would keep showing the full (pre-filter) search result count, silently
+   * out of sync with what's actually on screen.
+   */
+  @Output() FilteredRowCountChanged = new EventEmitter<number>();
 
   public Theme: Theme = themeAlpine.withParams({
     backgroundColor: 'var(--mj-bg-surface)',
@@ -464,6 +646,12 @@ export class PropertySearchGridComponent {
     suppressCellFocus: true,
     enableCellTextSelection: true,
     suppressNoRowsOverlay: true,
+    // Covers filter, sort, AND rowData changes in one callback -- a plain
+    // onFilterChanged would miss the case where a NEW search result set
+    // arrives while an existing column filter is still active (AG Grid
+    // re-applies the retained filter model to the new rowData and this still
+    // fires with the correct re-filtered count).
+    onModelUpdated: () => this.emitFilteredRowCount(),
   };
 
   public DefaultColDef: ColDef = {
@@ -482,10 +670,18 @@ export class PropertySearchGridComponent {
     this.gridApi = event.api;
     this.gridApi.setGridOption('rowData', this._rows);
     this.applyColumnVisibility();
+    // Belt-and-suspenders alongside onModelUpdated -- reports the correct
+    // count immediately on first render rather than waiting on that event to
+    // fire for this initial rowData set.
+    this.emitFilteredRowCount();
   }
 
   public OnRowClicked(event: RowClickedEvent<MergedParcelRow>): void {
     if (event.data) this.RowClicked.emit(event.data);
+  }
+
+  private emitFilteredRowCount(): void {
+    if (this.gridApi) this.FilteredRowCountChanged.emit(this.gridApi.getDisplayedRowCount());
   }
 
   private applyColumnVisibility(): void {

@@ -7,3 +7,28 @@
   width: 100%;
   height: 100%;
 }
+
+/* Recommendation column -- semantic color per PROPERTY_SEARCH_GRID_COLUMNS'
+   RECOMMENDATION_CELL_CLASS_RULES, separate from the app's accent hue.
+   ::ng-deep is required here (not just scoped CSS) because AG Grid renders
+   cells via its own imperative DOM, outside Angular's template compiler --
+   those elements never receive the emulated-encapsulation host attribute a
+   plain scoped selector relies on. */
+.psg-grid ::ng-deep .psg-rec-appeal {
+  color: var(--mj-status-success-text);
+  font-weight: 600;
+}
+.psg-grid ::ng-deep .psg-rec-monitor {
+  color: var(--mj-status-warning-text);
+  font-weight: 600;
+}
+.psg-grid ::ng-deep .psg-rec-no {
+  color: var(--mj-text-muted);
+}
+
+/* AV YoY % past the 5% burden-shift threshold (see AV_YOY_CELL_CLASS_RULES). */
+.psg-grid ::ng-deep .psg-yoy-flag {
+  color: var(--mj-status-warning-text);
+  font-weight: 600;
+  background: color-mix(in srgb, var(--mj-status-warning) 10%, transparent);
+}
