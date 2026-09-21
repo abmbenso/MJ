@@ -58,6 +58,7 @@ import {
 } from './property-search-county';
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
+import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers, fetchParcelAppealLayerDetail, ParcelAppealLayerDetail } from './property-search-appeal-layers';
 
 /** Parses CountyAssessorRecord.Acreage (NVARCHAR(10), legacy ArcGIS-sourced text) into a number, or null for blank/non-numeric/non-positive values -- the analytics panel's per-acre calculations need a real number, not the raw string RunView('simple') returns. */
 function parseAcreage(raw: string | null): number | null {
@@ -102,6 +103,18 @@ interface AgentClientTool {
   Description: string;
   ParameterSchema: Record<string, unknown>;
   Handler: (params: Record<string, unknown>) => Promise<AgentToolResult>;
+}
+
+/**
+ * The county/year a single search is FOR, captured synchronously at search start. The filters
+ * can change under a search that is already in flight (the county combobox, the year toggle,
+ * and loadAssessmentYearsIfNeeded itself all rewrite this.filters), so everything downstream of
+ * an await reads this snapshot instead of this.filters.
+ */
+interface SearchScope {
+  countyNumber: number;
+  countySlug: string;
+  assessmentYear: number;
 }
 
 /**
@@ -153,6 +166,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   public IsLoading = false;
   public MergedResults: MergedParcelRow[] = [];
   public IsTruncated = false;
+  /** Set when the card / IBTR / Tax Court layer queries failed -- the layer columns are then blank because the load failed, not because nothing exists, and the banner says so (spec §12). */
+  public AppealLayerError: string | null = null;
+  /** Bumped by whatever STARTS a search (runSearch, loadData, reloadForCounty) before its own first await, and passed down into runSearchInternal -- lets a search tell, after any await, whether it is still the newest one in flight. Guards against a slower earlier search's results landing after a faster later search's and overwriting them (mj-page-search fires per keystroke, unthrottled, and runSearch() is never awaited by its callers). reloadForCounty claims it BEFORE its metadata loads specifically so that changing the county invalidates an in-flight search immediately (I-4), not two awaits later. Mirrors loadParcelDetail's own `SelectedParcel?.ParcelID !== parcelID` staleness guard. */
+  private searchGeneration = 0;
   public ActiveRenderMode: PropertySearchRenderMode = 'point';
   public SelectedParcel: MergedParcelRow | null = null;
   public DetailPanelVisible = false;
@@ -162,6 +179,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   /** SelectedParcel's PTABOA appeal history, newest first -- fetched alongside the trend rows on selection (same RunViews batch). */
   public SelectedParcelAppeals: AppealHistoryRow[] = [];
   public IsAppealsLoading = false;
+  /** SelectedParcel's card revisions, card notes, IBTR decisions and Tax Court candidates (spec §12). Null until loaded or when the load failed (see AppealLayersDetailError). */
+  public SelectedParcelAppealLayers: ParcelAppealLayerDetail | null = null;
+  public IsAppealLayersLoading = false;
+  public AppealLayersDetailError: string | null = null;
   /** SelectedParcel's CoStar matches (usually 0 or 1, occasionally more -- see CoStarPropertyRow's doc comment) -- fetched alongside the trend/appeal rows on selection (same RunViews batch). */
   public SelectedParcelCoStarMatches: CoStarPropertyRow[] = [];
 
@@ -209,15 +230,27 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   private async reloadForCounty(): Promise<void> {
+    // Claimed HERE, before the two metadata loads below are awaited -- a search already in flight
+    // for the OLD county must be invalidated the moment the county changes, not only once this
+    // method reaches runSearchInternal. Otherwise that older search resolves inside the metadata
+    // window, still holds the newest generation, and lands its rows (and its own assessment year)
+    // under the new county's selector.
+    const generation = ++this.searchGeneration;
     this.IsLoading = true;
+    // The previous county's banner does not describe this result set (I-4).
+    this.AppealLayerError = null;
     this.cdr.markForCheck();
     try {
       await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded()]);
-      await this.runSearchInternal();
+      await this.runSearchInternal(generation);
     } finally {
-      this.IsLoading = false;
-      this.publishAgentContext();
-      this.cdr.markForCheck();
+      // Only the generation THIS call claimed -- still the newest -- may clear the spinner: a
+      // newer county change or search now owns the screen and its own finally will do it.
+      if (generation === this.searchGeneration) {
+        this.IsLoading = false;
+        this.publishAgentContext();
+        this.cdr.markForCheck();
+      }
     }
   }
 
@@ -489,6 +522,9 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.SelectedParcelCoStarMatches = [];
     this.IsTrendLoading = true;
     this.IsAppealsLoading = true;
+    this.IsAppealLayersLoading = true;
+    this.SelectedParcelAppealLayers = null;
+    this.AppealLayersDetailError = null;
     void this.loadParcelDetail(parcel.ParcelID);
     this.publishAgentContext();
     this.cdr.markForCheck();
@@ -499,9 +535,35 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.SelectedParcel = null;
     this.SelectedParcelTrend = [];
     this.SelectedParcelAppeals = [];
+    this.SelectedParcelAppealLayers = null;
+    this.IsAppealLayersLoading = false;
+    this.AppealLayersDetailError = null;
     this.SelectedParcelCoStarMatches = [];
     this.publishAgentContext();
     this.cdr.markForCheck();
+  }
+
+  /**
+   * Card / IBTR / Tax Court layers for whichever path built the rows (spec §12). A failure
+   * never blocks the search: the rows come back with empty layers and an error message for
+   * the caller to assign. Returns rather than writes AppealLayerError itself -- the caller
+   * (runSearchInternal / runDlgfSearchInternal) is the one that knows whether its own search
+   * generation is still current, so it alone decides whether this result is still worth
+   * showing (spec §12 fix: a stale call here must not overwrite a newer search's banner).
+   * @param assessmentYear the year THIS search is for -- never re-read from this.filters here,
+   * which may already belong to a newer county by the time this runs (I-4).
+   */
+  private async withAppealLayers(rows: MergedParcelRow[], includeCard: boolean, assessmentYear: number): Promise<{ rows: MergedParcelRow[]; error: string | null }> {
+    try {
+      const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+      const layers = await fetchAppealLayers(rv, rows.map((r) => r.ParcelID), assessmentYear, includeCard);
+      return { rows: applyAppealLayers(rows, layers), error: null };
+    } catch (e) {
+      return {
+        rows,
+        error: `Card, IBTR and Tax Court columns could not be loaded (${e instanceof Error ? e.message : 'unknown error'}). Blank here means "not loaded", not "none".`,
+      };
+    }
   }
 
   /**
@@ -585,6 +647,17 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.IsAppealsLoading = false;
     this.SelectedParcelCoStarMatches = coStarResult.Success ? buildCoStarPropertyRows(coStarResult.Results ?? []) : [];
     this.cdr.markForCheck();
+
+    try {
+      const detail = await fetchParcelAppealLayerDetail(rv, parcelID);
+      if (this.SelectedParcel?.ParcelID !== parcelID) return; // stale selection -- the newer selection's own load owns IsAppealLayersLoading, so it's intentionally left as-is here.
+      this.SelectedParcelAppealLayers = detail;
+    } catch (e) {
+      if (this.SelectedParcel?.ParcelID !== parcelID) return;
+      this.AppealLayersDetailError = e instanceof Error ? e.message : 'Appeal layers failed to load';
+    }
+    this.IsAppealLayersLoading = false;
+    this.cdr.markForCheck();
   }
 
   // ───── Export ─────
@@ -625,6 +698,16 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'SupportingApproachCount', displayName: 'Supporting Approaches', dataType: 'number' },
       { name: 'EstSavingsAtAsk', displayName: 'Est. Savings (Ask)', dataType: 'currency' },
       { name: 'AVYoYPct', displayName: 'AV YoY %', dataType: 'number' },
+      { name: 'CardAppealForm', displayName: 'Card Appeal Form', dataType: 'number' },
+      { name: 'CardOriginalAV', displayName: 'Card Original AV', dataType: 'currency' },
+      { name: 'CardRevisedAV', displayName: 'Card Revised AV', dataType: 'currency' },
+      { name: 'CardAppealDate', displayName: 'Card Appeal Date', dataType: 'date' },
+      { name: 'IBTRDecisionDate', displayName: 'IBTR Decision Date', dataType: 'date' },
+      { name: 'IBTRAssessmentYear', displayName: 'IBTR Year', dataType: 'number' },
+      { name: 'IBTRDisposition', displayName: 'IBTR Disposition' },
+      { name: 'IBTRValue', displayName: 'IBTR Value', dataType: 'currency' },
+      { name: 'IBTRDecisionCount', displayName: 'IBTR Decisions', dataType: 'number' },
+      { name: 'TaxCourtDecision', displayName: 'Tax Court' },
       { name: 'LastSaleDate', displayName: 'Last Sale Date', dataType: 'date' },
       { name: 'LastSalePrice', displayName: 'Last Sale Price', dataType: 'currency' },
       { name: 'LastSaleIsValid', displayName: 'Last Sale Valid?', dataType: 'boolean' },
@@ -644,9 +727,17 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     // Spec §6 asks for the notation as a header LINE as well as a column. The shared export
     // dialog exports a row array with no banner concept, so the line is a leading row whose
     // first column carries the text -- visible as line 1 in CSV/Excel and as element 0 in JSON.
-    const rowsToExport = this.HasDlgfRows
-      ? [{ Address: `SOURCE NOTE: ${DLGF_NOTATION}` } as Record<string, unknown>, ...exportRows]
-      : exportRows;
+    const sourceNotes: Record<string, unknown>[] = [];
+    if (this.HasDlgfRows) sourceNotes.push({ Address: `SOURCE NOTE: ${DLGF_NOTATION}` });
+    // The banner the screen shows travels with the file: a spreadsheet read away from this
+    // dashboard must not read ten blank appeal columns as "no appeals" (I-2).
+    if (this.AppealLayerError) {
+      sourceNotes.push({
+        Address: 'SOURCE NOTE: the Card Appeal, IBTR and Tax Court columns were NOT LOADED for this export '
+          + '(the layer queries failed). Blank in those ten columns means "not loaded", not "none".',
+      });
+    }
+    const rowsToExport = sourceNotes.length ? [...sourceNotes, ...exportRows] : exportRows;
     this.ExportDialogConfig = {
       data: rowsToExport,
       columns,
@@ -738,15 +829,21 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   async loadData(): Promise<void> {
+    // Claimed before the metadata loads, exactly as reloadForCounty does -- a county change
+    // during the first load must win over this initial search, not the other way round.
+    const generation = ++this.searchGeneration;
     this.IsLoading = true;
+    this.AppealLayerError = null;
     this.cdr.markForCheck();
     try {
       await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded(), this.loadLatestOwnerPortfolioRunIfNeeded()]);
-      await this.runSearchInternal();
+      await this.runSearchInternal(generation);
     } finally {
-      this.IsLoading = false;
-      this.publishAgentContext();
-      this.cdr.markForCheck();
+      if (generation === this.searchGeneration) {
+        this.IsLoading = false;
+        this.publishAgentContext();
+        this.cdr.markForCheck();
+      }
     }
     // The county dropdown's full option list carries a live ~203k-row C&I tally
     // (loadCountyOptionsIfNeeded) -- fire-and-forget AFTER the first search has already resolved
@@ -758,14 +855,21 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   public runSearch(): void {
+    const generation = ++this.searchGeneration;
     this.IsLoading = true;
     this.cdr.markForCheck();
-    this.runSearchInternal()
-      .catch(() => undefined)
+    this.runSearchInternal(generation)
+      .catch(() => {
+        // A search that threw has no result set of its own, and the PREVIOUS search's layer
+        // banner does not describe this attempt either -- clearing it is the honest state (I-4).
+        if (generation === this.searchGeneration) this.AppealLayerError = null;
+      })
       .finally(() => {
-        this.IsLoading = false;
-        this.publishAgentContext();
-        this.cdr.markForCheck();
+        if (generation === this.searchGeneration) {
+          this.IsLoading = false;
+          this.publishAgentContext();
+          this.cdr.markForCheck();
+        }
       });
   }
 
@@ -944,10 +1048,23 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     return partial ? partial.value : null;
   }
 
-  private async runSearchInternal(): Promise<void> {
+  /**
+   * @param generation The token the CALLER claimed (`++this.searchGeneration`) before its own
+   * first await. Every read of `this.searchGeneration` below asks "is that claim still the
+   * newest?"; anything else on screen belongs to a newer search or a newer county.
+   */
+  private async runSearchInternal(generation: number): Promise<void> {
+    // The filter values this search is FOR, read synchronously before its first await. Re-reading
+    // this.filters after an await would mix a newer county's selections into an older search's
+    // rows -- most visibly in withAppealLayers, which is the last thing a search does (I-4).
+    const scope: SearchScope = {
+      countyNumber: this.filters.countyNumber,
+      countySlug: this.SelectedCounty?.Slug ?? '',
+      assessmentYear: this.filters.assessmentYear,
+    };
     // A county with no loaded record cards reads Parcel + Assessment instead (spec §6).
     if (!this.CountyHasCardData) {
-      await this.runDlgfSearchInternal();
+      await this.runDlgfSearchInternal(generation, scope);
       return;
     }
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
@@ -995,7 +1112,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         'Neighborhood',
         'TaxDistrictID',
       ],
-      ExtraFilter: this.buildCarExtraFilter(term, kind, parcelIdConstraint),
+      ExtraFilter: this.buildCarExtraFilter(term, kind, parcelIdConstraint, scope.countyNumber),
       // GrossAssessment (the Tax History billed figure) leads: it reconciles to
       // the noticed value and is year-consistent. AssessedTotalAV is a stale
       // ArcGIS assessor-layer snapshot -- not year-aligned to TaxYear and wrong
@@ -1023,8 +1140,15 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     });
 
     if (!carResult.Success || !carResult.Results?.length) {
-      this.MergedResults = [];
-      this.IsTruncated = false;
+      // A newer search may have already landed and be showing its own (correct) results --
+      // this stale search must not stomp them with an empty set (spec §12 fix).
+      if (generation === this.searchGeneration) {
+        this.MergedResults = [];
+        this.IsTruncated = false;
+        // This result set has no unloaded layer columns to warn about; an earlier search's
+        // banner would otherwise sit above "No matching parcels" describing nothing (I-4).
+        this.AppealLayerError = null;
+      }
       return;
     }
 
@@ -1075,44 +1199,23 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       {
         EntityName: 'Assessments',
         Fields: ['ParcelID', 'Source', 'OriginalLandAV', 'OriginalImprovementAV', 'OriginalTotalAV'],
-        ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${this.filters.assessmentYear}`,
-        // No MaxRows here was the same silent-truncation bug class this batch's
-        // other queries already guard against (see County Assessor Sale
-        // Histories / PTABOA Appeals / County Assessor Improvement Segments
-        // below) -- an unset MaxRows falls back to the entity's
-        // UserViewMaxRows (or the provider's own default) which silently
-        // truncated this query, leaving most parcels with no matching row in
-        // assessmentByParcel below -- the real cause of the List View's
-        // "No data" bug reported 2026-09-03 (confirmed live: parcel 1055259
-        // has correct 2026 Assessment data in the DB but showed "No data" in
-        // the grid).
-        //
-        // Consolidation 2026-09-21: expressed as RESULT_CAP * 4 (= 20000 at 5000) so it scales;
-        // the multi-county branch found up to 2 sources per parcel-year (county card + statewide)
-        // and this cap must hold for any county.
-        // RESULT_CAP parcels x up to 2 sources (MarionPRC + a statewide
-        // fallback) for the selected year is the theoretical max -- measured
-        // live 2026-09-11 at RESULT_CAP=5000: 9,794-9,961 rows depending on
-        // year (2025/2026 run closest to the old 10000 ceiling with
-        // essentially zero headroom). Raised to 20000 -- 2x the theoretical
-        // max, not just past the last observed number -- since this scales
-        // directly with RESULT_CAP and needs real margin if RESULT_CAP is
-        // ever nudged again without someone re-deriving this from scratch.
+        ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${scope.assessmentYear}`,
+        // SEVERAL rows per parcel-year: the county-card row (LakePRC / MarionPRC /
+        // StJosephPRC) AND the statewide row (dlgf_gdb_2025 / marion_foia_2026) both
+        // exist for the same parcel and year. Without an explicit cap this inherited
+        // the entity's 1,000-row default and silently truncated at RESULT_CAP parcels
+        // x 2 sources -- on Lake AY2025 that left 550 of 1,000 parcels reading "No
+        // assessment on file" and 181 falling back to the DLGF row although every one
+        // of them has a card (caught in the Plan B click-through, 2026-09-13). The
+        // same MaxRows bug class this component has hit three times before.
         MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
       {
         EntityName: 'Tax History Years',
         Fields: ['ParcelID', 'ColumnOrdinal', 'NetAnnualTax', 'TaxRate'],
-        ExtraFilter: `ParcelID IN (${parcelIdList}) AND TaxYear = ${this.filters.assessmentYear}`,
-        // Same gap as Assessments above -- no MaxRows meant this was exposed
-        // to the identical silent-truncation risk. Measured live 2026-09-11
-        // at RESULT_CAP=5000: max ~4,584 rows across years (well under the
-        // old 10000 -- most parcels don't yet have Tax History Report data
-        // for every year), but raised alongside Assessments to 20000 anyway
-        // since it scales with the same RESULT_CAP and shouldn't need its
-        // own re-derivation the next time that constant moves.
-        // Expressed as RESULT_CAP * 4 so it scales with the cap (consolidation 2026-09-21).
+        ExtraFilter: `ParcelID IN (${parcelIdList}) AND TaxYear = ${scope.assessmentYear}`,
+        // Several ColumnOrdinal rows can exist per parcel-year; same reason as above.
         MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
@@ -1156,7 +1259,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         // real AfterTotalAV existing right here. Reading it straight from
         // the appeal itself has no such gap.
         Fields: ['ParcelID', 'HearingDate', 'AfterTotalAV', 'AppealType'],
-        ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${this.filters.assessmentYear}`,
+        ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${scope.assessmentYear}`,
         // Latest hearing wins when a parcel has more than one appeal case for
         // the same year (confirmed real: the same case can appear on two
         // agendas, e.g. a "scheduled" pass then a "final" pass). Measured
@@ -1230,7 +1333,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     if (assessmentResult.Success) {
       for (const a of assessmentResult.Results ?? []) {
         const pid = a['ParcelID'] as string;
-        assessmentByParcel.set(pid, pickAssessmentRow(assessmentByParcel.get(pid), a, this.filters.countyNumber));
+        assessmentByParcel.set(pid, pickAssessmentRow(assessmentByParcel.get(pid), a, scope.countyNumber));
       }
     }
 
@@ -1320,7 +1423,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       const assessment = assessmentByParcel.get(parcelID);
       const taxHistory = taxHistoryByParcel.get(parcelID);
       const lastSale = lastSaleByCar.get(car['ID'] as string);
-      const rowAssessmentYear = assessment ? this.filters.assessmentYear : null;
+      const rowAssessmentYear = assessment ? scope.assessmentYear : null;
       const ownerPortfolio = ownerPortfolioByParcel.get(parcelID);
       merged.push({
         ID: p['ID'] as string,
@@ -1356,16 +1459,16 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         AssessedLandAV: (assessment?.['OriginalLandAV'] as number) ?? null,
         AssessedImprovementAV: (assessment?.['OriginalImprovementAV'] as number) ?? null,
         AssessedTotalAV: (assessment?.['OriginalTotalAV'] as number) ?? null,
-        // null (not this.filters.assessmentYear) when this row has no Assessment for the
+        // null (not the searched year) when this row has no Assessment for the
         // selected year -- also feeds VerifyURL below, so a row with no data for this year
         // never claims a card link for a year it doesn't actually have (buildVerifyLink's
         // xSoft Engage branch requires a non-null assessmentYear; "not on file" otherwise).
         AssessmentYear: rowAssessmentYear,
         AssessmentSource: (assessment?.['Source'] as string) ?? null,
-        DataSource: dataSourceLabel((assessment?.['Source'] as string) ?? null, this.filters.countyNumber),
+        DataSource: dataSourceLabel((assessment?.['Source'] as string) ?? null, scope.countyNumber),
         VerifyURL: buildVerifyLink({
-          countyNumber: this.filters.countyNumber,
-          slug: this.SelectedCounty?.Slug ?? '',
+          countyNumber: scope.countyNumber,
+          slug: scope.countySlug,
           parcelNumber: (p['ParcelNumber'] as string) ?? null,
           gisParcelNumber: (p['GISParcelNumber'] as string) ?? null,
           assessmentYear: rowAssessmentYear,
@@ -1375,6 +1478,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         PTABOAValue: ptaboaValueByParcel.get(parcelID) ?? null,
         PTABOADate: ptaboaDateByParcel.get(parcelID) ?? null,
         PTABOAAppealType: ptaboaAppealTypeByParcel.get(parcelID) ?? null,
+        ...EMPTY_APPEAL_LAYERS,
         LastSaleDate: (lastSale?.['SaleDate'] as string) ?? null,
         LastSalePrice: (lastSale?.['SaleAmount'] as number) ?? null,
         LastSaleIsValid: lastSale ? ((lastSale['IsValidSale'] as boolean) ?? null) : null,
@@ -1396,29 +1500,43 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       });
     }
 
-    this.MergedResults = merged;
+    const { rows: layeredRows, error: appealLayerError } = await this.withAppealLayers(merged, true, scope.assessmentYear);
+    // A newer search may have already claimed the current generation while the above awaited
+    // -- this stale search's results must not overwrite it (spec §12 fix).
+    if (generation !== this.searchGeneration) return;
+    this.MergedResults = layeredRows;
     this.IsTruncated = carResult.Results.length >= this.RESULT_CAP;
+    this.AppealLayerError = appealLayerError;
   }
 
-  /** The DLGF-only path. All of its logic lives in property-search-dlgf.ts; this only wires it. */
-  private async runDlgfSearchInternal(): Promise<void> {
+  /**
+   * The DLGF-only path. All of its logic lives in property-search-dlgf.ts; this only wires it.
+   * @param generation The token the search claimed -- see runSearchInternal's doc comment.
+   * @param scope The county/year this search is for, captured before its first await.
+   */
+  private async runDlgfSearchInternal(generation: number, scope: SearchScope): Promise<void> {
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const { rows, isTruncated } = await fetchDlgfParcelRows(rv, {
-      countyNumber: this.filters.countyNumber,
-      slug: this.SelectedCounty?.Slug ?? '',
-      assessmentYear: this.filters.assessmentYear,
+      countyNumber: scope.countyNumber,
+      slug: scope.countySlug,
+      assessmentYear: scope.assessmentYear,
       searchTerm: this.filters.searchTerm,
       propertyClassCode: this.filters.propertySubClass,
       resultCap: this.RESULT_CAP,
     });
-    this.MergedResults = rows;
+    const { rows: layeredRows, error: appealLayerError } = await this.withAppealLayers(rows, false, scope.assessmentYear);
+    // Same stale-search guard as the card path above (spec §12 fix).
+    if (generation !== this.searchGeneration) return;
+    this.MergedResults = layeredRows;
     this.IsTruncated = isTruncated;
+    this.AppealLayerError = appealLayerError;
   }
 
-  private buildCarExtraFilter(term: string, kind: ReturnType<typeof classifySearchTerm> | null, parcelIdConstraint: string[] | null): string {
+  /** @param countyNumber the county THIS search is for (runSearchInternal's scope), not whatever is selected now. */
+  private buildCarExtraFilter(term: string, kind: ReturnType<typeof classifySearchTerm> | null, parcelIdConstraint: string[] | null, countyNumber: number): string {
     const clauses: string[] = [];
 
-    clauses.push(`CountyNumber = ${this.filters.countyNumber}`);
+    clauses.push(`CountyNumber = ${countyNumber}`);
     if (this.filters.propertySubClass) {
       clauses.push(`PropertySubClassDescription = '${escapeSqlLiteral(this.filters.propertySubClass)}'`);
     }

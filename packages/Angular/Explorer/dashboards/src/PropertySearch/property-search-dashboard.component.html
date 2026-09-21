@@ -146,6 +146,11 @@
             </mj-alert>
           }
 
+          @if (AppealLayerError) {
+            <mj-alert Variant="error" Icon="fa-solid fa-circle-exclamation" [Message]="AppealLayerError">
+            </mj-alert>
+          }
+
           @if (ActiveViewMode === 'map' && RowsWithoutGeometryCount > 0) {
             <mj-alert Variant="warning" Icon="fa-solid fa-map-pin"
               Message="{{ RowsWithoutGeometryCount }} of {{ MapDisplayRows.length }} parcels have no map coordinates and aren't plotted — switch to List view to see all of them.">
@@ -188,6 +193,9 @@
           [IsTrendLoading]="IsTrendLoading"
           [Appeals]="SelectedParcelAppeals"
           [IsAppealsLoading]="IsAppealsLoading"
+          [AppealLayers]="SelectedParcelAppealLayers"
+          [IsAppealLayersLoading]="IsAppealLayersLoading"
+          [AppealLayersError]="AppealLayersDetailError"
           [CoStarMatches]="SelectedParcelCoStarMatches"
           (Close)="closeDetailPanel()"
           (OpenRecord)="openParcelRecord($event)"

@@ -11,6 +11,7 @@
 import { RunView } from '@memberjunction/core';
 import { MergedParcelRow, classifySearchTerm, escapeSqlLiteral, SearchTermKind } from './property-search-agent-context';
 import { pickAssessmentRow, dataSourceLabel, buildVerifyLink, CI_CLASS_CODE_FILTER } from './property-search-county';
+import { EMPTY_APPEAL_LAYERS } from './property-search-appeal-layers';
 
 export interface DlgfSearchParams {
   countyNumber: number;
@@ -127,6 +128,7 @@ export function buildDlgfMergedRows(
       PTABOAValue: null,
       PTABOADate: null,
       PTABOAAppealType: null,
+      ...EMPTY_APPEAL_LAYERS,
       LastSaleDate: null,
       LastSalePrice: null,
       LastSaleIsValid: null,

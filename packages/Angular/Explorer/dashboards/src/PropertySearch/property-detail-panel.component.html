@@ -220,6 +220,63 @@
         }
       </div>
 
+      <div class="detail-section">
+        <div class="detail-label">Record-Card Revisions, IBTR &amp; Tax Court</div>
+        @if (IsAppealLayersLoading) {
+          <mj-loading text="Loading appeal layers..." size="small"></mj-loading>
+        } @else if (AppealLayersError) {
+          <p class="trend-empty">Could not load: {{ AppealLayersError }}</p>
+        } @else if (AppealLayers) {
+          @if (AppealLayers.cardRevisions.length) {
+            <div class="appeal-av-table-wrap">
+              <table class="appeal-av-table">
+                <thead><tr><th>Year</th><th>Form</th><th>Original</th><th>Revised</th><th>As of</th><th>Card reason</th></tr></thead>
+                <tbody>
+                  @for (r of AppealLayers.cardRevisions; track $index) {
+                    <tr><td>{{ r.assessmentYear }}</td><td>{{ r.form ?? '—' }}</td><td>{{ formatCurrency(r.originalTotalAV) }}</td><td>{{ formatCurrency(r.revisedTotalAV) }}</td><td>{{ r.asOfDate ?? '—' }}</td><td>{{ r.reason ?? '—' }}</td></tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="trend-empty">No revision printed on this parcel's record cards (or no card on file).</p>
+          }
+          @if (AppealLayers.ibtrDecisions.length) {
+            <div class="appeal-av-table-wrap">
+              <table class="appeal-av-table">
+                <thead><tr><th>IBTR petition</th><th>Decided</th><th>Year</th><th>Disposition</th><th>Value</th></tr></thead>
+                <tbody>
+                  @for (d of AppealLayers.ibtrDecisions; track d.petitionNumber) {
+                    <tr>
+                      <td>@if (d.documentURL) { <a [href]="d.documentURL" target="_blank" rel="noopener noreferrer">{{ d.petitionNumber }}</a> } @else { {{ d.petitionNumber }} }</td>
+                      <td>{{ d.decisionDate ?? '—' }}</td><td>{{ d.assessmentYear ?? '—' }}</td><td>{{ d.disposition ?? '—' }}</td><td>{{ formatCurrency(d.valueAfter) }}</td>
+                    </tr>
+                  }
+                </tbody>
+              </table>
+            </div>
+          } @else {
+            <p class="trend-empty">No Indiana Board of Tax Review disposition matched to this parcel.</p>
+          }
+          @for (c of AppealLayers.taxCourtCases; track c.docketNumber) {
+            <div class="appeal-circumstances">
+              Tax Court{{ c.isHighConfidence ? '' : ' (candidate — weak name match)' }}:
+              @if (c.opinionURL) { <a [href]="c.opinionURL" target="_blank" rel="noopener noreferrer">{{ c.caseName }}</a> } @else { {{ c.caseName }} }
+              — {{ c.docketNumber }}, {{ c.lastDecisionDate ?? 'undated' }}. Name match {{ c.nameScore.toFixed(3) }}; verify before citing.
+            </div>
+          }
+          @if (AppealLayers.cardNotes.length) {
+            <div class="detail-label">Card notes ({{ AppealLayers.cardNotes.length }})</div>
+            @for (n of VisibleNotes; track $index) {
+              <div class="appeal-circumstances">[{{ n.kind }}{{ n.form ? ' · Form ' + n.form : '' }}] {{ n.date ?? '' }} {{ n.code ?? '' }} — {{ n.text }}</div>
+            }
+            @if (AppealLayers.cardNotes.length > 25) {
+              <button type="button" class="appeal-summary-row" (click)="ShowAllNotes = !ShowAllNotes">{{ ShowAllNotes ? 'Show fewer notes' : 'Show all ' + AppealLayers.cardNotes.length + ' notes' }}</button>
+            }
+          }
+        }
+      </div>
+
       @if (CoStarMatches.length) {
         <div class="detail-section">
           <div class="detail-label">
