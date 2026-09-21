@@ -149,6 +149,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   public IsTruncated = false;
   /** Set when the card / IBTR / Tax Court layer queries failed -- the layer columns are then blank because the load failed, not because nothing exists, and the banner says so (spec §12). */
   public AppealLayerError: string | null = null;
+  /** Bumped by runSearchInternal at the top of every search, before its first await -- lets a search tell, after any await, whether it is still the newest one in flight. Guards against a slower earlier search's results landing after a faster later search's and overwriting them (mj-page-search fires per keystroke, unthrottled, and runSearch() is never awaited by its callers). Mirrors loadParcelDetail's own `SelectedParcel?.ParcelID !== parcelID` staleness guard. */
+  private searchGeneration = 0;
   public ActiveRenderMode: PropertySearchRenderMode = 'point';
   public SelectedParcel: MergedParcelRow | null = null;
   public DetailPanelVisible = false;
@@ -207,13 +209,25 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   private async reloadForCounty(): Promise<void> {
     this.IsLoading = true;
     this.cdr.markForCheck();
+    // null until runSearchInternal is actually reached below -- a failure in the metadata
+    // loads before it never claimed a generation, so it always clears IsLoading unconditionally
+    // (matches pre-existing behavior for that case); once a generation IS claimed, only that
+    // exact generation (still the newest) may clear it (spec §12 fix, stale-search guard).
+    let generation: number | null = null;
     try {
       await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded()]);
-      await this.runSearchInternal();
+      const searchPromise = this.runSearchInternal();
+      // runSearchInternal claims its generation token synchronously, before its own first
+      // await -- an async function body runs synchronously up to its first await before the
+      // call below returns, so this.searchGeneration already reflects that claim here.
+      generation = this.searchGeneration;
+      await searchPromise;
     } finally {
-      this.IsLoading = false;
-      this.publishAgentContext();
-      this.cdr.markForCheck();
+      if (generation === null || generation === this.searchGeneration) {
+        this.IsLoading = false;
+        this.publishAgentContext();
+        this.cdr.markForCheck();
+      }
     }
   }
 
@@ -418,16 +432,24 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.cdr.markForCheck();
   }
 
-  /** Card / IBTR / Tax Court layers for whichever path built the rows (spec §12). A failure never blocks the search: the rows come back with empty layers and AppealLayerError set. */
-  private async withAppealLayers(rows: MergedParcelRow[], includeCard: boolean): Promise<MergedParcelRow[]> {
-    this.AppealLayerError = null;
+  /**
+   * Card / IBTR / Tax Court layers for whichever path built the rows (spec §12). A failure
+   * never blocks the search: the rows come back with empty layers and an error message for
+   * the caller to assign. Returns rather than writes AppealLayerError itself -- the caller
+   * (runSearchInternal / runDlgfSearchInternal) is the one that knows whether its own search
+   * generation is still current, so it alone decides whether this result is still worth
+   * showing (spec §12 fix: a stale call here must not overwrite a newer search's banner).
+   */
+  private async withAppealLayers(rows: MergedParcelRow[], includeCard: boolean): Promise<{ rows: MergedParcelRow[]; error: string | null }> {
     try {
       const rv = RunView.FromMetadataProvider(this.ProviderToUse);
       const layers = await fetchAppealLayers(rv, rows.map((r) => r.ParcelID), this.filters.assessmentYear, includeCard);
-      return applyAppealLayers(rows, layers);
+      return { rows: applyAppealLayers(rows, layers), error: null };
     } catch (e) {
-      this.AppealLayerError = `Card, IBTR and Tax Court columns could not be loaded (${e instanceof Error ? e.message : 'unknown error'}). Blank here means "not loaded", not "none".`;
-      return rows;
+      return {
+        rows,
+        error: `Card, IBTR and Tax Court columns could not be loaded (${e instanceof Error ? e.message : 'unknown error'}). Blank here means "not loaded", not "none".`,
+      };
     }
   }
 
@@ -665,13 +687,19 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   async loadData(): Promise<void> {
     this.IsLoading = true;
     this.cdr.markForCheck();
+    // See reloadForCounty's identical guard for why this starts null and what it means below.
+    let generation: number | null = null;
     try {
       await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded()]);
-      await this.runSearchInternal();
+      const searchPromise = this.runSearchInternal();
+      generation = this.searchGeneration;
+      await searchPromise;
     } finally {
-      this.IsLoading = false;
-      this.publishAgentContext();
-      this.cdr.markForCheck();
+      if (generation === null || generation === this.searchGeneration) {
+        this.IsLoading = false;
+        this.publishAgentContext();
+        this.cdr.markForCheck();
+      }
     }
     // The county dropdown's full option list carries a live ~203k-row C&I tally
     // (loadCountyOptionsIfNeeded) -- fire-and-forget AFTER the first search has already resolved
@@ -685,12 +713,18 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   public runSearch(): void {
     this.IsLoading = true;
     this.cdr.markForCheck();
-    this.runSearchInternal()
+    const searchPromise = this.runSearchInternal();
+    // See reloadForCounty's identical comment: this already reflects the generation
+    // runSearchInternal just claimed, read synchronously before awaiting its result.
+    const generation = this.searchGeneration;
+    searchPromise
       .catch(() => undefined)
       .finally(() => {
-        this.IsLoading = false;
-        this.publishAgentContext();
-        this.cdr.markForCheck();
+        if (generation === this.searchGeneration) {
+          this.IsLoading = false;
+          this.publishAgentContext();
+          this.cdr.markForCheck();
+        }
       });
   }
 
@@ -845,9 +879,13 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   private async runSearchInternal(): Promise<void> {
+    // Claimed synchronously, before this function's first await, so callers that invoke this
+    // (without awaiting it yet) can read this.searchGeneration right afterward and already see
+    // the claim (spec §12 fix: stale-search guard -- see the field's own doc comment).
+    const generation = ++this.searchGeneration;
     // A county with no loaded record cards reads Parcel + Assessment instead (spec §6).
     if (!this.CountyHasCardData) {
-      await this.runDlgfSearchInternal();
+      await this.runDlgfSearchInternal(generation);
       return;
     }
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
@@ -909,8 +947,12 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     });
 
     if (!carResult.Success || !carResult.Results?.length) {
-      this.MergedResults = [];
-      this.IsTruncated = false;
+      // A newer search may have already landed and be showing its own (correct) results --
+      // this stale search must not stomp them with an empty set (spec §12 fix).
+      if (generation === this.searchGeneration) {
+        this.MergedResults = [];
+        this.IsTruncated = false;
+      }
       return;
     }
 
@@ -1183,12 +1225,17 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       });
     }
 
-    this.MergedResults = await this.withAppealLayers(merged, true);
+    const { rows: layeredRows, error: appealLayerError } = await this.withAppealLayers(merged, true);
+    // A newer search may have already claimed the current generation while the above awaited
+    // -- this stale search's results must not overwrite it (spec §12 fix).
+    if (generation !== this.searchGeneration) return;
+    this.MergedResults = layeredRows;
     this.IsTruncated = carResult.Results.length >= this.RESULT_CAP;
+    this.AppealLayerError = appealLayerError;
   }
 
-  /** The DLGF-only path. All of its logic lives in property-search-dlgf.ts; this only wires it. */
-  private async runDlgfSearchInternal(): Promise<void> {
+  /** The DLGF-only path. All of its logic lives in property-search-dlgf.ts; this only wires it. @param generation The token runSearchInternal claimed for this search -- see its own doc comment. */
+  private async runDlgfSearchInternal(generation: number): Promise<void> {
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const { rows, isTruncated } = await fetchDlgfParcelRows(rv, {
       countyNumber: this.filters.countyNumber,
@@ -1198,8 +1245,12 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       propertyClassCode: this.filters.propertySubClass,
       resultCap: this.RESULT_CAP,
     });
-    this.MergedResults = await this.withAppealLayers(rows, false);
+    const { rows: layeredRows, error: appealLayerError } = await this.withAppealLayers(rows, false);
+    // Same stale-search guard as the card path above (spec §12 fix).
+    if (generation !== this.searchGeneration) return;
+    this.MergedResults = layeredRows;
     this.IsTruncated = isTruncated;
+    this.AppealLayerError = appealLayerError;
   }
 
   private buildCarExtraFilter(term: string, kind: ReturnType<typeof classifySearchTerm> | null, parcelIdConstraint: string[] | null): string {
