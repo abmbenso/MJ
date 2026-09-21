@@ -51,6 +51,7 @@ import { indianataxDLGFImprovementFormComponent } from "./Entities/indianataxDLG
 import { indianataxDLGFLandFormComponent } from "./Entities/indianataxDLGFLand/indianataxdlgfland.form.component";
 import { indianataxDocumentAcquisitionFormComponent } from "./Entities/indianataxDocumentAcquisition/indianataxdocumentacquisition.form.component";
 import { indianataxDocumentCatalogFormComponent } from "./Entities/indianataxDocumentCatalog/indianataxdocumentcatalog.form.component";
+import { indianataxFairAndAccurateLeadFormComponent } from "./Entities/indianataxFairAndAccurateLead/indianataxfairandaccuratelead.form.component";
 import { indianataxFormCatalogFormComponent } from "./Entities/indianataxFormCatalog/indianataxformcatalog.form.component";
 import { indianataxIBTRAppealFormComponent } from "./Entities/indianataxIBTRAppeal/indianataxibtrappeal.form.component";
 import { indianataxIBTRDecisionChunkFormComponent } from "./Entities/indianataxIBTRDecisionChunk/indianataxibtrdecisionchunk.form.component";
@@ -150,10 +151,10 @@ declarations: [
     indianataxDLGFLandFormComponent,
     indianataxDocumentAcquisitionFormComponent,
     indianataxDocumentCatalogFormComponent,
+    indianataxFairAndAccurateLeadFormComponent,
     indianataxFormCatalogFormComponent,
     indianataxIBTRAppealFormComponent,
-    indianataxIBTRDecisionChunkFormComponent,
-    indianataxIBTRDecisionCitationFormComponent],
+    indianataxIBTRDecisionChunkFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -170,6 +171,7 @@ export class GeneratedForms_SubModule_1 { }
 
 @NgModule({
 declarations: [
+    indianataxIBTRDecisionCitationFormComponent,
     indianataxIBTRDecisionHoldingFormComponent,
     indianataxIBTRDecisionIssueFormComponent,
     indianataxIBTRDecisionPartyFormComponent,
@@ -188,8 +190,7 @@ declarations: [
     indianataxPropertyClassMapFormComponent,
     indianataxProspectActivityFormComponent,
     indianataxProspectContactFormComponent,
-    indianataxProspectParcelFormComponent,
-    indianataxProspectSnapshotFormComponent],
+    indianataxProspectParcelFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -206,6 +207,7 @@ export class GeneratedForms_SubModule_2 { }
 
 @NgModule({
 declarations: [
+    indianataxProspectSnapshotFormComponent,
     indianataxProspectTaskFormComponent,
     indianataxProspectFormComponent,
     indianataxPTABOAAppealFormComponent,

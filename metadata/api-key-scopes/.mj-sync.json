@@ -1,0 +1,30 @@
+{
+  "entity": "MJ: API Key Scopes",
+  "filePattern": "**/.*.json",
+  "defaults": {},
+  "pull": {
+    "createNewFileIfNotFound": true,
+    "newFileName": ".records.json",
+    "appendRecordsToExistingFile": true,
+    "updateExistingRecords": true,
+    "preserveFields": [],
+    "excludeFields": [],
+    "mergeStrategy": "merge",
+    "backupBeforeUpdate": true,
+    "backupDirectory": ".backups",
+    "filter": "",
+    "externalizeFields": [],
+    "ignoreNullFields": true,
+    "ignoreVirtualFields": true,
+    "lookupFields": {
+      "APIKeyID": {
+        "entity": "MJ: API Keys",
+        "field": "Label"
+      },
+      "ScopeID": {
+        "entity": "MJ: API Scopes",
+        "field": "FullPath"
+      }
+    }
+  }
+}

@@ -1,0 +1,31 @@
+{
+  "entity": "MJ: User Roles",
+  "filePattern": "**/.*.json",
+  "defaults": {},
+  "pull": {
+    "createNewFileIfNotFound": true,
+    "newFileName": ".records.json",
+    "appendRecordsToExistingFile": true,
+    "updateExistingRecords": true,
+    "preserveFields": [],
+    "excludeFields": [],
+    "mergeStrategy": "merge",
+    "backupBeforeUpdate": true,
+    "backupDirectory": ".backups",
+    "filter": "",
+    "externalizeFields": [],
+    "ignoreNullFields": true,
+    "ignoreVirtualFields": true,
+    "lookupFields": {
+      "UserID": {
+        "entity": "MJ: Users",
+        "field": "Email"
+      },
+      "RoleID": {
+        "entity": "MJ: Roles",
+        "field": "Name"
+      }
+    },
+    "relatedEntities": {}
+  }
+}

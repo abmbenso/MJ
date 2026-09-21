@@ -1,0 +1,90 @@
+<!-- legal-research-dashboard.component.html -->
+<mj-page-layout>
+  <mj-page-header
+    Title="Legal Research"
+    Icon="fa-solid fa-gavel"
+    Subtitle="Search Indiana property tax statute, rules, the Manual, Guidelines, and IBTR/Tax Court decisions">
+
+    <div meta>
+      @if (sourceResults.length) {
+        <mj-stat-badge [Count]="sourceResults.length" Label="sources found" Icon="fa-solid fa-magnifying-glass" />
+      }
+    </div>
+  </mj-page-header>
+
+  <mj-page-body>
+    <div class="lr-search-bar">
+      <input
+        type="text"
+        class="mj-input"
+        placeholder="Search statute, rules, the Manual, Guidelines, or IBTR/Tax Court decisions — or ask a question"
+        [(ngModel)]="query"
+        (keydown.enter)="runSearch()" />
+      <button mjButton variant="primary" size="md" (click)="runSearch()" [disabled]="loading || !query.trim()">
+        <i class="fa-solid fa-magnifying-glass"></i> Search
+      </button>
+      @if (query || sourceResults.length || answerText) {
+        <button mjButton variant="flat" size="md" (click)="clearSearch()" [disabled]="loading">
+          Clear
+        </button>
+      }
+    </div>
+
+    @if (loading) {
+      <mj-loading text="Searching Indiana property tax law..."></mj-loading>
+    } @else {
+      @if (errorMessage) {
+        <mj-alert Variant="error" Title="Search unavailable" [Message]="errorMessage"></mj-alert>
+      }
+
+      @if (answerText) {
+        <div class="lr-answer">
+          <p class="lr-answer-text">{{ answerText }}</p>
+          @if (answerChips.length) {
+            <div class="lr-chips">
+              @for (chip of answerChips; track chip.key) {
+                <button
+                  type="button"
+                  class="lr-chip"
+                  [class.lr-chip--active]="activeChip === chip"
+                  (click)="openCitation(chip)">
+                  {{ chip.key }}
+                </button>
+              }
+            </div>
+          }
+        </div>
+      }
+
+      @if (activeChip?.resolved; as r) {
+        <div class="lr-detail">
+          <div class="lr-detail-header">
+            <h3>{{ r.heading }}</h3>
+            <button type="button" class="lr-detail-close" (click)="activeChip = null" aria-label="Close">
+              <i class="fa-solid fa-times"></i>
+            </button>
+          </div>
+          <p class="lr-detail-text">{{ r.text }}</p>
+        </div>
+      }
+
+      @if (sourceResults.length) {
+        <div class="lr-results">
+          @for (item of sourceResults; track item.ID) {
+            <div class="lr-result-card" (click)="openSourceRecord(item)">
+              <span class="lr-badge">{{ item.EntityName }}</span>
+              <h4>{{ item.Title }}</h4>
+              <p>{{ item.Snippet }}</p>
+            </div>
+          }
+        </div>
+      } @else if (query.trim() && !answerText && !errorMessage) {
+        <mj-empty-state
+          Icon="fa-solid fa-book-open"
+          Title="No sources found"
+          Message="Try a broader query, a citation key (e.g. IC 6-1.1-15-17.2), or fewer search terms.">
+        </mj-empty-state>
+      }
+    }
+  </mj-page-body>
+</mj-page-layout>

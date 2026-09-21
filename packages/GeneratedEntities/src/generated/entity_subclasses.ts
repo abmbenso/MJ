@@ -4610,6 +4610,77 @@ export const indianataxDocumentCatalogSchema = z.object({
 export type indianataxDocumentCatalogEntityType = z.infer<typeof indianataxDocumentCatalogSchema>;
 
 /**
+ * zod schema definition for the entity Fair And Accurate Leads
+ */
+export const indianataxFairAndAccurateLeadSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ParcelID: z.string().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+    ContactName: z.string().describe(`
+        * * Field Name: ContactName
+        * * Display Name: Contact Name
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The visitor's self-reported name, taken verbatim from the public site form.`),
+    ContactEmail: z.string().describe(`
+        * * Field Name: ContactEmail
+        * * Display Name: Contact Email
+        * * SQL Data Type: nvarchar(320)
+        * * Description: The visitor's self-reported email address, taken verbatim from the public site form. The firm's intake process uses this to follow up.`),
+    ContactPhone: z.string().nullable().describe(`
+        * * Field Name: ContactPhone
+        * * Display Name: Contact Phone
+        * * SQL Data Type: nvarchar(30)
+        * * Description: The visitor's self-reported phone number, taken verbatim from the public site form. Optional.`),
+    Message: z.string().nullable().describe(`
+        * * Field Name: Message
+        * * Display Name: Message
+        * * SQL Data Type: nvarchar(2000)
+        * * Description: Free-text message the visitor entered on the public site form. Optional.`),
+    SubmittedAt: z.date().describe(`
+        * * Field Name: SubmittedAt
+        * * Display Name: Submitted At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: sysdatetimeoffset()
+        * * Description: When the public API received this lead. Defaults to the moment of insert; the public API does not set this explicitly.`),
+    Status: z.union([z.literal('contacted'), z.literal('converted'), z.literal('disqualified'), z.literal('new'), z.literal('qualified')]).describe(`
+        * * Field Name: Status
+        * * Display Name: Status
+        * * SQL Data Type: nvarchar(30)
+        * * Default Value: new
+    * * Value List Type: List
+    * * Possible Values 
+    *   * contacted
+    *   * converted
+    *   * disqualified
+    *   * new
+    *   * qualified
+        * * Description: The firm's intake-pipeline status for this lead. Always inserted as 'new' by the public API (which has Create-only access); internal staff advance it through the rest of the intake process from the Explorer UI.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Parcel: z.string().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel Details
+        * * SQL Data Type: nvarchar(30)`),
+});
+
+export type indianataxFairAndAccurateLeadEntityType = z.infer<typeof indianataxFairAndAccurateLeadSchema>;
+
+/**
  * zod schema definition for the entity Form Catalogs
  */
 export const indianataxFormCatalogSchema = z.object({
@@ -21892,6 +21963,180 @@ export class indianataxDocumentCatalogEntity extends BaseEntity<indianataxDocume
     */
     get SourceRegistry(): string {
         return this.Get('SourceRegistry');
+    }
+}
+
+
+/**
+ * Fair And Accurate Leads - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: FairAndAccurateLead
+ * * Base View: vwFairAndAccurateLeads
+ * * @description A public taxpayer-site lead: captured when an anonymous "Fair & Accurate" site visitor asks to be contacted about a specific parcel. Mirrors the shape of an intake record, not a full CRM — the firm's existing intake process consumes Status/ContactEmail/ParcelID and does the rest. Written by the public API under a restricted, Create-only Role.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Fair And Accurate Leads')
+export class indianataxFairAndAccurateLeadEntity extends BaseEntity<indianataxFairAndAccurateLeadEntityType> {
+    /**
+    * Loads the Fair And Accurate Leads record from the database
+    * @param ID: string - primary key value to load the Fair And Accurate Leads record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxFairAndAccurateLeadEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    */
+    get ParcelID(): string {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: ContactName
+    * * Display Name: Contact Name
+    * * SQL Data Type: nvarchar(200)
+    * * Description: The visitor's self-reported name, taken verbatim from the public site form.
+    */
+    get ContactName(): string {
+        return this.Get('ContactName');
+    }
+    set ContactName(value: string) {
+        this.Set('ContactName', value);
+    }
+
+    /**
+    * * Field Name: ContactEmail
+    * * Display Name: Contact Email
+    * * SQL Data Type: nvarchar(320)
+    * * Description: The visitor's self-reported email address, taken verbatim from the public site form. The firm's intake process uses this to follow up.
+    */
+    get ContactEmail(): string {
+        return this.Get('ContactEmail');
+    }
+    set ContactEmail(value: string) {
+        this.Set('ContactEmail', value);
+    }
+
+    /**
+    * * Field Name: ContactPhone
+    * * Display Name: Contact Phone
+    * * SQL Data Type: nvarchar(30)
+    * * Description: The visitor's self-reported phone number, taken verbatim from the public site form. Optional.
+    */
+    get ContactPhone(): string | null {
+        return this.Get('ContactPhone');
+    }
+    set ContactPhone(value: string | null) {
+        this.Set('ContactPhone', value);
+    }
+
+    /**
+    * * Field Name: Message
+    * * Display Name: Message
+    * * SQL Data Type: nvarchar(2000)
+    * * Description: Free-text message the visitor entered on the public site form. Optional.
+    */
+    get Message(): string | null {
+        return this.Get('Message');
+    }
+    set Message(value: string | null) {
+        this.Set('Message', value);
+    }
+
+    /**
+    * * Field Name: SubmittedAt
+    * * Display Name: Submitted At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: sysdatetimeoffset()
+    * * Description: When the public API received this lead. Defaults to the moment of insert; the public API does not set this explicitly.
+    */
+    get SubmittedAt(): Date {
+        return this.Get('SubmittedAt');
+    }
+    set SubmittedAt(value: Date) {
+        this.Set('SubmittedAt', value);
+    }
+
+    /**
+    * * Field Name: Status
+    * * Display Name: Status
+    * * SQL Data Type: nvarchar(30)
+    * * Default Value: new
+    * * Value List Type: List
+    * * Possible Values 
+    *   * contacted
+    *   * converted
+    *   * disqualified
+    *   * new
+    *   * qualified
+    * * Description: The firm's intake-pipeline status for this lead. Always inserted as 'new' by the public API (which has Create-only access); internal staff advance it through the rest of the intake process from the Explorer UI.
+    */
+    get Status(): 'contacted' | 'converted' | 'disqualified' | 'new' | 'qualified' {
+        return this.Get('Status');
+    }
+    set Status(value: 'contacted' | 'converted' | 'disqualified' | 'new' | 'qualified') {
+        this.Set('Status', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel Details
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string {
+        return this.Get('Parcel');
     }
 }
 

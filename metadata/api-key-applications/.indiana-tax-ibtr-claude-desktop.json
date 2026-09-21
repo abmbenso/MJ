@@ -1,0 +1,11 @@
+[
+  {
+    "fields": {
+      "APIKeyID": "@lookup:MJ: API Keys.Label=IBTR library - Claude Desktop (localhost MCP, read-only)",
+      "ApplicationID": "@lookup:MJ: API Applications.Name=MCPServer"
+    },
+    "primaryKey": {
+      "ID": "235F6232-6B7C-4BF1-A7BB-1713E90B6255"
+    }
+  }
+]

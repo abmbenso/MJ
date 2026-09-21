@@ -233,6 +233,7 @@ export * from './property-search-dashboards.module';
 export * from './owner-prospects-dashboards.module';
 export * from './tax-budget-projection-dashboards.module';
 export * from './appeal-workbench-dashboards.module';
+export * from './legal-research-dashboards.module';
 
 // Routines app — schedule AI agents to run on a cron cadence
 export { UserRoutinesResourceComponent, LoadUserRoutinesResource } from './UserRoutines/user-routines-resource.component';

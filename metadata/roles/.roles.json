@@ -24,5 +24,14 @@
       "lastModified": "2026-07-07T15:18:40.532Z",
       "checksum": "c28b2fe1c2cc32adff84d324a9c65f6b7ea42f742d50b91ff2ecb8e1da073855"
     }
+  },
+  {
+    "fields": {
+      "Name": "Fair And Accurate Public",
+      "Description": "Restricted role for anonymous visitors on the public taxpayer-facing \"Fair & Accurate\" website. Grants Read on Parcels, Assessments, Valuation Analysis, and Valuation Comps (so the site can show a parcel's fairness/accuracy picture) plus Create-only on FairAndAccurateLead (so a visitor can ask to be contacted, but can never read, update, or delete lead records once submitted). The site's API key is bound to this Role and nothing else. Never assign to internal/SSO users."
+    },
+    "primaryKey": {
+      "ID": "92427367-F1F9-4309-A9C0-BB607D89497E"
+    }
   }
 ]

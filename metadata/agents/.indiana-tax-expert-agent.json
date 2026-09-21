@@ -1,0 +1,97 @@
+[
+  {
+    "fields": {
+      "Name": "Indiana Property Tax Expert",
+      "CategoryID": "@lookup:MJ: AI Agent Categories.Name=Indiana Tax Expert?create&Description=Agents for the Indiana Property Tax Expert application",
+      "Description": "Answers questions about Indiana real property taxation using this instance's assessment, appeal, statute, and DLGF guidance data. Informational only, not legal or tax advice.",
+      "TypeID": "@lookup:MJ: AI Agent Types.Name=Loop",
+      "Status": "Active",
+      "ExecutionOrder": 0,
+      "ExposeAsAction": false,
+      "ModelSelectionMode": "Agent",
+      "AgentTypePromptParams": {},
+      "IconClass": "fa-solid fa-scale-balanced",
+      "SearchScopeAccess": "Assigned"
+    },
+    "primaryKey": {
+      "ID": "C5B47595-2BD8-453B-9364-5BCEAD30B5BB"
+    },
+    "relatedEntities": {
+      "MJ: AI Agent Prompts": [
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "PromptID": "@lookup:MJ: AI Prompts.Name=Indiana Property Tax Expert - Main Prompt",
+            "ExecutionOrder": 0,
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "E98603B8-489C-49A1-9F52-321B9BFC83FD"
+          }
+        }
+      ],
+      "MJ: AI Agent Actions": [
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=Get Record",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "6190ABE5-5768-4E1F-9D5D-1790CCF9C8C1"
+          }
+        },
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=Get Records",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "158B83ED-B387-4EF6-B640-1959C67EB597"
+          }
+        },
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=Search",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "98C7DD5E-90E8-4591-B6B6-0897A005FEF5"
+          }
+        },
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=Get Entity List",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "6BFC6891-E6DC-4C53-A5DA-69A4154828B1"
+          }
+        },
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=Explore Database Schema",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "DC65AE21-6488-4887-9C88-3D803504AC3B"
+          }
+        },
+        {
+          "fields": {
+            "AgentID": "@parent:ID",
+            "ActionID": "@lookup:MJ: Actions.Name=PDF Extractor",
+            "Status": "Active"
+          },
+          "primaryKey": {
+            "ID": "349B1C7E-D544-4077-91A6-ED21C4DD4C00"
+          }
+        }
+      ]
+    }
+  }
+]

@@ -1,0 +1,16 @@
+[
+  {
+    "fields": {
+      "AgentID": "@lookup:MJ: AI Agents.Name=Indiana Property Tax Expert",
+      "SearchScopeID": "@lookup:MJ: Search Scopes.Name=IBTR Decisions",
+      "Phase": "Both",
+      "Status": "Active",
+      "Priority": 1,
+      "MaxResults": 8,
+      "IsDefault": false
+    },
+    "primaryKey": {
+      "ID": "839B971D-8379-4093-9634-25F9EAC99BB8"
+    }
+  }
+]

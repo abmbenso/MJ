@@ -17,7 +17,7 @@ import { MaxLength } from 'class-validator';
 import * as mj_core_schema_server_object_types from '@memberjunction/server'
 
 
-import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
+import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
     
 
 //****************************************************************************
@@ -11600,6 +11600,210 @@ export class indianataxDocumentCatalogResolver extends ResolverBase {
 }
 
 //****************************************************************************
+// ENTITY CLASS for Fair And Accurate Leads
+//****************************************************************************
+@ObjectType({ description: `A public taxpayer-site lead: captured when an anonymous "Fair & Accurate" site visitor asks to be contacted about a specific parcel. Mirrors the shape of an intake record, not a full CRM — the firm\'s existing intake process consumes Status/ContactEmail/ParcelID and does the rest. Written by the public API under a restricted, Create-only Role.` })
+export class indianataxFairAndAccurateLead_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field() 
+    @MaxLength(36)
+    ParcelID: string;
+        
+    @Field({description: `The visitor's self-reported name, taken verbatim from the public site form.`}) 
+    @MaxLength(200)
+    ContactName: string;
+        
+    @Field({description: `The visitor's self-reported email address, taken verbatim from the public site form. The firm's intake process uses this to follow up.`}) 
+    @MaxLength(320)
+    ContactEmail: string;
+        
+    @Field({nullable: true, description: `The visitor's self-reported phone number, taken verbatim from the public site form. Optional.`}) 
+    @MaxLength(30)
+    ContactPhone?: string;
+        
+    @Field({nullable: true, description: `Free-text message the visitor entered on the public site form. Optional.`}) 
+    @MaxLength(2000)
+    Message?: string;
+        
+    @Field({description: `When the public API received this lead. Defaults to the moment of insert; the public API does not set this explicitly.`}) 
+    SubmittedAt: Date;
+        
+    @Field({description: `The firm's intake-pipeline status for this lead. Always inserted as 'new' by the public API (which has Create-only access); internal staff advance it through the rest of the intake process from the Explorer UI.`}) 
+    @MaxLength(30)
+    Status: string;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(30)
+    Parcel: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Fair And Accurate Leads
+//****************************************************************************
+@InputType()
+export class CreateindianataxFairAndAccurateLeadInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field({ nullable: true })
+    ContactName?: string;
+
+    @Field({ nullable: true })
+    ContactEmail?: string;
+
+    @Field({ nullable: true })
+    ContactPhone: string | null;
+
+    @Field({ nullable: true })
+    Message: string | null;
+
+    @Field({ nullable: true })
+    SubmittedAt?: Date;
+
+    @Field({ nullable: true })
+    Status?: string;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Fair And Accurate Leads
+//****************************************************************************
+@InputType()
+export class UpdateindianataxFairAndAccurateLeadInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field({ nullable: true })
+    ContactName?: string;
+
+    @Field({ nullable: true })
+    ContactEmail?: string;
+
+    @Field({ nullable: true })
+    ContactPhone?: string | null;
+
+    @Field({ nullable: true })
+    Message?: string | null;
+
+    @Field({ nullable: true })
+    SubmittedAt?: Date;
+
+    @Field({ nullable: true })
+    Status?: string;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Fair And Accurate Leads
+//****************************************************************************
+@ObjectType()
+export class RunindianataxFairAndAccurateLeadViewResult {
+    @Field(() => [indianataxFairAndAccurateLead_])
+    Results: indianataxFairAndAccurateLead_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxFairAndAccurateLead_)
+export class indianataxFairAndAccurateLeadResolver extends ResolverBase {
+    @Query(() => RunindianataxFairAndAccurateLeadViewResult)
+    async RunindianataxFairAndAccurateLeadViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxFairAndAccurateLeadViewResult)
+    async RunindianataxFairAndAccurateLeadViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxFairAndAccurateLeadViewResult)
+    async RunindianataxFairAndAccurateLeadDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Fair And Accurate Leads';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxFairAndAccurateLead_, { nullable: true })
+    async indianataxFairAndAccurateLead(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxFairAndAccurateLead_ | null> {
+        this.CheckUserReadPermissions('Fair And Accurate Leads', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwFairAndAccurateLeads')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Fair And Accurate Leads', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Fair And Accurate Leads', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxFairAndAccurateLead_)
+    async CreateindianataxFairAndAccurateLead(
+        @Arg('input', () => CreateindianataxFairAndAccurateLeadInput) input: CreateindianataxFairAndAccurateLeadInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Fair And Accurate Leads', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxFairAndAccurateLead_)
+    async UpdateindianataxFairAndAccurateLead(
+        @Arg('input', () => UpdateindianataxFairAndAccurateLeadInput) input: UpdateindianataxFairAndAccurateLeadInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Fair And Accurate Leads', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxFairAndAccurateLead_)
+    async DeleteindianataxFairAndAccurateLead(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Fair And Accurate Leads', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
 // ENTITY CLASS for Form Catalogs
 //****************************************************************************
 @ObjectType()
@@ -16775,6 +16979,9 @@ export class indianataxParcel_ {
     @Field(() => [indianataxAppealAnalysis_])
     indianataxAppealAnalysis_ParcelIDArray: indianataxAppealAnalysis_[]; // Link to indianataxAppealAnalysis
     
+    @Field(() => [indianataxFairAndAccurateLead_])
+    indianataxFairAndAccurateLeads_ParcelIDArray: indianataxFairAndAccurateLead_[]; // Link to indianataxFairAndAccurateLeads
+    
 }
 
 //****************************************************************************
@@ -17277,6 +17484,16 @@ export class indianataxParcelResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealAnalysis')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Analysis', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Analysis', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxFairAndAccurateLead_])
+    async indianataxFairAndAccurateLeads_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Fair And Accurate Leads', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwFairAndAccurateLeads')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Fair And Accurate Leads', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Fair And Accurate Leads', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         

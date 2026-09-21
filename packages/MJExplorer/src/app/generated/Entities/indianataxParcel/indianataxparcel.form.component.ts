@@ -51,7 +51,8 @@ export class indianataxParcelFormComponent extends BaseFormComponent {
             { sectionKey: 'cardImprovements', sectionName: 'Card Improvements', isExpanded: false },
             { sectionKey: 'iBTRAppeals', sectionName: 'IBTR Appeals', isExpanded: false },
             { sectionKey: 'assessmentNotices', sectionName: 'Assessment Notices', isExpanded: false },
-            { sectionKey: 'appealAnalysis', sectionName: 'Appeal Analysis', isExpanded: false }
+            { sectionKey: 'appealAnalysis', sectionName: 'Appeal Analysis', isExpanded: false },
+            { sectionKey: 'fairAndAccurateLeads', sectionName: 'Fair And Accurate Leads', isExpanded: false }
         ]);
     }
 }

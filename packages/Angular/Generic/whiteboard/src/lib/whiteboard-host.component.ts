@@ -1,6 +1,6 @@
 import {
-  ChangeDetectorRef, Component, EventEmitter, HostListener, Input, OnDestroy, OnInit, Output,
-  ViewChild, inject
+  ChangeDetectorRef, Component, ElementRef, EventEmitter, HostBinding, HostListener, Input,
+  OnDestroy, OnInit, Output, ViewChild, inject
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { Subscription } from 'rxjs';
@@ -9,6 +9,7 @@ import {
   WhiteboardItemRemovedEventArgs, WhiteboardItemRemovingEventArgs,
   WhiteboardItemUpdatedEventArgs, WhiteboardItemUpdatingEventArgs, WhiteboardState
 } from './whiteboard-state';
+import { WhiteboardTool, WhiteboardToolRoster, ClampToolToRoster, IsToolAllowed } from './whiteboard-tool-roster';
 import {
   BuildWhiteboardExportHtml, BuildWhiteboardExportHtmlAllPages, BuildWhiteboardExportSvg,
   BuildWhiteboardExportSvgPages
@@ -21,7 +22,7 @@ import {
 import {
   WhiteboardWidgetInteractionEvent, WhiteboardWidgetSubmitEvent, WhiteboardWidgetSubmittingEventArgs
 } from './whiteboard-widget-bridge';
-import { RealtimeWhiteboardToolbarComponent, WhiteboardTool, WHITEBOARD_PEN_COLORS } from './whiteboard-toolbar.component';
+import { RealtimeWhiteboardToolbarComponent, WHITEBOARD_PEN_COLORS } from './whiteboard-toolbar.component';
 import { RealtimeWhiteboardZoomComponent } from './whiteboard-zoom.component';
 import { RealtimeWhiteboardAgentSeesPopoverComponent } from './whiteboard-agent-sees-popover.component';
 
@@ -77,6 +78,56 @@ export class RealtimeWhiteboardHostComponent implements OnInit, OnDestroy {
   @Input() BoardTitle = 'Whiteboard';
   /** Persistence chip text (e.g. "Saved to session · v14"). */
   @Input() SavedLabel = 'Saved to session';
+  /**
+   * Opt back in to DOCUMENT-WIDE keyboard shortcuts.
+   *
+   * The host binds eleven bare single-character tool shortcuts (v h p r s t m w i c e). While
+   * those listened on `document` unconditionally they fired wherever the user was on the page,
+   * which fails WCAG 2.1.4 (Character Key Shortcuts): a speech-input user saying an ordinary
+   * word, or anyone typing in a non-input control elsewhere, silently switched the board tool.
+   * They are now scoped to focus being inside this host, which satisfies the criterion's
+   * "active only on focus" branch.
+   *
+   * Scoping covers the host's ENTIRE keydown handler, not only the letters: undo/redo
+   * (Cmd/Ctrl+Z, +Y), Escape and Delete/Backspace are focus-gated as well.
+   *
+   * Set `true` only for a surface where the whiteboard is the entire page AND the 2.1.4
+   * exposure has been accepted — it is an accessibility regression, not a convenience flag.
+   */
+  @Input() EnableGlobalShortcuts = false;
+
+  /**
+   * Which tools this surface offers. `null` (default) is all eleven: today's rendering.
+   *
+   * The roster governs which tools are AVAILABLE, closing every door to a tool it leaves out:
+   * the toolbar button, the single-letter shortcut, and the canvas "add … here" action. It is
+   * deliberately not a content policy — it does not restrict what already exists on the board,
+   * what the agent places, or authoring on existing items (Restyle, Duplicate, paste). An empty
+   * roster narrows the palette to nothing; it does NOT make the board read-only, which is a
+   * separate input.
+   *
+   * A setter rather than `ngOnChanges` (packages/Angular/CLAUDE.md): a realtime channel's
+   * `BindSurface` assigns this property directly on a dynamically-created component, and
+   * Angular fires no `ngOnChanges` for a plain assignment, so a clamp implemented there would
+   * silently never run on the path real consumers use.
+   */
+  @Input()
+  set ToolRoster(value: WhiteboardToolRoster) {
+    const next = value ?? null;
+    // Identity compare, per the Angular rule: a consumer binding a freshly-built array literal
+    // re-fires this setter every change-detection pass, and re-running the clamp on every pass
+    // would fight the user for the active tool.
+    if (next === this._toolRoster) {
+      return;
+    }
+    this._toolRoster = next;
+    // Re-validate the CURRENT tool through the same chokepoint every other write uses.
+    this.Tool = this._tool;
+  }
+  get ToolRoster(): WhiteboardToolRoster {
+    return this._toolRoster;
+  }
+  private _toolRoster: WhiteboardToolRoster = null;
 
   /** Debounced (750 ms), coalesced scene-delta JSON — the live perception feed. */
   @Output() SceneDelta = new EventEmitter<string>();
@@ -136,7 +187,29 @@ export class RealtimeWhiteboardHostComponent implements OnInit, OnDestroy {
   @ViewChild(RealtimeWhiteboardBoardComponent) public Board?: RealtimeWhiteboardBoardComponent;
 
   // tool state (host-owned; toolbar + keyboard drive it, board consumes it)
-  public Tool: WhiteboardTool = 'select';
+  /**
+   * The active tool, and the ONE place the roster invariant is enforced on a write.
+   *
+   * "The active tool is always one the roster allows" is a property of every write, not of the
+   * handful of call sites that exist today (the roster setter, Escape, the key map, and the two
+   * template `Tool = $event` bindings). Guarding each of those would leave the next writer —
+   * a new shortcut, a gesture, a host API — to remember the rule. Guarding here closes them all
+   * by construction, and makes assignment order irrelevant: setting `ToolRoster` and `Tool` in
+   * either order still lands on an allowed tool.
+   *
+   * A DISALLOWED request is ignored rather than clamped: pressing Escape under `['pen','eraser']`
+   * should leave you on pen, not bounce you to the roster's fallback. The clamp is only for the
+   * case where the tool you are already holding stopped being allowed.
+   */
+  public get Tool(): WhiteboardTool {
+    return this._tool;
+  }
+  public set Tool(value: WhiteboardTool) {
+    this._tool = IsToolAllowed(this._toolRoster, value)
+      ? value
+      : ClampToolToRoster(this._tool, this._toolRoster);
+  }
+  private _tool: WhiteboardTool = 'select';
   public PenColor: string = WHITEBOARD_PEN_COLORS[0];
   public PenWidth = 4;
   public ShapeKind: 'rect' | 'ellipse' | 'diamond' = 'rect';
@@ -380,8 +453,48 @@ export class RealtimeWhiteboardHostComponent implements OnInit, OnDestroy {
 
   // ────────────────────────────────────────────── keyboard shortcuts
 
+  /**
+   * The board is made focusable so its shortcuts have a focus scope to be bound to. `-1`, not
+   * `0`: the canvas has no keyboard interaction model yet (see the whiteboard keyboard-
+   * operability work), so adding a real Tab stop would put a stop in the page that a keyboard
+   * user can reach and do nothing with. Click focuses it; that is the whole contract today.
+   */
+  @HostBinding('attr.tabindex') readonly HostTabIndex = '-1';
+
+  private readonly host: ElementRef<HTMLElement> = inject(ElementRef);
+
+  /**
+   * Clicking the board takes focus, so the shortcuts below apply. The browser would usually do
+   * this on its own by focusing the nearest focusable ancestor, but the board's pointer
+   * pipeline is elaborate enough (drag, marquee, handles, transient shapes) that relying on
+   * that default is fragile — one `preventDefault()` added later would silently kill every
+   * shortcut. This makes it explicit.
+   */
+  @HostListener('pointerdown')
+  public OnHostPointerDown(): void {
+    if (!this.hasFocusWithin()) {
+      this.host.nativeElement.focus({ preventScroll: true });
+    }
+  }
+
+  /** Whether focus currently sits on, or inside, this whiteboard host. */
+  private hasFocusWithin(): boolean {
+    const el = this.host.nativeElement;
+    const active = document.activeElement;
+    return !!active && (active === el || el.contains(active));
+  }
+
   @HostListener('document:keydown', ['$event'])
   public OnKeydown(event: KeyboardEvent): void {
+    // WCAG 2.1.4: only live while focus is on the board. NOTE this gates the WHOLE handler,
+    // not just the single-character tool keys that 2.1.4 is about — undo/redo (Cmd/Ctrl+Z,
+    // +Y), Escape and Delete/Backspace are scoped too. That is deliberate: a board that
+    // swallows the document's Cmd+Z from anywhere on the page is its own bug, and "the board
+    // responds to keys when you are on the board" is the only model that stays predictable.
+    // See {@link EnableGlobalShortcuts} for the (discouraged) opt-out.
+    if (!this.EnableGlobalShortcuts && !this.hasFocusWithin()) {
+      return;
+    }
     const target = event.target as HTMLElement | null;
     if (target && (target.tagName === 'INPUT' || target.tagName === 'TEXTAREA' || target.isContentEditable)) {
       return;
@@ -420,6 +533,8 @@ export class RealtimeWhiteboardHostComponent implements OnInit, OnDestroy {
         break;
       default: {
         const tool = RealtimeWhiteboardHostComponent.toolForKey(event.key);
+        // No roster check here: the Tool setter ignores a disallowed write, so a key for a
+        // hidden tool is a no-op by construction rather than by a remembered guard.
         if (tool) {
           this.Tool = tool;
         }

@@ -1,0 +1,30 @@
+{
+  "entity": "MJ: API Key Applications",
+  "filePattern": "**/.*.json",
+  "defaults": {},
+  "pull": {
+    "createNewFileIfNotFound": true,
+    "newFileName": ".records.json",
+    "appendRecordsToExistingFile": true,
+    "updateExistingRecords": true,
+    "preserveFields": [],
+    "excludeFields": [],
+    "mergeStrategy": "merge",
+    "backupBeforeUpdate": true,
+    "backupDirectory": ".backups",
+    "filter": "",
+    "externalizeFields": [],
+    "ignoreNullFields": true,
+    "ignoreVirtualFields": true,
+    "lookupFields": {
+      "APIKeyID": {
+        "entity": "MJ: API Keys",
+        "field": "Label"
+      },
+      "ApplicationID": {
+        "entity": "MJ: API Applications",
+        "field": "Name"
+      }
+    }
+  }
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "fields": {
+      "Name": "Indiana Property Tax Expert - Main Prompt",
+      "Description": "System persona and domain instructions for the Indiana Property Tax Expert agent.",
+      "TypeID": "@lookup:MJ: AI Prompt Types.Name=Chat",
+      "TemplateText": "@file:templates/indiana-tax-expert/system-prompt.md",
+      "Status": "Active",
+      "ResponseFormat": "JSON",
+      "SelectionStrategy": "Specific",
+      "PowerPreference": "Highest",
+      "ParallelizationMode": "None",
+      "OutputType": "object",
+      "OutputExample": "@file:output/indiana-tax-expert/example.json",
+      "ValidationBehavior": "Strict",
+      "MaxRetries": 2,
+      "RetryDelayMS": 1000,
+      "RetryStrategy": "Fixed",
+      "PromptRole": "System",
+      "PromptPosition": "First",
+      "CategoryID": "@lookup:MJ: AI Prompt Categories.Name=Indiana Tax Expert?create&Description=Prompts for the Indiana Property Tax Expert agent"
+    },
+    "primaryKey": {
+      "ID": "B51A5BCF-5C9C-4FBC-90EF-B656C42D6B73"
+    },
+    "relatedEntities": {
+      "MJ: AI Prompt Models": [
+        {
+          "fields": {
+            "PromptID": "@parent:ID",
+            "ModelID": "@lookup:MJ: AI Models.Name=Claude Sonnet 5",
+            "VendorID": "@lookup:MJ: AI Vendors.Name=Anthropic",
+            "Priority": 1
+          },
+          "primaryKey": {
+            "ID": "07C2C6A2-8EAB-435F-A8A6-1061649F984D"
+          }
+        }
+      ]
+    }
+  }
+]

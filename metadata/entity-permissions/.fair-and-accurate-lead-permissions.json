@@ -1,0 +1,15 @@
+[
+  {
+    "fields": {
+      "EntityID": "@lookup:MJ: Entities.Name=Fair And Accurate Leads",
+      "RoleID": "@lookup:MJ: Roles.Name=Fair And Accurate Public",
+      "CanRead": false,
+      "CanCreate": true,
+      "CanUpdate": false,
+      "CanDelete": false
+    },
+    "primaryKey": {
+      "ID": "6AA76721-5FD0-4923-B030-F7223CA93557"
+    }
+  }
+]

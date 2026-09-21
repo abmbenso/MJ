@@ -60,15 +60,21 @@ COPY packages/GeneratedEntities ./packages/GeneratedEntities/
 COPY packages/MJAPI ./packages/MJAPI/
 
 
+# Install the MJCLI package globally BEFORE building: MJAPI's `prebuild` runs
+# `mj codegen manifest` to produce src/generated/class-registrations-manifest.ts (gitignored).
+# With the CLI absent at build time that step falls back to "using existing manifest" (there is
+# none), the manifest never reaches dist/, and MJAPI only starts if boot-time `mj codegen`
+# regenerates it -- so skipping boot-time CodeGen (MJ_SKIP_CODEGEN=1) failed with
+# ERR_MODULE_NOT_FOUND on dist/generated/class-registrations-manifest.js. Installing first
+# makes the image self-contained.
+RUN npm install -g @memberjunction/cli
+
 # Build the MJAPI application
 RUN npm run build:api
 
 COPY docker/MJAPI/docker.config.cjs ./mj.config.cjs
 COPY migrations ./migrations
 COPY ["[SQL Scripts]", "./[SQL Scripts]"]
-
-# Install the MJCLI package globally
-RUN npm install -g @memberjunction/cli
 
 # Copy the entrypoint script
 COPY docker/MJAPI/entrypoint.sh /entrypoint.sh

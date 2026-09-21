@@ -1,0 +1,20 @@
+[
+  {
+    "fields": {
+      "Hash": "0262e44ba746c656cedd1311e9a49b97f3ba2f8b6581a459db173a28a3a2038d",
+      "KeyPrefix": "mj_sk_",
+      "UserID": "@lookup:MJ: Users.Email=fair-and-accurate-public-api@service.memberjunction.local",
+      "CreatedByUserID": "@lookup:MJ: Users.Email=abmbenso@gmail.com",
+      "Label": "Fair and Accurate public website (read Parcels/Assessments/Valuation, create-only Leads)",
+      "Description": "Created 2026-09-19 for the public taxpayer-facing Fair & Accurate website (Task 2 of the fair-and-accurate-v1 plan). Bound to the dedicated 'Fair And Accurate Public API' service user, which holds only the restricted 'Fair And Accurate Public' Role (Task 1). Raw key lives in Fair_And_Accurate/.env (gitignored) on this machine only, never committed. Distinct from and unrelated to the IBTR library's Claude-Desktop key.",
+      "Status": "Active"
+    },
+    "primaryKey": {
+      "ID": "F6762FC4-AD80-48DE-BD51-495142160E90"
+    },
+    "sync": {
+      "lastModified": "2026-09-19T19:37:55.319Z",
+      "checksum": "a2480cba8833c286259b3c58f95be93f563a08e86363ebbc2b2c58cb86affd46"
+    }
+  }
+]

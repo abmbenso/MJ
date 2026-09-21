@@ -591,7 +591,7 @@ import {
     TagEngineBase,
 } from '@memberjunction/tag-engine-base';
 
-// mj_generatedentities (75 classes)
+// mj_generatedentities (80 classes)
 import {
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -606,6 +606,7 @@ import {
     indianataxAPRAResponseFileEntity,
     indianataxAdjustmentCodeEntity,
     indianataxAppealAnalysisAssumptionEntity,
+    indianataxAppealAnalysisCompDecisionEntity,
     indianataxAppealAnalysisEntity,
     indianataxAppealAnalysisIndicationEntity,
     indianataxAppealLeadEntity,
@@ -636,6 +637,7 @@ import {
     indianataxDLGFLandEntity,
     indianataxDocumentAcquisitionEntity,
     indianataxDocumentCatalogEntity,
+    indianataxFairAndAccurateLeadEntity,
     indianataxFormCatalogEntity,
     indianataxIBTRAppealEntity,
     indianataxIBTRDecisionChunkEntity,
@@ -644,6 +646,9 @@ import {
     indianataxIBTRDecisionIssueEntity,
     indianataxIBTRDecisionPartyEntity,
     indianataxJurisdictionDeadlineAnchorEntity,
+    indianataxLegalAuthorityChunkEntity,
+    indianataxLegalAuthorityEntity,
+    indianataxLegalAuthoritySectionEntity,
     indianataxMarketAssumptionEntity,
     indianataxOwnerPortfolioEntity,
     indianataxOwnerPortfolioParcelEntity,
@@ -1316,6 +1321,7 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxAPRAResponseFileEntity,
     indianataxAdjustmentCodeEntity,
     indianataxAppealAnalysisAssumptionEntity,
+    indianataxAppealAnalysisCompDecisionEntity,
     indianataxAppealAnalysisEntity,
     indianataxAppealAnalysisIndicationEntity,
     indianataxAppealLeadEntity,
@@ -1346,6 +1352,7 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxDLGFLandEntity,
     indianataxDocumentAcquisitionEntity,
     indianataxDocumentCatalogEntity,
+    indianataxFairAndAccurateLeadEntity,
     indianataxFormCatalogEntity,
     indianataxIBTRAppealEntity,
     indianataxIBTRDecisionChunkEntity,
@@ -1354,6 +1361,9 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxIBTRDecisionIssueEntity,
     indianataxIBTRDecisionPartyEntity,
     indianataxJurisdictionDeadlineAnchorEntity,
+    indianataxLegalAuthorityChunkEntity,
+    indianataxLegalAuthorityEntity,
+    indianataxLegalAuthoritySectionEntity,
     indianataxMarketAssumptionEntity,
     indianataxOwnerPortfolioEntity,
     indianataxOwnerPortfolioParcelEntity,
@@ -1499,7 +1509,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 694;
+export const CLASS_REGISTRATIONS_COUNT = 699;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

@@ -1,0 +1,61 @@
+[
+  {
+    "fields": {
+      "Name": "IBTR Decisions",
+      "Description": "The Indiana Board of Tax Review's decisions since 2002: docket facts, extracted holdings and citations, and the full text of every written determination. Non-precedential: report results as counts with petition numbers.",
+      "Icon": "fa-solid fa-gavel",
+      "IsGlobal": false,
+      "IsDefault": false,
+      "Status": "Active"
+    },
+    "primaryKey": {
+      "ID": "B19198C8-7E99-47A8-A529-1C42F4AE5C7C"
+    },
+    "relatedEntities": {
+      "MJ: Search Scope Entities": [
+        {
+          "fields": {
+            "SearchScopeID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=IBTR Appeals",
+            "ExtraFilter": ""
+          },
+          "primaryKey": {
+            "ID": "53F8EB58-ADA8-433A-B42D-595ACF5538A2"
+          }
+        },
+        {
+          "fields": {
+            "SearchScopeID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=IBTR Decision Chunks",
+            "ExtraFilter": ""
+          },
+          "primaryKey": {
+            "ID": "26FDA737-723C-400F-B75F-2F08E8897185"
+          }
+        }
+      ],
+      "MJ: Search Scope Providers": [
+        {
+          "fields": {
+            "SearchScopeID": "@parent:ID",
+            "SearchProviderID": "@lookup:MJ: Search Providers.Name=Semantic",
+            "Enabled": true
+          },
+          "primaryKey": {
+            "ID": "25B7801C-8CF2-472C-AA33-EC687C5F74F4"
+          }
+        },
+        {
+          "fields": {
+            "SearchScopeID": "@parent:ID",
+            "SearchProviderID": "@lookup:MJ: Search Providers.Name=Database Full-Text",
+            "Enabled": true
+          },
+          "primaryKey": {
+            "ID": "F58F44B6-D369-4352-92F2-3549522042BD"
+          }
+        }
+      ]
+    }
+  }
+]

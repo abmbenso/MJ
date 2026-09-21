@@ -1,0 +1,23 @@
+[
+  {
+    "fields": {
+      "Name": "Legal Authority",
+      "Description": "Indiana property tax statute, 50 IAC, the Real Property Assessment Manual, DLGF Guidelines, IBTR/Tax Court procedural rules, DLGF Forms, DLGF memos, and county ratio-study narratives.",
+      "Icon": "fa-solid fa-book",
+      "IsGlobal": false,
+      "IsDefault": false,
+      "Status": "Active"
+    },
+    "primaryKey": { "ID": "E3C4E6EF-8E2F-4E22-A904-597CC31E3EB0" },
+    "relatedEntities": {
+      "MJ: Search Scope Entities": [
+        { "fields": { "SearchScopeID": "@parent:ID", "EntityID": "@lookup:MJ: Entities.Name=Legal Authority Sections", "ExtraFilter": "" }, "primaryKey": { "ID": "AEBCB875-E659-4C68-8EC5-5E02CDE5BC70" } },
+        { "fields": { "SearchScopeID": "@parent:ID", "EntityID": "@lookup:MJ: Entities.Name=Legal Authority Chunks", "ExtraFilter": "" }, "primaryKey": { "ID": "5AB05605-482D-4290-A914-20829AF48A14" } }
+      ],
+      "MJ: Search Scope Providers": [
+        { "fields": { "SearchScopeID": "@parent:ID", "SearchProviderID": "@lookup:MJ: Search Providers.Name=Semantic", "Enabled": true }, "primaryKey": { "ID": "B27DBD0B-D8DF-4225-98D3-906616F706FE" } },
+        { "fields": { "SearchScopeID": "@parent:ID", "SearchProviderID": "@lookup:MJ: Search Providers.Name=Database Full-Text", "Enabled": true }, "primaryKey": { "ID": "B1562442-BD9D-4E54-A25C-2CB5EE5B6918" } }
+      ]
+    }
+  }
+]

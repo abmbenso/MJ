@@ -1,0 +1,41 @@
+[
+  {
+    "fields": {
+      "Name": "Legal Research - Main Prompt",
+      "Description": "System persona and citation-discipline instructions for the Legal Research agent.",
+      "TypeID": "@lookup:MJ: AI Prompt Types.Name=Chat",
+      "TemplateText": "@file:templates/indiana-legal-research/system-prompt.md",
+      "Status": "Active",
+      "ResponseFormat": "Text",
+      "SelectionStrategy": "Specific",
+      "PowerPreference": "Highest",
+      "ParallelizationMode": "None",
+      "OutputType": "string",
+      "ValidationBehavior": "None",
+      "MaxRetries": 2,
+      "RetryDelayMS": 1000,
+      "RetryStrategy": "Fixed",
+      "PromptRole": "System",
+      "PromptPosition": "First",
+      "CategoryID": "@lookup:MJ: AI Prompt Categories.Name=Indiana Tax Expert?create&Description=Prompts for the Indiana Property Tax Expert agent"
+    },
+    "primaryKey": {
+      "ID": "062F0133-FAB7-4C5E-9F14-D245F5C8D264"
+    },
+    "relatedEntities": {
+      "MJ: AI Prompt Models": [
+        {
+          "fields": {
+            "PromptID": "@parent:ID",
+            "ModelID": "@lookup:MJ: AI Models.Name=Claude Sonnet 5",
+            "VendorID": "@lookup:MJ: AI Vendors.Name=Anthropic",
+            "Priority": 1
+          },
+          "primaryKey": {
+            "ID": "EF1DFEBC-0151-4443-81B3-1344FE1F19B2"
+          }
+        }
+      ]
+    }
+  }
+]

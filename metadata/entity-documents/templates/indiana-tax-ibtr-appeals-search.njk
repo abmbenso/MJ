@@ -1,0 +1,5 @@
+IBTR {{ DispositionType }} — {{ PetitionerName }} v. {{ CountyName }} County Assessor, petition {{ PetitionNumber }}, assessment year {{ AssessmentYear }}, decided {{ DecisionDate }}.
+{% if PropertyType %}Property: {{ PropertyType }} ({{ UseCategory }}).{% endif %}
+{% if IssuesPhrase %}Issues: {{ IssuesPhrase }}.{% endif %}
+{% if Summary %}{{ Summary }}{% endif %}
+{% if KeyReasoning %}Reasoning: {{ KeyReasoning }}{% endif %}
