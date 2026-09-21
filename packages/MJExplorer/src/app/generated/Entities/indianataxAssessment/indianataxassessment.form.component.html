@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="assessmentIdentification"
         SectionName="Assessment Identification"
-        Icon="fa fa-barcode"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -66,7 +66,7 @@
     <mj-collapsible-panel
         SectionKey="originalAssessmentValues"
         SectionName="Original Assessment Values"
-        Icon="fa fa-calculator"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -100,7 +100,7 @@
     <mj-collapsible-panel
         SectionKey="pTABOAAppealValues"
         SectionName="PTABOA Appeal Values"
-        Icon="fa fa-gavel"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -124,6 +124,40 @@
             [ShowLabel]="true"
             FieldName="PTABOATotalAV"
             Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Appeal Revision Details Section -->
+    <mj-collapsible-panel
+        SectionKey="appealRevisionDetails"
+        SectionName="Appeal Revision Details"
+        Icon="fa fa-edit"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisionForm"
+            Type="code"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisionReason"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisionAsOfDate"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>

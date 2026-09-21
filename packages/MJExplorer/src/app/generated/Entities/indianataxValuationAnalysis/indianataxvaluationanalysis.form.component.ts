@@ -22,7 +22,8 @@ export class indianataxValuationAnalysisFormComponent extends BaseFormComponent 
             { sectionKey: 'reconciliationAndTarget', sectionName: 'Reconciliation and Target', isExpanded: true },
             { sectionKey: 'appealAnalysis', sectionName: 'Appeal Analysis', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
-            { sectionKey: 'valuationComps', sectionName: 'Valuation Comps', isExpanded: false }
+            { sectionKey: 'valuationComps', sectionName: 'Valuation Comps', isExpanded: false },
+            { sectionKey: 'appealAnalysis', sectionName: 'Appeal Analysis', isExpanded: false }
         ]);
     }
 }

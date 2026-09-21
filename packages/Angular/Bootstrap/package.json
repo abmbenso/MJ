@@ -56,6 +56,7 @@
     "@memberjunction/ng-file-storage": "5.51.1",
     "@memberjunction/ng-shared": "5.51.1",
     "@memberjunction/tag-engine-base": "5.51.1",
+    "mj_generatedentities": "1.0.0",
     "rxjs": "^7.8.2"
   },
   "devDependencies": {

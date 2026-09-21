@@ -199,6 +199,14 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="CoStarRBA"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -432,18 +440,34 @@
 
     </mj-collapsible-panel>
 
-    <!-- Property Dimensions Section -->
+    <!-- Assessment Revision Section -->
     <mj-collapsible-panel
-        SectionKey="propertyDimensions"
-        SectionName="Property Dimensions"
-        Icon="fa fa-ruler"
+        SectionKey="assessmentRevision"
+        SectionName="Assessment Revision"
+        Icon="fa fa-file-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="false"
-            FieldName="CoStarRBA"
+            [ShowLabel]="true"
+            FieldName="RevisionForm"
             Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisionReason"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisionAsOfDate"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>

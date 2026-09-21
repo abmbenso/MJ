@@ -29,6 +29,7 @@
     "@memberjunction/ng-file-storage",
     "@memberjunction/ng-shared",
     "@memberjunction/tag-engine-base",
+    "mj_generatedentities",
     "rxjs"
   ]
 }

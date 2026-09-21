@@ -363,6 +363,31 @@
         }
     </mj-collapsible-panel>
 
+    <!-- APRA Requests Section -->
+    <mj-collapsible-panel
+        SectionKey="aPRARequests"
+        SectionName="APRA Requests"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('aPRARequests')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('APRA Requests','TemplateID')"
+                [NewRecordValues]="NewRecordValues('APRA Requests')"
+                [AllowLoad]="IsSectionExpanded('aPRARequests')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('aPRARequests', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         

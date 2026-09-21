@@ -45,7 +45,16 @@ export class indianataxSourceDocumentFormComponent extends BaseFormComponent {
             { sectionKey: 'cardNotes', sectionName: 'Card Notes', isExpanded: false },
             { sectionKey: 'cardValuationColumns', sectionName: 'Card Valuation Columns', isExpanded: false },
             { sectionKey: 'cardSummaries', sectionName: 'Card Summaries', isExpanded: false },
-            { sectionKey: 'cardImprovements', sectionName: 'Card Improvements', isExpanded: false }
+            { sectionKey: 'cardImprovements', sectionName: 'Card Improvements', isExpanded: false },
+            { sectionKey: 'iBTRAppeals', sectionName: 'IBTR Appeals', isExpanded: false },
+            { sectionKey: 'iBTRDecisionChunks', sectionName: 'IBTR Decision Chunks', isExpanded: false },
+            { sectionKey: 'aPRARequestEvents', sectionName: 'APRA Request Events', isExpanded: false },
+            { sectionKey: 'aPRARequests', sectionName: 'APRA Requests', isExpanded: false },
+            { sectionKey: 'countyContacts', sectionName: 'County Contacts', isExpanded: false },
+            { sectionKey: 'aPRAResponseFiles', sectionName: 'APRA Response Files', isExpanded: false },
+            { sectionKey: 'assessmentNotices', sectionName: 'Assessment Notices', isExpanded: false },
+            { sectionKey: 'legalAuthorities', sectionName: 'Legal Authorities', isExpanded: false },
+            { sectionKey: 'legalAuthoritySections', sectionName: 'Legal Authority Sections', isExpanded: false }
         ]);
     }
 }

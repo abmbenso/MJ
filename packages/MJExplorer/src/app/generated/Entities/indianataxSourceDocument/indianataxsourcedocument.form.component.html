@@ -847,6 +847,231 @@
         }
     </mj-collapsible-panel>
 
+    <!-- IBTR Appeals Section -->
+    <mj-collapsible-panel
+        SectionKey="iBTRAppeals"
+        SectionName="IBTR Appeals"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('iBTRAppeals')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('IBTR Appeals','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('IBTR Appeals')"
+                [AllowLoad]="IsSectionExpanded('iBTRAppeals')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('iBTRAppeals', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- IBTR Decision Chunks Section -->
+    <mj-collapsible-panel
+        SectionKey="iBTRDecisionChunks"
+        SectionName="IBTR Decision Chunks"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('iBTRDecisionChunks')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('IBTR Decision Chunks','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('IBTR Decision Chunks')"
+                [AllowLoad]="IsSectionExpanded('iBTRDecisionChunks')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('iBTRDecisionChunks', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- APRA Request Events Section -->
+    <mj-collapsible-panel
+        SectionKey="aPRARequestEvents"
+        SectionName="APRA Request Events"
+        Icon="fa fa-envelope-open-text"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('aPRARequestEvents')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('APRA Request Events','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('APRA Request Events')"
+                [AllowLoad]="IsSectionExpanded('aPRARequestEvents')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('aPRARequestEvents', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- APRA Requests Section -->
+    <mj-collapsible-panel
+        SectionKey="aPRARequests"
+        SectionName="APRA Requests"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('aPRARequests')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('APRA Requests','RequestSourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('APRA Requests')"
+                [AllowLoad]="IsSectionExpanded('aPRARequests')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('aPRARequests', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- County Contacts Section -->
+    <mj-collapsible-panel
+        SectionKey="countyContacts"
+        SectionName="County Contacts"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('countyContacts')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('County Contacts','EvidenceSourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('County Contacts')"
+                [AllowLoad]="IsSectionExpanded('countyContacts')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('countyContacts', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- APRA Response Files Section -->
+    <mj-collapsible-panel
+        SectionKey="aPRAResponseFiles"
+        SectionName="APRA Response Files"
+        Icon="fa fa-file-pdf"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('aPRAResponseFiles')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('APRA Response Files','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('APRA Response Files')"
+                [AllowLoad]="IsSectionExpanded('aPRAResponseFiles')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('aPRAResponseFiles', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Assessment Notices Section -->
+    <mj-collapsible-panel
+        SectionKey="assessmentNotices"
+        SectionName="Assessment Notices"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('assessmentNotices')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Assessment Notices','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Assessment Notices')"
+                [AllowLoad]="IsSectionExpanded('assessmentNotices')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('assessmentNotices', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Legal Authorities Section -->
+    <mj-collapsible-panel
+        SectionKey="legalAuthorities"
+        SectionName="Legal Authorities"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('legalAuthorities')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Legal Authorities','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Legal Authorities')"
+                [AllowLoad]="IsSectionExpanded('legalAuthorities')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('legalAuthorities', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Legal Authority Sections Section -->
+    <mj-collapsible-panel
+        SectionKey="legalAuthoritySections"
+        SectionName="Legal Authority Sections"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('legalAuthoritySections')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Legal Authority Sections','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Legal Authority Sections')"
+                [AllowLoad]="IsSectionExpanded('legalAuthoritySections')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('legalAuthoritySections', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         

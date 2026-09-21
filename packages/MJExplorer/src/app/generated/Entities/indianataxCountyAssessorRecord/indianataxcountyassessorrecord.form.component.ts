@@ -25,7 +25,7 @@ export class indianataxCountyAssessorRecordFormComponent extends BaseFormCompone
             { sectionKey: 'deedInformation', sectionName: 'Deed Information', isExpanded: true },
             { sectionKey: 'sourceDocuments', sectionName: 'Source Documents', isExpanded: true },
             { sectionKey: 'valuationApproach', sectionName: 'Valuation Approach', isExpanded: true },
-            { sectionKey: 'propertyDimensions', sectionName: 'Property Dimensions', isExpanded: true },
+            { sectionKey: 'assessmentRevision', sectionName: 'Assessment Revision', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'countyAssessorSaleHistories', sectionName: 'County Assessor Sale Histories', isExpanded: false },
             { sectionKey: 'countyAssessorImprovements', sectionName: 'County Assessor Improvements', isExpanded: false },

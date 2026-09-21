@@ -938,6 +938,81 @@
         }
     </mj-collapsible-panel>
 
+    <!-- IBTR Appeals Section -->
+    <mj-collapsible-panel
+        SectionKey="iBTRAppeals"
+        SectionName="IBTR Appeals"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('iBTRAppeals')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('IBTR Appeals','ParcelID')"
+                [NewRecordValues]="NewRecordValues('IBTR Appeals')"
+                [AllowLoad]="IsSectionExpanded('iBTRAppeals')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('iBTRAppeals', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Assessment Notices Section -->
+    <mj-collapsible-panel
+        SectionKey="assessmentNotices"
+        SectionName="Assessment Notices"
+        Icon="fa fa-table"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('assessmentNotices')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Assessment Notices','ParcelID')"
+                [NewRecordValues]="NewRecordValues('Assessment Notices')"
+                [AllowLoad]="IsSectionExpanded('assessmentNotices')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('assessmentNotices', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Appeal Analysis Section -->
+    <mj-collapsible-panel
+        SectionKey="appealAnalysis"
+        SectionName="Appeal Analysis"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('appealAnalysis')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Appeal Analysis','ParcelID')"
+                [NewRecordValues]="NewRecordValues('Appeal Analysis')"
+                [AllowLoad]="IsSectionExpanded('appealAnalysis')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('appealAnalysis', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         

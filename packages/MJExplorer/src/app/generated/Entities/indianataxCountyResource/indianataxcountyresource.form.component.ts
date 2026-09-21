@@ -18,6 +18,7 @@ export class indianataxCountyResourceFormComponent extends BaseFormComponent {
             { sectionKey: 'resourceIdentification', sectionName: 'Resource Identification', isExpanded: true },
             { sectionKey: 'resourceContact', sectionName: 'Resource Contact', isExpanded: true },
             { sectionKey: 'sourceInformation', sectionName: 'Source Information', isExpanded: true },
+            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

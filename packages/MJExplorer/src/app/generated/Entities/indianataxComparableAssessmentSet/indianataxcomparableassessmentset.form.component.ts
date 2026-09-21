@@ -23,7 +23,8 @@ export class indianataxComparableAssessmentSetFormComponent extends BaseFormComp
             { sectionKey: 'countyWideComparables', sectionName: 'County-wide Comparables', isExpanded: true },
             { sectionKey: 'comparativeAnalysis', sectionName: 'Comparative Analysis', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
-            { sectionKey: 'comparableAssessmentMembers', sectionName: 'Comparable Assessment Members', isExpanded: false }
+            { sectionKey: 'comparableAssessmentMembers', sectionName: 'Comparable Assessment Members', isExpanded: false },
+            { sectionKey: 'appealAnalysis', sectionName: 'Appeal Analysis', isExpanded: false }
         ]);
     }
 }

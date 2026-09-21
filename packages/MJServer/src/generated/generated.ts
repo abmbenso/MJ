@@ -29569,7 +29569,8 @@ export class MJCommunicationLog_ {
     @Field({nullable: true}) 
     @MaxLength(100)
     CommunicationRun?: string;
-        
+        // Relationship field to APRA Requests not generated: its GraphQL type is not declared in this file.
+
 }
 
 //****************************************************************************
@@ -29704,7 +29705,8 @@ export class MJCommunicationLogResolver extends ResolverBase {
         const result = await this.MapFieldNamesToCodeNames('MJ: Communication Logs', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
         return result;
     }
-    
+    // Relationship to APRA Requests not generated: its GraphQL type is not declared in this file.
+
     @Mutation(() => MJCommunicationLog_)
     async CreateMJCommunicationLog(
         @Arg('input', () => CreateMJCommunicationLogInput) input: CreateMJCommunicationLogInput,
@@ -87040,7 +87042,8 @@ export class MJTemplate_ {
     
     @Field(() => [MJUserRoutine_])
     MJUserRoutines_NotificationTemplateIDArray: MJUserRoutine_[]; // Link to MJUserRoutines
-    
+    // Relationship field to APRA Requests not generated: its GraphQL type is not declared in this file.
+
 }
 
 //****************************************************************************
@@ -87265,7 +87268,8 @@ export class MJTemplateResolver extends ResolverBase {
         const result = await this.ArrayMapFieldNamesToCodeNames('MJ: User Routines', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
-        
+        // Relationship to APRA Requests not generated: its GraphQL type is not declared in this file.
+
     @Mutation(() => MJTemplate_)
     async CreateMJTemplate(
         @Arg('input', () => CreateMJTemplateInput) input: CreateMJTemplateInput,

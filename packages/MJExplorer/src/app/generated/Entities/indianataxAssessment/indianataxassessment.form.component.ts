@@ -18,6 +18,7 @@ export class indianataxAssessmentFormComponent extends BaseFormComponent {
             { sectionKey: 'assessmentIdentification', sectionName: 'Assessment Identification', isExpanded: true },
             { sectionKey: 'originalAssessmentValues', sectionName: 'Original Assessment Values', isExpanded: true },
             { sectionKey: 'pTABOAAppealValues', sectionName: 'PTABOA Appeal Values', isExpanded: true },
+            { sectionKey: 'appealRevisionDetails', sectionName: 'Appeal Revision Details', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }
