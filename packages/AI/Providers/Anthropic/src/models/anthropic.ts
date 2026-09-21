@@ -467,6 +467,43 @@ export class AnthropicLLM extends BaseLLM {
     }
 
     /**
+     * Resolves max_tokens and the optional extended-thinking budget from ChatParams. Shared by
+     * nonStreamingChatCompletion and createStreamingRequest so the two request-building paths
+     * can't drift out of sync the way they did before this method existed: createStreamingRequest
+     * used to set `max_tokens: params.maxOutputTokens` directly with no fallback, so any caller
+     * that left maxOutputTokens unset (e.g. AIPromptRunner driving a Loop-type agent step) sent
+     * `max_tokens: undefined` — which Anthropic's SDK drops from the request entirely, and the
+     * API rejects with "max_tokens: Field required" on every single call. The non-streaming path
+     * already guarded against this with `params.maxOutputTokens || 32000`; this factors that
+     * guard (plus the thinking-budget bump) out so both paths get it for free.
+     */
+    private resolveMaxTokensAndThinking(params: ChatParams): { maxTokens: number; thinkingBudget: number | undefined } {
+        // When thinking is enabled, max_tokens must be greater than budget_tokens
+        let maxTokens = params.maxOutputTokens || 32000;
+        let thinkingBudget: number | undefined = undefined;
+
+        if (params.effortLevel && (params.reasoningBudgetTokens >= 1 || params.reasoningBudgetTokens === undefined || params.reasoningBudgetTokens === null)) {
+            thinkingBudget = params.reasoningBudgetTokens || 31000;
+            // Ensure max_tokens is greater than budget_tokens
+            if (maxTokens <= thinkingBudget) {
+                maxTokens = thinkingBudget + 1000; // Add buffer to ensure max_tokens > budget_tokens
+            }
+        }
+        return { maxTokens, thinkingBudget };
+    }
+
+    /**
+     * Whether to omit a caller-supplied temperature. Shared by both request-building paths for
+     * the same reason as {@link resolveMaxTokensAndThinking}.
+     * 2025-11-25: With thinking enabled on Claude 4.5 Opus, temperature must be 1 — omit rather
+     * than send a caller-supplied value that would violate that (and trigger Anthropic's
+     * "temperature may only be set to 1 when thinking is enabled" 400).
+     */
+    private shouldSkipTemperature(model: string, thinkingBudget: number | undefined): boolean {
+        return model.toLowerCase().startsWith('claude-opus-4-5') && thinkingBudget !== undefined;
+    }
+
+    /**
      * Non-streaming implementation for Anthropic
      */
     protected async nonStreamingChatCompletion(params: ChatParams): Promise<ChatResult> {
@@ -480,19 +517,8 @@ export class AnthropicLLM extends BaseLLM {
             // Find system message and non-system messages
             const systemMsgs = params.messages.filter(m => m.role === "system");
             const nonSystemMsgs = params.messages.filter(m => m.role !== "system");
-            
-            // Determine max_tokens and thinking budget
-            // When thinking is enabled, max_tokens must be greater than budget_tokens
-            let maxTokens = params.maxOutputTokens || 32000;
-            let thinkingBudget: number | undefined = undefined;
 
-            if (params.effortLevel && (params.reasoningBudgetTokens >= 1 || params.reasoningBudgetTokens === undefined || params.reasoningBudgetTokens === null)) {
-                thinkingBudget = params.reasoningBudgetTokens || 31000;
-                // Ensure max_tokens is greater than budget_tokens
-                if (maxTokens <= thinkingBudget) {
-                    maxTokens = thinkingBudget + 1000; // Add buffer to ensure max_tokens > budget_tokens
-                }
-            }
+            const { maxTokens, thinkingBudget } = this.resolveMaxTokensAndThinking(params);
 
             // Append assistant prefill message if specified
             const messagesForApi = this.appendPrefillMessage(nonSystemMsgs, params.assistantPrefill);
@@ -505,13 +531,9 @@ export class AnthropicLLM extends BaseLLM {
                 messages: this.formatMessagesWithCaching(messagesForApi, params.enableCaching || true)
             };
 
-            // Add temperature if specified. Note that Claude 4.5 Opus doesn't support temperature changes when extended thinking is enabled.
-            // Skip the temperature set in that case.
-            if (params.temperature != null) {
-                //2025-11-25: With thinking enabled on Claude 4.5 Opus, temperature must be 1.
-                if (!(params.model.toLowerCase().startsWith('claude-opus-4-5') && thinkingBudget !== undefined)) {
-                    createParams.temperature = params.temperature;
-                }
+            // Add temperature if specified (skipped when thinking-enabled Opus 4.5 forbids it)
+            if (params.temperature != null && !this.shouldSkipTemperature(params.model, thinkingBudget)) {
+                createParams.temperature = params.temperature;
             }
 
             // Add supported parameters.
@@ -723,16 +745,18 @@ export class AnthropicLLM extends BaseLLM {
         // Find system message and non-system messages
         const systemMsg = params.messages.find(m => m.role === "system");
         const nonSystemMsgs = params.messages.filter(m => m.role !== "system");
-        
+
+        const { maxTokens, thinkingBudget } = this.resolveMaxTokensAndThinking(params);
+
         // Create the request parameters
         const createParams: any = {
             model: params.model,
-            max_tokens: params.maxOutputTokens,
+            max_tokens: maxTokens,
             stream: true as const
         };
 
-        // Add temperature if specified
-        if (params.temperature != null) {
+        // Add temperature if specified (skipped when thinking-enabled Opus 4.5 forbids it)
+        if (params.temperature != null && !this.shouldSkipTemperature(params.model, thinkingBudget)) {
             createParams.temperature = params.temperature;
         }
 
@@ -776,12 +800,15 @@ export class AnthropicLLM extends BaseLLM {
             params.enableCaching
         );
         
-        // Add thinking parameter if effort level is set
-        // Note: Requires minimum 1024 tokens and must be less than max_tokens
-        if (params.effortLevel && params.reasoningBudgetTokens >= 1024) {
+        // Add thinking parameter if effort level is set. Uses the same thinkingBudget computed
+        // by resolveMaxTokensAndThinking() above (and which max_tokens was already sized against)
+        // rather than re-deriving it from params.reasoningBudgetTokens directly — the two used to
+        // apply different minimum thresholds (1024 tokens here vs. no minimum on the non-streaming
+        // path), which could enable thinking on one path and not the other for the same request.
+        if (thinkingBudget !== undefined) {
             createParams.thinking = {
                 type: "enabled" as const,
-                budget_tokens: params.reasoningBudgetTokens
+                budget_tokens: thinkingBudget
             };
         }
 

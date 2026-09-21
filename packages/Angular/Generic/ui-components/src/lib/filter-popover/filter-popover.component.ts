@@ -163,6 +163,14 @@ import { OverlayModule, ConnectedPosition } from '@angular/cdk/overlay';
     .mj-filter-popover-panel {
       min-width: 320px;
       max-width: 480px;
+      /* Capped + scrollable, same reasoning as the mobile sheet below --
+         without this, content taller than the available viewport space just
+         gets clipped by overflow:hidden with nothing to scroll it back into
+         view (the bug this comment is fixing: a tall "Columns" checkbox list
+         could make everything past a certain point unreachable). */
+      max-height: 70vh;
+      display: flex;
+      flex-direction: column;
       background: var(--mj-bg-surface);
       border: 1px solid var(--mj-border-default);
       border-radius: var(--mj-radius-md);
@@ -176,6 +184,7 @@ import { OverlayModule, ConnectedPosition } from '@angular/cdk/overlay';
       align-items: center;
       justify-content: space-between;
       padding: var(--mj-space-3) var(--mj-space-4) 0;
+      flex-shrink: 0;
     }
 
     .mj-filter-popover-title {
@@ -204,6 +213,9 @@ import { OverlayModule, ConnectedPosition } from '@angular/cdk/overlay';
       display: flex;
       flex-direction: column;
       gap: var(--mj-space-2-5);
+      flex: 1;
+      min-height: 0;
+      overflow-y: auto;
     }
 
     /* ── Mobile bottom sheet (≤700px) ─────────────────────────────────────

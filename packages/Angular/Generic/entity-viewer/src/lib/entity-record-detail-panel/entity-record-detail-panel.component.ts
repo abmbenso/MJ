@@ -413,7 +413,7 @@ export class EntityRecordDetailPanelComponent extends BaseAngularComponent imple
       if (field) {
         const value = record[field.Name];
         if (value !== null && value !== undefined) {
-          return this.formatFieldValue(value, field.Name);
+          return this.formatFieldValue(value, field);
         }
       }
     }
@@ -482,7 +482,7 @@ export class EntityRecordDetailPanelComponent extends BaseAngularComponent imple
         type: isEnum ? 'enum' : 'regular',
         name: field.Name,
         label: this.formatFieldLabel(field),
-        value: this.formatFieldValue(value, field.Name)
+        value: this.formatFieldValue(value, field)
       });
     }
 
@@ -553,9 +553,25 @@ export class EntityRecordDetailPanelComponent extends BaseAngularComponent imple
   }
 
   /**
-   * Format field value for display
+   * Format field value for display. `field` is optional (some callers -- the
+   * organic-key subtitle lookups -- only have a field NAME, not the full
+   * EntityFieldInfo, at their call site) but should be passed whenever
+   * available: it's what lets this tell a whole-number YEAR field apart from
+   * a whole-number COUNT/SQFT field, and a decimal RATE field apart from a
+   * decimal MONEY field, none of which is recoverable from the raw value or
+   * field name alone. Without `field`, this falls back to the old
+   * name-substring-only heuristic for numbers.
+   *
+   * SQL type family drives the base rule (never override a real integer with
+   * "$", never comma-group a real percentage) exactly the way an int
+   * cannot ever be legitimately displayed as a dollar amount with cents; a
+   * narrower name pattern only breaks a further tie WITHIN a type family
+   * (e.g. "is this int a Year or a Count", "is this decimal a Rate or an
+   * Amount") -- see docs/NUMBER_FORMATTING.md in the indiana_tax project for
+   * the worked examples this was built against (YearBuilt showing "1,995",
+   * TotalSqFt showing "$212,630").
    */
-  private formatFieldValue(value: unknown, fieldName: string): string {
+  private formatFieldValue(value: unknown, field: EntityFieldInfo | string): string {
     if (value === null || value === undefined) return '-';
 
     // Handle dates
@@ -568,17 +584,10 @@ export class EntityRecordDetailPanelComponent extends BaseAngularComponent imple
       return value ? 'Yes' : 'No';
     }
 
-    // Handle numbers that look like currency
     if (typeof value === 'number') {
-      const nameLower = fieldName.toLowerCase();
-      if (nameLower.includes('amount') ||
-          nameLower.includes('price') ||
-          nameLower.includes('cost') ||
-          nameLower.includes('total') ||
-          nameLower.includes('value')) {
-        return `$${value.toLocaleString()}`;
-      }
-      return value.toLocaleString();
+      const fieldName = typeof field === 'string' ? field : field.Name;
+      const sqlType = typeof field === 'string' ? null : field.Type?.toLowerCase() ?? null;
+      return this.formatNumericFieldValue(value, fieldName, sqlType);
     }
 
     const strValue = String(value);
@@ -589,6 +598,61 @@ export class EntityRecordDetailPanelComponent extends BaseAngularComponent imple
     }
 
     return strValue;
+  }
+
+  /** Whole-number SQL types -- never have a fractional/cents component, so "$" (which implies cents) is never appropriate for these. */
+  private static readonly INTEGER_SQL_TYPES = new Set(['int', 'smallint', 'tinyint', 'bigint']);
+  /** SQL types that CAN carry cents/fractional precision -- the only family where "$" currency formatting is ever appropriate. */
+  private static readonly DECIMAL_SQL_TYPES = new Set(['decimal', 'numeric', 'money', 'smallmoney', 'float', 'real']);
+
+  private static readonly YEAR_NAME_PATTERN = /year/i;
+  private static readonly RATE_NAME_PATTERN = /rate|percent|pct/i;
+  // `acre`/`acres`/`acreage` added 2026-09-08: acreage is a land-area quantity, and unlike most
+  // measures it cannot be renamed to fit the patterns above -- "Acres" IS the unit, and
+  // an `AcresArea` column would be worse than the bug. Without it a decimal acreage falls
+  // through to the currency default and a 26.42-acre site renders as "$26.42". Extending
+  // the shared pattern is what Indiana_Tax_Expert/docs/NUMBER_FORMATTING.md prescribes for
+  // exactly this case, in preference to special-casing one project.
+  // A leading \b is deliberately NOT used: camelCase defeats it, so `SiblingVacantAcres`
+  // would still have rendered as currency. The trailing (?![a-z]) keeps it tight, and the
+  // (?<!per) guard keeps a per-unit PRICE out: `PricePerAcre` is dollars per acre and must
+  // stay currency. A database-wide sweep found exactly five columns whose rendering this
+  // changes -- Acreage, Acres, CoStarLandAreaAcres, SiblingVacantAcres (all quantities,
+  // correctly changed) and PricePerAcre (currency, correctly excluded by that guard).
+  private static readonly SIZE_OR_COUNT_NAME_PATTERN = /sq\s?ft|squarefoot|square\s?feet|\barea\b|(?<!per)acre(?:s|age)?(?![a-z])|quantity|\bqty\b|\bcount\b/i;
+
+  private formatNumericFieldValue(value: number, fieldName: string, sqlType: string | null): string {
+    if (sqlType && EntityRecordDetailPanelComponent.INTEGER_SQL_TYPES.has(sqlType)) {
+      // A real integer column -- e.g. YearBuilt, TaxYear, AssessmentYear --
+      // must never be comma-grouped (1,995 is not a year); anything else
+      // (EstimatedSqFt, a row count, etc.) is grouped for readability.
+      if (EntityRecordDetailPanelComponent.YEAR_NAME_PATTERN.test(fieldName)) {
+        return String(value);
+      }
+      return value.toLocaleString('en-US');
+    }
+
+    if (sqlType && EntityRecordDetailPanelComponent.DECIMAL_SQL_TYPES.has(sqlType)) {
+      if (EntityRecordDetailPanelComponent.RATE_NAME_PATTERN.test(fieldName)) {
+        return `${value.toFixed(4)}%`;
+      }
+      if (EntityRecordDetailPanelComponent.SIZE_OR_COUNT_NAME_PATTERN.test(fieldName)) {
+        return value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+      }
+      // Default for the decimal/money family: this is the common case for
+      // this SQL type family across MJ schemas (assessed values, tax
+      // amounts, credits, etc.) -- unlike guessing currency from a name
+      // substring (the old approach), gating on the type family first means
+      // a non-money decimal has to positively match Rate or Size/Count above
+      // to escape this default, rather than a money field needing to
+      // positively match a curated word list to reach it.
+      return `$${value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+    }
+
+    // Unknown/unrecognized SQL type string, or no field metadata available
+    // at all (the `field: string` fallback path) -- safest default is a
+    // plain grouped number, never assume currency without type evidence.
+    return value.toLocaleString('en-US');
   }
 
   /**
@@ -776,7 +840,7 @@ export class EntityRecordDetailPanelComponent extends BaseAngularComponent imple
       if (field) {
         const value = record[field.Name];
         if (value !== null && value !== undefined) {
-          return this.formatFieldValue(value, field.Name);
+          return this.formatFieldValue(value, field);
         }
       }
     }
