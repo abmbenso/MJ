@@ -39,7 +39,63 @@
       ]
     },
     "relatedEntities": {
-      "MJ: Application Entities": []
+      "MJ: Application Entities": [
+        {
+          "fields": {
+            "ApplicationID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=Counties",
+            "Sequence": 10,
+            "DefaultForNewUser": true
+          },
+          "primaryKey": {
+            "ID": "6E8D8D5F-7B64-41CB-BF5C-8B7A500D3E63"
+          }
+        },
+        {
+          "fields": {
+            "ApplicationID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=County Contacts",
+            "Sequence": 11,
+            "DefaultForNewUser": true
+          },
+          "primaryKey": {
+            "ID": "77C0F9E7-2021-4E2C-828F-ED9369C227EF"
+          }
+        },
+        {
+          "fields": {
+            "ApplicationID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=APRA Requests",
+            "Sequence": 12,
+            "DefaultForNewUser": true
+          },
+          "primaryKey": {
+            "ID": "C4669867-72FC-47B9-80CB-8FA97E1ED44B"
+          }
+        },
+        {
+          "fields": {
+            "ApplicationID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=APRA Request Events",
+            "Sequence": 13,
+            "DefaultForNewUser": true
+          },
+          "primaryKey": {
+            "ID": "0EFA694D-96B9-4400-AD53-9EDCB7CD7E3B"
+          }
+        },
+        {
+          "fields": {
+            "ApplicationID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=APRA Response Files",
+            "Sequence": 14,
+            "DefaultForNewUser": true
+          },
+          "primaryKey": {
+            "ID": "10C28279-1D1F-4FCB-8036-58CD9DA616B4"
+          }
+        }
+      ]
     },
     "primaryKey": {
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
