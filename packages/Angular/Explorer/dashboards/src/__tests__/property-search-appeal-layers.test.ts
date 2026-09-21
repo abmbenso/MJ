@@ -3,6 +3,7 @@ import type { RunView } from '@memberjunction/core';
 import {
   EMPTY_APPEAL_LAYERS, reduceCardAppeals, reduceIbtr, reduceTaxCourtParcels, fetchAppealLayers, applyAppealLayers,
 } from '../PropertySearch/property-search-appeal-layers';
+import { buildCardRevisionRows, buildCardNoteRows } from '../PropertySearch/property-search-appeal-layers';
 
 describe('reduceCardAppeals', () => {
   // Hand-read from a real card (Hendricks, AY2024): original 123,700 on 2024-04-18, revised by Form 134 to 90,700 on 2024-07-29.
@@ -99,5 +100,33 @@ describe('applyAppealLayers', () => {
     const out = applyAppealLayers(rows, new Map([['P1', { ...EMPTY_APPEAL_LAYERS, TaxCourtDecision: 'Y' as const, IBTRDecisionCount: 3 }]]));
     expect(out[0]).toMatchObject({ TaxCourtDecision: 'Y', IBTRDecisionCount: 3 });
     expect(out[1]).toMatchObject({ TaxCourtDecision: 'N', IBTRDecisionCount: null });
+  });
+});
+
+describe('buildCardRevisionRows', () => {
+  const cols = [
+    { CardAssessmentYear: 2026, AssessmentYear: 2025, IsCertified: true, ReasonKind: 'appeal', ReasonForm: 134, ReasonForChange: 'Reval/134', AsOfDate: '2025-08-21', TotalAV: 93500 },
+    { CardAssessmentYear: 2026, AssessmentYear: 2025, IsCertified: true, ReasonKind: 'annual', ReasonForm: null, ReasonForChange: 'Annual-Adj', AsOfDate: '2025-04-17', TotalAV: 184100 },
+    { CardAssessmentYear: 2026, AssessmentYear: 2024, IsCertified: true, ReasonKind: 'appeal', ReasonForm: 134, ReasonForChange: 'Reval/134', AsOfDate: '2024-07-29', TotalAV: 90700 },
+    { CardAssessmentYear: 2025, AssessmentYear: 2024, IsCertified: true, ReasonKind: 'appeal', ReasonForm: 134, ReasonForChange: 'Reval/134', AsOfDate: '2024-07-29', TotalAV: 90700 },
+    { CardAssessmentYear: 2025, AssessmentYear: 2024, IsCertified: true, ReasonKind: 'annual', ReasonForm: null, ReasonForChange: 'Annual-Adj', AsOfDate: '2024-04-18', TotalAV: 123700 },
+  ];
+  it('lists each distinct revision once (reprints collapsed), newest year first, with its original', () => {
+    expect(buildCardRevisionRows(cols)).toEqual([
+      { assessmentYear: 2025, form: 134, reason: 'Reval/134', asOfDate: '2025-08-21', originalTotalAV: 184100, revisedTotalAV: 93500, cardYear: 2026 },
+      { assessmentYear: 2024, form: 134, reason: 'Reval/134', asOfDate: '2024-07-29', originalTotalAV: 123700, revisedTotalAV: 90700, cardYear: 2026 },
+    ]);
+  });
+});
+
+describe('buildCardNoteRows', () => {
+  it('collapses repeated printings on NoteKey and orders appeal, permit, other -- newest first', () => {
+    const notes = [
+      { NoteKey: 'k1', NoteKind: 'other', NoteForm: null, NoteDate: '2020-01-01', NoteCode: 'GEN', NoteText: 'x' },
+      { NoteKey: 'k2', NoteKind: 'appeal', NoteForm: 130, NoteDate: '2017-01-30', NoteCode: 'CBTB', NoteText: '2016 CBTB (FORM 130) - ADJ AV' },
+      { NoteKey: 'k2', NoteKind: 'appeal', NoteForm: 130, NoteDate: '2017-01-30', NoteCode: 'CBTB', NoteText: '2016 CBTB (FORM 130) - ADJ AV' },
+      { NoteKey: 'k3', NoteKind: 'permit', NoteForm: null, NoteDate: '2022-06-01', NoteCode: 'BP', NoteText: 'new roof' },
+    ];
+    expect(buildCardNoteRows(notes).map((n) => [n.kind, n.printings])).toEqual([['appeal', 2], ['permit', 1], ['other', 1]]);
   });
 });

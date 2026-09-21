@@ -56,7 +56,7 @@ import {
 } from './property-search-county';
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
-import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers } from './property-search-appeal-layers';
+import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers, fetchParcelAppealLayerDetail, ParcelAppealLayerDetail } from './property-search-appeal-layers';
 
 /** Parses CountyAssessorRecord.Acreage (NVARCHAR(10), legacy ArcGIS-sourced text) into a number, or null for blank/non-numeric/non-positive values -- the analytics panel's per-acre calculations need a real number, not the raw string RunView('simple') returns. */
 function parseAcreage(raw: string | null): number | null {
@@ -160,6 +160,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   /** SelectedParcel's PTABOA appeal history, newest first -- fetched alongside the trend rows on selection (same RunViews batch). */
   public SelectedParcelAppeals: AppealHistoryRow[] = [];
   public IsAppealsLoading = false;
+  /** SelectedParcel's card revisions, card notes, IBTR decisions and Tax Court candidates (spec §12). Null until loaded or when the load failed (see AppealLayersDetailError). */
+  public SelectedParcelAppealLayers: ParcelAppealLayerDetail | null = null;
+  public IsAppealLayersLoading = false;
+  public AppealLayersDetailError: string | null = null;
   /** SelectedParcel's CoStar matches (usually 0 or 1, occasionally more -- see CoStarPropertyRow's doc comment) -- fetched alongside the trend/appeal rows on selection (same RunViews batch). */
   public SelectedParcelCoStarMatches: CoStarPropertyRow[] = [];
 
@@ -417,6 +421,9 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.SelectedParcelCoStarMatches = [];
     this.IsTrendLoading = true;
     this.IsAppealsLoading = true;
+    this.IsAppealLayersLoading = true;
+    this.SelectedParcelAppealLayers = null;
+    this.AppealLayersDetailError = null;
     void this.loadParcelDetail(parcel.ParcelID);
     this.publishAgentContext();
     this.cdr.markForCheck();
@@ -427,6 +434,9 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.SelectedParcel = null;
     this.SelectedParcelTrend = [];
     this.SelectedParcelAppeals = [];
+    this.SelectedParcelAppealLayers = null;
+    this.IsAppealLayersLoading = false;
+    this.AppealLayersDetailError = null;
     this.SelectedParcelCoStarMatches = [];
     this.publishAgentContext();
     this.cdr.markForCheck();
@@ -533,6 +543,17 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.SelectedParcelAppeals = appealsResult.Success ? buildAppealHistoryRows(appealsResult.Results ?? []) : [];
     this.IsAppealsLoading = false;
     this.SelectedParcelCoStarMatches = coStarResult.Success ? buildCoStarPropertyRows(coStarResult.Results ?? []) : [];
+    this.cdr.markForCheck();
+
+    try {
+      const detail = await fetchParcelAppealLayerDetail(rv, parcelID);
+      if (this.SelectedParcel?.ParcelID !== parcelID) return; // stale selection -- the newer selection's own load owns IsAppealLayersLoading, so it's intentionally left as-is here.
+      this.SelectedParcelAppealLayers = detail;
+    } catch (e) {
+      if (this.SelectedParcel?.ParcelID !== parcelID) return;
+      this.AppealLayersDetailError = e instanceof Error ? e.message : 'Appeal layers failed to load';
+    }
+    this.IsAppealLayersLoading = false;
     this.cdr.markForCheck();
   }
 

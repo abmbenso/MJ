@@ -195,3 +195,95 @@ export async function fetchAppealLayers(rv: RunView, parcelIds: string[], assess
 export function applyAppealLayers<T extends { ParcelID: string }>(rows: T[], layers: Map<string, AppealLayerFields>): (T & AppealLayerFields)[] {
   return rows.map((r) => ({ ...EMPTY_APPEAL_LAYERS, ...r, ...(layers.get(r.ParcelID) ?? {}) }));
 }
+
+export interface CardRevisionRow { assessmentYear: number; form: number | null; reason: string | null; asOfDate: string | null; originalTotalAV: number | null; revisedTotalAV: number | null; cardYear: number; }
+export interface CardNoteRow { kind: 'appeal' | 'permit' | 'other'; form: number | null; date: string | null; code: string | null; text: string; printings: number; }
+export interface IbtrDecisionRow { petitionNumber: string; decisionDate: string | null; assessmentYear: number | null; disposition: string | null; appealType: string | null; valueAfter: number | null; documentURL: string | null; }
+export interface TaxCourtCaseRow { docketNumber: string; caseName: string; lastDecisionDate: string | null; opinionURL: string | null; nameScore: number; isHighConfidence: boolean; }
+export interface ParcelAppealLayerDetail { cardRevisions: CardRevisionRow[]; cardNotes: CardNoteRow[]; ibtrDecisions: IbtrDecisionRow[]; taxCourtCases: TaxCourtCaseRow[]; }
+
+/** @param columnRows every non-WIP CardValuationColumn row of ONE parcel, all cards and years. */
+export function buildCardRevisionRows(columnRows: Row[]): CardRevisionRow[] {
+  const byYear = new Map<number, Row[]>();
+  for (const r of columnRows) { const y = Number(r['AssessmentYear']); byYear.set(y, [...(byYear.get(y) ?? []), r]); }
+  const out: CardRevisionRow[] = [];
+  for (const [year, rows] of byYear) {
+    const originals = rows.filter((r) => r['IsCertified'] && r['ReasonKind'] !== 'appeal' && r['ReasonKind'] !== 'wip');
+    const original = originals.reduce<Row | null>((a, r) => (!a || (time(r['AsOfDate']) ?? Infinity) < (time(a['AsOfDate']) ?? Infinity) ? r : a), null);
+    const distinct = new Map<string, Row>();
+    for (const r of rows.filter((x) => x['ReasonKind'] === 'appeal')) {
+      const key = `${str(r['AsOfDate'])}|${r['TotalAV']}|${r['ReasonForm']}`;
+      const cur = distinct.get(key);
+      if (!cur || Number(r['CardAssessmentYear']) > Number(cur['CardAssessmentYear'])) distinct.set(key, r);
+    }
+    for (const r of distinct.values()) {
+      out.push({ assessmentYear: year, form: num(r['ReasonForm']), reason: str(r['ReasonForChange']), asOfDate: str(r['AsOfDate']),
+        originalTotalAV: num(original?.['TotalAV']), revisedTotalAV: num(r['TotalAV']), cardYear: Number(r['CardAssessmentYear']) });
+    }
+  }
+  return out.sort((a, b) => b.assessmentYear - a.assessmentYear || (time(b.asOfDate) ?? 0) - (time(a.asOfDate) ?? 0));
+}
+
+const NOTE_KIND_ORDER: Record<CardNoteRow['kind'], number> = { appeal: 0, permit: 1, other: 2 };
+export function buildCardNoteRows(noteRows: Row[]): CardNoteRow[] {
+  const byKey = new Map<string, CardNoteRow>();
+  for (const r of noteRows) {
+    const key = (r['NoteKey'] as string) ?? `${str(r['NoteDate'])}|${r['NoteCode']}|${r['NoteText']}`;
+    const cur = byKey.get(key);
+    if (cur) { cur.printings++; continue; }
+    const kind: CardNoteRow['kind'] = r['NoteKind'] === 'appeal' || r['NoteKind'] === 'permit' ? r['NoteKind'] : 'other';
+    byKey.set(key, { kind, form: num(r['NoteForm']), date: str(r['NoteDate']), code: str(r['NoteCode']), text: String(r['NoteText'] ?? ''), printings: 1 });
+  }
+  return [...byKey.values()].sort((a, b) => NOTE_KIND_ORDER[a.kind] - NOTE_KIND_ORDER[b.kind] || (time(b.date) ?? 0) - (time(a.date) ?? 0));
+}
+
+/** Everything the detail panel shows for one parcel. Three round trips at most; throws on a failed query. */
+export async function fetchParcelAppealLayerDetail(rv: RunView, parcelID: string): Promise<ParcelAppealLayerDetail> {
+  const pid = escapeSqlLiteral(parcelID);
+  const [colRes, noteRes, ibtrRes] = await rv.RunViews<Row>([
+    { EntityName: CARD_COLUMNS_ENTITY, Fields: ['CardAssessmentYear', 'AssessmentYear', 'IsCertified', 'ReasonKind', 'ReasonForm', 'ReasonForChange', 'AsOfDate', 'TotalAV'],
+      ExtraFilter: `ParcelID = '${pid}' AND ReasonKind <> 'wip'`, MaxRows: 1000, ResultType: 'simple' },
+    { EntityName: CARD_NOTES_ENTITY, Fields: ['NoteKey', 'NoteKind', 'NoteForm', 'NoteDate', 'NoteCode', 'NoteText'],
+      ExtraFilter: `ParcelID = '${pid}'`, MaxRows: 5000, ResultType: 'simple' },
+    { EntityName: IBTR_APPEALS_ENTITY, Fields: ['ID', 'PetitionNumber', 'DecisionDate', 'AssessmentYear', 'DispositionType', 'AppealType', 'SourceDocumentID'],
+      ExtraFilter: `ParcelID = '${pid}'`, OrderBy: 'DecisionDate DESC', MaxRows: 500, ResultType: 'simple' },
+  ]);
+  const ibtrRows = rowsOrThrow(IBTR_APPEALS_ENTITY, ibtrRes);
+  const detail: ParcelAppealLayerDetail = {
+    cardRevisions: buildCardRevisionRows(rowsOrThrow(CARD_COLUMNS_ENTITY, colRes)),
+    cardNotes: buildCardNoteRows(rowsOrThrow(CARD_NOTES_ENTITY, noteRes)), ibtrDecisions: [], taxCourtCases: [],
+  };
+  if (!ibtrRows.length) return detail;
+
+  const appealIds = inList(ibtrRows.map((r) => r['ID'] as string));
+  const docIds = ibtrRows.map((r) => r['SourceDocumentID'] as string | null).filter((v): v is string => !!v);
+  const [holdRes, linkRes, docRes] = await rv.RunViews<Row>([
+    { EntityName: IBTR_HOLDINGS_ENTITY, Fields: ['IBTRAppealID', 'ValueAfter'], ExtraFilter: `IBTRAppealID IN (${appealIds})`, MaxRows: 1000, ResultType: 'simple' },
+    { EntityName: TAX_COURT_LINKS_ENTITY, Fields: ['TaxCourtCaseID', 'NameScore'], ExtraFilter: `IBTRAppealID IN (${appealIds})`, MaxRows: 1000, ResultType: 'simple' },
+    { EntityName: SOURCE_DOCUMENTS_ENTITY, Fields: ['ID', 'SourceURL'], ExtraFilter: docIds.length ? `ID IN (${inList(docIds)})` : '1=0', MaxRows: 500, ResultType: 'simple' },
+  ]);
+  const valueByAppeal = new Map<string, number>();
+  for (const h of rowsOrThrow(IBTR_HOLDINGS_ENTITY, holdRes)) if (h['ValueAfter'] != null && !valueByAppeal.has(h['IBTRAppealID'] as string)) valueByAppeal.set(h['IBTRAppealID'] as string, Number(h['ValueAfter']));
+  const urlByDoc = new Map(rowsOrThrow(SOURCE_DOCUMENTS_ENTITY, docRes).map((d) => [d['ID'] as string, str(d['SourceURL'])]));
+  detail.ibtrDecisions = ibtrRows.map((r) => ({
+    petitionNumber: String(r['PetitionNumber'] ?? ''), decisionDate: str(r['DecisionDate']), assessmentYear: num(r['AssessmentYear']),
+    disposition: str(r['DispositionType']), appealType: str(r['AppealType']), valueAfter: valueByAppeal.get(r['ID'] as string) ?? null,
+    documentURL: urlByDoc.get(r['SourceDocumentID'] as string) ?? null,
+  }));
+
+  const bestScoreByCase = new Map<string, number>();
+  for (const l of rowsOrThrow(TAX_COURT_LINKS_ENTITY, linkRes)) {
+    const id = l['TaxCourtCaseID'] as string; const s = Number(l['NameScore']);
+    if (s > (bestScoreByCase.get(id) ?? -1)) bestScoreByCase.set(id, s);
+  }
+  if (bestScoreByCase.size) {
+    const caseRes = await rv.RunView<Row>({ EntityName: TAX_COURT_CASES_ENTITY, Fields: ['ID', 'DocketNumber', 'CaseName', 'LastDecisionDate', 'OpinionURL'],
+      ExtraFilter: `ID IN (${inList([...bestScoreByCase.keys()])})`, MaxRows: 500, ResultType: 'simple' });
+    detail.taxCourtCases = rowsOrThrow(TAX_COURT_CASES_ENTITY, caseRes).map((c) => {
+      const score = bestScoreByCase.get(c['ID'] as string) ?? 0;
+      return { docketNumber: String(c['DocketNumber']), caseName: String(c['CaseName']), lastDecisionDate: str(c['LastDecisionDate']),
+        opinionURL: str(c['OpinionURL']), nameScore: score, isHighConfidence: score >= TAX_COURT_FLAG_MIN_SCORE };
+    }).sort((a, b) => b.nameScore - a.nameScore);
+  }
+  return detail;
+}

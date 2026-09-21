@@ -14,6 +14,7 @@ import {
   AppealConfirmationStatus,
   CoStarPropertyRow,
 } from './property-search-agent-context';
+import { ParcelAppealLayerDetail } from './property-search-appeal-layers';
 
 interface SqFtConfidenceBadge {
   label: string;
@@ -50,6 +51,14 @@ export class PropertyDetailPanelComponent {
   }
   private _appeals: AppealHistoryRow[] = [];
   @Input() IsAppealsLoading = false;
+
+  /** Card revisions, card notes, IBTR decisions, Tax Court candidates for the selected parcel (host fetches once per selection). */
+  @Input() AppealLayers: ParcelAppealLayerDetail | null = null;
+  @Input() IsAppealLayersLoading = false;
+  @Input() AppealLayersError: string | null = null;
+  /** 'other' notes run to hundreds on some cards; the panel shows the first 25 until asked. */
+  public ShowAllNotes = false;
+  public get VisibleNotes() { const n = this.AppealLayers?.cardNotes ?? []; return this.ShowAllNotes ? n : n.slice(0, 25); }
 
   /** The selected parcel's CoStar matches -- usually 0 or 1, occasionally more (see CoStarPropertyRow's doc comment on why this is a list, not a single merged value). Host fetches once per selection. */
   @Input() CoStarMatches: CoStarPropertyRow[] = [];
