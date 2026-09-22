@@ -4831,13 +4831,13 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Description: Parcel number as docketed; formats vary by era and county (18-digit state number with punctuation, older local numbers, personal-property markers).`),
     ParcelID: z.string().nullable().describe(`
         * * Field Name: ParcelID
-        * * Display Name: Parcel ID
+        * * Display Name: Parcel
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
-        * * Description: indiana_tax.Parcel matched by the 18-digit state parcel number where the docketed number normalises to one; NULL otherwise.`),
+        * * Description: indiana_tax.Parcel resolved from the docketed parcel number; see ParcelMatchMethod for how. NULL when the number matches no C&I parcel.`),
     LocationAddress: z.string().nullable().describe(`
         * * Field Name: LocationAddress
-        * * Display Name: Location Address
+        * * Display Name: Property Address
         * * SQL Data Type: nvarchar(300)
         * * Description: Property address as docketed.`),
     AssessmentYear: z.number().nullable().describe(`
@@ -4893,7 +4893,7 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Description: Year the petition was filed, per POPLAR.`),
     StatusName: z.string().nullable().describe(`
         * * Field Name: StatusName
-        * * Display Name: Status Name
+        * * Display Name: Status
         * * SQL Data Type: nvarchar(30)
         * * Description: POPLAR status (Closed etc.).`),
     IssuesPhrase: z.string().nullable().describe(`
@@ -4903,23 +4903,23 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Description: The Boards one-line Issues phrase from its Decisions archive month page, where the decision appears there (2008 onward).`),
     IsSmallClaims: z.boolean().nullable().describe(`
         * * Field Name: IsSmallClaims
-        * * Display Name: Is Small Claims
+        * * Display Name: Small Claims
         * * SQL Data Type: bit
         * * Description: 1 when the decision caption says Small Claims (the simplified track, removed for Form 131 from 2026-09-02).`),
     SourceDocumentID: z.string().nullable().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Source Document ID
+        * * Display Name: Decision Document
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
         * * Description: The decision file: SourceDocument of type IBTRDecision (hash, path, URL, extracted text).`),
     TextChars: z.number().nullable().describe(`
         * * Field Name: TextChars
-        * * Display Name: Text Chars
+        * * Display Name: Text Characters
         * * SQL Data Type: int
         * * Description: Characters of extracted text for the decision file.`),
     TextIsOCR: z.boolean().nullable().describe(`
         * * Field Name: TextIsOCR
-        * * Display Name: Text Is OCR
+        * * Display Name: Text is OCR
         * * SQL Data Type: bit
         * * Description: 1 when the text came from OCR of an image-only scan (most POPLAR copies from 2025 on); treat quotations with care.`),
     ExtractionStatus: z.union([z.literal('Model'), z.literal('None'), z.literal('Reviewed'), z.literal('Rules')]).describe(`
@@ -4990,6 +4990,15 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    ParcelMatchMethod: z.union([z.literal('CountyLocalNumber'), z.literal('StateParcel18')]).nullable().describe(`
+        * * Field Name: ParcelMatchMethod
+        * * Display Name: Parcel Match Method
+        * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * CountyLocalNumber
+    *   * StateParcel18
+        * * Description: How ParcelID was resolved: StateParcel18 (the docketed number normalises to an 18-digit state parcel number held in Parcel.ParcelNumber) or CountyLocalNumber (its digits equal Parcel.GISParcelNumber inside the same county, that key is unique there, AND the docketed address and the parcel address carry the same house number; counties where the local-number scheme does not line up are skipped — list in Indiana_Tax_Expert scripts/lib/ibtr-parcel-match.js). NULL exactly when ParcelID is NULL. indiana_tax.Parcel is C&I only, so most residential appeals match nothing by design.`),
     Parcel: z.string().nullable().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -4998,6 +5007,14 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Field Name: LegacyBoardDecision
         * * Display Name: Legacy Board Decision
         * * SQL Data Type: nvarchar(50)`),
+    __mj_Latitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Latitude
+        * * Display Name: Mj Latitude
+        * * SQL Data Type: decimal(10, 6)`),
+    __mj_Longitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Longitude
+        * * Display Name: Mj Longitude
+        * * SQL Data Type: decimal(10, 6)`),
 });
 
 export type indianataxIBTRAppealEntityType = z.infer<typeof indianataxIBTRAppealSchema>;
@@ -9413,6 +9430,130 @@ export const indianataxTaxBillSchema = z.object({
 export type indianataxTaxBillEntityType = z.infer<typeof indianataxTaxBillSchema>;
 
 /**
+ * zod schema definition for the entity Tax Court Cases
+ */
+export const indianataxTaxCourtCaseSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    DocketNumber: z.string().describe(`
+        * * Field Name: DocketNumber
+        * * Display Name: Docket Number
+        * * SQL Data Type: nvarchar(40)
+        * * Description: Normalised docket number, e.g. 49T10-1405-TA-00019. Unique.`),
+    CaseName: z.string().describe(`
+        * * Field Name: CaseName
+        * * Display Name: Case Name
+        * * SQL Data Type: nvarchar(500)
+        * * Description: Caption as catalogued (petitioner v. respondent).`),
+    DateFiled: z.date().nullable().describe(`
+        * * Field Name: DateFiled
+        * * Display Name: Date Filed
+        * * SQL Data Type: date
+        * * Description: Filing date from the Tax Court filing list; NULL for cases known only from a published opinion.`),
+    TaxCategory: z.string().nullable().describe(`
+        * * Field Name: TaxCategory
+        * * Display Name: Tax Category
+        * * SQL Data Type: nvarchar(60)
+        * * Description: Tax type as catalogued (Real property, Sales & Use, Income, Personal property, ...).`),
+    DecisionCount: z.number().describe(`
+        * * Field Name: DecisionCount
+        * * Display Name: Decision Count
+        * * SQL Data Type: int
+        * * Default Value: 0
+        * * Description: Number of catalogued decisions (opinions and orders) in the case.`),
+    FirstDecisionDate: z.date().nullable().describe(`
+        * * Field Name: FirstDecisionDate
+        * * Display Name: First Decision Date
+        * * SQL Data Type: date
+        * * Description: Date of the earliest catalogued decision.`),
+    LastDecisionDate: z.date().nullable().describe(`
+        * * Field Name: LastDecisionDate
+        * * Display Name: Last Decision Date
+        * * SQL Data Type: date
+        * * Description: Date of the latest catalogued decision.`),
+    Dispositions: z.string().nullable().describe(`
+        * * Field Name: Dispositions
+        * * Display Name: Dispositions
+        * * SQL Data Type: nvarchar(300)
+        * * Description: Disposition(s) as catalogued, semicolon-separated when a case has several decisions.`),
+    OpinionURL: z.string().nullable().describe(`
+        * * Field Name: OpinionURL
+        * * Display Name: Opinion URL
+        * * SQL Data Type: nvarchar(1000)
+        * * Description: Public URL of the latest decision: the court portal opinion where held, else CourtListener.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+});
+
+export type indianataxTaxCourtCaseEntityType = z.infer<typeof indianataxTaxCourtCaseSchema>;
+
+/**
+ * zod schema definition for the entity Tax Court IBTR Links
+ */
+export const indianataxTaxCourtIBTRLinkSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    TaxCourtCaseID: z.string().describe(`
+        * * Field Name: TaxCourtCaseID
+        * * Display Name: Tax Court Case
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Tax Court Cases (vwTaxCourtCases.ID)
+        * * Description: The Tax Court case.`),
+    IBTRAppealID: z.string().describe(`
+        * * Field Name: IBTRAppealID
+        * * Display Name: IBTR Appeal
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+        * * Description: The IBTR disposition the case is a candidate review of.`),
+    NameScore: z.number().describe(`
+        * * Field Name: NameScore
+        * * Display Name: Name Score
+        * * SQL Data Type: decimal(4, 3)
+        * * Description: Similarity (0-1) between the taxpayer as filed in the Tax Court and the IBTR petitioner; 1.000 = identical after normalisation.`),
+    DaysBeforeFiling: z.number().nullable().describe(`
+        * * Field Name: DaysBeforeFiling
+        * * Display Name: Days Before Filing
+        * * SQL Data Type: int
+        * * Description: Days between the IBTR decision and the Tax Court filing (0-75; IC 6-1.1-15-5 allows 45).`),
+    MatchMethod: z.string().describe(`
+        * * Field Name: MatchMethod
+        * * Display Name: Match Method
+        * * SQL Data Type: nvarchar(40)
+        * * Description: How the candidate was found, e.g. PetitionerCountyDate.`),
+    IsConfirmed: z.boolean().nullable().describe(`
+        * * Field Name: IsConfirmed
+        * * Display Name: Is Confirmed
+        * * SQL Data Type: bit
+        * * Description: 1 when a person confirmed the link, 0 when rejected, NULL when unreviewed (all rows at first load).`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+});
+
+export type indianataxTaxCourtIBTRLinkEntityType = z.infer<typeof indianataxTaxCourtIBTRLinkSchema>;
+
+/**
  * zod schema definition for the entity Tax History Years
  */
 export const indianataxTaxHistoryYearSchema = z.object({
@@ -9833,287 +9974,6 @@ export const indianataxValuationCompSchema = z.object({
 });
 
 export type indianataxValuationCompEntityType = z.infer<typeof indianataxValuationCompSchema>;
-
-/**
- * zod schema definition for the entity Legal Authorities
- */
-export const indianataxLegalAuthoritySchema = z.object({
-    ID: z.string().describe(`
-        * * Field Name: ID
-        * * Display Name: ID
-        * * SQL Data Type: uniqueidentifier
-        * * Default Value: newsequentialid()`),
-    SourceType: z.union([z.literal('AdminRule'), z.literal('Form'), z.literal('Guideline'), z.literal('Manual'), z.literal('Memo'), z.literal('ProceduralRule'), z.literal('RatioStudyNarrative'), z.literal('Statute')]).describe(`
-        * * Field Name: SourceType
-        * * Display Name: Source Type
-        * * SQL Data Type: nvarchar(30)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * AdminRule
-    *   * Form
-    *   * Guideline
-    *   * Manual
-    *   * Memo
-    *   * ProceduralRule
-    *   * RatioStudyNarrative
-    *   * Statute
-        * * Description: Statute | AdminRule | Manual | Guideline | ProceduralRule | Form | Memo | RatioStudyNarrative.`),
-    Forum: z.union([z.literal('IBTR'), z.literal('TaxCourt')]).nullable().describe(`
-        * * Field Name: Forum
-        * * Display Name: Forum
-        * * SQL Data Type: nvarchar(20)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * IBTR
-    *   * TaxCourt
-        * * Description: IBTR or TaxCourt, set only when SourceType = ProceduralRule.`),
-    Title: z.string().describe(`
-        * * Field Name: Title
-        * * Display Name: Title
-        * * SQL Data Type: nvarchar(300)
-        * * Description: Human-readable title, e.g. "Indiana Code Title 6, Article 1.1 -- Property Taxation" or "Real Property Assessment Manual".`),
-    AsOfDate: z.date().nullable().describe(`
-        * * Field Name: AsOfDate
-        * * Display Name: As Of Date
-        * * SQL Data Type: date
-        * * Description: The edition/publication date this text is current as of; NULL when unknown.`),
-    SourceDocumentID: z.string().nullable().describe(`
-        * * Field Name: SourceDocumentID
-        * * Display Name: Source Document
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
-        * * Description: The fetched source file (PDF/HTML) this document was parsed from, for provenance.`),
-    SourceURL: z.string().nullable().describe(`
-        * * Field Name: SourceURL
-        * * Display Name: Source URL
-        * * SQL Data Type: nvarchar(1000)
-        * * Description: The authoritative URL this document was retrieved from, for direct citation linking.`),
-    __mj_CreatedAt: z.date().describe(`
-        * * Field Name: __mj_CreatedAt
-        * * Display Name: Created At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-    __mj_UpdatedAt: z.date().describe(`
-        * * Field Name: __mj_UpdatedAt
-        * * Display Name: Updated At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-});
-
-export type indianataxLegalAuthorityEntityType = z.infer<typeof indianataxLegalAuthoritySchema>;
-
-
-/**
- * zod schema definition for the entity Legal Authority Chunks
- */
-export const indianataxLegalAuthorityChunkSchema = z.object({
-    ID: z.string().describe(`
-        * * Field Name: ID
-        * * Display Name: ID
-        * * SQL Data Type: uniqueidentifier
-        * * Default Value: newsequentialid()`),
-    LegalAuthoritySectionID: z.string().describe(`
-        * * Field Name: LegalAuthoritySectionID
-        * * Display Name: Legal Authority Section
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
-        * * Description: The section this chunk was cut from.`),
-    Ordinal: z.number().describe(`
-        * * Field Name: Ordinal
-        * * Display Name: Ordinal Position
-        * * SQL Data Type: int
-        * * Description: 0-based order of this chunk within its section.`),
-    ChunkText: z.string().describe(`
-        * * Field Name: ChunkText
-        * * Display Name: Chunk Text
-        * * SQL Data Type: nvarchar(MAX)
-        * * Description: The chunk's text.`),
-    TokenCount: z.number().nullable().describe(`
-        * * Field Name: TokenCount
-        * * Display Name: Token Count
-        * * SQL Data Type: int
-        * * Description: Approximate token count (chars / 4), matching IBTRDecisionChunk's convention.`),
-    __mj_CreatedAt: z.date().describe(`
-        * * Field Name: __mj_CreatedAt
-        * * Display Name: Created At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-    __mj_UpdatedAt: z.date().describe(`
-        * * Field Name: __mj_UpdatedAt
-        * * Display Name: Updated At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-});
-
-export type indianataxLegalAuthorityChunkEntityType = z.infer<typeof indianataxLegalAuthorityChunkSchema>;
-
-
-/**
- * zod schema definition for the entity Legal Authority Sections
- */
-export const indianataxLegalAuthoritySectionSchema = z.object({
-    ID: z.string().describe(`
-        * * Field Name: ID
-        * * Display Name: ID
-        * * SQL Data Type: uniqueidentifier
-        * * Default Value: newsequentialid()`),
-    LegalAuthorityID: z.string().describe(`
-        * * Field Name: LegalAuthorityID
-        * * Display Name: Legal Authority
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Legal Authorities (vwLegalAuthorities.ID)
-        * * Description: The parent LegalAuthority document this section belongs to.`),
-    ParentSectionID: z.string().nullable().describe(`
-        * * Field Name: ParentSectionID
-        * * Display Name: Parent Section
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
-        * * Description: The enclosing section (a Section's parent is a Chapter, a Chapter's parent is an Article); NULL for a top-level Article/Form/Rule.`),
-    SectionLevel: z.union([z.literal('Article'), z.literal('Chapter'), z.literal('Form'), z.literal('Part'), z.literal('Rule'), z.literal('Section')]).describe(`
-        * * Field Name: SectionLevel
-        * * Display Name: Section Level
-        * * SQL Data Type: nvarchar(20)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * Article
-    *   * Chapter
-    *   * Form
-    *   * Part
-    *   * Rule
-    *   * Section
-        * * Description: Article | Chapter | Section | Part | Rule | Form -- what kind of hierarchical unit this row is.`),
-    SectionNumber: z.string().describe(`
-        * * Field Name: SectionNumber
-        * * Display Name: Section Number
-        * * SQL Data Type: nvarchar(60)
-        * * Description: The source's own numbering, e.g. "1.1", "6-1.1-1", "6-1.1-1-1", "27-2-2", "Rule 3".`),
-    CitationKey: z.string().describe(`
-        * * Field Name: CitationKey
-        * * Display Name: Citation Key
-        * * SQL Data Type: nvarchar(120)
-        * * Description: Normalized full citation, e.g. "IC 6-1.1-15-17.2" or "50 IAC 26-2-2" -- matches IBTRDecisionCitation.CiteKey's format so a decision's citation resolves by string equality.`),
-    Heading: z.string().nullable().describe(`
-        * * Field Name: Heading
-        * * Display Name: Heading
-        * * SQL Data Type: nvarchar(500)
-        * * Description: The section's short title/caption, e.g. "Applicability".`),
-    FullText: z.string().nullable().describe(`
-        * * Field Name: FullText
-        * * Display Name: Full Text
-        * * SQL Data Type: nvarchar(MAX)
-        * * Description: The section's full text, verbatim. NULL for grouping-only rows (Article/Chapter).`),
-    SourceDocumentID: z.string().nullable().describe(`
-        * * Field Name: SourceDocumentID
-        * * Display Name: Source Document
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
-        * * Description: The fetched source file this section was parsed from, for provenance.`),
-    SourceURL: z.string().nullable().describe(`
-        * * Field Name: SourceURL
-        * * Display Name: Source URL
-        * * SQL Data Type: nvarchar(1000)
-        * * Description: A deep link to this specific section at its source, where the source supports anchors.`),
-    __mj_CreatedAt: z.date().describe(`
-        * * Field Name: __mj_CreatedAt
-        * * Display Name: Created At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-    __mj_UpdatedAt: z.date().describe(`
-        * * Field Name: __mj_UpdatedAt
-        * * Display Name: Updated At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-    RootParentSectionID: z.string().nullable().describe(`
-        * * Field Name: RootParentSectionID
-        * * Display Name: Root Parent Section
-        * * SQL Data Type: uniqueidentifier`),
-});
-
-export type indianataxLegalAuthoritySectionEntityType = z.infer<typeof indianataxLegalAuthoritySectionSchema>;
-
-
-/**
- * zod schema definition for the entity IBTR Decision Citations
- */
-export const indianataxIBTRDecisionCitationSchema = z.object({
-    ID: z.string().describe(`
-        * * Field Name: ID
-        * * Display Name: ID
-        * * SQL Data Type: uniqueidentifier
-        * * Default Value: newsequentialid()`),
-    IBTRAppealID: z.string().describe(`
-        * * Field Name: IBTRAppealID
-        * * Display Name: IBTR Appeal
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
-        * * Description: The citing decision.`),
-    AuthorityType: z.union([z.literal('Case'), z.literal('CourtOfAppeals'), z.literal('Guidelines'), z.literal('IBTR'), z.literal('Manual'), z.literal('Rule'), z.literal('Statute'), z.literal('SupremeCourt'), z.literal('TaxCourt'), z.literal('USPAP')]).describe(`
-        * * Field Name: AuthorityType
-        * * Display Name: Authority Type
-        * * SQL Data Type: nvarchar(20)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * Case
-    *   * CourtOfAppeals
-    *   * Guidelines
-    *   * IBTR
-    *   * Manual
-    *   * Rule
-    *   * Statute
-    *   * SupremeCourt
-    *   * TaxCourt
-    *   * USPAP
-        * * Description: Statute, Rule, Manual, Guidelines, TaxCourt, CourtOfAppeals, SupremeCourt, Case (court not recognised), IBTR (the Board citing itself), USPAP.`),
-    CiteKey: z.string().describe(`
-        * * Field Name: CiteKey
-        * * Display Name: Cite Key
-        * * SQL Data Type: nvarchar(200)
-        * * Description: Normalised key: IC 6-1.1-15-17.2; 50 IAC 2.4-1-2; 821 N.E.2d 466; a petition number for IBTR self-cites; Manual / Guidelines / USPAP.`),
-    CaseName: z.string().nullable().describe(`
-        * * Field Name: CaseName
-        * * Display Name: Case Name
-        * * SQL Data Type: nvarchar(300)
-        * * Description: Most frequent spelling of the case name in this decision (cases only).`),
-    Court: z.string().nullable().describe(`
-        * * Field Name: Court
-        * * Display Name: Court
-        * * SQL Data Type: nvarchar(30)
-        * * Description: Ind. Tax Ct., Ind. Ct. App., Ind. (cases only).`),
-    Year: z.number().nullable().describe(`
-        * * Field Name: Year
-        * * Display Name: Year
-        * * SQL Data Type: smallint
-        * * Description: Year of the cited decision (cases only).`),
-    Subsection: z.string().nullable().describe(`
-        * * Field Name: Subsection
-        * * Display Name: Subsection
-        * * SQL Data Type: nvarchar(100)
-        * * Description: Subsections cited, semicolon-separated, e.g. (d);(k) (statutes only).`),
-    MentionCount: z.number().describe(`
-        * * Field Name: MentionCount
-        * * Display Name: Mention Count
-        * * SQL Data Type: int
-        * * Description: Times the authority is cited in the decision, full and short forms together.`),
-    __mj_CreatedAt: z.date().describe(`
-        * * Field Name: __mj_CreatedAt
-        * * Display Name: Created At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-    __mj_UpdatedAt: z.date().describe(`
-        * * Field Name: __mj_UpdatedAt
-        * * Display Name: Updated At
-        * * SQL Data Type: datetimeoffset
-        * * Default Value: getutcdate()`),
-    ResolvedLegalAuthoritySectionID: z.string().nullable().describe(`
-        * * Field Name: ResolvedLegalAuthoritySectionID
-        * * Display Name: Resolved Legal Authority Section
-        * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
-        * * Description: The LegalAuthoritySection this citation's CiteKey resolves to, where a match exists (statute/rule cites only -- case citations are out of scope for this column).`),
-});
-
-export type indianataxIBTRDecisionCitationEntityType = z.infer<typeof indianataxIBTRDecisionCitationSchema>;
-
  
  
 
@@ -13825,7 +13685,7 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
     * Validate() method override for Assessments entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
     * * RevisionForm: The RevisionForm field, when populated, must contain one of the approved revision form types (136, 134, 133, 131, 130, 115, or 113). This ensures that property assessment revisions are only processed using valid, standardized form types recognized by the assessment system.
     * * Table-Level: All assessed property values (total, land, and improvement assessments) must be zero or positive amounts. Negative values are not permitted for any of these assessment fields, as they represent financial amounts that cannot be less than zero.
-    * * Table-Level: Assessment records from approved sources (Indiana county PRC offices and Marion FOIA 2026) must have all three original assessed values (Land, Improvement, and Total) populated, and the sum of Land and Improvement values must equal the Total value within a tolerance of $1. Records from other sources or with missing values are permitted to bypass this validation.
+    * * Table-Level: Property assessment values must be internally consistent: the sum of land and improvement values should equal the total value (within a $1 tolerance). This validation only applies to records from specific county PRC sources (Washington, Elkhart, Fountain, Posey, Randolph, Daviess, Shelby, Knox, Warrick, DeKalb, Hendricks, Porter, Clark, Vanderburgh, Allen, St. Joseph, Lake, and Marion). Records from other sources or records missing any of these three value fields are exempt from this check to prevent data quality errors during import.
     * @public
     * @method
     * @override
@@ -13834,7 +13694,7 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
         const result = super.Validate();
         this.ValidateRevisionFormInAllowedValues(result);
         this.ValidateAssessmentValuesNonNegative(result);
-        this.ValidateOriginalAssessmentValuesForApprovedSources(result);
+        this.ValidateOriginalAssessmentValueBalance(result);
         result.Success = result.Success && (result.Errors.length === 0);
 
         return result;
@@ -13893,53 +13753,47 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
     }
 
     /**
-    * Assessment records from approved sources (Indiana county PRC offices and Marion FOIA 2026) must have all three original assessed values (Land, Improvement, and Total) populated, and the sum of Land and Improvement values must equal the Total value within a tolerance of $1. Records from other sources or with missing values are permitted to bypass this validation.
+    * Property assessment values must be internally consistent: the sum of land and improvement values should equal the total value (within a $1 tolerance). This validation only applies to records from specific county PRC sources (Washington, Elkhart, Fountain, Posey, Randolph, Daviess, Shelby, Knox, Warrick, DeKalb, Hendricks, Porter, Clark, Vanderburgh, Allen, St. Joseph, Lake, and Marion). Records from other sources or records missing any of these three value fields are exempt from this check to prevent data quality errors during import.
     * @param result - the ValidationResult object to add any errors or warnings to
     * @public
     * @method
     */
-    public ValidateOriginalAssessmentValuesForApprovedSources(result: ValidationResult) {
-    	const approvedSources = ["ElkhartPRC", "FountainPRC", "PoseyPRC", "RandolphPRC", "DaviessPRC", "ShelbyPRC", "KnoxPRC", "WarrickPRC", "DeKalbPRC", "HendricksPRC", "PorterPRC", "ClarkPRC", "VanderburghPRC", "AllenPRC", "StJosephPRC", "LakePRC", "marion_foia_2026", "MarionPRC"];
-    	const isApprovedSource = approvedSources.indexOf(this.Source) >= 0;
-    	
-    	if (isApprovedSource) {
-    		if (this.OriginalLandAV == null) {
-    			result.Errors.push(new ValidationErrorInfo(
-    				"OriginalLandAV",
-    				"Original Land Assessed Value is required for approved sources.",
-    				this.OriginalLandAV,
-    				ValidationErrorType.Failure
-    			));
-    		}
-    		
-    		if (this.OriginalImprovementAV == null) {
-    			result.Errors.push(new ValidationErrorInfo(
-    				"OriginalImprovementAV",
-    				"Original Improvement Assessed Value is required for approved sources.",
-    				this.OriginalImprovementAV,
-    				ValidationErrorType.Failure
-    			));
-    		}
-    		
-    		if (this.OriginalTotalAV == null) {
+    public ValidateOriginalAssessmentValueBalance(result: ValidationResult) {
+    	const validSources = [
+    		"WashingtonPRC",
+    		"ElkhartPRC",
+    		"FountainPRC",
+    		"PoseyPRC",
+    		"RandolphPRC",
+    		"DaviessPRC",
+    		"ShelbyPRC",
+    		"KnoxPRC",
+    		"WarrickPRC",
+    		"DeKalbPRC",
+    		"HendricksPRC",
+    		"PorterPRC",
+    		"ClarkPRC",
+    		"VanderburghPRC",
+    		"AllenPRC",
+    		"StJosephPRC",
+    		"LakePRC",
+    		"marion_foia_2026",
+    		"MarionPRC"
+    	];
+    
+    	const isValidSource = validSources.includes(this.Source);
+    
+    	if (isValidSource && this.OriginalLandAV != null && this.OriginalImprovementAV != null && this.OriginalTotalAV != null) {
+    		const calculatedTotal = this.OriginalLandAV + this.OriginalImprovementAV;
+    		const difference = Math.abs(calculatedTotal - this.OriginalTotalAV);
+    
+    		if (difference > 1) {
     			result.Errors.push(new ValidationErrorInfo(
     				"OriginalTotalAV",
-    				"Original Total Assessed Value is required for approved sources.",
+    				"Original assessment total value must equal the sum of land and improvement values (within $1). Land: " + this.OriginalLandAV + ", Improvement: " + this.OriginalImprovementAV + ", Total: " + this.OriginalTotalAV,
     				this.OriginalTotalAV,
     				ValidationErrorType.Failure
     			));
-    		}
-    		
-    		if (this.OriginalLandAV != null && this.OriginalImprovementAV != null && this.OriginalTotalAV != null) {
-    			const difference = Math.abs((this.OriginalLandAV + this.OriginalImprovementAV) - this.OriginalTotalAV);
-    			if (difference > 1) {
-    				result.Errors.push(new ValidationErrorInfo(
-    					"OriginalTotalAV",
-    					"Sum of Original Land and Improvement Assessed Values must equal Original Total Assessed Value within a tolerance of $1.",
-    					this.OriginalTotalAV,
-    					ValidationErrorType.Failure
-    				));
-    			}
     		}
     	}
     }
@@ -22713,6 +22567,41 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
     }
 
     /**
+    * Validate() method override for IBTR Appeals entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
+    * * Table-Level: Either both ParcelID and ParcelMatchMethod must be provided together, or both must be empty. You cannot have one without the other. This ensures that whenever a parcel is matched to an appeal, the method used for that match is also recorded, and vice versa.
+    * @public
+    * @method
+    * @override
+    */
+    public override Validate(): ValidationResult {
+        const result = super.Validate();
+        this.ValidateParcelIDAndMatchMethodRequired(result);
+        result.Success = result.Success && (result.Errors.length === 0);
+
+        return result;
+    }
+
+    /**
+    * Either both ParcelID and ParcelMatchMethod must be provided together, or both must be empty. You cannot have one without the other. This ensures that whenever a parcel is matched to an appeal, the method used for that match is also recorded, and vice versa.
+    * @param result - the ValidationResult object to add any errors or warnings to
+    * @public
+    * @method
+    */
+    public ValidateParcelIDAndMatchMethodRequired(result: ValidationResult) {
+    	const parcelIDIsNull = this.ParcelID == null;
+    	const matchMethodIsNull = this.ParcelMatchMethod == null;
+    
+    	if (parcelIDIsNull !== matchMethodIsNull) {
+    		result.Errors.push(new ValidationErrorInfo(
+    			"ParcelID",
+    			"ParcelID and ParcelMatchMethod must both be provided together, or both must be empty. You cannot have one without the other.",
+    			this.ParcelID,
+    			ValidationErrorType.Failure
+    		));
+    	}
+    }
+
+    /**
     * * Field Name: ID
     * * Display Name: ID
     * * SQL Data Type: uniqueidentifier
@@ -22818,10 +22707,10 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: ParcelID
-    * * Display Name: Parcel ID
+    * * Display Name: Parcel
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
-    * * Description: indiana_tax.Parcel matched by the 18-digit state parcel number where the docketed number normalises to one; NULL otherwise.
+    * * Description: indiana_tax.Parcel resolved from the docketed parcel number; see ParcelMatchMethod for how. NULL when the number matches no C&I parcel.
     */
     get ParcelID(): string | null {
         return this.Get('ParcelID');
@@ -22832,7 +22721,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: LocationAddress
-    * * Display Name: Location Address
+    * * Display Name: Property Address
     * * SQL Data Type: nvarchar(300)
     * * Description: Property address as docketed.
     */
@@ -22952,7 +22841,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: StatusName
-    * * Display Name: Status Name
+    * * Display Name: Status
     * * SQL Data Type: nvarchar(30)
     * * Description: POPLAR status (Closed etc.).
     */
@@ -22978,7 +22867,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: IsSmallClaims
-    * * Display Name: Is Small Claims
+    * * Display Name: Small Claims
     * * SQL Data Type: bit
     * * Description: 1 when the decision caption says Small Claims (the simplified track, removed for Form 131 from 2026-09-02).
     */
@@ -22991,7 +22880,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Source Document ID
+    * * Display Name: Decision Document
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     * * Description: The decision file: SourceDocument of type IBTRDecision (hash, path, URL, extracted text).
@@ -23005,7 +22894,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: TextChars
-    * * Display Name: Text Chars
+    * * Display Name: Text Characters
     * * SQL Data Type: int
     * * Description: Characters of extracted text for the decision file.
     */
@@ -23018,7 +22907,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: TextIsOCR
-    * * Display Name: Text Is OCR
+    * * Display Name: Text is OCR
     * * SQL Data Type: bit
     * * Description: 1 when the text came from OCR of an image-only scan (most POPLAR copies from 2025 on); treat quotations with care.
     */
@@ -23164,6 +23053,23 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
     }
 
     /**
+    * * Field Name: ParcelMatchMethod
+    * * Display Name: Parcel Match Method
+    * * SQL Data Type: nvarchar(30)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * CountyLocalNumber
+    *   * StateParcel18
+    * * Description: How ParcelID was resolved: StateParcel18 (the docketed number normalises to an 18-digit state parcel number held in Parcel.ParcelNumber) or CountyLocalNumber (its digits equal Parcel.GISParcelNumber inside the same county, that key is unique there, AND the docketed address and the parcel address carry the same house number; counties where the local-number scheme does not line up are skipped — list in Indiana_Tax_Expert scripts/lib/ibtr-parcel-match.js). NULL exactly when ParcelID is NULL. indiana_tax.Parcel is C&I only, so most residential appeals match nothing by design.
+    */
+    get ParcelMatchMethod(): 'CountyLocalNumber' | 'StateParcel18' | null {
+        return this.Get('ParcelMatchMethod');
+    }
+    set ParcelMatchMethod(value: 'CountyLocalNumber' | 'StateParcel18' | null) {
+        this.Set('ParcelMatchMethod', value);
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
@@ -23179,6 +23085,24 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
     */
     get LegacyBoardDecision(): string | null {
         return this.Get('LegacyBoardDecision');
+    }
+
+    /**
+    * * Field Name: __mj_Latitude
+    * * Display Name: Mj Latitude
+    * * SQL Data Type: decimal(10, 6)
+    */
+    get __mj_Latitude(): number | null {
+        return this.Get('__mj_Latitude');
+    }
+
+    /**
+    * * Field Name: __mj_Longitude
+    * * Display Name: Mj Longitude
+    * * SQL Data Type: decimal(10, 6)
+    */
+    get __mj_Longitude(): number | null {
+        return this.Get('__mj_Longitude');
     }
 }
 
@@ -34549,6 +34473,366 @@ export class indianataxTaxBillEntity extends BaseEntity<indianataxTaxBillEntityT
 
 
 /**
+ * Tax Court Cases - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: TaxCourtCase
+ * * Base View: vwTaxCourtCases
+ * * @description One Indiana Tax Court case (docket) from the Indiana_Tax_Court catalog (catalog/cases.csv): every tax type, 1986 onward. Loaded whole so a docket can be looked up; only real-property cases link to Board determinations. Full rebuild on every load.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Tax Court Cases')
+export class indianataxTaxCourtCaseEntity extends BaseEntity<indianataxTaxCourtCaseEntityType> {
+    /**
+    * Loads the Tax Court Cases record from the database
+    * @param ID: string - primary key value to load the Tax Court Cases record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxTaxCourtCaseEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: DocketNumber
+    * * Display Name: Docket Number
+    * * SQL Data Type: nvarchar(40)
+    * * Description: Normalised docket number, e.g. 49T10-1405-TA-00019. Unique.
+    */
+    get DocketNumber(): string {
+        return this.Get('DocketNumber');
+    }
+    set DocketNumber(value: string) {
+        this.Set('DocketNumber', value);
+    }
+
+    /**
+    * * Field Name: CaseName
+    * * Display Name: Case Name
+    * * SQL Data Type: nvarchar(500)
+    * * Description: Caption as catalogued (petitioner v. respondent).
+    */
+    get CaseName(): string {
+        return this.Get('CaseName');
+    }
+    set CaseName(value: string) {
+        this.Set('CaseName', value);
+    }
+
+    /**
+    * * Field Name: DateFiled
+    * * Display Name: Date Filed
+    * * SQL Data Type: date
+    * * Description: Filing date from the Tax Court filing list; NULL for cases known only from a published opinion.
+    */
+    get DateFiled(): Date | null {
+        return this.Get('DateFiled');
+    }
+    set DateFiled(value: Date | null) {
+        this.Set('DateFiled', value);
+    }
+
+    /**
+    * * Field Name: TaxCategory
+    * * Display Name: Tax Category
+    * * SQL Data Type: nvarchar(60)
+    * * Description: Tax type as catalogued (Real property, Sales & Use, Income, Personal property, ...).
+    */
+    get TaxCategory(): string | null {
+        return this.Get('TaxCategory');
+    }
+    set TaxCategory(value: string | null) {
+        this.Set('TaxCategory', value);
+    }
+
+    /**
+    * * Field Name: DecisionCount
+    * * Display Name: Decision Count
+    * * SQL Data Type: int
+    * * Default Value: 0
+    * * Description: Number of catalogued decisions (opinions and orders) in the case.
+    */
+    get DecisionCount(): number {
+        return this.Get('DecisionCount');
+    }
+    set DecisionCount(value: number) {
+        this.Set('DecisionCount', value);
+    }
+
+    /**
+    * * Field Name: FirstDecisionDate
+    * * Display Name: First Decision Date
+    * * SQL Data Type: date
+    * * Description: Date of the earliest catalogued decision.
+    */
+    get FirstDecisionDate(): Date | null {
+        return this.Get('FirstDecisionDate');
+    }
+    set FirstDecisionDate(value: Date | null) {
+        this.Set('FirstDecisionDate', value);
+    }
+
+    /**
+    * * Field Name: LastDecisionDate
+    * * Display Name: Last Decision Date
+    * * SQL Data Type: date
+    * * Description: Date of the latest catalogued decision.
+    */
+    get LastDecisionDate(): Date | null {
+        return this.Get('LastDecisionDate');
+    }
+    set LastDecisionDate(value: Date | null) {
+        this.Set('LastDecisionDate', value);
+    }
+
+    /**
+    * * Field Name: Dispositions
+    * * Display Name: Dispositions
+    * * SQL Data Type: nvarchar(300)
+    * * Description: Disposition(s) as catalogued, semicolon-separated when a case has several decisions.
+    */
+    get Dispositions(): string | null {
+        return this.Get('Dispositions');
+    }
+    set Dispositions(value: string | null) {
+        this.Set('Dispositions', value);
+    }
+
+    /**
+    * * Field Name: OpinionURL
+    * * Display Name: Opinion URL
+    * * SQL Data Type: nvarchar(1000)
+    * * Description: Public URL of the latest decision: the court portal opinion where held, else CourtListener.
+    */
+    get OpinionURL(): string | null {
+        return this.Get('OpinionURL');
+    }
+    set OpinionURL(value: string | null) {
+        this.Set('OpinionURL', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+}
+
+
+/**
+ * Tax Court IBTR Links - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: TaxCourtIBTRLink
+ * * Base View: vwTaxCourtIBTRLinks
+ * * @description A candidate link from a Tax Court case to an IBTR disposition it reviews (Indiana_Tax_Court/data/extracted/ibtr_links.csv). Many-to-many by design: a consolidated appeal reviews several petitions. Unconfirmed name matches -- Property Search flags a parcel only at NameScore >= 0.95, and shows lower scores as candidates. Full rebuild on every load; rebuilt after any IBTRAppeal rebuild.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Tax Court IBTR Links')
+export class indianataxTaxCourtIBTRLinkEntity extends BaseEntity<indianataxTaxCourtIBTRLinkEntityType> {
+    /**
+    * Loads the Tax Court IBTR Links record from the database
+    * @param ID: string - primary key value to load the Tax Court IBTR Links record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxTaxCourtIBTRLinkEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * Validate() method override for Tax Court IBTR Links entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
+    * * NameScore: The name score must be between 0 and 1 (inclusive). This represents a normalized matching score where 0 indicates no match and 1 indicates a perfect match.
+    * @public
+    * @method
+    * @override
+    */
+    public override Validate(): ValidationResult {
+        const result = super.Validate();
+        this.ValidateNameScoreRange(result);
+        result.Success = result.Success && (result.Errors.length === 0);
+
+        return result;
+    }
+
+    /**
+    * The name score must be between 0 and 1 (inclusive). This represents a normalized matching score where 0 indicates no match and 1 indicates a perfect match.
+    * @param result - the ValidationResult object to add any errors or warnings to
+    * @public
+    * @method
+    */
+    public ValidateNameScoreRange(result: ValidationResult) {
+    	if (this.NameScore < 0 || this.NameScore > 1) {
+    		result.Errors.push(new ValidationErrorInfo(
+    			"NameScore",
+    			"Name score must be between 0 and 1",
+    			this.NameScore,
+    			ValidationErrorType.Failure
+    		));
+    	}
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: TaxCourtCaseID
+    * * Display Name: Tax Court Case
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Tax Court Cases (vwTaxCourtCases.ID)
+    * * Description: The Tax Court case.
+    */
+    get TaxCourtCaseID(): string {
+        return this.Get('TaxCourtCaseID');
+    }
+    set TaxCourtCaseID(value: string) {
+        this.Set('TaxCourtCaseID', value);
+    }
+
+    /**
+    * * Field Name: IBTRAppealID
+    * * Display Name: IBTR Appeal
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+    * * Description: The IBTR disposition the case is a candidate review of.
+    */
+    get IBTRAppealID(): string {
+        return this.Get('IBTRAppealID');
+    }
+    set IBTRAppealID(value: string) {
+        this.Set('IBTRAppealID', value);
+    }
+
+    /**
+    * * Field Name: NameScore
+    * * Display Name: Name Score
+    * * SQL Data Type: decimal(4, 3)
+    * * Description: Similarity (0-1) between the taxpayer as filed in the Tax Court and the IBTR petitioner; 1.000 = identical after normalisation.
+    */
+    get NameScore(): number {
+        return this.Get('NameScore');
+    }
+    set NameScore(value: number) {
+        this.Set('NameScore', value);
+    }
+
+    /**
+    * * Field Name: DaysBeforeFiling
+    * * Display Name: Days Before Filing
+    * * SQL Data Type: int
+    * * Description: Days between the IBTR decision and the Tax Court filing (0-75; IC 6-1.1-15-5 allows 45).
+    */
+    get DaysBeforeFiling(): number | null {
+        return this.Get('DaysBeforeFiling');
+    }
+    set DaysBeforeFiling(value: number | null) {
+        this.Set('DaysBeforeFiling', value);
+    }
+
+    /**
+    * * Field Name: MatchMethod
+    * * Display Name: Match Method
+    * * SQL Data Type: nvarchar(40)
+    * * Description: How the candidate was found, e.g. PetitionerCountyDate.
+    */
+    get MatchMethod(): string {
+        return this.Get('MatchMethod');
+    }
+    set MatchMethod(value: string) {
+        this.Set('MatchMethod', value);
+    }
+
+    /**
+    * * Field Name: IsConfirmed
+    * * Display Name: Is Confirmed
+    * * SQL Data Type: bit
+    * * Description: 1 when a person confirmed the link, 0 when rejected, NULL when unreviewed (all rows at first load).
+    */
+    get IsConfirmed(): boolean | null {
+        return this.Get('IsConfirmed');
+    }
+    set IsConfirmed(value: boolean | null) {
+        this.Set('IsConfirmed', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+}
+
+
+/**
  * Tax History Years - strongly typed entity sub-class
  * * Schema: indiana_tax
  * * Base Table: TaxHistoryYear
@@ -35693,739 +35977,5 @@ export class indianataxValuationCompEntity extends BaseEntity<indianataxValuatio
     */
     get __mj_Longitude(): number | null {
         return this.Get('__mj_Longitude');
-    }
-}
-
-/**
- * Legal Authorities - strongly typed entity sub-class
- * * Schema: indiana_tax
- * * Base Table: LegalAuthority
- * * Base View: vwLegalAuthorities
- * * @description One titled legal-authority document or edition -- an Indiana Code article, a 50 IAC article, the Real Property Assessment Manual, a specific DLGF Guidelines edition, IBTR or Tax Court Rules of Procedure, a specific DLGF Form, a DLGF memo, or one county's ratio-study narrative. Current text only; no historical versioning.
- * * Primary Key: ID
- * @extends {BaseEntity}
- * @class
- * @public
- */
-@RegisterClass(BaseEntity, 'Legal Authorities')
-export class indianataxLegalAuthorityEntity extends BaseEntity<indianataxLegalAuthorityEntityType> {
-    /**
-    * Loads the Legal Authorities record from the database
-    * @param ID: string - primary key value to load the Legal Authorities record.
-    * @param EntityRelationshipsToLoad - (optional) the relationships to load
-    * @returns {Promise<boolean>} - true if successful, false otherwise
-    * @public
-    * @async
-    * @memberof indianataxLegalAuthorityEntity
-    * @method
-    * @override
-    */
-    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
-        const compositeKey: CompositeKey = new CompositeKey();
-        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
-        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
-    }
-
-    /**
-    * * Field Name: ID
-    * * Display Name: ID
-    * * SQL Data Type: uniqueidentifier
-    * * Default Value: newsequentialid()
-    */
-    get ID(): string {
-        return this.Get('ID');
-    }
-    set ID(value: string) {
-        this.Set('ID', value);
-    }
-
-    /**
-    * * Field Name: SourceType
-    * * Display Name: Source Type
-    * * SQL Data Type: nvarchar(30)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * AdminRule
-    *   * Form
-    *   * Guideline
-    *   * Manual
-    *   * Memo
-    *   * ProceduralRule
-    *   * RatioStudyNarrative
-    *   * Statute
-    * * Description: Statute | AdminRule | Manual | Guideline | ProceduralRule | Form | Memo | RatioStudyNarrative.
-    */
-    get SourceType(): 'AdminRule' | 'Form' | 'Guideline' | 'Manual' | 'Memo' | 'ProceduralRule' | 'RatioStudyNarrative' | 'Statute' {
-        return this.Get('SourceType');
-    }
-    set SourceType(value: 'AdminRule' | 'Form' | 'Guideline' | 'Manual' | 'Memo' | 'ProceduralRule' | 'RatioStudyNarrative' | 'Statute') {
-        this.Set('SourceType', value);
-    }
-
-    /**
-    * * Field Name: Forum
-    * * Display Name: Forum
-    * * SQL Data Type: nvarchar(20)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * IBTR
-    *   * TaxCourt
-    * * Description: IBTR or TaxCourt, set only when SourceType = ProceduralRule.
-    */
-    get Forum(): 'IBTR' | 'TaxCourt' | null {
-        return this.Get('Forum');
-    }
-    set Forum(value: 'IBTR' | 'TaxCourt' | null) {
-        this.Set('Forum', value);
-    }
-
-    /**
-    * * Field Name: Title
-    * * Display Name: Title
-    * * SQL Data Type: nvarchar(300)
-    * * Description: Human-readable title, e.g. "Indiana Code Title 6, Article 1.1 -- Property Taxation" or "Real Property Assessment Manual".
-    */
-    get Title(): string {
-        return this.Get('Title');
-    }
-    set Title(value: string) {
-        this.Set('Title', value);
-    }
-
-    /**
-    * * Field Name: AsOfDate
-    * * Display Name: As Of Date
-    * * SQL Data Type: date
-    * * Description: The edition/publication date this text is current as of; NULL when unknown.
-    */
-    get AsOfDate(): Date | null {
-        return this.Get('AsOfDate');
-    }
-    set AsOfDate(value: Date | null) {
-        this.Set('AsOfDate', value);
-    }
-
-    /**
-    * * Field Name: SourceDocumentID
-    * * Display Name: Source Document
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
-    * * Description: The fetched source file (PDF/HTML) this document was parsed from, for provenance.
-    */
-    get SourceDocumentID(): string | null {
-        return this.Get('SourceDocumentID');
-    }
-    set SourceDocumentID(value: string | null) {
-        this.Set('SourceDocumentID', value);
-    }
-
-    /**
-    * * Field Name: SourceURL
-    * * Display Name: Source URL
-    * * SQL Data Type: nvarchar(1000)
-    * * Description: The authoritative URL this document was retrieved from, for direct citation linking.
-    */
-    get SourceURL(): string | null {
-        return this.Get('SourceURL');
-    }
-    set SourceURL(value: string | null) {
-        this.Set('SourceURL', value);
-    }
-
-    /**
-    * * Field Name: __mj_CreatedAt
-    * * Display Name: Created At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_CreatedAt(): Date {
-        return this.Get('__mj_CreatedAt');
-    }
-
-    /**
-    * * Field Name: __mj_UpdatedAt
-    * * Display Name: Updated At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_UpdatedAt(): Date {
-        return this.Get('__mj_UpdatedAt');
-    }
-}
-
-/**
- * Legal Authority Chunks - strongly typed entity sub-class
- * * Schema: indiana_tax
- * * Base Table: LegalAuthorityChunk
- * * Base View: vwLegalAuthorityChunks
- * * @description A passage of a LegalAuthoritySection's text for retrieval. The Search Scope for legal-authority search points here.
- * * Primary Key: ID
- * @extends {BaseEntity}
- * @class
- * @public
- */
-@RegisterClass(BaseEntity, 'Legal Authority Chunks')
-export class indianataxLegalAuthorityChunkEntity extends BaseEntity<indianataxLegalAuthorityChunkEntityType> {
-    /**
-    * Loads the Legal Authority Chunks record from the database
-    * @param ID: string - primary key value to load the Legal Authority Chunks record.
-    * @param EntityRelationshipsToLoad - (optional) the relationships to load
-    * @returns {Promise<boolean>} - true if successful, false otherwise
-    * @public
-    * @async
-    * @memberof indianataxLegalAuthorityChunkEntity
-    * @method
-    * @override
-    */
-    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
-        const compositeKey: CompositeKey = new CompositeKey();
-        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
-        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
-    }
-
-    /**
-    * Validate() method override for Legal Authority Chunks entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
-    * * Ordinal: The ordinal position must be zero or greater. This ensures that sequence numbers for text chunks are non-negative, maintaining proper ordering and preventing invalid negative position values in the document structure.
-    * @public
-    * @method
-    * @override
-    */
-    public override Validate(): ValidationResult {
-        const result = super.Validate();
-        this.ValidateOrdinalIsNonNegative(result);
-        result.Success = result.Success && (result.Errors.length === 0);
-
-        return result;
-    }
-
-    /**
-    * The ordinal position must be zero or greater. This ensures that sequence numbers for text chunks are non-negative, maintaining proper ordering and preventing invalid negative position values in the document structure.
-    * @param result - the ValidationResult object to add any errors or warnings to
-    * @public
-    * @method
-    */
-    public ValidateOrdinalIsNonNegative(result: ValidationResult) {
-    	if (this.Ordinal < 0) {
-    		result.Errors.push(new ValidationErrorInfo(
-    			"Ordinal",
-    			"Ordinal position must be zero or greater",
-    			this.Ordinal,
-    			ValidationErrorType.Failure
-    		));
-    	}
-    }
-
-    /**
-    * * Field Name: ID
-    * * Display Name: ID
-    * * SQL Data Type: uniqueidentifier
-    * * Default Value: newsequentialid()
-    */
-    get ID(): string {
-        return this.Get('ID');
-    }
-    set ID(value: string) {
-        this.Set('ID', value);
-    }
-
-    /**
-    * * Field Name: LegalAuthoritySectionID
-    * * Display Name: Legal Authority Section
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
-    * * Description: The section this chunk was cut from.
-    */
-    get LegalAuthoritySectionID(): string {
-        return this.Get('LegalAuthoritySectionID');
-    }
-    set LegalAuthoritySectionID(value: string) {
-        this.Set('LegalAuthoritySectionID', value);
-    }
-
-    /**
-    * * Field Name: Ordinal
-    * * Display Name: Ordinal Position
-    * * SQL Data Type: int
-    * * Description: 0-based order of this chunk within its section.
-    */
-    get Ordinal(): number {
-        return this.Get('Ordinal');
-    }
-    set Ordinal(value: number) {
-        this.Set('Ordinal', value);
-    }
-
-    /**
-    * * Field Name: ChunkText
-    * * Display Name: Chunk Text
-    * * SQL Data Type: nvarchar(MAX)
-    * * Description: The chunk's text.
-    */
-    get ChunkText(): string {
-        return this.Get('ChunkText');
-    }
-    set ChunkText(value: string) {
-        this.Set('ChunkText', value);
-    }
-
-    /**
-    * * Field Name: TokenCount
-    * * Display Name: Token Count
-    * * SQL Data Type: int
-    * * Description: Approximate token count (chars / 4), matching IBTRDecisionChunk's convention.
-    */
-    get TokenCount(): number | null {
-        return this.Get('TokenCount');
-    }
-    set TokenCount(value: number | null) {
-        this.Set('TokenCount', value);
-    }
-
-    /**
-    * * Field Name: __mj_CreatedAt
-    * * Display Name: Created At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_CreatedAt(): Date {
-        return this.Get('__mj_CreatedAt');
-    }
-
-    /**
-    * * Field Name: __mj_UpdatedAt
-    * * Display Name: Updated At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_UpdatedAt(): Date {
-        return this.Get('__mj_UpdatedAt');
-    }
-}
-
-/**
- * Legal Authority Sections - strongly typed entity sub-class
- * * Schema: indiana_tax
- * * Base Table: LegalAuthoritySection
- * * Base View: vwLegalAuthoritySections
- * * @description One hierarchical unit within a LegalAuthority document -- an article, chapter, or leaf section/part/rule/form. Grouping rows (Article, Chapter) typically have NULL FullText; leaf rows carry the actual text.
- * * Primary Key: ID
- * @extends {BaseEntity}
- * @class
- * @public
- */
-@RegisterClass(BaseEntity, 'Legal Authority Sections')
-export class indianataxLegalAuthoritySectionEntity extends BaseEntity<indianataxLegalAuthoritySectionEntityType> {
-    /**
-    * Loads the Legal Authority Sections record from the database
-    * @param ID: string - primary key value to load the Legal Authority Sections record.
-    * @param EntityRelationshipsToLoad - (optional) the relationships to load
-    * @returns {Promise<boolean>} - true if successful, false otherwise
-    * @public
-    * @async
-    * @memberof indianataxLegalAuthoritySectionEntity
-    * @method
-    * @override
-    */
-    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
-        const compositeKey: CompositeKey = new CompositeKey();
-        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
-        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
-    }
-
-    /**
-    * * Field Name: ID
-    * * Display Name: ID
-    * * SQL Data Type: uniqueidentifier
-    * * Default Value: newsequentialid()
-    */
-    get ID(): string {
-        return this.Get('ID');
-    }
-    set ID(value: string) {
-        this.Set('ID', value);
-    }
-
-    /**
-    * * Field Name: LegalAuthorityID
-    * * Display Name: Legal Authority
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: Legal Authorities (vwLegalAuthorities.ID)
-    * * Description: The parent LegalAuthority document this section belongs to.
-    */
-    get LegalAuthorityID(): string {
-        return this.Get('LegalAuthorityID');
-    }
-    set LegalAuthorityID(value: string) {
-        this.Set('LegalAuthorityID', value);
-    }
-
-    /**
-    * * Field Name: ParentSectionID
-    * * Display Name: Parent Section
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
-    * * Description: The enclosing section (a Section's parent is a Chapter, a Chapter's parent is an Article); NULL for a top-level Article/Form/Rule.
-    */
-    get ParentSectionID(): string | null {
-        return this.Get('ParentSectionID');
-    }
-    set ParentSectionID(value: string | null) {
-        this.Set('ParentSectionID', value);
-    }
-
-    /**
-    * * Field Name: SectionLevel
-    * * Display Name: Section Level
-    * * SQL Data Type: nvarchar(20)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * Article
-    *   * Chapter
-    *   * Form
-    *   * Part
-    *   * Rule
-    *   * Section
-    * * Description: Article | Chapter | Section | Part | Rule | Form -- what kind of hierarchical unit this row is.
-    */
-    get SectionLevel(): 'Article' | 'Chapter' | 'Form' | 'Part' | 'Rule' | 'Section' {
-        return this.Get('SectionLevel');
-    }
-    set SectionLevel(value: 'Article' | 'Chapter' | 'Form' | 'Part' | 'Rule' | 'Section') {
-        this.Set('SectionLevel', value);
-    }
-
-    /**
-    * * Field Name: SectionNumber
-    * * Display Name: Section Number
-    * * SQL Data Type: nvarchar(60)
-    * * Description: The source's own numbering, e.g. "1.1", "6-1.1-1", "6-1.1-1-1", "27-2-2", "Rule 3".
-    */
-    get SectionNumber(): string {
-        return this.Get('SectionNumber');
-    }
-    set SectionNumber(value: string) {
-        this.Set('SectionNumber', value);
-    }
-
-    /**
-    * * Field Name: CitationKey
-    * * Display Name: Citation Key
-    * * SQL Data Type: nvarchar(120)
-    * * Description: Normalized full citation, e.g. "IC 6-1.1-15-17.2" or "50 IAC 26-2-2" -- matches IBTRDecisionCitation.CiteKey's format so a decision's citation resolves by string equality.
-    */
-    get CitationKey(): string {
-        return this.Get('CitationKey');
-    }
-    set CitationKey(value: string) {
-        this.Set('CitationKey', value);
-    }
-
-    /**
-    * * Field Name: Heading
-    * * Display Name: Heading
-    * * SQL Data Type: nvarchar(500)
-    * * Description: The section's short title/caption, e.g. "Applicability".
-    */
-    get Heading(): string | null {
-        return this.Get('Heading');
-    }
-    set Heading(value: string | null) {
-        this.Set('Heading', value);
-    }
-
-    /**
-    * * Field Name: FullText
-    * * Display Name: Full Text
-    * * SQL Data Type: nvarchar(MAX)
-    * * Description: The section's full text, verbatim. NULL for grouping-only rows (Article/Chapter).
-    */
-    get FullText(): string | null {
-        return this.Get('FullText');
-    }
-    set FullText(value: string | null) {
-        this.Set('FullText', value);
-    }
-
-    /**
-    * * Field Name: SourceDocumentID
-    * * Display Name: Source Document
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
-    * * Description: The fetched source file this section was parsed from, for provenance.
-    */
-    get SourceDocumentID(): string | null {
-        return this.Get('SourceDocumentID');
-    }
-    set SourceDocumentID(value: string | null) {
-        this.Set('SourceDocumentID', value);
-    }
-
-    /**
-    * * Field Name: SourceURL
-    * * Display Name: Source URL
-    * * SQL Data Type: nvarchar(1000)
-    * * Description: A deep link to this specific section at its source, where the source supports anchors.
-    */
-    get SourceURL(): string | null {
-        return this.Get('SourceURL');
-    }
-    set SourceURL(value: string | null) {
-        this.Set('SourceURL', value);
-    }
-
-    /**
-    * * Field Name: __mj_CreatedAt
-    * * Display Name: Created At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_CreatedAt(): Date {
-        return this.Get('__mj_CreatedAt');
-    }
-
-    /**
-    * * Field Name: __mj_UpdatedAt
-    * * Display Name: Updated At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_UpdatedAt(): Date {
-        return this.Get('__mj_UpdatedAt');
-    }
-
-    /**
-    * * Field Name: RootParentSectionID
-    * * Display Name: Root Parent Section
-    * * SQL Data Type: uniqueidentifier
-    */
-    get RootParentSectionID(): string | null {
-        return this.Get('RootParentSectionID');
-    }
-}
-
-/**
- * IBTR Decision Citations - strongly typed entity sub-class
- * * Schema: indiana_tax
- * * Base Table: IBTRDecisionCitation
- * * Base View: vwIBTRDecisionCitations
- * * @description One authority cited in one IBTR decision, with how many times: statutes (IC ...), rules (50 IAC ...), the Assessment Manual and Guidelines, USPAP, Tax Court / Court of Appeals / Supreme Court cases by reporter cite, and the Boards own prior determinations. Extracted by rule (regex over the full text); short-form cites are resolved to the full cite in the same decision. This is the tally table: group by CiteKey with the decision count as numerator and IBTRAppeal rows with text as denominator.
- * * Primary Key: ID
- * @extends {BaseEntity}
- * @class
- * @public
- */
-@RegisterClass(BaseEntity, 'IBTR Decision Citations')
-export class indianataxIBTRDecisionCitationEntity extends BaseEntity<indianataxIBTRDecisionCitationEntityType> {
-    /**
-    * Loads the IBTR Decision Citations record from the database
-    * @param ID: string - primary key value to load the IBTR Decision Citations record.
-    * @param EntityRelationshipsToLoad - (optional) the relationships to load
-    * @returns {Promise<boolean>} - true if successful, false otherwise
-    * @public
-    * @async
-    * @memberof indianataxIBTRDecisionCitationEntity
-    * @method
-    * @override
-    */
-    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
-        const compositeKey: CompositeKey = new CompositeKey();
-        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
-        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
-    }
-
-    /**
-    * Validate() method override for IBTR Decision Citations entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
-    * * MentionCount: The mention count must be at least 1. This ensures that every citation authority record represents at least one actual mention in the document, maintaining data quality by preventing empty or placeholder records.
-    * @public
-    * @method
-    * @override
-    */
-    public override Validate(): ValidationResult {
-        const result = super.Validate();
-        this.ValidateMentionCountMinimum(result);
-        result.Success = result.Success && (result.Errors.length === 0);
-
-        return result;
-    }
-
-    /**
-    * The mention count must be at least 1. This ensures that every citation authority record represents at least one actual mention in the document, maintaining data quality by preventing empty or placeholder records.
-    * @param result - the ValidationResult object to add any errors or warnings to
-    * @public
-    * @method
-    */
-    public ValidateMentionCountMinimum(result: ValidationResult) {
-    	if (this.MentionCount < 1) {
-    		result.Errors.push(new ValidationErrorInfo(
-    			"MentionCount",
-    			"Mention count must be at least 1",
-    			this.MentionCount,
-    			ValidationErrorType.Failure
-    		));
-    	}
-    }
-
-    /**
-    * * Field Name: ID
-    * * Display Name: ID
-    * * SQL Data Type: uniqueidentifier
-    * * Default Value: newsequentialid()
-    */
-    get ID(): string {
-        return this.Get('ID');
-    }
-    set ID(value: string) {
-        this.Set('ID', value);
-    }
-
-    /**
-    * * Field Name: IBTRAppealID
-    * * Display Name: IBTR Appeal
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
-    * * Description: The citing decision.
-    */
-    get IBTRAppealID(): string {
-        return this.Get('IBTRAppealID');
-    }
-    set IBTRAppealID(value: string) {
-        this.Set('IBTRAppealID', value);
-    }
-
-    /**
-    * * Field Name: AuthorityType
-    * * Display Name: Authority Type
-    * * SQL Data Type: nvarchar(20)
-    * * Value List Type: List
-    * * Possible Values 
-    *   * Case
-    *   * CourtOfAppeals
-    *   * Guidelines
-    *   * IBTR
-    *   * Manual
-    *   * Rule
-    *   * Statute
-    *   * SupremeCourt
-    *   * TaxCourt
-    *   * USPAP
-    * * Description: Statute, Rule, Manual, Guidelines, TaxCourt, CourtOfAppeals, SupremeCourt, Case (court not recognised), IBTR (the Board citing itself), USPAP.
-    */
-    get AuthorityType(): 'Case' | 'CourtOfAppeals' | 'Guidelines' | 'IBTR' | 'Manual' | 'Rule' | 'Statute' | 'SupremeCourt' | 'TaxCourt' | 'USPAP' {
-        return this.Get('AuthorityType');
-    }
-    set AuthorityType(value: 'Case' | 'CourtOfAppeals' | 'Guidelines' | 'IBTR' | 'Manual' | 'Rule' | 'Statute' | 'SupremeCourt' | 'TaxCourt' | 'USPAP') {
-        this.Set('AuthorityType', value);
-    }
-
-    /**
-    * * Field Name: CiteKey
-    * * Display Name: Cite Key
-    * * SQL Data Type: nvarchar(200)
-    * * Description: Normalised key: IC 6-1.1-15-17.2; 50 IAC 2.4-1-2; 821 N.E.2d 466; a petition number for IBTR self-cites; Manual / Guidelines / USPAP.
-    */
-    get CiteKey(): string {
-        return this.Get('CiteKey');
-    }
-    set CiteKey(value: string) {
-        this.Set('CiteKey', value);
-    }
-
-    /**
-    * * Field Name: CaseName
-    * * Display Name: Case Name
-    * * SQL Data Type: nvarchar(300)
-    * * Description: Most frequent spelling of the case name in this decision (cases only).
-    */
-    get CaseName(): string | null {
-        return this.Get('CaseName');
-    }
-    set CaseName(value: string | null) {
-        this.Set('CaseName', value);
-    }
-
-    /**
-    * * Field Name: Court
-    * * Display Name: Court
-    * * SQL Data Type: nvarchar(30)
-    * * Description: Ind. Tax Ct., Ind. Ct. App., Ind. (cases only).
-    */
-    get Court(): string | null {
-        return this.Get('Court');
-    }
-    set Court(value: string | null) {
-        this.Set('Court', value);
-    }
-
-    /**
-    * * Field Name: Year
-    * * Display Name: Year
-    * * SQL Data Type: smallint
-    * * Description: Year of the cited decision (cases only).
-    */
-    get Year(): number | null {
-        return this.Get('Year');
-    }
-    set Year(value: number | null) {
-        this.Set('Year', value);
-    }
-
-    /**
-    * * Field Name: Subsection
-    * * Display Name: Subsection
-    * * SQL Data Type: nvarchar(100)
-    * * Description: Subsections cited, semicolon-separated, e.g. (d);(k) (statutes only).
-    */
-    get Subsection(): string | null {
-        return this.Get('Subsection');
-    }
-    set Subsection(value: string | null) {
-        this.Set('Subsection', value);
-    }
-
-    /**
-    * * Field Name: MentionCount
-    * * Display Name: Mention Count
-    * * SQL Data Type: int
-    * * Description: Times the authority is cited in the decision, full and short forms together.
-    */
-    get MentionCount(): number {
-        return this.Get('MentionCount');
-    }
-    set MentionCount(value: number) {
-        this.Set('MentionCount', value);
-    }
-
-    /**
-    * * Field Name: __mj_CreatedAt
-    * * Display Name: Created At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_CreatedAt(): Date {
-        return this.Get('__mj_CreatedAt');
-    }
-
-    /**
-    * * Field Name: __mj_UpdatedAt
-    * * Display Name: Updated At
-    * * SQL Data Type: datetimeoffset
-    * * Default Value: getutcdate()
-    */
-    get __mj_UpdatedAt(): Date {
-        return this.Get('__mj_UpdatedAt');
-    }
-
-    /**
-    * * Field Name: ResolvedLegalAuthoritySectionID
-    * * Display Name: Resolved Legal Authority Section
-    * * SQL Data Type: uniqueidentifier
-    * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
-    * * Description: The LegalAuthoritySection this citation's CiteKey resolves to, where a match exists (statute/rule cites only -- case citations are out of scope for this column).
-    */
-    get ResolvedLegalAuthoritySectionID(): string | null {
-        return this.Get('ResolvedLegalAuthoritySectionID');
-    }
-    set ResolvedLegalAuthoritySectionID(value: string | null) {
-        this.Set('ResolvedLegalAuthoritySectionID', value);
     }
 }

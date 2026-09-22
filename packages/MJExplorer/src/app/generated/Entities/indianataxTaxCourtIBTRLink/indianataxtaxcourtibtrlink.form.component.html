@@ -10,16 +10,25 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Citation Identification Section -->
+    <!-- Link Relationships Section -->
     <mj-collapsible-panel
-        SectionKey="citationIdentification"
-        SectionName="Citation Identification"
-        Icon="fa fa-fingerprint"
+        SectionKey="linkRelationships"
+        SectionName="Link Relationships"
+        Icon="fa fa-link"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="false"
+            [ShowLabel]="true"
+            FieldName="TaxCourtCaseID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
             FieldName="IBTRAppealID"
             Type="textbox"
             [EditMode]="EditMode"
@@ -29,49 +38,17 @@
 
     </mj-collapsible-panel>
 
-    <!-- Authority Details Section -->
+    <!-- Match Quality Section -->
     <mj-collapsible-panel
-        SectionKey="authorityDetails"
-        SectionName="Authority Details"
-        Icon="fa fa-gavel"
+        SectionKey="matchQuality"
+        SectionName="Match Quality"
+        Icon="fa fa-chart-line"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="AuthorityType"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="CiteKey"
-            Type="code"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="CaseName"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Court"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Year"
+            FieldName="NameScore"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -79,7 +56,15 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Subsection"
+            FieldName="DaysBeforeFiling"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="MatchMethod"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -87,29 +72,20 @@
 
     </mj-collapsible-panel>
 
-    <!-- Citation Metrics Section -->
+    <!-- Confirmation Status Section -->
     <mj-collapsible-panel
-        SectionKey="citationMetrics"
-        SectionName="Citation Metrics"
-        Icon="fa fa-chart-bar"
+        SectionKey="confirmationStatus"
+        SectionName="Confirmation Status"
+        Icon="fa fa-check-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="true"
-            FieldName="MentionCount"
-            Type="number"
+            [ShowLabel]="false"
+            FieldName="IsConfirmed"
+            Type="checkbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="ResolvedLegalAuthoritySectionID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
         ></mj-form-field>
 
     </mj-collapsible-panel>

@@ -10,44 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Citation Identification Section -->
+    <!-- Case Identification Section -->
     <mj-collapsible-panel
-        SectionKey="citationIdentification"
-        SectionName="Citation Identification"
-        Icon="fa fa-fingerprint"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="false"
-            FieldName="IBTRAppealID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Authority Details Section -->
-    <mj-collapsible-panel
-        SectionKey="authorityDetails"
-        SectionName="Authority Details"
-        Icon="fa fa-gavel"
+        SectionKey="caseIdentification"
+        SectionName="Case Identification"
+        Icon="fa fa-file-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="AuthorityType"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="CiteKey"
+            FieldName="DocketNumber"
             Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -60,26 +33,54 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Case Timeline Section -->
+    <mj-collapsible-panel
+        SectionKey="caseTimeline"
+        SectionName="Case Timeline"
+        Icon="fa fa-calendar-alt"
+        [Form]="this"
+        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Court"
-            Type="textbox"
+            FieldName="DateFiled"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Year"
-            Type="number"
+            FieldName="FirstDecisionDate"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Subsection"
+            FieldName="LastDecisionDate"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Case Classification Section -->
+    <mj-collapsible-panel
+        SectionKey="caseClassification"
+        SectionName="Case Classification"
+        Icon="fa fa-tags"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="false"
+            FieldName="TaxCategory"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -87,17 +88,17 @@
 
     </mj-collapsible-panel>
 
-    <!-- Citation Metrics Section -->
+    <!-- Case Decisions Section -->
     <mj-collapsible-panel
-        SectionKey="citationMetrics"
-        SectionName="Citation Metrics"
-        Icon="fa fa-chart-bar"
+        SectionKey="caseDecisions"
+        SectionName="Case Decisions"
+        Icon="fa fa-gavel"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="MentionCount"
+            FieldName="DecisionCount"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -105,11 +106,19 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="ResolvedLegalAuthoritySectionID"
+            FieldName="Dispositions"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
-            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="OpinionURL"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="URL"
         ></mj-form-field>
 
     </mj-collapsible-panel>
@@ -141,6 +150,35 @@
     </mj-collapsible-panel>
 
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-fields" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
+
+    <!-- ========================================
+         RELATED ENTITY PANELS
+         ======================================== -->
+
+    <!-- Tax Court IBTR Links Section -->
+    <mj-collapsible-panel
+        SectionKey="taxCourtIBTRLinks"
+        SectionName="Tax Court IBTR Links"
+        Icon="fa fa-link"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('taxCourtIBTRLinks')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Tax Court IBTR Links','TaxCourtCaseID')"
+                [NewRecordValues]="NewRecordValues('Tax Court IBTR Links')"
+                [AllowLoad]="IsSectionExpanded('taxCourtIBTRLinks')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('taxCourtIBTRLinks', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
 
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>

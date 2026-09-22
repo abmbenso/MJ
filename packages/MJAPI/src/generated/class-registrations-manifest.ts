@@ -11,7 +11,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-// mj_generatedentities (80 classes)
+// mj_generatedentities (82 classes)
 import {
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -90,6 +90,8 @@ import {
     indianataxStatuteSectionEntity,
     indianataxTaxAdjustmentEntity,
     indianataxTaxBillEntity,
+    indianataxTaxCourtCaseEntity,
+    indianataxTaxCourtIBTRLinkEntity,
     indianataxTaxHistoryYearEntity,
     indianataxValuationAnalysisEntity,
     indianataxValuationCompEntity,
@@ -178,6 +180,8 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxStatuteSectionEntity,
     indianataxTaxAdjustmentEntity,
     indianataxTaxBillEntity,
+    indianataxTaxCourtCaseEntity,
+    indianataxTaxCourtIBTRLinkEntity,
     indianataxTaxHistoryYearEntity,
     indianataxValuationAnalysisEntity,
     indianataxValuationCompEntity,
@@ -187,7 +191,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 80;
+export const CLASS_REGISTRATIONS_COUNT = 82;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

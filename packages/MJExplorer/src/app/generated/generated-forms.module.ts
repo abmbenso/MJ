@@ -92,6 +92,8 @@ import { bigboxretailvwStoreYearFormComponent } from "./Entities/bigboxretailvwS
 import { bigboxretailStoreFormComponent } from "./Entities/bigboxretailStore/bigboxretailstore.form.component";
 import { indianataxTaxAdjustmentFormComponent } from "./Entities/indianataxTaxAdjustment/indianataxtaxadjustment.form.component";
 import { indianataxTaxBillFormComponent } from "./Entities/indianataxTaxBill/indianataxtaxbill.form.component";
+import { indianataxTaxCourtCaseFormComponent } from "./Entities/indianataxTaxCourtCase/indianataxtaxcourtcase.form.component";
+import { indianataxTaxCourtIBTRLinkFormComponent } from "./Entities/indianataxTaxCourtIBTRLink/indianataxtaxcourtibtrlink.form.component";
 import { indianataxTaxHistoryYearFormComponent } from "./Entities/indianataxTaxHistoryYear/indianataxtaxhistoryyear.form.component";
 import { indianataxValuationAnalysisFormComponent } from "./Entities/indianataxValuationAnalysis/indianataxvaluationanalysis.form.component";
 import { indianataxValuationCompFormComponent } from "./Entities/indianataxValuationComp/indianataxvaluationcomp.form.component";
@@ -224,9 +226,9 @@ declarations: [
     bigboxretailStoreFormComponent,
     indianataxTaxAdjustmentFormComponent,
     indianataxTaxBillFormComponent,
-    indianataxTaxHistoryYearFormComponent,
-    indianataxValuationAnalysisFormComponent,
-    indianataxValuationCompFormComponent],
+    indianataxTaxCourtCaseFormComponent,
+    indianataxTaxCourtIBTRLinkFormComponent,
+    indianataxTaxHistoryYearFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -243,12 +245,31 @@ export class GeneratedForms_SubModule_3 { }
 
 @NgModule({
 declarations: [
+    indianataxValuationAnalysisFormComponent,
+    indianataxValuationCompFormComponent],
+imports: [
+    CommonModule,
+    FormsModule,
+    BaseFormsModule,
+    EntityViewerModule,
+    LinkDirectivesModule
+],
+exports: [
+]
+})
+export class GeneratedForms_SubModule_4 { }
+    
+
+
+@NgModule({
+declarations: [
 ],
 imports: [
     GeneratedForms_SubModule_0,
     GeneratedForms_SubModule_1,
     GeneratedForms_SubModule_2,
-    GeneratedForms_SubModule_3
+    GeneratedForms_SubModule_3,
+    GeneratedForms_SubModule_4
 ]
 })
 export class GeneratedFormsModule { }

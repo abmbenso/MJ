@@ -17,7 +17,7 @@ import { MaxLength } from 'class-validator';
 import * as mj_core_schema_server_object_types from '@memberjunction/server'
 
 
-import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
+import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelEntity, indianataxPropertyClassMapEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxCourtCaseEntity, indianataxTaxCourtIBTRLinkEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
     
 
 //****************************************************************************
@@ -12105,7 +12105,7 @@ export class indianataxIBTRAppeal_ {
     @MaxLength(60)
     StateParcelNumber?: string;
         
-    @Field({nullable: true, description: `indiana_tax.Parcel matched by the 18-digit state parcel number where the docketed number normalises to one; NULL otherwise.`}) 
+    @Field({nullable: true, description: `indiana_tax.Parcel resolved from the docketed parcel number; see ParcelMatchMethod for how. NULL when the number matches no C&I parcel.`}) 
     @MaxLength(36)
     ParcelID?: string;
         
@@ -12190,6 +12190,10 @@ export class indianataxIBTRAppeal_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({nullable: true, description: `How ParcelID was resolved: StateParcel18 (the docketed number normalises to an 18-digit state parcel number held in Parcel.ParcelNumber) or CountyLocalNumber (its digits equal Parcel.GISParcelNumber inside the same county, that key is unique there, AND the docketed address and the parcel address carry the same house number; counties where the local-number scheme does not line up are skipped — list in Indiana_Tax_Expert scripts/lib/ibtr-parcel-match.js). NULL exactly when ParcelID is NULL. indiana_tax.Parcel is C&I only, so most residential appeals match nothing by design.`}) 
+    @MaxLength(30)
+    ParcelMatchMethod?: string;
+        
     @Field({nullable: true}) 
     @MaxLength(30)
     Parcel?: string;
@@ -12197,6 +12201,12 @@ export class indianataxIBTRAppeal_ {
     @Field({nullable: true}) 
     @MaxLength(50)
     LegacyBoardDecision?: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Latitude?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Longitude?: number;
         
     @Field(() => [indianataxIBTRDecisionCitation_])
     indianataxIBTRDecisionCitations_IBTRAppealIDArray: indianataxIBTRDecisionCitation_[]; // Link to indianataxIBTRDecisionCitations
@@ -12212,6 +12222,9 @@ export class indianataxIBTRAppeal_ {
     
     @Field(() => [indianataxIBTRDecisionChunk_])
     indianataxIBTRDecisionChunks_IBTRAppealIDArray: indianataxIBTRDecisionChunk_[]; // Link to indianataxIBTRDecisionChunks
+    
+    @Field(() => [indianataxTaxCourtIBTRLink_])
+    indianataxTaxCourtIBTRLinks_IBTRAppealIDArray: indianataxTaxCourtIBTRLink_[]; // Link to indianataxTaxCourtIBTRLinks
     
 }
 
@@ -12309,6 +12322,9 @@ export class CreateindianataxIBTRAppealInput {
 
     @Field({ nullable: true })
     LegacyBoardDecisionID: string | null;
+
+    @Field({ nullable: true })
+    ParcelMatchMethod: string | null;
 
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
@@ -12409,6 +12425,9 @@ export class UpdateindianataxIBTRAppealInput {
 
     @Field({ nullable: true })
     LegacyBoardDecisionID?: string | null;
+
+    @Field({ nullable: true })
+    ParcelMatchMethod?: string | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -12521,6 +12540,16 @@ export class indianataxIBTRAppealResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwIBTRDecisionChunks')} WHERE ${provider.QuoteIdentifier('IBTRAppealID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'IBTR Decision Chunks', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxibtrappeal_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('IBTR Decision Chunks', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxTaxCourtIBTRLink_])
+    async indianataxTaxCourtIBTRLinks_IBTRAppealIDArray(@Root() indianataxibtrappeal_: indianataxIBTRAppeal_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Tax Court IBTR Links', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxCourtIBTRLinks')} WHERE ${provider.QuoteIdentifier('IBTRAppealID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Court IBTR Links', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxibtrappeal_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Tax Court IBTR Links', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         
@@ -23834,6 +23863,424 @@ export class indianataxTaxBillResolver extends ResolverBase {
         const provider = GetReadWriteProvider(providers);
         const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
         return this.DeleteRecord('Tax Bills', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Tax Court Cases
+//****************************************************************************
+@ObjectType({ description: `One Indiana Tax Court case (docket) from the Indiana_Tax_Court catalog (catalog/cases.csv): every tax type, 1986 onward. Loaded whole so a docket can be looked up; only real-property cases link to Board determinations. Full rebuild on every load.` })
+export class indianataxTaxCourtCase_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `Normalised docket number, e.g. 49T10-1405-TA-00019. Unique.`}) 
+    @MaxLength(40)
+    DocketNumber: string;
+        
+    @Field({description: `Caption as catalogued (petitioner v. respondent).`}) 
+    @MaxLength(500)
+    CaseName: string;
+        
+    @Field({nullable: true, description: `Filing date from the Tax Court filing list; NULL for cases known only from a published opinion.`}) 
+    DateFiled?: Date;
+        
+    @Field({nullable: true, description: `Tax type as catalogued (Real property, Sales & Use, Income, Personal property, ...).`}) 
+    @MaxLength(60)
+    TaxCategory?: string;
+        
+    @Field(() => Int, {description: `Number of catalogued decisions (opinions and orders) in the case.`}) 
+    DecisionCount: number;
+        
+    @Field({nullable: true, description: `Date of the earliest catalogued decision.`}) 
+    FirstDecisionDate?: Date;
+        
+    @Field({nullable: true, description: `Date of the latest catalogued decision.`}) 
+    LastDecisionDate?: Date;
+        
+    @Field({nullable: true, description: `Disposition(s) as catalogued, semicolon-separated when a case has several decisions.`}) 
+    @MaxLength(300)
+    Dispositions?: string;
+        
+    @Field({nullable: true, description: `Public URL of the latest decision: the court portal opinion where held, else CourtListener.`}) 
+    @MaxLength(1000)
+    OpinionURL?: string;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field(() => [indianataxTaxCourtIBTRLink_])
+    indianataxTaxCourtIBTRLinks_TaxCourtCaseIDArray: indianataxTaxCourtIBTRLink_[]; // Link to indianataxTaxCourtIBTRLinks
+    
+}
+
+//****************************************************************************
+// INPUT TYPE for Tax Court Cases
+//****************************************************************************
+@InputType()
+export class CreateindianataxTaxCourtCaseInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    DocketNumber?: string;
+
+    @Field({ nullable: true })
+    CaseName?: string;
+
+    @Field({ nullable: true })
+    DateFiled: Date | null;
+
+    @Field({ nullable: true })
+    TaxCategory: string | null;
+
+    @Field(() => Int, { nullable: true })
+    DecisionCount?: number;
+
+    @Field({ nullable: true })
+    FirstDecisionDate: Date | null;
+
+    @Field({ nullable: true })
+    LastDecisionDate: Date | null;
+
+    @Field({ nullable: true })
+    Dispositions: string | null;
+
+    @Field({ nullable: true })
+    OpinionURL: string | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Tax Court Cases
+//****************************************************************************
+@InputType()
+export class UpdateindianataxTaxCourtCaseInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    DocketNumber?: string;
+
+    @Field({ nullable: true })
+    CaseName?: string;
+
+    @Field({ nullable: true })
+    DateFiled?: Date | null;
+
+    @Field({ nullable: true })
+    TaxCategory?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    DecisionCount?: number;
+
+    @Field({ nullable: true })
+    FirstDecisionDate?: Date | null;
+
+    @Field({ nullable: true })
+    LastDecisionDate?: Date | null;
+
+    @Field({ nullable: true })
+    Dispositions?: string | null;
+
+    @Field({ nullable: true })
+    OpinionURL?: string | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Tax Court Cases
+//****************************************************************************
+@ObjectType()
+export class RunindianataxTaxCourtCaseViewResult {
+    @Field(() => [indianataxTaxCourtCase_])
+    Results: indianataxTaxCourtCase_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxTaxCourtCase_)
+export class indianataxTaxCourtCaseResolver extends ResolverBase {
+    @Query(() => RunindianataxTaxCourtCaseViewResult)
+    async RunindianataxTaxCourtCaseViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxCourtCaseViewResult)
+    async RunindianataxTaxCourtCaseViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxCourtCaseViewResult)
+    async RunindianataxTaxCourtCaseDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Tax Court Cases';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxTaxCourtCase_, { nullable: true })
+    async indianataxTaxCourtCase(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxTaxCourtCase_ | null> {
+        this.CheckUserReadPermissions('Tax Court Cases', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxCourtCases')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Court Cases', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Tax Court Cases', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @FieldResolver(() => [indianataxTaxCourtIBTRLink_])
+    async indianataxTaxCourtIBTRLinks_TaxCourtCaseIDArray(@Root() indianataxtaxcourtcase_: indianataxTaxCourtCase_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Tax Court IBTR Links', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxCourtIBTRLinks')} WHERE ${provider.QuoteIdentifier('TaxCourtCaseID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Court IBTR Links', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxtaxcourtcase_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Tax Court IBTR Links', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @Mutation(() => indianataxTaxCourtCase_)
+    async CreateindianataxTaxCourtCase(
+        @Arg('input', () => CreateindianataxTaxCourtCaseInput) input: CreateindianataxTaxCourtCaseInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Tax Court Cases', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxTaxCourtCase_)
+    async UpdateindianataxTaxCourtCase(
+        @Arg('input', () => UpdateindianataxTaxCourtCaseInput) input: UpdateindianataxTaxCourtCaseInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Tax Court Cases', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxTaxCourtCase_)
+    async DeleteindianataxTaxCourtCase(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Tax Court Cases', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Tax Court IBTR Links
+//****************************************************************************
+@ObjectType({ description: `A candidate link from a Tax Court case to an IBTR disposition it reviews (Indiana_Tax_Court/data/extracted/ibtr_links.csv). Many-to-many by design: a consolidated appeal reviews several petitions. Unconfirmed name matches -- Property Search flags a parcel only at NameScore >= 0.95, and shows lower scores as candidates. Full rebuild on every load; rebuilt after any IBTRAppeal rebuild.` })
+export class indianataxTaxCourtIBTRLink_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The Tax Court case.`}) 
+    @MaxLength(36)
+    TaxCourtCaseID: string;
+        
+    @Field({description: `The IBTR disposition the case is a candidate review of.`}) 
+    @MaxLength(36)
+    IBTRAppealID: string;
+        
+    @Field(() => Float, {description: `Similarity (0-1) between the taxpayer as filed in the Tax Court and the IBTR petitioner; 1.000 = identical after normalisation.`}) 
+    NameScore: number;
+        
+    @Field(() => Int, {nullable: true, description: `Days between the IBTR decision and the Tax Court filing (0-75; IC 6-1.1-15-5 allows 45).`}) 
+    DaysBeforeFiling?: number;
+        
+    @Field({description: `How the candidate was found, e.g. PetitionerCountyDate.`}) 
+    @MaxLength(40)
+    MatchMethod: string;
+        
+    @Field(() => Boolean, {nullable: true, description: `1 when a person confirmed the link, 0 when rejected, NULL when unreviewed (all rows at first load).`}) 
+    IsConfirmed?: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Tax Court IBTR Links
+//****************************************************************************
+@InputType()
+export class CreateindianataxTaxCourtIBTRLinkInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    TaxCourtCaseID?: string;
+
+    @Field({ nullable: true })
+    IBTRAppealID?: string;
+
+    @Field(() => Float, { nullable: true })
+    NameScore?: number;
+
+    @Field(() => Int, { nullable: true })
+    DaysBeforeFiling: number | null;
+
+    @Field({ nullable: true })
+    MatchMethod?: string;
+
+    @Field(() => Boolean, { nullable: true })
+    IsConfirmed: boolean | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Tax Court IBTR Links
+//****************************************************************************
+@InputType()
+export class UpdateindianataxTaxCourtIBTRLinkInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    TaxCourtCaseID?: string;
+
+    @Field({ nullable: true })
+    IBTRAppealID?: string;
+
+    @Field(() => Float, { nullable: true })
+    NameScore?: number;
+
+    @Field(() => Int, { nullable: true })
+    DaysBeforeFiling?: number | null;
+
+    @Field({ nullable: true })
+    MatchMethod?: string;
+
+    @Field(() => Boolean, { nullable: true })
+    IsConfirmed?: boolean | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Tax Court IBTR Links
+//****************************************************************************
+@ObjectType()
+export class RunindianataxTaxCourtIBTRLinkViewResult {
+    @Field(() => [indianataxTaxCourtIBTRLink_])
+    Results: indianataxTaxCourtIBTRLink_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxTaxCourtIBTRLink_)
+export class indianataxTaxCourtIBTRLinkResolver extends ResolverBase {
+    @Query(() => RunindianataxTaxCourtIBTRLinkViewResult)
+    async RunindianataxTaxCourtIBTRLinkViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxCourtIBTRLinkViewResult)
+    async RunindianataxTaxCourtIBTRLinkViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxTaxCourtIBTRLinkViewResult)
+    async RunindianataxTaxCourtIBTRLinkDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Tax Court IBTR Links';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxTaxCourtIBTRLink_, { nullable: true })
+    async indianataxTaxCourtIBTRLink(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxTaxCourtIBTRLink_ | null> {
+        this.CheckUserReadPermissions('Tax Court IBTR Links', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwTaxCourtIBTRLinks')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Tax Court IBTR Links', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Tax Court IBTR Links', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxTaxCourtIBTRLink_)
+    async CreateindianataxTaxCourtIBTRLink(
+        @Arg('input', () => CreateindianataxTaxCourtIBTRLinkInput) input: CreateindianataxTaxCourtIBTRLinkInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Tax Court IBTR Links', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxTaxCourtIBTRLink_)
+    async UpdateindianataxTaxCourtIBTRLink(
+        @Arg('input', () => UpdateindianataxTaxCourtIBTRLinkInput) input: UpdateindianataxTaxCourtIBTRLinkInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Tax Court IBTR Links', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxTaxCourtIBTRLink_)
+    async DeleteindianataxTaxCourtIBTRLink(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Tax Court IBTR Links', key, options, provider, userPayload, pubSub);
     }
     
 }
