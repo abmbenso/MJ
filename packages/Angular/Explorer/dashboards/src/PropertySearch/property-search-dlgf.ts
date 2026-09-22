@@ -157,12 +157,12 @@ export function buildDlgfMergedRows(
  * Precedence-resolves the raw (possibly multi-source-per-parcel) Assessment rows and returns the
  * IDs of only the top `resultCap` parcels by AV -- the ids the follow-up Parcels/Tax History
  * queries actually need. Without this, a big county's assessmentResult (up to resultCap*3 rows,
- * fetched with headroom for the precedence de-dupe) could carry up to resultCap*3 (6,000)
+ * fetched with headroom for the precedence de-dupe) could carry up to resultCap*3 (15,000 at the current 5,000 cap)
  * DISTINCT parcel ids, turning the two follow-up `IN (...)` literals into ~230KB query strings --
  * when buildDlgfMergedRows' own final slice(0, resultCap) only ever keeps `resultCap` of them.
  * Mirrors buildDlgfMergedRows' own pickAssessmentRow + AV-descending sort exactly, so the ids
  * returned here are exactly the ones that final slice would keep -- matches the card path's own
- * 2,000-row cap (there enforced by MaxRows on the CountyAssessorRecord query itself).
+ * RESULT_CAP-row cap (5,000 today; there enforced by MaxRows on the CountyAssessorRecord query itself).
  */
 export function resolveDlgfTopParcelIds(
   assessmentRows: Record<string, unknown>[],
@@ -211,7 +211,7 @@ export async function fetchDlgfParcelRows(rv: RunView, params: DlgfSearchParams)
     OrderBy: 'OriginalTotalAV DESC',
     // Up to 3 sources can exist for one parcel-year (county PRC, FOIA list, DLGF), and the
     // precedence de-dupe happens client-side -- so fetch 3x the cap to be certain the top
-    // `resultCap` DISTINCT parcels are all present after de-duping. 3 x 2000 = 6000, well
+    // `resultCap` DISTINCT parcels are all present after de-duping. 3 x RESULT_CAP (15,000 at 5,000), well
     // under the 202,150 dlgf_gdb_2025 Assessment rows (2026-09-13 controller probe) since
     // this query is always county-scoped.
     MaxRows: params.resultCap * 3,
@@ -235,7 +235,7 @@ export async function fetchDlgfParcelRows(rv: RunView, params: DlgfSearchParams)
       Fields: ['ID', 'ParcelNumber', 'GISParcelNumber', 'Address', 'OwnerName', 'Acreage', 'PropertyClassCode', 'TaxDistrictCode', 'Latitude', 'Longitude', 'BoundaryGeoJSON'],
       ExtraFilter: `ID IN (${parcelIdList})`,
       // One row per id in a list that is itself bounded to resultCap (see above) -- matches the
-      // card path's own 2,000-row cap.
+      // card path's own RESULT_CAP (5,000 today).
       MaxRows: params.resultCap,
       ResultType: 'simple',
     },

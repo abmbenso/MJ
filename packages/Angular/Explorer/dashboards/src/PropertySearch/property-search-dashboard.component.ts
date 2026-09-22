@@ -55,6 +55,7 @@ import {
   DLGF_NOTATION,
   buildVerifyLink,
   CI_ROSTER_PARCEL_FILTER,
+  ownerProspectsCoversCounty,
 } from './property-search-county';
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
@@ -241,7 +242,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     this.AppealLayerError = null;
     this.cdr.markForCheck();
     try {
-      await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded()]);
+      // loadLatestOwnerPortfolioRunIfNeeded is load-once and idempotent; awaiting it here
+      // too closes the window where a county change during the FIRST load reached the
+      // search batch before the run id had resolved (owner columns silently blank).
+      await Promise.all([this.loadSubClassOptionsIfNeeded(), this.loadAssessmentYearsIfNeeded(), this.loadLatestOwnerPortfolioRunIfNeeded()]);
       await this.runSearchInternal(generation);
     } finally {
       // Only the generation THIS call claimed -- still the newest -- may clear the spinner: a
@@ -1208,6 +1212,16 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         // assessment on file" and 181 falling back to the DLGF row although every one
         // of them has a card (caught in the Plan B click-through, 2026-09-13). The
         // same MaxRows bug class this component has hit three times before.
+        //
+        // The Marion-era history of this same cap (kept because the numbers were
+        // measured, not guessed): a MISSING MaxRows here was the real cause of the
+        // List View's "No data" bug reported 2026-09-03 -- parcel 1055259 had correct
+        // 2026 Assessment data in the DB but showed "No data" in the grid, because the
+        // query fell back to the entity's 1,000-row default. Measured live 2026-09-11
+        // at RESULT_CAP=5000: 9,794-9,961 rows depending on year (2025/2026 ran
+        // closest to the old 10,000 ceiling with essentially zero headroom). Set to
+        // RESULT_CAP * 4 (= 20,000 at 5,000): 2x the two-sources-per-parcel theoretical
+        // max, expressed in terms of the cap so it can never drift when the cap moves.
         MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
@@ -1216,6 +1230,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         Fields: ['ParcelID', 'ColumnOrdinal', 'NetAnnualTax', 'TaxRate'],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND TaxYear = ${scope.assessmentYear}`,
         // Several ColumnOrdinal rows can exist per parcel-year; same reason as above.
+        // Measured live 2026-09-11 at RESULT_CAP=5000: max ~4,584 rows across years
+        // (most parcels don't yet have Tax History Report data for every year), but
+        // sized alongside Assessments as RESULT_CAP * 4 so it scales with the same cap
+        // and never needs its own re-derivation the next time the constant moves.
         MaxRows: this.RESULT_CAP * 4,
         ResultType: 'simple',
       },
@@ -1301,7 +1319,14 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         // silently-unscoped (all-runs) fetch.
         EntityName: 'Owner Portfolio Parcels',
         Fields: ['ParcelID', 'OwnerPortfolio', 'ExistingRep', 'Recommendation', 'ConfidenceTier', 'SupportingApproachCount', 'EstSavingsAtAsk', 'AVYoYPct'],
-        ExtraFilter: this.latestOwnerPortfolioRunID
+        //
+        // County gate (consolidation review, 2026-09-22): the Owner Prospects rollup
+        // is built for Marion commercial only (scripts/build-owner-portfolios.js), so
+        // for any other county this query can only return zero rows -- and it is the
+        // largest literal IN (...) in the batch. Skip it outright outside Marion so the
+        // seven owner columns are honestly "not covered" rather than "looked and found
+        // nothing" (the column tooltips say the same via OWNER_PROSPECTS_COVERAGE_NOTE).
+        ExtraFilter: this.latestOwnerPortfolioRunID && ownerProspectsCoversCounty(scope.countyNumber)
           ? `ParcelID IN (${parcelIdList}) AND OwnerPortfolioID IN (SELECT ID FROM indiana_tax.OwnerPortfolio WHERE RunID = '${escapeSqlLiteral(this.latestOwnerPortfolioRunID)}')`
           : '1=0',
         // One row per parcel per run at most, so this query's true row count

@@ -16,6 +16,23 @@
 import { prcUrl } from '../TaxBudgetProjection/marion-verification';
 
 export const MARION_COUNTY_NUMBER = 49;
+
+/**
+ * Counties the Owner Prospects rollup (OwnerPortfolio / OwnerPortfolioParcel, built by
+ * scripts/build-owner-portfolios.js) actually covers. Marion commercial only as of the
+ * 2026-09-02 run. The Property Search owner columns are gated on this so a Lake or Allen
+ * row shows "not covered" rather than a misleading blank -- extend the set when the
+ * pipeline is run for another county, and nothing else needs to change.
+ */
+export const OWNER_PROSPECTS_COUNTIES: ReadonlySet<number> = new Set([MARION_COUNTY_NUMBER]);
+
+export function ownerProspectsCoversCounty(countyNumber: number): boolean {
+  return OWNER_PROSPECTS_COUNTIES.has(countyNumber);
+}
+
+/** Appended to every Owner Prospects column tooltip so the coverage limit travels with the column. */
+export const OWNER_PROSPECTS_COVERAGE_NOTE =
+  ' Owner Prospects covers Marion County only today: in any other county this column is blank because the rollup has not been run there, not because the engine looked and found nothing.';
 export const DLGF_SOURCE = 'dlgf_gdb_2025';
 export const MARION_FOIA_SOURCE = 'marion_foia_2026';
 

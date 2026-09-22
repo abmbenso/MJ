@@ -9,6 +9,7 @@ import {
   RATIO_METRIC_DEFS,
   UNIT_OF_COMPARISON_DEFS,
 } from './property-search-agent-context';
+import { OWNER_PROSPECTS_COVERAGE_NOTE } from './property-search-county';
 
 // Register AG Grid community modules once (idempotent across grids in the bundle).
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -223,7 +224,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       flex: 1,
       minWidth: 180,
       tooltipField: 'OwnerEntity',
-      headerTooltip: 'The RESOLVED owner (CoStar true owner -> shared mailing address -> cleaned name, from the Owner Prospects rollup) -- e.g. "Eli Lilly & Co." / "Birge & Held ...". Different from the plain "Owner" column, which is the county\'s raw as-recorded string and can vary parcel-to-parcel for one real owner. Blank means this parcel isn\'t in the current Owner Prospects run yet.',
+      headerTooltip: 'The RESOLVED owner (CoStar true owner -> shared mailing address -> cleaned name, from the Owner Prospects rollup) -- e.g. "Eli Lilly & Co." / "Birge & Held ...". Different from the plain "Owner" column, which is the county\'s raw as-recorded string and can vary parcel-to-parcel for one real owner. Blank means this parcel isn\'t in the current Owner Prospects run yet.' + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {
@@ -440,7 +441,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       // signal (a fresh, unrepresented prospect), so a blank cell needs no
       // decoration; adding one would visually compete with the "flag good
       // opportunities" columns below rather than support them.
-      headerTooltip: 'The tax representative on record for THIS parcel specifically (inferred from a past PTABOA reduction, indiana_tax.OwnerPortfolioParcel.ExistingRep). Blank = no rep on record for this parcel -- a fresh-prospect signal. NOT the same as the owner’s portfolio-wide rep status -- a different parcel the same owner holds can carry a rep while this one doesn’t.',
+      headerTooltip: 'The tax representative on record for THIS parcel specifically (inferred from a past PTABOA reduction, indiana_tax.OwnerPortfolioParcel.ExistingRep). Blank = no rep on record for this parcel -- a fresh-prospect signal. NOT the same as the owner’s portfolio-wide rep status -- a different parcel the same owner holds can carry a rep while this one doesn’t.' + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   // ── Appeal Opportunity: the valuation engine's own triage signals for THIS
@@ -459,7 +460,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       headerName: 'Recommendation',
       width: 130,
       cellClassRules: RECOMMENDATION_CELL_CLASS_RULES,
-      headerTooltip: "The valuation engine's own verdict for this parcel -- Appeal / Monitor / No Appeal (indiana_tax.OwnerPortfolioParcel.Recommendation). Blank means this parcel isn't in the current Owner Prospects run yet, not that the engine looked and found nothing.",
+      headerTooltip: "The valuation engine's own verdict for this parcel -- Appeal / Monitor / No Appeal (indiana_tax.OwnerPortfolioParcel.Recommendation). Blank means this parcel isn't in the current Owner Prospects run yet, not that the engine looked and found nothing." + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {
@@ -471,7 +472,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       field: 'ConfidenceTier',
       headerName: 'Confidence',
       width: 110,
-      headerTooltip: 'How strongly the engine backs Recommendation -- High / Medium / Low. Pair with Recommendation = Appeal to find the strongest cases first.',
+      headerTooltip: 'How strongly the engine backs Recommendation -- High / Medium / Low. Pair with Recommendation = Appeal to find the strongest cases first.' + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {
@@ -484,7 +485,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       headerName: 'Approaches',
       width: 110,
       type: 'numericColumn',
-      headerTooltip: 'Count of independent valuation approaches (sales comparison / income / cost) corroborating the recommendation. 2+ is a strong, multi-method case; 0 is typical for a "No Appeal" row, not a data gap.',
+      headerTooltip: 'Count of independent valuation approaches (sales comparison / income / cost) corroborating the recommendation. 2+ is a strong, multi-method case; 0 is typical for a "No Appeal" row, not a data gap.' + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {
@@ -498,7 +499,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       width: 130,
       type: 'numericColumn',
       valueFormatter: formatCurrency,
-      headerTooltip: "Estimated annual tax dollars at stake if appealed to the engine's \"ask\" value (indiana_tax.OwnerPortfolioParcel.EstSavingsAtAsk). Sort descending to find the biggest-dollar opportunities first.",
+      headerTooltip: "Estimated annual tax dollars at stake if appealed to the engine's \"ask\" value (indiana_tax.OwnerPortfolioParcel.EstSavingsAtAsk). Sort descending to find the biggest-dollar opportunities first." + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {
@@ -513,7 +514,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       type: 'numericColumn',
       valueFormatter: formatAVYoYPct,
       cellClassRules: AV_YOY_CELL_CLASS_RULES,
-      headerTooltip: "Year-over-year change in this parcel's assessed value. Highlighted past +5% -- the threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor, not just an arbitrary \"big jump.\"",
+      headerTooltip: "Year-over-year change in this parcel's assessed value. Highlighted past +5% -- the threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor, not just an arbitrary \"big jump.\"" + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {
