@@ -514,6 +514,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       valueFormatter: formatAVYoYPct,
       cellClassRules: AV_YOY_CELL_CLASS_RULES,
       headerTooltip: "Year-over-year change in this parcel's assessed value. Highlighted past +5% -- the threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor, not just an arbitrary \"big jump.\"",
+    },
   },
   {
     key: 'CardAppealForm',

@@ -129,6 +129,16 @@ export function buildDlgfMergedRows(
       PTABOADate: null,
       PTABOAAppealType: null,
       ...EMPTY_APPEAL_LAYERS,
+      // Owner Prospects rollup fields are Marion-only today (OwnerPortfolio runs
+      // cover Marion commercial), so a DLGF-sourced row for another county has
+      // nothing to report here -- null, never a fabricated value.
+      OwnerEntity: null,
+      TaxRep: null,
+      Recommendation: null,
+      ConfidenceTier: null,
+      SupportingApproachCount: null,
+      EstSavingsAtAsk: null,
+      AVYoYPct: null,
       LastSaleDate: null,
       LastSalePrice: null,
       LastSaleIsValid: null,
