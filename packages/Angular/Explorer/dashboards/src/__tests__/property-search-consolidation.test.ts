@@ -4,6 +4,7 @@ import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from 
 import { buildDlgfMergedRows } from '../PropertySearch/property-search-dlgf';
 import { applyAppealLayers, EMPTY_APPEAL_LAYERS } from '../PropertySearch/property-search-appeal-layers';
 import { ownerProspectsCoversCounty, OWNER_PROSPECTS_COVERAGE_NOTE, MARION_COUNTY_NUMBER } from '../PropertySearch/property-search-county';
+import { indexDataSources } from '../PropertySearch/property-search-headline';
 
 /**
  * Pins the invariants that only exist because two independently developed feature sets --
@@ -79,10 +80,12 @@ describe('Owner Prospects coverage gate', () => {
 
 describe('the DLGF row shape carries the merged fields', () => {
   const parcelRows = [{ ID: 'p1', ParcelNumber: '111', GISParcelNumber: 'g1', Address: '1 Main St', OwnerName: 'Acme', Acreage: 1, PropertyClassCode: '401' }];
-  const assessmentRows = [{ ParcelID: 'p1', Source: 'dlgf_gdb_2025', PropertyClassCode: '401', OriginalLandAV: 1, OriginalImprovementAV: 2, OriginalTotalAV: 3 }];
+  const sources = indexDataSources([{ ID: 'D1', Name: 'dlgf_gdb_2025', Kind: 'State DLGF', Label: 'DLGF statewide roll, AY2025', IsOfficial: false, IsPlaceholder: true }]);
+  const headlineRows = [{ ParcelID: 'p1', AssessmentYear: 2025, HeadlineLandAV: 1, HeadlineImprovementAV: 2, HeadlineTotalAV: 3, HeadlineDataSourceID: 'D1', HeadlineDocumentYear: 2025, IsPlaceholder: true, SourceCount: 1, MaxSpreadPct: null, HasDisagreement: false, HasRevision: false, RevisedFromTotalAV: null, HeadlineTax: null, TaxDataSourceID: null }];
+  const classRows = [{ ParcelID: 'p1', Source: 'dlgf_gdb_2025', PropertyClassCode: '401' }];
 
   it('emits every Owner Prospects field as null (never undefined, never a fabricated value)', () => {
-    const { rows } = buildDlgfMergedRows(assessmentRows, parcelRows, [], 45, 'lake', 2025, 5000);
+    const { rows } = buildDlgfMergedRows(headlineRows, parcelRows, classRows, sources, 45, 'lake', 2025, 5000);
     expect(rows).toHaveLength(1);
     const row = rows[0] as unknown as Record<string, unknown>;
     for (const key of Object.keys(OWNER_COLUMNS)) {
@@ -92,7 +95,7 @@ describe('the DLGF row shape carries the merged fields', () => {
   });
 
   it('applyAppealLayers preserves the Owner Prospects fields on the row it overlays', () => {
-    const { rows } = buildDlgfMergedRows(assessmentRows, parcelRows, [], 45, 'lake', 2025, 5000);
+    const { rows } = buildDlgfMergedRows(headlineRows, parcelRows, classRows, sources, 45, 'lake', 2025, 5000);
     const withOwner = { ...rows[0], OwnerEntity: 'Acme Holdings LLC', Recommendation: 'Appeal' };
     const [out] = applyAppealLayers([withOwner], new Map());
     expect(out.OwnerEntity).toBe('Acme Holdings LLC');

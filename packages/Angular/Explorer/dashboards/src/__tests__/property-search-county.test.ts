@@ -6,10 +6,6 @@ import {
   COUNTY_CARD_SOURCE,
   countyCardSource,
   countySourceTier,
-  assessmentSourceRank,
-  pickAssessmentRow,
-  dataSourceLabel,
-  isDlgfSourced,
   DLGF_NOTATION,
   buildCountyOptions,
   tallyCIParcels,
@@ -71,89 +67,6 @@ describe('county identity + source tier', () => {
       87: 'WarrickPRC', 42: 'KnoxPRC', 73: 'ShelbyPRC', 14: 'DaviessPRC', 68: 'RandolphPRC',
       65: 'PoseyPRC', 23: 'FountainPRC', 20: 'ElkhartPRC', 88: 'WashingtonPRC',
     });
-  });
-});
-
-describe('assessmentSourceRank', () => {
-  it('ranks a source only as its OWN county\'s card source -- the bug this ordering prevents', () => {
-    // LakePRC is county 45's card source: rank 3 there.
-    expect(assessmentSourceRank('LakePRC', 45)).toBe(3);
-    // But LakePRC is NOT county 49's (Marion's) card source -- an unrecognised source for
-    // Marion, so it falls to 0, never masquerading as Marion's own card data.
-    expect(assessmentSourceRank('LakePRC', 49)).toBe(0);
-  });
-
-  it('ranks marion_foia_2026 as 2 and dlgf_gdb_2025 as 1, for any county', () => {
-    expect(assessmentSourceRank('marion_foia_2026', 49)).toBe(2);
-    expect(assessmentSourceRank('dlgf_gdb_2025', 45)).toBe(1);
-  });
-
-  it('ranks null/missing as -1 (nothing at all), and an unrecognised source as 0', () => {
-    expect(assessmentSourceRank(null, 49)).toBe(-1);
-    expect(assessmentSourceRank('apra_lake_2027', 45)).toBe(0);
-  });
-});
-
-describe('pickAssessmentRow', () => {
-  const dlgfRow = { Source: 'dlgf_gdb_2025', OriginalTotalAV: 100000 };
-  const marionRow = { Source: 'MarionPRC', OriginalTotalAV: 250000 };
-  const foiaRow = { Source: 'marion_foia_2026', OriginalTotalAV: 180000 };
-
-  it('a DLGF row already held loses to a MarionPRC candidate', () => {
-    expect(pickAssessmentRow(dlgfRow, marionRow, 49)).toBe(marionRow);
-  });
-
-  it('in reverse order -- MarionPRC already held -- MarionPRC still wins over the DLGF candidate', () => {
-    expect(pickAssessmentRow(marionRow, dlgfRow, 49)).toBe(marionRow);
-  });
-
-  it('marion_foia_2026 beats dlgf_gdb_2025', () => {
-    expect(pickAssessmentRow(dlgfRow, foiaRow, 49)).toBe(foiaRow);
-  });
-
-  it('marion_foia_2026 loses to MarionPRC', () => {
-    expect(pickAssessmentRow(foiaRow, marionRow, 49)).toBe(marionRow);
-  });
-
-  it('a tie keeps existing (first-write-wins, stable under a stable query order)', () => {
-    const firstDlgf = { Source: 'dlgf_gdb_2025', OriginalTotalAV: 100000 };
-    const secondDlgf = { Source: 'dlgf_gdb_2025', OriginalTotalAV: 999999 };
-    expect(pickAssessmentRow(firstDlgf, secondDlgf, 49)).toBe(firstDlgf);
-  });
-
-  it('with nothing held yet, the candidate always wins', () => {
-    expect(pickAssessmentRow(undefined, dlgfRow, 49)).toBe(dlgfRow);
-  });
-});
-
-describe('dataSourceLabel', () => {
-  it('no source at all -> No assessment on file', () => {
-    expect(dataSourceLabel(null, 49)).toBe('No assessment on file');
-  });
-
-  it('DLGF statewide source -> DLGF statewide file', () => {
-    expect(dataSourceLabel('dlgf_gdb_2025', 45)).toBe('DLGF statewide file');
-  });
-
-  it("a county's own card source -> County record card", () => {
-    expect(dataSourceLabel('StJosephPRC', 71)).toBe('County record card');
-  });
-
-  it('Marion FOIA source -> County FOIA list', () => {
-    expect(dataSourceLabel('marion_foia_2026', 49)).toBe('County FOIA list');
-  });
-
-  it('an unrecognised source still resolves to DLGF statewide file (rank 0)', () => {
-    expect(dataSourceLabel('apra_lake_2027', 45)).toBe('DLGF statewide file');
-  });
-});
-
-describe('isDlgfSourced', () => {
-  it('true only for the DLGF statewide file label', () => {
-    expect(isDlgfSourced('DLGF statewide file')).toBe(true);
-    expect(isDlgfSourced('County record card')).toBe(false);
-    expect(isDlgfSourced('County FOIA list')).toBe(false);
-    expect(isDlgfSourced('No assessment on file')).toBe(false);
   });
 });
 

@@ -82,25 +82,28 @@ describe('resetFiltersForCountyChange', () => {
   });
 });
 
-describe('buildSubClassAssessmentRows -- county-scoped precedence', () => {
-  // Same parcel, two Assessment rows: one from Lake's own card source, one from the DLGF
-  // statewide fallback. Task 1's pickAssessmentRow guard, at the aggregate level: which one
-  // wins depends on WHICH county is rolling up, not on source name alone.
-  const carRows: Record<string, unknown>[] = [{ ParcelID: 'p1', PropertySubClassDescription: 'Retail', SqFtSource: null, EstimatedSqFt: null }];
-  const assessmentRows: Record<string, unknown>[] = [
-    { ParcelID: 'p1', Source: 'LakePRC', OriginalTotalAV: 500000 },
-    { ParcelID: 'p1', Source: 'dlgf_gdb_2025', OriginalTotalAV: 300000 },
+describe('buildSubClassAssessmentRows -- reads the stored headline', () => {
+  // One Parcel Year Headlines row per parcel-year: the source choice (county card over the
+  // DLGF roll, latest official document first) was made by the Foundation's rule when the row
+  // was built, so the rollup takes HeadlineTotalAV as given -- no per-county precedence here.
+  const carRows: Record<string, unknown>[] = [
+    { ParcelID: 'p1', PropertySubClassDescription: 'Retail', SqFtSource: null, EstimatedSqFt: null },
+    { ParcelID: 'p2', PropertySubClassDescription: 'Retail', SqFtSource: null, EstimatedSqFt: null },
+    { ParcelID: 'p3', PropertySubClassDescription: 'Office', SqFtSource: null, EstimatedSqFt: null },
+  ];
+  const headlineRows: Record<string, unknown>[] = [
+    { ParcelID: 'p1', HeadlineTotalAV: 500000 },
+    { ParcelID: 'p2', HeadlineTotalAV: 300000 },
   ];
 
-  it('at county 45 (Lake), rolls up the LakePRC AV -- LakePRC is Lake\'s own card source', () => {
-    const rows = buildSubClassAssessmentRows(carRows, assessmentRows, 45);
+  it('sums the headline AV per sub class and counts only parcels that have a headline row', () => {
+    const rows = buildSubClassAssessmentRows(carRows, headlineRows);
     expect(rows).toHaveLength(1);
-    expect(rows[0].totalAV).toBe(500000);
+    expect(rows[0]).toMatchObject({ subClass: 'Retail', parcelCount: 2, totalAV: 800000, avgAV: 400000 });
   });
 
-  it('at county 49 (Marion), rolls up the DLGF AV -- LakePRC is not Marion\'s own card source, so it never masquerades as Marion card data', () => {
-    const rows = buildSubClassAssessmentRows(carRows, assessmentRows, 49);
-    expect(rows).toHaveLength(1);
-    expect(rows[0].totalAV).toBe(300000);
+  it('a parcel with no headline row for the year is excluded, never counted as $0', () => {
+    const rows = buildSubClassAssessmentRows(carRows, [{ ParcelID: 'p3', HeadlineTotalAV: 1000 }]);
+    expect(rows).toEqual([{ subClass: 'Office', parcelCount: 1, totalAV: 1000, avgAV: 1000, avgDollarPerSqFt: null }]);
   });
 });

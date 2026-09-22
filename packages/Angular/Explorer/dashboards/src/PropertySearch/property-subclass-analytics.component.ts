@@ -244,20 +244,22 @@ export class PropertySubclassAnalyticsComponent extends BaseAngularComponent {
 
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const result = await rv.RunView<Record<string, unknown>>({
-      EntityName: 'Assessments',
-      Fields: ['ParcelID', 'Source', 'OriginalTotalAV'],
+      // The stored headline (one row per parcel-year, already source-resolved by the
+      // Foundation's rule) -- the same number the Property Search grid shows, so the
+      // sub-class totals and the list can never disagree with each other.
+      EntityName: 'Parcel Year Headlines',
+      Fields: ['ParcelID', 'HeadlineTotalAV'],
       ExtraFilter: `AssessmentYear = ${this.AssessmentYear} AND ParcelID IN (SELECT ID FROM indiana_tax.vwParcels WHERE CountyNumber = ${this.CountyNumber})`,
-      // A full year's worth of statewide Assessment rows across all sources
-      // can approach ~40,000 (up to 2 sources x ~19,859 parcels) -- see
-      // loadAssessmentYearsIfNeeded's own comment in the host dashboard for
-      // the same ceiling reasoning.
+      // One row per parcel: the largest county's whole roster is ~20,000 parcels
+      // (Marion C&I 20,722), so 50,000 keeps the same headroom the old
+      // two-sources-per-parcel query had.
       MaxRows: 50000,
       ResultType: 'simple',
     });
 
     if (seq !== this.loadSeq || !this.carRowsCache) return; // a newer load owns the screen now
 
-    this.AssessmentRows = result.Success ? buildSubClassAssessmentRows(this.carRowsCache, result.Results ?? [], this.CountyNumber) : [];
+    this.AssessmentRows = result.Success ? buildSubClassAssessmentRows(this.carRowsCache, result.Results ?? []) : [];
     this.IsLoading = false;
     this.cdr.markForCheck();
   }

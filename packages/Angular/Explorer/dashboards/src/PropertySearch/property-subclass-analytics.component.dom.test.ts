@@ -44,14 +44,15 @@ class StubViewToggle {
 }
 
 const CAR_ROWS = [{ ParcelID: 'p1', PropertySubClassDescription: 'Retail', SqFtSource: 'PropertyRecordCard', EstimatedSqFt: 10000 }];
-const ASSESSMENT_ROWS = [{ ParcelID: 'p1', Source: 'MarionPRC', OriginalTotalAV: 500000 }];
+// Parcel Year Headlines rows: one per parcel-year, already source-resolved (2026-09-22).
+const ASSESSMENT_ROWS = [{ ParcelID: 'p1', HeadlineTotalAV: 500000 }];
 
 function fakeProvider() {
   return createFakeProvider({
     runViewResults: (params: RunViewParams): Record<string, unknown>[] => {
       if (params.EntityName === 'County Assessor Records') return CAR_ROWS;
       if (params.EntityName === 'PTABOA Appeals') return [];
-      if (params.EntityName === 'Assessments') return ASSESSMENT_ROWS;
+      if (params.EntityName === 'Parcel Year Headlines') return ASSESSMENT_ROWS;
       return [];
     },
   });
@@ -124,7 +125,7 @@ const CAR_ROWS_BY_COUNTY: Record<string, Record<string, unknown>[]> = {
 };
 const ASSESSMENT_ROWS_BY_COUNTY: Record<string, Record<string, unknown>[]> = {
   '49': ASSESSMENT_ROWS,
-  '45': [{ ParcelID: 'lake1', Source: 'LakePRC', OriginalTotalAV: 750000 }],
+  '45': [{ ParcelID: 'lake1', HeadlineTotalAV: 750000 }],
 };
 function countyOf(params: RunViewParams): string {
   const m = /CountyNumber = (\d+)/.exec(String(params.ExtraFilter ?? ''));
@@ -138,7 +139,7 @@ function countyProvider(carFilters: string[]) {
         carFilters.push(String(params.ExtraFilter));
         return CAR_ROWS_BY_COUNTY[county] ?? [];
       }
-      if (params.EntityName === 'Assessments') return ASSESSMENT_ROWS_BY_COUNTY[county] ?? [];
+      if (params.EntityName === 'Parcel Year Headlines') return ASSESSMENT_ROWS_BY_COUNTY[county] ?? [];
       return [];
     },
   });

@@ -71,54 +71,16 @@ export function countyCardSource(countyNumber: number): string | null {
 }
 
 export type CountySourceTier = 'County PRC' | 'DLGF only';
-export type ParcelDataSource = 'County record card' | 'County FOIA list' | 'DLGF statewide file' | 'No assessment on file';
 
 export function countySourceTier(countyNumber: number): CountySourceTier {
   return countyCardSource(countyNumber) ? 'County PRC' : 'DLGF only';
 }
 
-/**
- * Rank of an Assessment row's Source for one county: county PRC > county FOIA list > DLGF.
- * Spec: proposals/multi-county-ci-intake.md §4.3. 0 = an unrecognised source (e.g. a future
- * apra_<slug>_<year> row), which still beats nothing at all but loses to every known source.
- */
-export function assessmentSourceRank(source: string | null, countyNumber: number): number {
-  if (!source) return -1;
-  if (source === countyCardSource(countyNumber)) return 3;
-  if (source === MARION_FOIA_SOURCE) return 2;
-  if (source === DLGF_SOURCE) return 1;
-  return 0;
-}
-
-/**
- * Winner between the Assessment row already held for a parcel-year and a new candidate.
- * Ties keep `existing` (first-write-wins), so a stable query order gives a stable result.
- */
-export function pickAssessmentRow(
-  existing: Record<string, unknown> | undefined,
-  candidate: Record<string, unknown>,
-  countyNumber: number
-): Record<string, unknown> {
-  if (!existing) return candidate;
-  const existingRank = assessmentSourceRank(existing['Source'] as string | null, countyNumber);
-  const candidateRank = assessmentSourceRank(candidate['Source'] as string | null, countyNumber);
-  return candidateRank > existingRank ? candidate : existing;
-}
-
-/** The words shown to the user for a row's Source -- what `MergedParcelRow.DataSource` carries. */
-export function dataSourceLabel(source: string | null, countyNumber: number): ParcelDataSource {
-  switch (assessmentSourceRank(source, countyNumber)) {
-    case 3: return 'County record card';
-    case 2: return 'County FOIA list';
-    case 1: return 'DLGF statewide file';
-    case 0: return 'DLGF statewide file';
-    default: return 'No assessment on file';
-  }
-}
-
-export function isDlgfSourced(dataSource: ParcelDataSource): boolean {
-  return dataSource === 'DLGF statewide file';
-}
+// The per-row source precedence that used to live here (assessmentSourceRank / pickAssessmentRow /
+// dataSourceLabel, spec §4.3) was retired on 2026-09-22: indiana_tax.ParcelYearHeadline now stores
+// the one headline per parcel-year, resolved by the Foundation's shared rule, and Property Search
+// reads it (property-search-headline.ts). COUNTY_CARD_SOURCE above remains the county-tier and
+// verify-link table only.
 
 /** Spec §6, verbatim. One constant: the banner, the export header line and the export column all read it. */
 export const DLGF_NOTATION =

@@ -34,9 +34,11 @@ function formatPricePerSqFt(params: { data?: MergedParcelRow }): string {
   return v == null ? '—' : `${formatCurrencyValue(Math.round(v))}/SF`;
 }
 
-/** Tax Rate is stored as dollars per $100 assessed value (e.g. 2.6094) -- numerically identical to a percentage, so displayed as one. */
-function formatTaxRate(params: { value: number | null }): string {
-  return params.value == null ? '—' : `${params.value.toFixed(4)}%`;
+/** Source disagreement: the largest spread between same-vintage sources' totals as a percent of the headline; a dash when fewer than two sources were compared. */
+function formatSpreadPct(params: { value: number | null; data?: MergedParcelRow }): string {
+  if (params.value == null) return '—';
+  const pct = `${params.value.toFixed(1)}%`;
+  return params.data?.HasDisagreement ? `${pct} ⚠` : pct;
 }
 
 /** Minimal HTML escaper for the VerifyLink cellRenderer below -- AG Grid's cellRenderer here returns
@@ -64,10 +66,10 @@ function formatLastSalePrice(params: { value: number | null; data?: MergedParcel
   return `${formatted}${suffix}`;
 }
 
-/** Year column: the year itself, with the source's confidence folded in as a suffix -- a county's own record card (this project's highest-confidence source) vs. a statewide/FOIA fallback vs. no data at all for this parcel/year. */
+/** Year column: the year itself, with the headline's standing folded in as a suffix -- ✓ = an official county document (card, bill, notice, records response) is the headline; no mark = the DLGF roll is standing in as a placeholder; "No data" = no headline row for this parcel/year. */
 function formatAssessmentYear(params: { value: number | null; data?: MergedParcelRow }): string {
   if (params.value == null) return 'No data';
-  return params.data?.DataSource === 'County record card' ? `${params.value} ✓` : String(params.value);
+  return params.data && !params.data.IsPlaceholder ? `${params.value} ✓` : String(params.value);
 }
 
 /** Own YearBuilt (Tax History Report-sourced) preferred, CoStarYearBuilt shown as an explicitly-marked fallback -- see formatYearBuilt's own doc comment for why the "(CoStar)" suffix matters here specifically. */
@@ -173,7 +175,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       field: 'DataSource',
       headerName: 'Source',
       width: 170,
-      headerTooltip: 'Where this row’s assessed values came from. "County record card" = the county’s own PRC (highest confidence). "County FOIA list" = a county-provided list. "DLGF statewide file" = the state’s AY2025 file, as initially determined — not the county’s card.',
+      headerTooltip: 'The document this row’s assessed values came from, with that document’s own year in parentheses — an AY2024 value can come from the 2026 card (the value as it stands after appeals and corrections) or from the 2024 card (as noticed). A county record card, tax bill, notice or public-records list is the headline whenever one exists; "DLGF statewide roll (placeholder)" means only the state’s AY2025 file is on hand, as initially determined — not the county’s card.',
     },
   },
   {
@@ -357,7 +359,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       width: 110,
       type: 'numericColumn',
       valueFormatter: formatAssessmentYear,
-      headerTooltip: 'Assessment year shown. ✓ = from the county\'s own record card (highest confidence); no checkmark = a statewide/FOIA fallback source — see the Source column; "No data" = nothing on file for this parcel/year.',
+      headerTooltip: 'Assessment year shown. ✓ = an official county document is the headline (see the Source column for which one and its year); no checkmark = the DLGF statewide roll is standing in as a placeholder; "No data" = nothing on file for this parcel/year.',
     },
   },
   {
@@ -371,21 +373,47 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       width: 140,
       type: 'numericColumn',
       valueFormatter: formatCurrency,
-      headerTooltip: 'Net annual tax liability for the selected assessment year, from the Tax History Report. "No data" (—) when this parcel has no Tax History Report for that year yet.',
+      headerTooltip: 'The tax billed on the selected assessment year: the county tax history report where one is loaded, else the DLGF tax abstract (see Tax Source). "No data" (—) for the newest year until it is billed (pay-year lag) or where neither source covers this parcel.',
     },
   },
   {
-    key: 'TaxRate',
-    label: 'Tax Rate',
+    key: 'TaxSource',
+    label: 'Tax Source',
     defaultVisible: false,
     category: 'Assessment & Taxation',
     colDef: {
-      field: 'TaxRate',
-      headerName: 'Tax Rate',
-      width: 120,
+      field: 'TaxSource',
+      headerName: 'Tax Source',
+      width: 200,
+      headerTooltip: 'Which document the Total Tax figure came from — the county tax history report, or the DLGF statewide tax abstract (which can predate an Auditor’s Correction).',
+    },
+  },
+  {
+    key: 'MaxSpreadPct',
+    label: 'Source Disagreement',
+    defaultVisible: false,
+    category: 'Assessment & Taxation',
+    colDef: {
+      field: 'MaxSpreadPct',
+      headerName: 'Disagreement',
+      width: 130,
       type: 'numericColumn',
-      valueFormatter: formatTaxRate,
-      headerTooltip: 'Tax rate for the selected assessment year (per $100 of assessed value), from the Tax History Report.',
+      valueFormatter: formatSpreadPct,
+      headerTooltip: 'When more than one source reports this parcel-year, the largest spread between their totals as a percent of the headline value. ⚠ above 1% — a lead for the practitioner. Compares only sources of the same document year plus every non-county source; an older card that differs is a revision (see Revised From), not a disagreement. Dash = fewer than two sources compared.',
+    },
+  },
+  {
+    key: 'RevisedFromTotalAV',
+    label: 'Revised From',
+    defaultVisible: false,
+    category: 'Assessment & Taxation',
+    colDef: {
+      field: 'RevisedFromTotalAV',
+      headerName: 'Revised From',
+      width: 150,
+      type: 'numericColumn',
+      valueFormatter: formatCurrency,
+      headerTooltip: 'The total an earlier county document carried for this same assessment year when it differs from the headline — what was noticed versus what stands after appeals and corrections. Blank when no earlier document differs.',
     },
   },
   {

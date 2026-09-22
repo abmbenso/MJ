@@ -8,7 +8,7 @@
  * here writes to the database — search/filter tools only change what's
  * QUERIED and displayed; OpenParcelRecord opens a record for VIEWING only.
  */
-import { MARION_COUNTY_NUMBER, ParcelDataSource, CountySourceTier, pickAssessmentRow } from './property-search-county';
+import { MARION_COUNTY_NUMBER, CountySourceTier } from './property-search-county';
 // Type-only: property-search-appeal-layers.ts imports escapeSqlLiteral from THIS file, so a
 // value import back here would be a cycle -- `import type` is erased at compile time and never
 // executes, so it can't participate in a runtime cycle.
@@ -69,32 +69,41 @@ export interface MergedParcelRow extends AppealLayerFields {
   // EstimatedSqFt (total building SF), not just a different source for the
   // same number. See migration V202608272230.
   CoStarRBA: number | null;
-  // Assessed values AS OF AssessmentYear (below) -- sourced from
-  // indiana_tax.Assessment via pickAssessmentRow's per-county precedence
-  // (the selected county's own card source, e.g. LakePRC/MarionPRC/
-  // StJosephPRC, beats a FOIA list, which beats the DLGF statewide fallback),
-  // NOT CountyAssessorRecord's own undifferentiated snapshot.
-  // Null (not a stale substitute) when no Assessment row exists for this
-  // parcel at the selected year -- most commonly 2024, which currently has
-  // no statewide fallback and only exists for already-PRC-fetched parcels.
+  // Assessed values AS OF AssessmentYear (below) -- read from
+  // indiana_tax.ParcelYearHeadline, the Foundation's ONE stored headline per
+  // parcel-year (latest-dated official county document wins; the DLGF roll
+  // only as a placeholder; commercial data never), NOT picked between raw
+  // Assessment rows here and NOT CountyAssessorRecord's own snapshot. Null
+  // (not a stale substitute) when no headline row exists for this parcel at
+  // the selected year -- most commonly 2024, which has no statewide roll and
+  // only exists for already-PRC-fetched parcels. See property-search-headline.ts.
   AssessedLandAV: number | null;
   AssessedImprovementAV: number | null;
   AssessedTotalAV: number | null;
   AssessmentYear: number | null;
+  /** DataSource.Name of the headline document ('MarionPRC', 'dlgf_gdb_2025') -- for the export. */
   AssessmentSource: string | null;
-  /** Which source the AV on this row actually came from, in words (spec §6: "every merged row carries a DataSource value"). */
-  DataSource: ParcelDataSource;
+  /** The headline's source in words WITH its document year, e.g. "Marion County record card (2026)" -- an AY2024 value can come from the 2026 card (as finally determined) or the 2024 card (as noticed). "DLGF statewide roll (placeholder)" / "No assessment on file" otherwise. */
+  DataSource: string;
+  /** True when the headline is the DLGF roll standing in for a missing county document -- drives the DLGF notation banner. */
+  IsPlaceholder: boolean;
+  /** Calendar year of the headline document (its vintage); null when undated or no headline. */
+  HeadlineDocumentYear: number | null;
+  /** Largest spread between the totals compared for disagreement (same-vintage official documents + every non-official source), as a percent of the headline; null with fewer than two compared sources. */
+  MaxSpreadPct: number | null;
+  /** MaxSpreadPct > 1% -- a lead for the practitioner, transparency for the client. */
+  HasDisagreement: boolean;
+  /** The total an older-vintage official document carried when it differs from the headline (what was noticed vs. what stands) -- appeal history, not a data conflict. */
+  RevisedFromTotalAV: number | null;
+  HasRevision: boolean;
   /** The route to the county's own record card for this parcel, from buildVerifyLink(...).url -- null when none can be built (see the Verify column's "not on file" cell). */
   VerifyURL: string | null;
-  // Sourced from indiana_tax.TaxHistoryYear at TaxYear = AssessmentYear (the
-  // two year fields are confirmed 1:1 aligned, not off-by-one) -- NOT
-  // CountyAssessorRecord's own current-year-only snapshot, so these track the
-  // year selector the same way AssessedTotalAV does. Null when no
-  // TaxHistoryYear row exists for this parcel at the selected year (a parcel
-  // not yet Tax-History-fetched, or a year the report hasn't covered yet,
-  // e.g. the newest year before that cycle's report is issued).
+  // The headline tax for the selected assessment year (ParcelYearHeadline.HeadlineTax):
+  // the county tax history row with TaxYear = AssessmentYear, else the DLGF TaxBill row
+  // with PayYear = AssessmentYear + 1. Null for the newest year until it is billed
+  // (pay-year lag) or where neither source covers the parcel. TaxSource names which.
   TotalTax: number | null;
-  TaxRate: number | null;
+  TaxSource: string | null;
   // The assessed value AFTER a PTABOA appeal decision, for the SELECTED
   // AssessmentYear -- sourced from indiana_tax.PTABOAAppeal.AfterTotalAV
   // (the latest-hearing-dated appeal for this parcel+year when more than one
@@ -864,22 +873,16 @@ export interface SubClassAppealAnalytics {
 }
 
 /**
- * Groups CountyAssessorRecord + year-scoped Assessment rows by sub class.
+ * Groups CountyAssessorRecord + year-scoped headline rows by sub class.
  * @param carRows Raw 'County Assessor Records' rows -- needs ParcelID, PropertySubClassDescription, SqFtSource, EstimatedSqFt.
- * @param assessmentRows Raw 'Assessments' rows already scoped to one AssessmentYear -- needs ParcelID, Source, OriginalTotalAV.
+ * @param headlineRows Raw 'Parcel Year Headlines' rows already scoped to one AssessmentYear -- needs ParcelID, HeadlineTotalAV. One row per parcel (UQ_ParcelYearHeadline); the source choice was made by the Foundation's rule when the row was built.
  */
 export function buildSubClassAssessmentRows(
   carRows: Record<string, unknown>[],
-  assessmentRows: Record<string, unknown>[],
-  countyNumber: number
+  headlineRows: Record<string, unknown>[]
 ): SubClassAssessmentRow[] {
-  // Prefer the county's own card source per parcel (pickAssessmentRow, spec §4.3) -- same
-  // data-integrity rule as the main dashboard's own assessmentByParcel map.
   const assessmentByParcel = new Map<string, Record<string, unknown>>();
-  for (const a of assessmentRows) {
-    const pid = a['ParcelID'] as string;
-    assessmentByParcel.set(pid, pickAssessmentRow(assessmentByParcel.get(pid), a, countyNumber));
-  }
+  for (const h of headlineRows) assessmentByParcel.set(h['ParcelID'] as string, h);
 
   interface Bucket {
     parcelCount: number;
@@ -890,8 +893,8 @@ export function buildSubClassAssessmentRows(
   const buckets = new Map<string, Bucket>();
   for (const car of carRows) {
     const pid = car['ParcelID'] as string;
-    const av = assessmentByParcel.get(pid)?.['OriginalTotalAV'] as number | null | undefined;
-    // No Assessment row for this parcel at the selected year -- excluded from
+    const av = assessmentByParcel.get(pid)?.['HeadlineTotalAV'] as number | null | undefined;
+    // No headline row for this parcel at the selected year -- excluded from
     // this sub class's rollup entirely, not counted as $0 (which would drag
     // down AvgAV with parcels that simply haven't been fetched for this year).
     if (av == null) continue;

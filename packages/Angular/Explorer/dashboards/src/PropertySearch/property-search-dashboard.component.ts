@@ -49,15 +49,13 @@ import {
   countySourceTier,
   buildCountyOptions,
   tallyCIParcels,
-  pickAssessmentRow,
-  dataSourceLabel,
-  isDlgfSourced,
   DLGF_NOTATION,
   buildVerifyLink,
   CI_ROSTER_PARCEL_FILTER,
   ownerProspectsCoversCounty,
 } from './property-search-county';
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
+import { DataSourceIndex, DATA_SOURCE_FIELDS, PARCEL_YEAR_HEADLINE_FIELDS, buildHeadlineFields, indexDataSources, indexHeadlinesByParcel } from './property-search-headline';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
 import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers, fetchParcelAppealLayerDetail, ParcelAppealLayerDetail } from './property-search-appeal-layers';
 
@@ -212,11 +210,35 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     return countyCardSource(this.filters.countyNumber) != null;
   }
 
-  /** True when ANY row on screen is DLGF-sourced -- the condition spec §6 sets for the notation. */
+  /** True when ANY row on screen is a DLGF placeholder headline -- the condition spec §6 sets for the notation. */
   public get HasDlgfRows(): boolean {
-    return this.MergedResults.some((r) => isDlgfSourced(r.DataSource));
+    return this.MergedResults.some((r) => r.IsPlaceholder);
   }
   public readonly DlgfNotation = DLGF_NOTATION;
+
+  /**
+   * indiana_tax.DataSource (29 rows), loaded once per dashboard instance: every source word on
+   * screen (the Source and Tax Source cells, the export) comes from here, never from a
+   * hand-written source-name list. Empty until the first search's own load; a failed load leaves
+   * it empty and the cells read "Unknown source" rather than a fabricated label.
+   */
+  private dataSources: DataSourceIndex = new Map();
+  private dataSourcesLoaded = false;
+
+  private async loadDataSourcesIfNeeded(): Promise<void> {
+    if (this.dataSourcesLoaded) return;
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const result = await rv.RunView<Record<string, unknown>>({
+      EntityName: 'Data Sources',
+      Fields: [...DATA_SOURCE_FIELDS],
+      // 29 rows today; the cap only has to exceed the table, and this table grows by ones.
+      MaxRows: 500,
+      ResultType: 'simple',
+    });
+    if (!result.Success) return; // retried on the next search
+    this.dataSources = indexDataSources(result.Results ?? []);
+    this.dataSourcesLoaded = true;
+  }
 
   public onCountyChange(countyNumber: number): void {
     if (!Number.isFinite(countyNumber) || countyNumber === this.filters.countyNumber) return;
@@ -679,6 +701,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'AssessmentYear', displayName: 'Assessment Year', dataType: 'number' },
       { name: 'AssessmentSource', displayName: 'Assessment Source' },
       { name: 'DataSource', displayName: 'Data Source' },
+      { name: 'HeadlineDocumentYear', displayName: 'Source Document Year', dataType: 'number' },
+      { name: 'IsPlaceholder', displayName: 'DLGF Placeholder?', dataType: 'boolean' },
+      { name: 'MaxSpreadPct', displayName: 'Source Disagreement %', dataType: 'number' },
+      { name: 'RevisedFromTotalAV', displayName: 'Revised From (prior document)', dataType: 'currency' },
       { name: 'VerifyURL', displayName: 'Verify (county document)' },
       { name: 'EstimatedSqFt', displayName: 'Building Sq Ft', dataType: 'number' },
       { name: 'EstimatedSqFtExGarage', displayName: 'Building Sq Ft (County XG)', dataType: 'number' },
@@ -692,7 +718,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'AssessedImprovementAV', displayName: 'Assessed Improvement AV', dataType: 'currency' },
       { name: 'AssessedTotalAV', displayName: 'Assessed Total AV', dataType: 'currency' },
       { name: 'TotalTax', displayName: 'Total Tax', dataType: 'currency' },
-      { name: 'TaxRate', displayName: 'Tax Rate', dataType: 'number' },
+      { name: 'TaxSource', displayName: 'Tax Source' },
       { name: 'PTABOAValue', displayName: 'PTABOA Value', dataType: 'currency' },
       { name: 'PTABOADate', displayName: 'PTABOA Date', dataType: 'date' },
       { name: 'PTABOAAppealType', displayName: 'Appeal Type' },
@@ -1170,11 +1196,13 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     // one join in this batch that needs the OTHER id from carResult.
     const carIdList = carResult.Results.map((r) => `'${escapeSqlLiteral(r['ID'] as string)}'`).join(',');
 
-    // Geometry, year-specific Assessment figures, year-specific tax history,
-    // and sale history are independent of each other (all four only depend
-    // on ids already known from carResult above) -- batch as one RunViews
-    // call rather than sequential RunView calls.
-    const [parcelResult, assessmentResult, taxHistoryResult, saleHistoryResult, ptaboaDateResult, parkingSegmentResult, ownerPortfolioResult] = await rv.RunViews<Record<string, unknown>>([
+    // Geometry, the year's headline (assessed value + tax, one row per parcel),
+    // and sale history are independent of each other (all only depend on ids
+    // already known from carResult above) -- batch as one RunViews call rather
+    // than sequential RunView calls. The Data Sources lookup the headline
+    // labels need is a one-time load, awaited here so the first search has it.
+    await this.loadDataSourcesIfNeeded();
+    const [parcelResult, headlineResult, saleHistoryResult, ptaboaDateResult, parkingSegmentResult, ownerPortfolioResult] = await rv.RunViews<Record<string, unknown>>([
       {
         EntityName: 'Parcels',
         Fields: ['ID', 'ParcelNumber', 'GISParcelNumber', 'Address', 'OwnerName', 'Latitude', 'Longitude', 'BoundaryGeoJSON'],
@@ -1201,40 +1229,17 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         ResultType: 'simple',
       },
       {
-        EntityName: 'Assessments',
-        Fields: ['ParcelID', 'Source', 'OriginalLandAV', 'OriginalImprovementAV', 'OriginalTotalAV'],
+        // ONE row per parcel-year (UQ_ParcelYearHeadline): the assessed value already
+        // resolved by the Foundation's shared rule, plus the year's tax and the
+        // disagreement/revision flags. This replaced the two multi-row-per-parcel
+        // queries (Assessments x sources, Tax History Years x ColumnOrdinal) on
+        // 2026-09-22, and with them the RESULT_CAP * 4 headroom those needed. The
+        // MaxRows bug class this component hit three times still applies: the cap
+        // must be >= RESULT_CAP, tied to it, or rows silently vanish at 1,000.
+        EntityName: 'Parcel Year Headlines',
+        Fields: [...PARCEL_YEAR_HEADLINE_FIELDS],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${scope.assessmentYear}`,
-        // SEVERAL rows per parcel-year: the county-card row (LakePRC / MarionPRC /
-        // StJosephPRC) AND the statewide row (dlgf_gdb_2025 / marion_foia_2026) both
-        // exist for the same parcel and year. Without an explicit cap this inherited
-        // the entity's 1,000-row default and silently truncated at RESULT_CAP parcels
-        // x 2 sources -- on Lake AY2025 that left 550 of 1,000 parcels reading "No
-        // assessment on file" and 181 falling back to the DLGF row although every one
-        // of them has a card (caught in the Plan B click-through, 2026-09-13). The
-        // same MaxRows bug class this component has hit three times before.
-        //
-        // The Marion-era history of this same cap (kept because the numbers were
-        // measured, not guessed): a MISSING MaxRows here was the real cause of the
-        // List View's "No data" bug reported 2026-09-03 -- parcel 1055259 had correct
-        // 2026 Assessment data in the DB but showed "No data" in the grid, because the
-        // query fell back to the entity's 1,000-row default. Measured live 2026-09-11
-        // at RESULT_CAP=5000: 9,794-9,961 rows depending on year (2025/2026 ran
-        // closest to the old 10,000 ceiling with essentially zero headroom). Set to
-        // RESULT_CAP * 4 (= 20,000 at 5,000): 2x the two-sources-per-parcel theoretical
-        // max, expressed in terms of the cap so it can never drift when the cap moves.
-        MaxRows: this.RESULT_CAP * 4,
-        ResultType: 'simple',
-      },
-      {
-        EntityName: 'Tax History Years',
-        Fields: ['ParcelID', 'ColumnOrdinal', 'NetAnnualTax', 'TaxRate'],
-        ExtraFilter: `ParcelID IN (${parcelIdList}) AND TaxYear = ${scope.assessmentYear}`,
-        // Several ColumnOrdinal rows can exist per parcel-year; same reason as above.
-        // Measured live 2026-09-11 at RESULT_CAP=5000: max ~4,584 rows across years
-        // (most parcels don't yet have Tax History Report data for every year), but
-        // sized alongside Assessments as RESULT_CAP * 4 so it scales with the same cap
-        // and never needs its own re-derivation the next time the constant moves.
-        MaxRows: this.RESULT_CAP * 4,
+        MaxRows: this.RESULT_CAP,
         ResultType: 'simple',
       },
       {
@@ -1346,21 +1351,12 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       for (const p of parcelResult.Results ?? []) parcelById.set(p['ID'] as string, p);
     }
 
-    // Per parcel, prefer the county's own PRC-sourced row over the year's
-    // statewide fallback (marion_foia_2026 / dlgf_gdb_2025) -- matches this
-    // project's established data-integrity priority (county PRC is the
-    // highest-confidence source), via the one shared precedence rule
-    // (spec §4.3, pickAssessmentRow). 2024 currently has no statewide
-    // fallback at all, so a parcel not yet PRC-fetched will have no entry
-    // here for that year -- shown as null/"No data", not silently
-    // substituted from another year.
-    const assessmentByParcel = new Map<string, Record<string, unknown>>();
-    if (assessmentResult.Success) {
-      for (const a of assessmentResult.Results ?? []) {
-        const pid = a['ParcelID'] as string;
-        assessmentByParcel.set(pid, pickAssessmentRow(assessmentByParcel.get(pid), a, scope.countyNumber));
-      }
-    }
+    // One headline row per parcel for the selected year -- the source choice
+    // (county card over the DLGF roll, latest official document first) was made
+    // by the Foundation's rule when ParcelYearHeadline was built. 2024 has no
+    // statewide roll at all, so a parcel not yet PRC-fetched has no row for that
+    // year -- shown as null/"No data", not silently substituted from another year.
+    const headlineByParcel = headlineResult.Success ? indexHeadlinesByParcel(headlineResult.Results ?? []) : new Map<string, Record<string, unknown>>();
 
     // Query already returns rows ORDER BY HearingDate DESC, so the first row
     // per parcel is this year's latest-hearing appeal -- PTABOA Value, Date,
@@ -1379,25 +1375,6 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         if (value != null) ptaboaValueByParcel.set(pid, value);
         if (date != null) ptaboaDateByParcel.set(pid, date);
         if (appealType != null) ptaboaAppealTypeByParcel.set(pid, appealType);
-      }
-    }
-
-    // At most one TaxHistoryYear row per (ParcelID, TaxYear) is expected --
-    // the query above is already scoped to a single TaxYear. The one
-    // confirmed exception is the real 2007 Marion County reassessment-cycle
-    // transition, where a parcel can have two TaxYear=2007 rows at different
-    // ColumnOrdinal values (one with zeroed AV/rate fields, one with the real
-    // figures) -- see the TaxHistoryYear migration comment. When that
-    // happens, prefer the higher ColumnOrdinal, which is consistently the
-    // real-data row across every document checked.
-    const taxHistoryByParcel = new Map<string, Record<string, unknown>>();
-    if (taxHistoryResult.Success) {
-      for (const t of taxHistoryResult.Results ?? []) {
-        const pid = t['ParcelID'] as string;
-        const existing = taxHistoryByParcel.get(pid);
-        if (!existing || (t['ColumnOrdinal'] as number) > (existing['ColumnOrdinal'] as number)) {
-          taxHistoryByParcel.set(pid, t);
-        }
       }
     }
 
@@ -1445,10 +1422,9 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       // when it merely lacks Latitude/Longitude/BoundaryGeoJSON, which the
       // merged row now carries through as null and the map skips gracefully.
       if (!p) continue;
-      const assessment = assessmentByParcel.get(parcelID);
-      const taxHistory = taxHistoryByParcel.get(parcelID);
+      const headline = headlineByParcel.get(parcelID);
       const lastSale = lastSaleByCar.get(car['ID'] as string);
-      const rowAssessmentYear = assessment ? scope.assessmentYear : null;
+      const rowAssessmentYear = headline ? scope.assessmentYear : null;
       const ownerPortfolio = ownerPortfolioByParcel.get(parcelID);
       merged.push({
         ID: p['ID'] as string,
@@ -1481,16 +1457,14 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         YearBuilt: (car['YearBuilt'] as number) ?? null,
         CoStarYearBuilt: (car['CoStarYearBuilt'] as number) ?? null,
         CoStarRBA: (car['CoStarRBA'] as number) ?? null,
-        AssessedLandAV: (assessment?.['OriginalLandAV'] as number) ?? null,
-        AssessedImprovementAV: (assessment?.['OriginalImprovementAV'] as number) ?? null,
-        AssessedTotalAV: (assessment?.['OriginalTotalAV'] as number) ?? null,
-        // null (not the searched year) when this row has no Assessment for the
-        // selected year -- also feeds VerifyURL below, so a row with no data for this year
-        // never claims a card link for a year it doesn't actually have (buildVerifyLink's
+        // Assessed values, source label (with document year), placeholder /
+        // disagreement / revision flags, tax and tax source -- all from the one
+        // headline row. AssessmentYear inside is null (not the searched year) when
+        // this row has no headline for the selected year -- rowAssessmentYear
+        // also feeds VerifyURL below, so a row with no data for this year never
+        // claims a card link for a year it doesn't actually have (buildVerifyLink's
         // xSoft Engage branch requires a non-null assessmentYear; "not on file" otherwise).
-        AssessmentYear: rowAssessmentYear,
-        AssessmentSource: (assessment?.['Source'] as string) ?? null,
-        DataSource: dataSourceLabel((assessment?.['Source'] as string) ?? null, scope.countyNumber),
+        ...buildHeadlineFields(headline, this.dataSources, scope.assessmentYear),
         VerifyURL: buildVerifyLink({
           countyNumber: scope.countyNumber,
           slug: scope.countySlug,
@@ -1498,8 +1472,6 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
           gisParcelNumber: (p['GISParcelNumber'] as string) ?? null,
           assessmentYear: rowAssessmentYear,
         }).url,
-        TotalTax: (taxHistory?.['NetAnnualTax'] as number) ?? null,
-        TaxRate: (taxHistory?.['TaxRate'] as number) ?? null,
         PTABOAValue: ptaboaValueByParcel.get(parcelID) ?? null,
         PTABOADate: ptaboaDateByParcel.get(parcelID) ?? null,
         PTABOAAppealType: ptaboaAppealTypeByParcel.get(parcelID) ?? null,
@@ -1541,6 +1513,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
    */
   private async runDlgfSearchInternal(generation: number, scope: SearchScope): Promise<void> {
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    await this.loadDataSourcesIfNeeded();
     const { rows, isTruncated } = await fetchDlgfParcelRows(rv, {
       countyNumber: scope.countyNumber,
       slug: scope.countySlug,
@@ -1548,6 +1521,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       searchTerm: this.filters.searchTerm,
       propertyClassCode: this.filters.propertySubClass,
       resultCap: this.RESULT_CAP,
+      dataSources: this.dataSources,
     });
     const { rows: layeredRows, error: appealLayerError } = await this.withAppealLayers(rows, false, scope.assessmentYear);
     // Same stale-search guard as the card path above (spec §12 fix).
