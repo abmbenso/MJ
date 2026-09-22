@@ -16,7 +16,10 @@ export class indianataxStatuteSectionFormComponent extends BaseFormComponent {
     override async ngOnInit() {
         await super.ngOnInit();
         this.initSections([
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'sectionIdentification', sectionName: 'Section Identification', isExpanded: true },
+            { sectionKey: 'sectionContent', sectionName: 'Section Content', isExpanded: true },
+            { sectionKey: 'sourceInformation', sectionName: 'Source Information', isExpanded: true },
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'appealStageStatutes', sectionName: 'Appeal Stage Statutes', isExpanded: false },
             { sectionKey: 'appealStagePlaybookNotes', sectionName: 'Appeal Stage Playbook Notes', isExpanded: false }
         ]);

@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="cardIdentification"
         SectionName="Card Identification"
-        Icon="fa fa-id-card"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -50,7 +50,7 @@
     <mj-collapsible-panel
         SectionKey="propertyClassification"
         SectionName="Property Classification"
-        Icon="fa fa-tag"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -76,7 +76,7 @@
     <mj-collapsible-panel
         SectionKey="ownershipInformation"
         SectionName="Ownership Information"
-        Icon="fa fa-user-circle"
+        Icon="fa fa-truck"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -102,7 +102,7 @@
     <mj-collapsible-panel
         SectionKey="landDetails"
         SectionName="Land Details"
-        Icon="fa fa-map"
+        Icon="fa fa-align-left"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -120,7 +120,7 @@
     <mj-collapsible-panel
         SectionKey="improvementMeasurements"
         SectionName="Improvement Measurements"
-        Icon="fa fa-ruler-combined"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -170,7 +170,7 @@
     <mj-collapsible-panel
         SectionKey="buildingHistory"
         SectionName="Building History"
-        Icon="fa fa-calendar-alt"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -204,7 +204,7 @@
     <mj-collapsible-panel
         SectionKey="improvementSummaries"
         SectionName="Improvement Summaries"
-        Icon="fa fa-list-ol"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -238,7 +238,7 @@
     <mj-collapsible-panel
         SectionKey="valuationDetails"
         SectionName="Valuation Details"
-        Icon="fa fa-dollar-sign"
+        Icon="fa fa-align-left"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -256,7 +256,7 @@
     <mj-collapsible-panel
         SectionKey="cardAdministration"
         SectionName="Card Administration"
-        Icon="fa fa-clipboard"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -271,32 +271,6 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="ParseNotes"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Details Section -->
-    <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -323,6 +297,22 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"

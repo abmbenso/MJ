@@ -28,7 +28,6 @@ export class indianataxIBTRAppealFormComponent extends BaseFormComponent {
             { sectionKey: 'decisionDocument', sectionName: 'Decision Document', isExpanded: true },
             { sectionKey: 'decisionProcessing', sectionName: 'Decision Processing', isExpanded: true },
             { sectionKey: 'propertyClassification', sectionName: 'Property Classification', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'iBTRDecisionCitations', sectionName: 'IBTR Decision Citations', isExpanded: false },
             { sectionKey: 'iBTRDecisionHoldings', sectionName: 'IBTR Decision Holdings', isExpanded: false },

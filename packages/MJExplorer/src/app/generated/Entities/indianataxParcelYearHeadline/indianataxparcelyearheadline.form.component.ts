@@ -21,6 +21,7 @@ export class indianataxParcelYearHeadlineFormComponent extends BaseFormComponent
             { sectionKey: 'dataQuality', sectionName: 'Data Quality', isExpanded: true },
             { sectionKey: 'taxInformation', sectionName: 'Tax Information', isExpanded: true },
             { sectionKey: 'processingMetadata', sectionName: 'Processing Metadata', isExpanded: false },
+            { sectionKey: 'revisionHistory', sectionName: 'Revision History', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

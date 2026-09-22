@@ -1719,6 +1719,10 @@ export class indianataxAppealStagePlaybookNote_ {
     @MaxLength(200)
     AppealStage: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
 }
 
 //****************************************************************************
@@ -2149,6 +2153,10 @@ export class indianataxAppealStage_ {
     @MaxLength(300)
     InformalDeadlineDescription?: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
     @Field(() => [indianataxAppealStageStatute_])
     indianataxAppealStageStatutes_AppealStageIDArray: indianataxAppealStageStatute_[]; // Link to indianataxAppealStageStatutes
     
@@ -2486,6 +2494,10 @@ export class indianataxAPRARequestEvent_ {
     @MaxLength(30)
     APRARequest: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
 }
 
 //****************************************************************************
@@ -2811,6 +2823,10 @@ export class indianataxAPRARequest_ {
         
     @Field({nullable: true}) 
     CommunicationLog?: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    RequestSourceDocument?: string;
         
     @Field(() => [indianataxAPRAResponseFile_])
     indianataxAPRAResponseFiles_APRARequestIDArray: indianataxAPRAResponseFile_[]; // Link to indianataxAPRAResponseFiles
@@ -3244,6 +3260,10 @@ export class indianataxAPRAResponseFile_ {
     @MaxLength(30)
     APRARequest: string;
         
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -3534,8 +3554,18 @@ export class indianataxAssessmentNotice_ {
     _mj__UpdatedAt: Date;
         
     @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
+    @Field() 
     @MaxLength(30)
     Parcel: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Latitude?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Longitude?: number;
         
     @Field(() => [indianataxClientAppeal_])
     indianataxClientAppeals_AssessmentNoticeIDArray: indianataxClientAppeal_[]; // Link to indianataxClientAppeals
@@ -3882,6 +3912,10 @@ export class indianataxAssessment_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
 }
 
 //****************************************************************************
@@ -4129,6 +4163,10 @@ export class indianataxBoardDecision_ {
     @Field({nullable: true}) 
     @MaxLength(30)
     Parcel?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field(() => [indianataxIBTRAppeal_])
     indianataxIBTRAppeals_LegacyBoardDecisionIDArray: indianataxIBTRAppeal_[]; // Link to indianataxIBTRAppeals
@@ -4432,6 +4470,10 @@ export class indianataxCardImprovement_ {
         
     @Field() 
     _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
         
     @Field() 
     @MaxLength(30)
@@ -4808,6 +4850,10 @@ export class indianataxCardNote_ {
     NoteForm?: number;
         
     @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
+    @Field() 
     @MaxLength(30)
     Parcel: string;
         
@@ -5074,6 +5120,10 @@ export class indianataxCardSummary_ {
         
     @Field() 
     _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
         
     @Field() 
     @MaxLength(30)
@@ -5421,6 +5471,10 @@ export class indianataxCardValuationColumn_ {
         
     @Field(() => Int, {nullable: true, description: `The Indiana form named in this column's Reason For Change cell, as a number: 134 preliminary informal-conference agreement, 115 PTABOA determination, 133 correction of error, 130 petition to the county board, 131 IBTR appeal, 113 notice of assessment change, 136 exemption application. NULL when the cell names none (AA, GenReval, WIP, blank). The cell itself is ReasonForChange.`}) 
     ReasonForm?: number;
+        
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
         
     @Field() 
     @MaxLength(30)
@@ -7012,6 +7066,10 @@ export class indianataxCoStarIncomeInput_ {
     @MaxLength(30)
     Parcel?: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
     @Field(() => Float, {nullable: true}) 
     _mj__Latitude?: number;
         
@@ -7547,6 +7605,10 @@ export class indianataxCoStarProperty_ {
     @Field({nullable: true}) 
     @MaxLength(30)
     CoStarSecondaryParcel?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field(() => Float, {nullable: true}) 
     _mj__Latitude?: number;
@@ -9877,6 +9939,14 @@ export class indianataxCountyAssessorRecord_ {
     @MaxLength(200)
     SourceRegistry?: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    TaxHistorySourceDocument?: string;
+        
     @Field(() => Float, {nullable: true}) 
     _mj__Latitude?: number;
         
@@ -10610,6 +10680,10 @@ export class indianataxCountyContact_ {
     @Field() 
     @MaxLength(50)
     County: string;
+        
+    @Field() 
+    @MaxLength(500)
+    EvidenceSourceDocument: string;
         
     @Field(() => [indianataxAPRARequest_])
     indianataxAPRARequests_CountyContactIDArray: indianataxAPRARequest_[]; // Link to indianataxAPRARequests
@@ -11393,6 +11467,10 @@ export class indianataxDLGFBuildingDetail_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -11715,6 +11793,10 @@ export class indianataxDLGFBuilding_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -12008,6 +12090,10 @@ export class indianataxDLGFImprovement_ {
     @Field() 
     @MaxLength(30)
     Parcel: string;
+        
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
         
 }
 
@@ -12365,6 +12451,10 @@ export class indianataxDLGFLand_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -12702,6 +12792,10 @@ export class indianataxDocumentAcquisition_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
 }
 
 //****************************************************************************
@@ -12954,6 +13048,10 @@ export class indianataxDocumentCatalog_ {
     @Field() 
     @MaxLength(200)
     SourceRegistry: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
 }
 
@@ -13396,6 +13494,10 @@ export class indianataxFormCatalog_ {
     @MaxLength(200)
     TriggersAppealStage?: string;
         
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -13717,6 +13819,10 @@ export class indianataxIBTRAppeal_ {
     @Field({nullable: true}) 
     @MaxLength(30)
     Parcel?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field({nullable: true}) 
     @MaxLength(50)
@@ -14157,6 +14263,10 @@ export class indianataxIBTRDecisionChunk_ {
     @Field() 
     @MaxLength(200)
     IBTRAppeal: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
 }
 
@@ -15239,6 +15349,10 @@ export class indianataxJurisdictionDeadlineAnchor_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
 }
 
 //****************************************************************************
@@ -15446,6 +15560,10 @@ export class indianataxLegalAuthority_ {
         
     @Field() 
     _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field(() => [indianataxLegalAuthoritySection_])
     indianataxLegalAuthoritySections_LegalAuthorityIDArray: indianataxLegalAuthoritySection_[]; // Link to indianataxLegalAuthoritySections
@@ -15841,6 +15959,10 @@ export class indianataxLegalAuthoritySection_ {
     @Field({nullable: true}) 
     @MaxLength(120)
     ParentSection?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field({nullable: true}) 
     @MaxLength(36)
@@ -18411,10 +18533,10 @@ export class indianataxParcelYearHeadline_ {
     @Field(() => Int) 
     SourceCount: number;
         
-    @Field(() => Float, {nullable: true, description: `Largest difference between any two sources' totals for this parcel-year, as a percent of the headline total. NULL with fewer than two sources.`}) 
+    @Field(() => Float, {nullable: true, description: `Largest difference between the totals compared for disagreement -- official documents of the headline's own vintage (same document year) plus every non-official source -- as a percent of the headline total. Older-vintage official documents are revisions (see HasRevision), not disagreements. NULL with fewer than two compared rows.`}) 
     MaxSpreadPct?: number;
         
-    @Field(() => Boolean, {description: `1 when MaxSpreadPct exceeds 1% -- a lead for the practitioner, transparency for the client.`}) 
+    @Field(() => Boolean, {description: `1 when MaxSpreadPct exceeds 1% among same-vintage sources -- a lead for the practitioner, transparency for the client. A prior year's card that differs sets HasRevision instead.`}) 
     HasDisagreement: boolean;
         
     @Field(() => Float, {nullable: true, description: `The tax billed on this assessment year: the county tax history row with TaxYear = AssessmentYear, else the DLGF TaxBill row with PayYear = AssessmentYear + 1. NULL for the newest year until it is billed (pay-year lag).`}) 
@@ -18433,6 +18555,22 @@ export class indianataxParcelYearHeadline_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field(() => Int, {nullable: true, description: `Calendar year of the headline document (its vintage). An AY2024 value with HeadlineDocumentYear 2026 is "per the 2026 card": the value as it stands after appeals and corrections, not what was noticed in 2024. NULL when the headline document is undated.`}) 
+    HeadlineDocumentYear?: number;
+        
+    @Field(() => Boolean, {description: `1 when an older-vintage official document carried a different total for this parcel-year: the headline supersedes it. Appeal history, not a data conflict.`}) 
+    HasRevision: boolean;
+        
+    @Field(() => Float, {nullable: true, description: `The total the newest older-vintage official document carried, when it differs from the headline (e.g. the AY2024 value on the 2024 card, superseded by the 2026 card). NULL when no revision.`}) 
+    RevisedFromTotalAV?: number;
+        
+    @Field({nullable: true, description: `The older-vintage document RevisedFromTotalAV came from.`}) 
+    @MaxLength(36)
+    RevisedFromSourceDocumentID?: string;
+        
+    @Field({nullable: true, description: `Document date of the superseded older-vintage document.`}) 
+    RevisedFromDocumentDate?: Date;
+        
     @Field() 
     @MaxLength(30)
     Parcel: string;
@@ -18448,6 +18586,10 @@ export class indianataxParcelYearHeadline_ {
     @Field({nullable: true}) 
     @MaxLength(100)
     TaxDataSource?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    RevisedFromSourceDocument?: string;
         
 }
 
@@ -18503,6 +18645,21 @@ export class CreateindianataxParcelYearHeadlineInput {
 
     @Field({ nullable: true })
     ComputedAt?: Date;
+
+    @Field(() => Int, { nullable: true })
+    HeadlineDocumentYear: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    HasRevision?: boolean;
+
+    @Field(() => Float, { nullable: true })
+    RevisedFromTotalAV: number | null;
+
+    @Field({ nullable: true })
+    RevisedFromSourceDocumentID: string | null;
+
+    @Field({ nullable: true })
+    RevisedFromDocumentDate: Date | null;
 
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
@@ -18561,6 +18718,21 @@ export class UpdateindianataxParcelYearHeadlineInput {
 
     @Field({ nullable: true })
     ComputedAt?: Date;
+
+    @Field(() => Int, { nullable: true })
+    HeadlineDocumentYear?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    HasRevision?: boolean;
+
+    @Field(() => Float, { nullable: true })
+    RevisedFromTotalAV?: number | null;
+
+    @Field({ nullable: true })
+    RevisedFromSourceDocumentID?: string | null;
+
+    @Field({ nullable: true })
+    RevisedFromDocumentDate?: Date | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -21628,6 +21800,14 @@ export class indianataxPTABOAAppeal_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    FinalDeterminationSourceDocument?: string;
+        
     @Field(() => [indianataxClientAppeal_])
     indianataxClientAppeals_PTABOAAppealIDArray: indianataxClientAppeal_[]; // Link to indianataxClientAppeals
     
@@ -21926,6 +22106,10 @@ export class indianataxResearchTask_ {
     @Field({nullable: true}) 
     @MaxLength(200)
     RelatedSourceRegistry?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    RelatedSourceDocument?: string;
         
 }
 
@@ -22481,6 +22665,10 @@ export class indianataxSaleTransaction_ {
     BuildingSqFtExParking?: number;
         
     @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
+        
+    @Field({nullable: true}) 
     @MaxLength(30)
     Parcel?: string;
         
@@ -23010,6 +23198,9 @@ export class indianataxSourceDocument_ {
     
     @Field(() => [indianataxParcelYearHeadline_])
     indianataxParcelYearHeadlines_HeadlineSourceDocumentIDArray: indianataxParcelYearHeadline_[]; // Link to indianataxParcelYearHeadlines
+    
+    @Field(() => [indianataxParcelYearHeadline_])
+    indianataxParcelYearHeadlines_RevisedFromSourceDocumentIDArray: indianataxParcelYearHeadline_[]; // Link to indianataxParcelYearHeadlines
     
 }
 
@@ -23554,6 +23745,16 @@ export class indianataxSourceDocumentResolver extends ResolverBase {
         return result;
     }
         
+    @FieldResolver(() => [indianataxParcelYearHeadline_])
+    async indianataxParcelYearHeadlines_RevisedFromSourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Parcel Year Headlines', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwParcelYearHeadlines')} WHERE ${provider.QuoteIdentifier('RevisedFromSourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Year Headlines', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Parcel Year Headlines', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
     @Mutation(() => indianataxSourceDocument_)
     async CreateindianataxSourceDocument(
         @Arg('input', () => CreateindianataxSourceDocumentInput) input: CreateindianataxSourceDocumentInput,
@@ -23897,6 +24098,10 @@ export class indianataxStatuteSection_ {
         
     @Field() 
     _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field(() => [indianataxAppealStageStatute_])
     indianataxAppealStageStatutes_StatuteSectionIDArray: indianataxAppealStageStatute_[]; // Link to indianataxAppealStageStatutes
@@ -25660,6 +25865,10 @@ export class indianataxTaxAdjustment_ {
     @MaxLength(25)
     TaxBill: string;
         
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -25934,6 +26143,10 @@ export class indianataxTaxBill_ {
     @Field({nullable: true}) 
     @MaxLength(30)
     Parcel?: string;
+        
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
         
     @Field(() => [indianataxTaxAdjustment_])
     indianataxTaxAdjustments_TaxBillIDArray: indianataxTaxAdjustment_[]; // Link to indianataxTaxAdjustments
@@ -26685,6 +26898,10 @@ export class indianataxTaxHistoryYear_ {
     @MaxLength(30)
     Parcel: string;
         
+    @Field() 
+    @MaxLength(500)
+    TaxHistorySourceDocument: string;
+        
 }
 
 //****************************************************************************
@@ -27401,6 +27618,10 @@ export class indianataxValuationComp_ {
     @Field({nullable: true}) 
     @MaxLength(200)
     SaleTransaction?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(500)
+    SourceDocument?: string;
         
     @Field(() => Float, {nullable: true}) 
     _mj__Latitude?: number;

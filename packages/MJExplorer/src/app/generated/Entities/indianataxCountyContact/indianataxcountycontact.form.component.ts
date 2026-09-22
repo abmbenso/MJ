@@ -16,7 +16,11 @@ export class indianataxCountyContactFormComponent extends BaseFormComponent {
     override async ngOnInit() {
         await super.ngOnInit();
         this.initSections([
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'contactAssignment', sectionName: 'Contact Assignment', isExpanded: true },
+            { sectionKey: 'contactInformation', sectionName: 'Contact Information', isExpanded: true },
+            { sectionKey: 'sourceDocumentation', sectionName: 'Source Documentation', isExpanded: true },
+            { sectionKey: 'verificationAndQuality', sectionName: 'Verification and Quality', isExpanded: true },
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'aPRARequests', sectionName: 'APRA Requests', isExpanded: false }
         ]);
     }

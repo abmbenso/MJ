@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="appealDocketInformation"
         SectionName="Appeal Docket Information"
-        Icon="fa fa-file-alt"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -40,7 +40,7 @@
     <mj-collapsible-panel
         SectionKey="petitionerInformation"
         SectionName="Petitioner Information"
-        Icon="fa fa-user"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -100,14 +100,14 @@
     <mj-collapsible-panel
         SectionKey="propertyInformation"
         SectionName="Property Information"
-        Icon="fa fa-home"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
             FieldName="StateParcelNumber"
-            Type="textbox"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -135,7 +135,7 @@
     <mj-collapsible-panel
         SectionKey="appealDetails"
         SectionName="Appeal Details"
-        Icon="fa fa-gavel"
+        Icon="fa fa-align-left"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -169,7 +169,7 @@
     <mj-collapsible-panel
         SectionKey="appealTimeline"
         SectionName="Appeal Timeline"
-        Icon="fa fa-calendar-alt"
+        Icon="fa fa-calendar"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -203,7 +203,7 @@
     <mj-collapsible-panel
         SectionKey="appealOutcome"
         SectionName="Appeal Outcome"
-        Icon="fa fa-check-circle"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -229,7 +229,7 @@
     <mj-collapsible-panel
         SectionKey="hearingInformation"
         SectionName="Hearing Information"
-        Icon="fa fa-user-tie"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -247,7 +247,7 @@
     <mj-collapsible-panel
         SectionKey="decisionContent"
         SectionName="Decision Content"
-        Icon="fa fa-align-left"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -281,7 +281,7 @@
     <mj-collapsible-panel
         SectionKey="decisionDocument"
         SectionName="Decision Document"
-        Icon="fa fa-file-pdf"
+        Icon="fa fa-file-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -342,7 +342,7 @@
     <mj-collapsible-panel
         SectionKey="propertyClassification"
         SectionName="Property Classification"
-        Icon="fa fa-tag"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -364,37 +364,11 @@
 
     </mj-collapsible-panel>
 
-    <!-- Details Section -->
-    <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Longitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
     <!-- System Metadata Section -->
     <mj-collapsible-panel
         SectionKey="systemMetadata"
         SectionName="System Metadata"
-        Icon="fa fa-database"
+        Icon="fa fa-cog"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -418,6 +392,22 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"

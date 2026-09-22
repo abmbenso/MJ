@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="valuationReference"
         SectionName="Valuation Reference"
-        Icon="fa fa-link"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -51,7 +51,7 @@
     <mj-collapsible-panel
         SectionKey="comparablePropertyDetails"
         SectionName="Comparable Property Details"
-        Icon="fa fa-home"
+        Icon="fa fa-align-left"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -109,7 +109,7 @@
     <mj-collapsible-panel
         SectionKey="saleInformation"
         SectionName="Sale Information"
-        Icon="fa fa-handshake"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -143,7 +143,7 @@
     <mj-collapsible-panel
         SectionKey="adjustmentFactors"
         SectionName="Adjustment Factors"
-        Icon="fa fa-sliders-h"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -185,7 +185,7 @@
     <mj-collapsible-panel
         SectionKey="adjustmentResults"
         SectionName="Adjustment Results"
-        Icon="fa fa-calculator"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -219,7 +219,7 @@
     <mj-collapsible-panel
         SectionKey="valuationResults"
         SectionName="Valuation Results"
-        Icon="fa fa-dollar-sign"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -237,7 +237,7 @@
     <mj-collapsible-panel
         SectionKey="selectionCriteria"
         SectionName="Selection Criteria"
-        Icon="fa fa-filter"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -267,32 +267,6 @@
 
     </mj-collapsible-panel>
 
-    <!-- Details Section -->
-    <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Longitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
     <!-- System Metadata Section -->
     <mj-collapsible-panel
         SectionKey="systemMetadata"
@@ -312,6 +286,22 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"

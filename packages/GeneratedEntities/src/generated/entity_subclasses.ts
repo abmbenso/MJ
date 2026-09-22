@@ -694,6 +694,10 @@ export const indianataxAppealStagePlaybookNoteSchema = z.object({
         * * Field Name: AppealStage
         * * Display Name: Appeal Stage Name
         * * SQL Data Type: nvarchar(200)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Details
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxAppealStagePlaybookNoteEntityType = z.infer<typeof indianataxAppealStagePlaybookNoteSchema>;
@@ -883,6 +887,10 @@ export const indianataxAppealStageSchema = z.object({
         * * Display Name: Informal Deadline Description
         * * SQL Data Type: nvarchar(300)
         * * Description: Free text for the informal step's own deadline where one exists separately from DeadlineDays / DeadlineCalendarRule (MO, CO). Indiana = NULL: the preliminary informal meeting is auto-triggered by the Form 130 filing with no separate taxpayer date to hit.`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxAppealStageEntityType = z.infer<typeof indianataxAppealStageSchema>;
@@ -908,7 +916,7 @@ export const indianataxAPRARequestEventSchema = z.object({
         * * Description: 1, 2, 3 ... within the request; the order events happened.`),
     EventAt: z.date().describe(`
         * * Field Name: EventAt
-        * * Display Name: Event Date
+        * * Display Name: Event Date/Time
         * * SQL Data Type: datetimeoffset
         * * Default Value: sysdatetimeoffset()
         * * Description: When the event happened (the email's date for inbound; the send time for outbound).`),
@@ -974,6 +982,10 @@ export const indianataxAPRARequestEventSchema = z.object({
         * * Field Name: APRARequest
         * * Display Name: APRA Request Details
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Details
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxAPRARequestEventEntityType = z.infer<typeof indianataxAPRARequestEventSchema>;
@@ -1236,6 +1248,10 @@ export const indianataxAPRARequestSchema = z.object({
         * * Field Name: CommunicationLog
         * * Display Name: Communication Log Timestamp
         * * SQL Data Type: datetimeoffset`),
+    RequestSourceDocument: z.string().nullable().describe(`
+        * * Field Name: RequestSourceDocument
+        * * Display Name: Request Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxAPRARequestEntityType = z.infer<typeof indianataxAPRARequestSchema>;
@@ -1251,12 +1267,12 @@ export const indianataxAPRAResponseFileSchema = z.object({
         * * Default Value: newsequentialid()`),
     APRARequestID: z.string().describe(`
         * * Field Name: APRARequestID
-        * * Display Name: APRA Request
+        * * Display Name: APRA Request ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: APRA Requests (vwAPRARequests.ID)`),
     SourceDocumentID: z.string().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Source Document
+        * * Display Name: Source Document ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
     FileName: z.string().describe(`
@@ -1271,7 +1287,7 @@ export const indianataxAPRAResponseFileSchema = z.object({
         * * Description: MIME type as the provider reported it.`),
     Bytes: z.number().nullable().describe(`
         * * Field Name: Bytes
-        * * Display Name: File Size (Bytes)
+        * * Display Name: Size (Bytes)
         * * SQL Data Type: bigint
         * * Description: Size in bytes.`),
     ReceivedAt: z.date().describe(`
@@ -1328,8 +1344,12 @@ export const indianataxAPRAResponseFileSchema = z.object({
         * * Default Value: getutcdate()`),
     APRARequest: z.string().describe(`
         * * Field Name: APRARequest
-        * * Display Name: APRA Request Details
+        * * Display Name: APRA Request
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxAPRAResponseFileEntityType = z.infer<typeof indianataxAPRAResponseFileSchema>;
@@ -1345,12 +1365,12 @@ export const indianataxAssessmentNoticeSchema = z.object({
         * * Default Value: newsequentialid()`),
     SourceDocumentID: z.string().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Source Document ID
+        * * Display Name: Source Document
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
     ParcelID: z.string().describe(`
         * * Field Name: ParcelID
-        * * Display Name: Parcel ID
+        * * Display Name: Parcel
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
     AssessmentYear: z.number().describe(`
@@ -1384,37 +1404,37 @@ export const indianataxAssessmentNoticeSchema = z.object({
         * * Description: The date in the form's "APPEAL DEADLINE IS:" box, as the county printed it.`),
     PreviousLandAV: z.number().nullable().describe(`
         * * Field Name: PreviousLandAV
-        * * Display Name: Previous Land AV
+        * * Display Name: Previous Land Value
         * * SQL Data Type: decimal(14, 2)
         * * Description: PREVIOUS ASSESSMENT column, LAND row -- the prior year's value as the county states it on the notice.`),
     PreviousImprovementAV: z.number().nullable().describe(`
         * * Field Name: PreviousImprovementAV
-        * * Display Name: Previous Improvement AV
+        * * Display Name: Previous Improvement Value
         * * SQL Data Type: decimal(14, 2)
         * * Description: PREVIOUS ASSESSMENT column, STRUCTURES row.`),
     PreviousTotalAV: z.number().nullable().describe(`
         * * Field Name: PreviousTotalAV
-        * * Display Name: Previous Total AV
+        * * Display Name: Previous Total Value
         * * SQL Data Type: decimal(14, 2)
         * * Description: PREVIOUS ASSESSMENT column, TOTAL row.`),
     NewLandAV: z.number().nullable().describe(`
         * * Field Name: NewLandAV
-        * * Display Name: New Land AV
+        * * Display Name: New Land Value
         * * SQL Data Type: decimal(14, 2)
         * * Description: NEW ASSESSMENT EFFECTIVE JANUARY 1 column, LAND row -- the noticed value. The record card's as-noticed column for the same year (Assessment.OriginalLandAV) should equal it; the notice-vs-card check says when it does not.`),
     NewImprovementAV: z.number().nullable().describe(`
         * * Field Name: NewImprovementAV
-        * * Display Name: New Improvement AV
+        * * Display Name: New Improvement Value
         * * SQL Data Type: decimal(14, 2)
         * * Description: NEW ASSESSMENT column, STRUCTURES row -- the noticed improvement value.`),
     NewTotalAV: z.number().nullable().describe(`
         * * Field Name: NewTotalAV
-        * * Display Name: New Total AV
+        * * Display Name: New Total Value
         * * SQL Data Type: decimal(14, 2)
         * * Description: NEW ASSESSMENT column, TOTAL row -- the noticed total. On a Form 11-A this is the lowest of the three approaches when the assessor applied IC 6-1.1-4-39 as written.`),
     Reason: z.string().nullable().describe(`
         * * Field Name: Reason
-        * * Display Name: Reason
+        * * Display Name: Reason for Revision
         * * SQL Data Type: nvarchar(200)
         * * Description: "Reason for Revision of Assessment" (Form 11 only; e.g. Annual Adjustment). NULL on a Form 11-A, which prints no reason block.`),
     SalesComparisonValue: z.number().nullable().describe(`
@@ -1482,10 +1502,22 @@ export const indianataxAssessmentNoticeSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    __mj_Latitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Latitude
+        * * Display Name: Mj Latitude
+        * * SQL Data Type: decimal(10, 6)`),
+    __mj_Longitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Longitude
+        * * Display Name: Mj Longitude
+        * * SQL Data Type: decimal(10, 6)`),
 });
 
 export type indianataxAssessmentNoticeEntityType = z.infer<typeof indianataxAssessmentNoticeSchema>;
@@ -1585,6 +1617,10 @@ export const indianataxAssessmentSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel Reference
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxAssessmentEntityType = z.infer<typeof indianataxAssessmentSchema>;
@@ -1654,6 +1690,10 @@ export const indianataxBoardDecisionSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel Reference
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxBoardDecisionEntityType = z.infer<typeof indianataxBoardDecisionSchema>;
@@ -1853,6 +1893,10 @@ export const indianataxCardImprovementSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -1935,6 +1979,10 @@ export const indianataxCardNoteSchema = z.object({
         * * Display Name: Note Form
         * * SQL Data Type: smallint
         * * Description: The Indiana form the note cites (its code 'F113', or 'FORM 133' / 'F-115' in the text), as a number -- the same set as CardValuationColumn.ReasonForm. NULL when the note cites none. Lake's appeal history older than the card's five columns lives in these notes.`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel Number
@@ -2072,6 +2120,10 @@ export const indianataxCardSummarySchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -2230,6 +2282,10 @@ export const indianataxCardValuationColumnSchema = z.object({
         * * Display Name: Reason Form
         * * SQL Data Type: smallint
         * * Description: The Indiana form named in this column's Reason For Change cell, as a number: 134 preliminary informal-conference agreement, 115 PTABOA determination, 133 correction of error, 130 petition to the county board, 131 IBTR appeal, 113 notice of assessment change, 136 exemption application. NULL when the cell names none (AA, GenReval, WIP, blank). The cell itself is ReasonForChange.`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel ID
@@ -2792,6 +2848,10 @@ export const indianataxCoStarIncomeInputSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     __mj_Latitude: z.number().nullable().describe(`
         * * Field Name: __mj_Latitude
         * * Display Name: Latitude
@@ -3105,6 +3165,10 @@ export const indianataxCoStarPropertySchema = z.object({
         * * Field Name: CoStarSecondaryParcel
         * * Display Name: Secondary Parcel Display
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     __mj_Latitude: z.number().nullable().describe(`
         * * Field Name: __mj_Latitude
         * * Display Name: System Latitude
@@ -4059,6 +4123,14 @@ export const indianataxCountyAssessorRecordSchema = z.object({
         * * Field Name: SourceRegistry
         * * Display Name: Source Registry
         * * SQL Data Type: nvarchar(200)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Details
+        * * SQL Data Type: nvarchar(500)`),
+    TaxHistorySourceDocument: z.string().nullable().describe(`
+        * * Field Name: TaxHistorySourceDocument
+        * * Display Name: Tax History Source Document Details
+        * * SQL Data Type: nvarchar(500)`),
     __mj_Latitude: z.number().nullable().describe(`
         * * Field Name: __mj_Latitude
         * * Display Name: Latitude
@@ -4164,7 +4236,7 @@ export const indianataxCountyContactSchema = z.object({
         * * Default Value: newsequentialid()`),
     CountyID: z.string().describe(`
         * * Field Name: CountyID
-        * * Display Name: County ID
+        * * Display Name: County
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Counties (vwCounties.ID)`),
     Role: z.union([z.literal('APRA Custodian'), z.literal('Assessor'), z.literal('Chief Deputy'), z.literal('County Attorney'), z.literal('General Office'), z.literal('Records Clerk')]).describe(`
@@ -4213,12 +4285,12 @@ export const indianataxCountyContactSchema = z.object({
         * * Description: The page this contact was read from. Required.`),
     EvidenceSourceDocumentID: z.string().describe(`
         * * Field Name: EvidenceSourceDocumentID
-        * * Display Name: Evidence Source Document ID
+        * * Display Name: Source Document
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
     Confidence: z.union([z.literal('High'), z.literal('Low'), z.literal('Medium')]).describe(`
         * * Field Name: Confidence
-        * * Display Name: Confidence
+        * * Display Name: Confidence Level
         * * SQL Data Type: nvarchar(6)
     * * Value List Type: List
     * * Possible Values 
@@ -4259,8 +4331,12 @@ export const indianataxCountyContactSchema = z.object({
         * * Default Value: getutcdate()`),
     County: z.string().describe(`
         * * Field Name: County
-        * * Display Name: County
+        * * Display Name: County Name
         * * SQL Data Type: nvarchar(50)`),
+    EvidenceSourceDocument: z.string().describe(`
+        * * Field Name: EvidenceSourceDocument
+        * * Display Name: Source Document Content
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxCountyContactEntityType = z.infer<typeof indianataxCountyContactSchema>;
@@ -4548,6 +4624,10 @@ export const indianataxDLGFBuildingDetailSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel Reference
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxDLGFBuildingDetailEntityType = z.infer<typeof indianataxDLGFBuildingDetailSchema>;
@@ -4629,6 +4709,10 @@ export const indianataxDLGFBuildingSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxDLGFBuildingEntityType = z.infer<typeof indianataxDLGFBuildingSchema>;
@@ -4752,6 +4836,10 @@ export const indianataxDLGFImprovementSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxDLGFImprovementEntityType = z.infer<typeof indianataxDLGFImprovementSchema>;
@@ -4881,6 +4969,10 @@ export const indianataxDLGFLandSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel Reference
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxDLGFLandEntityType = z.infer<typeof indianataxDLGFLandSchema>;
@@ -5000,6 +5092,10 @@ export const indianataxDocumentAcquisitionSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Entity
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxDocumentAcquisitionEntityType = z.infer<typeof indianataxDocumentAcquisitionSchema>;
@@ -5070,6 +5166,10 @@ export const indianataxDocumentCatalogSchema = z.object({
         * * Field Name: SourceRegistry
         * * Display Name: Source Registry
         * * SQL Data Type: nvarchar(200)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxDocumentCatalogEntityType = z.infer<typeof indianataxDocumentCatalogSchema>;
@@ -5246,6 +5346,10 @@ export const indianataxFormCatalogSchema = z.object({
         * * Field Name: TriggersAppealStage
         * * Display Name: Triggers Appeal Stage Name
         * * SQL Data Type: nvarchar(200)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxFormCatalogEntityType = z.infer<typeof indianataxFormCatalogSchema>;
@@ -5368,12 +5472,12 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Description: The Boards one-line Issues phrase from its Decisions archive month page, where the decision appears there (2008 onward).`),
     IsSmallClaims: z.boolean().nullable().describe(`
         * * Field Name: IsSmallClaims
-        * * Display Name: Small Claims
+        * * Display Name: Small Claims Track
         * * SQL Data Type: bit
         * * Description: 1 when the decision caption says Small Claims (the simplified track, removed for Form 131 from 2026-09-02).`),
     SourceDocumentID: z.string().nullable().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Decision Document
+        * * Display Name: Source Document
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
         * * Description: The decision file: SourceDocument of type IBTRDecision (hash, path, URL, extracted text).`),
@@ -5384,7 +5488,7 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Description: Characters of extracted text for the decision file.`),
     TextIsOCR: z.boolean().nullable().describe(`
         * * Field Name: TextIsOCR
-        * * Display Name: Text is OCR
+        * * Display Name: Text Is OCR
         * * SQL Data Type: bit
         * * Description: 1 when the text came from OCR of an image-only scan (most POPLAR copies from 2025 on); treat quotations with care.`),
     ExtractionStatus: z.union([z.literal('Model'), z.literal('None'), z.literal('Reviewed'), z.literal('Rules')]).describe(`
@@ -5411,7 +5515,7 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Description: The models own confidence in its reading: high, medium, low (low when OCR-damaged or the outcome is not explicit).`),
     Summary: z.string().nullable().describe(`
         * * Field Name: Summary
-        * * Display Name: Summary
+        * * Display Name: Decision Summary
         * * SQL Data Type: nvarchar(MAX)
         * * Description: Two or three sentences from the model reading: what was argued, what evidence carried, what the Board did. A lead, not a holding.`),
     KeyReasoning: z.string().nullable().describe(`
@@ -5468,17 +5572,21 @@ export const indianataxIBTRAppealSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     LegacyBoardDecision: z.string().nullable().describe(`
         * * Field Name: LegacyBoardDecision
         * * Display Name: Legacy Board Decision
         * * SQL Data Type: nvarchar(50)`),
     __mj_Latitude: z.number().nullable().describe(`
         * * Field Name: __mj_Latitude
-        * * Display Name: Mj Latitude
+        * * Display Name: Latitude
         * * SQL Data Type: decimal(10, 6)`),
     __mj_Longitude: z.number().nullable().describe(`
         * * Field Name: __mj_Longitude
-        * * Display Name: Mj Longitude
+        * * Display Name: Longitude
         * * SQL Data Type: decimal(10, 6)`),
 });
 
@@ -5512,12 +5620,12 @@ export const indianataxIBTRDecisionChunkSchema = z.object({
         * * Description: Heading the chunk falls under, or Other.`),
     Ordinal: z.number().describe(`
         * * Field Name: Ordinal
-        * * Display Name: Position
+        * * Display Name: Ordinal Position
         * * SQL Data Type: int
         * * Description: Position within the decision, from 0.`),
     ChunkText: z.string().describe(`
         * * Field Name: ChunkText
-        * * Display Name: Text
+        * * Display Name: Chunk Text
         * * SQL Data Type: nvarchar(MAX)
         * * Description: The passage, verbatim.`),
     TokenCount: z.number().nullable().describe(`
@@ -5527,7 +5635,7 @@ export const indianataxIBTRDecisionChunkSchema = z.object({
         * * Description: Approximate token count for the chunk.`),
     IsOCR: z.boolean().nullable().describe(`
         * * Field Name: IsOCR
-        * * Display Name: Is OCR
+        * * Display Name: Is OCR Text
         * * SQL Data Type: bit
         * * Description: 1 when the text came from OCR; quotations from such chunks may carry recognition errors.`),
     __mj_CreatedAt: z.date().describe(`
@@ -5542,8 +5650,12 @@ export const indianataxIBTRDecisionChunkSchema = z.object({
         * * Default Value: getutcdate()`),
     IBTRAppeal: z.string().describe(`
         * * Field Name: IBTRAppeal
-        * * Display Name: Appeal Identifier
+        * * Display Name: IBTR Appeal Reference
         * * SQL Data Type: nvarchar(200)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxIBTRDecisionChunkEntityType = z.infer<typeof indianataxIBTRDecisionChunkSchema>;
@@ -5999,6 +6111,10 @@ export const indianataxJurisdictionDeadlineAnchorSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxJurisdictionDeadlineAnchorEntityType = z.infer<typeof indianataxJurisdictionDeadlineAnchorSchema>;
@@ -6048,7 +6164,7 @@ export const indianataxLegalAuthoritySchema = z.object({
         * * Description: The edition/publication date this text is current as of; NULL when unknown.`),
     SourceDocumentID: z.string().nullable().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Source Document
+        * * Display Name: Source Document ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
         * * Description: The fetched source file (PDF/HTML) this document was parsed from, for provenance.`),
@@ -6067,6 +6183,10 @@ export const indianataxLegalAuthoritySchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxLegalAuthorityEntityType = z.infer<typeof indianataxLegalAuthoritySchema>;
@@ -6196,12 +6316,16 @@ export const indianataxLegalAuthoritySectionSchema = z.object({
         * * Default Value: getutcdate()`),
     LegalAuthority: z.string().describe(`
         * * Field Name: LegalAuthority
-        * * Display Name: Legal Authority
+        * * Display Name: Legal Authority Name
         * * SQL Data Type: nvarchar(300)`),
     ParentSection: z.string().nullable().describe(`
         * * Field Name: ParentSection
-        * * Display Name: Parent Section
+        * * Display Name: Parent Section Name
         * * SQL Data Type: nvarchar(120)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
     RootParentSectionID: z.string().nullable().describe(`
         * * Field Name: RootParentSectionID
         * * Display Name: Root Parent Section
@@ -7223,7 +7347,7 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Default Value: newsequentialid()`),
     ParcelID: z.string().describe(`
         * * Field Name: ParcelID
-        * * Display Name: Parcel
+        * * Display Name: Parcel ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
     AssessmentYear: z.number().describe(`
@@ -7267,15 +7391,15 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * SQL Data Type: int`),
     MaxSpreadPct: z.number().nullable().describe(`
         * * Field Name: MaxSpreadPct
-        * * Display Name: Maximum Spread Percent
+        * * Display Name: Maximum Spread Percentage
         * * SQL Data Type: decimal(9, 4)
-        * * Description: Largest difference between any two sources' totals for this parcel-year, as a percent of the headline total. NULL with fewer than two sources.`),
+        * * Description: Largest difference between the totals compared for disagreement -- official documents of the headline's own vintage (same document year) plus every non-official source -- as a percent of the headline total. Older-vintage official documents are revisions (see HasRevision), not disagreements. NULL with fewer than two compared rows.`),
     HasDisagreement: z.boolean().describe(`
         * * Field Name: HasDisagreement
         * * Display Name: Has Disagreement
         * * SQL Data Type: bit
         * * Default Value: 0
-        * * Description: 1 when MaxSpreadPct exceeds 1% -- a lead for the practitioner, transparency for the client.`),
+        * * Description: 1 when MaxSpreadPct exceeds 1% among same-vintage sources -- a lead for the practitioner, transparency for the client. A prior year's card that differs sets HasRevision instead.`),
     HeadlineTax: z.number().nullable().describe(`
         * * Field Name: HeadlineTax
         * * Display Name: Headline Tax
@@ -7300,22 +7424,53 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    HeadlineDocumentYear: z.number().nullable().describe(`
+        * * Field Name: HeadlineDocumentYear
+        * * Display Name: Headline Document Year
+        * * SQL Data Type: int
+        * * Description: Calendar year of the headline document (its vintage). An AY2024 value with HeadlineDocumentYear 2026 is "per the 2026 card": the value as it stands after appeals and corrections, not what was noticed in 2024. NULL when the headline document is undated.`),
+    HasRevision: z.boolean().describe(`
+        * * Field Name: HasRevision
+        * * Display Name: Has Revision
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 when an older-vintage official document carried a different total for this parcel-year: the headline supersedes it. Appeal history, not a data conflict.`),
+    RevisedFromTotalAV: z.number().nullable().describe(`
+        * * Field Name: RevisedFromTotalAV
+        * * Display Name: Revised From Total Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The total the newest older-vintage official document carried, when it differs from the headline (e.g. the AY2024 value on the 2024 card, superseded by the 2026 card). NULL when no revision.`),
+    RevisedFromSourceDocumentID: z.string().nullable().describe(`
+        * * Field Name: RevisedFromSourceDocumentID
+        * * Display Name: Revised From Source Document
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+        * * Description: The older-vintage document RevisedFromTotalAV came from.`),
+    RevisedFromDocumentDate: z.date().nullable().describe(`
+        * * Field Name: RevisedFromDocumentDate
+        * * Display Name: Revised From Document Date
+        * * SQL Data Type: date
+        * * Description: Document date of the superseded older-vintage document.`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
     HeadlineDataSource: z.string().nullable().describe(`
         * * Field Name: HeadlineDataSource
-        * * Display Name: Headline Data Source
+        * * Display Name: Headline Data Source Name
         * * SQL Data Type: nvarchar(100)`),
     HeadlineSourceDocument: z.string().nullable().describe(`
         * * Field Name: HeadlineSourceDocument
-        * * Display Name: Headline Source Document
+        * * Display Name: Headline Source Document Name
         * * SQL Data Type: nvarchar(500)`),
     TaxDataSource: z.string().nullable().describe(`
         * * Field Name: TaxDataSource
-        * * Display Name: Tax Data Source
+        * * Display Name: Tax Data Source Name
         * * SQL Data Type: nvarchar(100)`),
+    RevisedFromSourceDocument: z.string().nullable().describe(`
+        * * Field Name: RevisedFromSourceDocument
+        * * Display Name: Revised From Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxParcelYearHeadlineEntityType = z.infer<typeof indianataxParcelYearHeadlineSchema>;
@@ -8317,6 +8472,14 @@ export const indianataxPTABOAAppealSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
+    FinalDeterminationSourceDocument: z.string().nullable().describe(`
+        * * Field Name: FinalDeterminationSourceDocument
+        * * Display Name: Final Determination Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxPTABOAAppealEntityType = z.infer<typeof indianataxPTABOAAppealSchema>;
@@ -8400,6 +8563,10 @@ export const indianataxResearchTaskSchema = z.object({
         * * Field Name: RelatedSourceRegistry
         * * Display Name: Related Source Registry
         * * SQL Data Type: nvarchar(200)`),
+    RelatedSourceDocument: z.string().nullable().describe(`
+        * * Field Name: RelatedSourceDocument
+        * * Display Name: Related Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxResearchTaskEntityType = z.infer<typeof indianataxResearchTaskSchema>;
@@ -8726,6 +8893,10 @@ export const indianataxSaleTransactionSchema = z.object({
         * * Display Name: Building Sq Ft (Ex Parking)
         * * SQL Data Type: decimal(14, 2)
         * * Description: Building square footage with structured parking removed -- the comp-side parallel of ParcelPhysicalProfile.BuildingSqFtExParking, so comp $/SF is computed on the same basis as the subject. For a MarionPRC row on a parcel with a Parking / Pkg Garage / Com Garage improvement segment: BuildingSqFt minus that segment SqFt (NULL when the result is <= 0, i.e. a standalone garage). Otherwise equals BuildingSqFt (no parking; CoStar RBA is already rentable area). Use this, not BuildingSqFt, for $/SF comp math.`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     Parcel: z.string().nullable().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -8976,6 +9147,10 @@ export const indianataxStatuteSectionSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Name
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxStatuteSectionEntityType = z.infer<typeof indianataxStatuteSectionSchema>;
@@ -10032,6 +10207,10 @@ export const indianataxTaxAdjustmentSchema = z.object({
         * * Field Name: TaxBill
         * * Display Name: Tax Bill Reference
         * * SQL Data Type: nvarchar(25)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxTaxAdjustmentEntityType = z.infer<typeof indianataxTaxAdjustmentSchema>;
@@ -10161,6 +10340,10 @@ export const indianataxTaxBillSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel Reference
         * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxTaxBillEntityType = z.infer<typeof indianataxTaxBillSchema>;
@@ -10392,6 +10575,10 @@ export const indianataxTaxHistoryYearSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    TaxHistorySourceDocument: z.string().describe(`
+        * * Field Name: TaxHistorySourceDocument
+        * * Display Name: Tax History Source Document
+        * * SQL Data Type: nvarchar(500)`),
 });
 
 export type indianataxTaxHistoryYearEntityType = z.infer<typeof indianataxTaxHistoryYearSchema>;
@@ -10707,6 +10894,10 @@ export const indianataxValuationCompSchema = z.object({
         * * Field Name: SaleTransaction
         * * Display Name: Sale Transaction
         * * SQL Data Type: nvarchar(200)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
     __mj_Latitude: z.number().nullable().describe(`
         * * Field Name: __mj_Latitude
         * * Display Name: Mj Latitude
@@ -12481,6 +12672,15 @@ export class indianataxAppealStagePlaybookNoteEntity extends BaseEntity<indianat
     get AppealStage(): string {
         return this.Get('AppealStage');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Details
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -12935,6 +13135,15 @@ export class indianataxAppealStageEntity extends BaseEntity<indianataxAppealStag
     set InformalDeadlineDescription(value: string | null) {
         this.Set('InformalDeadlineDescription', value);
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -13009,7 +13218,7 @@ export class indianataxAPRARequestEventEntity extends BaseEntity<indianataxAPRAR
 
     /**
     * * Field Name: EventAt
-    * * Display Name: Event Date
+    * * Display Name: Event Date/Time
     * * SQL Data Type: datetimeoffset
     * * Default Value: sysdatetimeoffset()
     * * Description: When the event happened (the email's date for inbound; the send time for outbound).
@@ -13136,6 +13345,15 @@ export class indianataxAPRARequestEventEntity extends BaseEntity<indianataxAPRAR
     */
     get APRARequest(): string {
         return this.Get('APRARequest');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Details
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -13765,6 +13983,15 @@ export class indianataxAPRARequestEntity extends BaseEntity<indianataxAPRAReques
     get CommunicationLog(): Date | null {
         return this.Get('CommunicationLog');
     }
+
+    /**
+    * * Field Name: RequestSourceDocument
+    * * Display Name: Request Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get RequestSourceDocument(): string | null {
+        return this.Get('RequestSourceDocument');
+    }
 }
 
 
@@ -13813,7 +14040,7 @@ export class indianataxAPRAResponseFileEntity extends BaseEntity<indianataxAPRAR
 
     /**
     * * Field Name: APRARequestID
-    * * Display Name: APRA Request
+    * * Display Name: APRA Request ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: APRA Requests (vwAPRARequests.ID)
     */
@@ -13826,7 +14053,7 @@ export class indianataxAPRAResponseFileEntity extends BaseEntity<indianataxAPRAR
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Source Document
+    * * Display Name: Source Document ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     */
@@ -13865,7 +14092,7 @@ export class indianataxAPRAResponseFileEntity extends BaseEntity<indianataxAPRAR
 
     /**
     * * Field Name: Bytes
-    * * Display Name: File Size (Bytes)
+    * * Display Name: Size (Bytes)
     * * SQL Data Type: bigint
     * * Description: Size in bytes.
     */
@@ -13996,11 +14223,20 @@ export class indianataxAPRAResponseFileEntity extends BaseEntity<indianataxAPRAR
 
     /**
     * * Field Name: APRARequest
-    * * Display Name: APRA Request Details
+    * * Display Name: APRA Request
     * * SQL Data Type: nvarchar(30)
     */
     get APRARequest(): string {
         return this.Get('APRARequest');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -14050,7 +14286,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Source Document ID
+    * * Display Name: Source Document
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     */
@@ -14063,7 +14299,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: ParcelID
-    * * Display Name: Parcel ID
+    * * Display Name: Parcel
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
     */
@@ -14145,7 +14381,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: PreviousLandAV
-    * * Display Name: Previous Land AV
+    * * Display Name: Previous Land Value
     * * SQL Data Type: decimal(14, 2)
     * * Description: PREVIOUS ASSESSMENT column, LAND row -- the prior year's value as the county states it on the notice.
     */
@@ -14158,7 +14394,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: PreviousImprovementAV
-    * * Display Name: Previous Improvement AV
+    * * Display Name: Previous Improvement Value
     * * SQL Data Type: decimal(14, 2)
     * * Description: PREVIOUS ASSESSMENT column, STRUCTURES row.
     */
@@ -14171,7 +14407,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: PreviousTotalAV
-    * * Display Name: Previous Total AV
+    * * Display Name: Previous Total Value
     * * SQL Data Type: decimal(14, 2)
     * * Description: PREVIOUS ASSESSMENT column, TOTAL row.
     */
@@ -14184,7 +14420,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: NewLandAV
-    * * Display Name: New Land AV
+    * * Display Name: New Land Value
     * * SQL Data Type: decimal(14, 2)
     * * Description: NEW ASSESSMENT EFFECTIVE JANUARY 1 column, LAND row -- the noticed value. The record card's as-noticed column for the same year (Assessment.OriginalLandAV) should equal it; the notice-vs-card check says when it does not.
     */
@@ -14197,7 +14433,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: NewImprovementAV
-    * * Display Name: New Improvement AV
+    * * Display Name: New Improvement Value
     * * SQL Data Type: decimal(14, 2)
     * * Description: NEW ASSESSMENT column, STRUCTURES row -- the noticed improvement value.
     */
@@ -14210,7 +14446,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: NewTotalAV
-    * * Display Name: New Total AV
+    * * Display Name: New Total Value
     * * SQL Data Type: decimal(14, 2)
     * * Description: NEW ASSESSMENT column, TOTAL row -- the noticed total. On a Form 11-A this is the lowest of the three approaches when the assessor applied IC 6-1.1-4-39 as written.
     */
@@ -14223,7 +14459,7 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
 
     /**
     * * Field Name: Reason
-    * * Display Name: Reason
+    * * Display Name: Reason for Revision
     * * SQL Data Type: nvarchar(200)
     * * Description: "Reason for Revision of Assessment" (Form 11 only; e.g. Annual Adjustment). NULL on a Form 11-A, which prints no reason block.
     */
@@ -14398,12 +14634,39 @@ export class indianataxAssessmentNoticeEntity extends BaseEntity<indianataxAsses
     }
 
     /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: __mj_Latitude
+    * * Display Name: Mj Latitude
+    * * SQL Data Type: decimal(10, 6)
+    */
+    get __mj_Latitude(): number | null {
+        return this.Get('__mj_Latitude');
+    }
+
+    /**
+    * * Field Name: __mj_Longitude
+    * * Display Name: Mj Longitude
+    * * SQL Data Type: decimal(10, 6)
+    */
+    get __mj_Longitude(): number | null {
+        return this.Get('__mj_Longitude');
     }
 }
 
@@ -14732,6 +14995,15 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
     get Parcel(): string {
         return this.Get('Parcel');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -14911,6 +15183,15 @@ export class indianataxBoardDecisionEntity extends BaseEntity<indianataxBoardDec
     */
     get Parcel(): string | null {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -15427,6 +15708,15 @@ export class indianataxCardImprovementEntity extends BaseEntity<indianataxCardIm
     }
 
     /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
@@ -15667,6 +15957,15 @@ export class indianataxCardNoteEntity extends BaseEntity<indianataxCardNoteEntit
     }
     set NoteForm(value: number | null) {
         this.Set('NoteForm', value);
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 
     /**
@@ -16027,6 +16326,15 @@ export class indianataxCardSummaryEntity extends BaseEntity<indianataxCardSummar
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 
     /**
@@ -16460,6 +16768,15 @@ export class indianataxCardValuationColumnEntity extends BaseEntity<indianataxCa
     }
     set ReasonForm(value: number | null) {
         this.Set('ReasonForm', value);
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 
     /**
@@ -17969,6 +18286,15 @@ export class indianataxCoStarIncomeInputEntity extends BaseEntity<indianataxCoSt
     }
 
     /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
+
+    /**
     * * Field Name: __mj_Latitude
     * * Display Name: Latitude
     * * SQL Data Type: decimal(10, 6)
@@ -18764,6 +19090,15 @@ export class indianataxCoStarPropertyEntity extends BaseEntity<indianataxCoStarP
     */
     get CoStarSecondaryParcel(): string | null {
         return this.Get('CoStarSecondaryParcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 
     /**
@@ -21313,6 +21648,24 @@ export class indianataxCountyAssessorRecordEntity extends BaseEntity<indianataxC
     }
 
     /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Details
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
+
+    /**
+    * * Field Name: TaxHistorySourceDocument
+    * * Display Name: Tax History Source Document Details
+    * * SQL Data Type: nvarchar(500)
+    */
+    get TaxHistorySourceDocument(): string | null {
+        return this.Get('TaxHistorySourceDocument');
+    }
+
+    /**
     * * Field Name: __mj_Latitude
     * * Display Name: Latitude
     * * SQL Data Type: decimal(10, 6)
@@ -21586,7 +21939,7 @@ export class indianataxCountyContactEntity extends BaseEntity<indianataxCountyCo
 
     /**
     * * Field Name: CountyID
-    * * Display Name: County ID
+    * * Display Name: County
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Counties (vwCounties.ID)
     */
@@ -21699,7 +22052,7 @@ export class indianataxCountyContactEntity extends BaseEntity<indianataxCountyCo
 
     /**
     * * Field Name: EvidenceSourceDocumentID
-    * * Display Name: Evidence Source Document ID
+    * * Display Name: Source Document
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     */
@@ -21712,7 +22065,7 @@ export class indianataxCountyContactEntity extends BaseEntity<indianataxCountyCo
 
     /**
     * * Field Name: Confidence
-    * * Display Name: Confidence
+    * * Display Name: Confidence Level
     * * SQL Data Type: nvarchar(6)
     * * Value List Type: List
     * * Possible Values 
@@ -21803,11 +22156,20 @@ export class indianataxCountyContactEntity extends BaseEntity<indianataxCountyCo
 
     /**
     * * Field Name: County
-    * * Display Name: County
+    * * Display Name: County Name
     * * SQL Data Type: nvarchar(50)
     */
     get County(): string {
         return this.Get('County');
+    }
+
+    /**
+    * * Field Name: EvidenceSourceDocument
+    * * Display Name: Source Document Content
+    * * SQL Data Type: nvarchar(500)
+    */
+    get EvidenceSourceDocument(): string {
+        return this.Get('EvidenceSourceDocument');
     }
 }
 
@@ -22562,6 +22924,15 @@ export class indianataxDLGFBuildingDetailEntity extends BaseEntity<indianataxDLG
     get Parcel(): string {
         return this.Get('Parcel');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -22793,6 +23164,15 @@ export class indianataxDLGFBuildingEntity extends BaseEntity<indianataxDLGFBuild
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -23147,6 +23527,15 @@ export class indianataxDLGFImprovementEntity extends BaseEntity<indianataxDLGFIm
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -23524,6 +23913,15 @@ export class indianataxDLGFLandEntity extends BaseEntity<indianataxDLGFLandEntit
     get Parcel(): string {
         return this.Get('Parcel');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -23810,6 +24208,15 @@ export class indianataxDocumentAcquisitionEntity extends BaseEntity<indianataxDo
     get Parcel(): string {
         return this.Get('Parcel');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Entity
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -23990,6 +24397,15 @@ export class indianataxDocumentCatalogEntity extends BaseEntity<indianataxDocume
     */
     get SourceRegistry(): string {
         return this.Get('SourceRegistry');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -24425,6 +24841,15 @@ export class indianataxFormCatalogEntity extends BaseEntity<indianataxFormCatalo
     get TriggersAppealStage(): string | null {
         return this.Get('TriggersAppealStage');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -24759,7 +25184,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: IsSmallClaims
-    * * Display Name: Small Claims
+    * * Display Name: Small Claims Track
     * * SQL Data Type: bit
     * * Description: 1 when the decision caption says Small Claims (the simplified track, removed for Form 131 from 2026-09-02).
     */
@@ -24772,7 +25197,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Decision Document
+    * * Display Name: Source Document
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     * * Description: The decision file: SourceDocument of type IBTRDecision (hash, path, URL, extracted text).
@@ -24799,7 +25224,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: TextIsOCR
-    * * Display Name: Text is OCR
+    * * Display Name: Text Is OCR
     * * SQL Data Type: bit
     * * Description: 1 when the text came from OCR of an image-only scan (most POPLAR copies from 2025 on); treat quotations with care.
     */
@@ -24850,7 +25275,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: Summary
-    * * Display Name: Summary
+    * * Display Name: Decision Summary
     * * SQL Data Type: nvarchar(MAX)
     * * Description: Two or three sentences from the model reading: what was argued, what evidence carried, what the Board did. A lead, not a holding.
     */
@@ -24971,6 +25396,15 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
     }
 
     /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
+
+    /**
     * * Field Name: LegacyBoardDecision
     * * Display Name: Legacy Board Decision
     * * SQL Data Type: nvarchar(50)
@@ -24981,7 +25415,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: __mj_Latitude
-    * * Display Name: Mj Latitude
+    * * Display Name: Latitude
     * * SQL Data Type: decimal(10, 6)
     */
     get __mj_Latitude(): number | null {
@@ -24990,7 +25424,7 @@ export class indianataxIBTRAppealEntity extends BaseEntity<indianataxIBTRAppealE
 
     /**
     * * Field Name: __mj_Longitude
-    * * Display Name: Mj Longitude
+    * * Display Name: Longitude
     * * SQL Data Type: decimal(10, 6)
     */
     get __mj_Longitude(): number | null {
@@ -25117,7 +25551,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: Ordinal
-    * * Display Name: Position
+    * * Display Name: Ordinal Position
     * * SQL Data Type: int
     * * Description: Position within the decision, from 0.
     */
@@ -25130,7 +25564,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: ChunkText
-    * * Display Name: Text
+    * * Display Name: Chunk Text
     * * SQL Data Type: nvarchar(MAX)
     * * Description: The passage, verbatim.
     */
@@ -25156,7 +25590,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: IsOCR
-    * * Display Name: Is OCR
+    * * Display Name: Is OCR Text
     * * SQL Data Type: bit
     * * Description: 1 when the text came from OCR; quotations from such chunks may carry recognition errors.
     */
@@ -25189,11 +25623,20 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: IBTRAppeal
-    * * Display Name: Appeal Identifier
+    * * Display Name: IBTR Appeal Reference
     * * SQL Data Type: nvarchar(200)
     */
     get IBTRAppeal(): string {
         return this.Get('IBTRAppeal');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -26301,6 +26744,15 @@ export class indianataxJurisdictionDeadlineAnchorEntity extends BaseEntity<india
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -26415,7 +26867,7 @@ export class indianataxLegalAuthorityEntity extends BaseEntity<indianataxLegalAu
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Source Document
+    * * Display Name: Source Document ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     * * Description: The fetched source file (PDF/HTML) this document was parsed from, for provenance.
@@ -26458,6 +26910,15 @@ export class indianataxLegalAuthorityEntity extends BaseEntity<indianataxLegalAu
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -26814,7 +27275,7 @@ export class indianataxLegalAuthoritySectionEntity extends BaseEntity<indianatax
 
     /**
     * * Field Name: LegalAuthority
-    * * Display Name: Legal Authority
+    * * Display Name: Legal Authority Name
     * * SQL Data Type: nvarchar(300)
     */
     get LegalAuthority(): string {
@@ -26823,11 +27284,20 @@ export class indianataxLegalAuthoritySectionEntity extends BaseEntity<indianatax
 
     /**
     * * Field Name: ParentSection
-    * * Display Name: Parent Section
+    * * Display Name: Parent Section Name
     * * SQL Data Type: nvarchar(120)
     */
     get ParentSection(): string | null {
         return this.Get('ParentSection');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 
     /**
@@ -29367,7 +29837,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: ParcelID
-    * * Display Name: Parcel
+    * * Display Name: Parcel ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
     */
@@ -29491,9 +29961,9 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: MaxSpreadPct
-    * * Display Name: Maximum Spread Percent
+    * * Display Name: Maximum Spread Percentage
     * * SQL Data Type: decimal(9, 4)
-    * * Description: Largest difference between any two sources' totals for this parcel-year, as a percent of the headline total. NULL with fewer than two sources.
+    * * Description: Largest difference between the totals compared for disagreement -- official documents of the headline's own vintage (same document year) plus every non-official source -- as a percent of the headline total. Older-vintage official documents are revisions (see HasRevision), not disagreements. NULL with fewer than two compared rows.
     */
     get MaxSpreadPct(): number | null {
         return this.Get('MaxSpreadPct');
@@ -29507,7 +29977,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Has Disagreement
     * * SQL Data Type: bit
     * * Default Value: 0
-    * * Description: 1 when MaxSpreadPct exceeds 1% -- a lead for the practitioner, transparency for the client.
+    * * Description: 1 when MaxSpreadPct exceeds 1% among same-vintage sources -- a lead for the practitioner, transparency for the client. A prior year's card that differs sets HasRevision instead.
     */
     get HasDisagreement(): boolean {
         return this.Get('HasDisagreement');
@@ -29575,6 +30045,73 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     }
 
     /**
+    * * Field Name: HeadlineDocumentYear
+    * * Display Name: Headline Document Year
+    * * SQL Data Type: int
+    * * Description: Calendar year of the headline document (its vintage). An AY2024 value with HeadlineDocumentYear 2026 is "per the 2026 card": the value as it stands after appeals and corrections, not what was noticed in 2024. NULL when the headline document is undated.
+    */
+    get HeadlineDocumentYear(): number | null {
+        return this.Get('HeadlineDocumentYear');
+    }
+    set HeadlineDocumentYear(value: number | null) {
+        this.Set('HeadlineDocumentYear', value);
+    }
+
+    /**
+    * * Field Name: HasRevision
+    * * Display Name: Has Revision
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 when an older-vintage official document carried a different total for this parcel-year: the headline supersedes it. Appeal history, not a data conflict.
+    */
+    get HasRevision(): boolean {
+        return this.Get('HasRevision');
+    }
+    set HasRevision(value: boolean) {
+        this.Set('HasRevision', value);
+    }
+
+    /**
+    * * Field Name: RevisedFromTotalAV
+    * * Display Name: Revised From Total Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The total the newest older-vintage official document carried, when it differs from the headline (e.g. the AY2024 value on the 2024 card, superseded by the 2026 card). NULL when no revision.
+    */
+    get RevisedFromTotalAV(): number | null {
+        return this.Get('RevisedFromTotalAV');
+    }
+    set RevisedFromTotalAV(value: number | null) {
+        this.Set('RevisedFromTotalAV', value);
+    }
+
+    /**
+    * * Field Name: RevisedFromSourceDocumentID
+    * * Display Name: Revised From Source Document
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+    * * Description: The older-vintage document RevisedFromTotalAV came from.
+    */
+    get RevisedFromSourceDocumentID(): string | null {
+        return this.Get('RevisedFromSourceDocumentID');
+    }
+    set RevisedFromSourceDocumentID(value: string | null) {
+        this.Set('RevisedFromSourceDocumentID', value);
+    }
+
+    /**
+    * * Field Name: RevisedFromDocumentDate
+    * * Display Name: Revised From Document Date
+    * * SQL Data Type: date
+    * * Description: Document date of the superseded older-vintage document.
+    */
+    get RevisedFromDocumentDate(): Date | null {
+        return this.Get('RevisedFromDocumentDate');
+    }
+    set RevisedFromDocumentDate(value: Date | null) {
+        this.Set('RevisedFromDocumentDate', value);
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
@@ -29585,7 +30122,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineDataSource
-    * * Display Name: Headline Data Source
+    * * Display Name: Headline Data Source Name
     * * SQL Data Type: nvarchar(100)
     */
     get HeadlineDataSource(): string | null {
@@ -29594,7 +30131,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineSourceDocument
-    * * Display Name: Headline Source Document
+    * * Display Name: Headline Source Document Name
     * * SQL Data Type: nvarchar(500)
     */
     get HeadlineSourceDocument(): string | null {
@@ -29603,11 +30140,20 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: TaxDataSource
-    * * Display Name: Tax Data Source
+    * * Display Name: Tax Data Source Name
     * * SQL Data Type: nvarchar(100)
     */
     get TaxDataSource(): string | null {
         return this.Get('TaxDataSource');
+    }
+
+    /**
+    * * Field Name: RevisedFromSourceDocument
+    * * Display Name: Revised From Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get RevisedFromSourceDocument(): string | null {
+        return this.Get('RevisedFromSourceDocument');
     }
 }
 
@@ -32224,6 +32770,24 @@ export class indianataxPTABOAAppealEntity extends BaseEntity<indianataxPTABOAApp
     get Parcel(): string {
         return this.Get('Parcel');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
+
+    /**
+    * * Field Name: FinalDeterminationSourceDocument
+    * * Display Name: Final Determination Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get FinalDeterminationSourceDocument(): string | null {
+        return this.Get('FinalDeterminationSourceDocument');
+    }
 }
 
 
@@ -32425,6 +32989,15 @@ export class indianataxResearchTaskEntity extends BaseEntity<indianataxResearchT
     */
     get RelatedSourceRegistry(): string | null {
         return this.Get('RelatedSourceRegistry');
+    }
+
+    /**
+    * * Field Name: RelatedSourceDocument
+    * * Display Name: Related Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get RelatedSourceDocument(): string | null {
+        return this.Get('RelatedSourceDocument');
     }
 }
 
@@ -33299,6 +33872,15 @@ export class indianataxSaleTransactionEntity extends BaseEntity<indianataxSaleTr
     }
 
     /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
@@ -33892,6 +34474,15 @@ export class indianataxStatuteSectionEntity extends BaseEntity<indianataxStatute
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Name
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -36692,6 +37283,15 @@ export class indianataxTaxAdjustmentEntity extends BaseEntity<indianataxTaxAdjus
     get TaxBill(): string {
         return this.Get('TaxBill');
     }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
 }
 
 
@@ -37043,6 +37643,15 @@ export class indianataxTaxBillEntity extends BaseEntity<indianataxTaxBillEntityT
     */
     get Parcel(): string | null {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
     }
 }
 
@@ -37679,6 +38288,15 @@ export class indianataxTaxHistoryYearEntity extends BaseEntity<indianataxTaxHist
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: TaxHistorySourceDocument
+    * * Display Name: Tax History Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get TaxHistorySourceDocument(): string {
+        return this.Get('TaxHistorySourceDocument');
     }
 }
 
@@ -38552,6 +39170,15 @@ export class indianataxValuationCompEntity extends BaseEntity<indianataxValuatio
     */
     get SaleTransaction(): string | null {
         return this.Get('SaleTransaction');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
     }
 
     /**

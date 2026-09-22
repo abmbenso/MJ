@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="parcelIdentification"
         SectionName="Parcel Identification"
-        Icon="fa fa-map-marked-alt"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -41,7 +41,7 @@
     <mj-collapsible-panel
         SectionKey="assessedValues"
         SectionName="Assessed Values"
-        Icon="fa fa-dollar-sign"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -75,7 +75,7 @@
     <mj-collapsible-panel
         SectionKey="sourceTracking"
         SectionName="Source Tracking"
-        Icon="fa fa-file-invoice"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -104,6 +104,14 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="HeadlineDocumentYear"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -111,7 +119,7 @@
     <mj-collapsible-panel
         SectionKey="dataQuality"
         SectionName="Data Quality"
-        Icon="fa fa-chart-line"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -153,7 +161,7 @@
     <mj-collapsible-panel
         SectionKey="taxInformation"
         SectionName="Tax Information"
-        Icon="fa fa-receipt"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -180,13 +188,56 @@
     <mj-collapsible-panel
         SectionKey="processingMetadata"
         SectionName="Processing Metadata"
-        Icon="fa fa-history"
+        Icon="fa fa-cog"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="false"
             FieldName="ComputedAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Revision History Section -->
+    <mj-collapsible-panel
+        SectionKey="revisionHistory"
+        SectionName="Revision History"
+        Icon="fa fa-history"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="HasRevision"
+            Type="checkbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisedFromTotalAV"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisedFromSourceDocumentID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="RevisedFromDocumentDate"
             Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"

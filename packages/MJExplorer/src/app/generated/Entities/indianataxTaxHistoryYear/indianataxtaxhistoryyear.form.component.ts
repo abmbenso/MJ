@@ -15,7 +15,12 @@ export class indianataxTaxHistoryYearFormComponent extends BaseFormComponent {
     override async ngOnInit() {
         await super.ngOnInit();
         this.initSections([
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true }
+            { sectionKey: 'taxHistoryReference', sectionName: 'Tax History Reference', isExpanded: true },
+            { sectionKey: 'taxYearInformation', sectionName: 'Tax Year Information', isExpanded: true },
+            { sectionKey: 'assessmentValues', sectionName: 'Assessment Values', isExpanded: true },
+            { sectionKey: 'deductionsAndCredits', sectionName: 'Deductions and Credits', isExpanded: true },
+            { sectionKey: 'taxCalculation', sectionName: 'Tax Calculation', isExpanded: true },
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }
 }

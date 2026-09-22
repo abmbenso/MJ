@@ -58,7 +58,8 @@ export class indianataxSourceDocumentFormComponent extends BaseFormComponent {
             { sectionKey: 'assessmentNotices', sectionName: 'Assessment Notices', isExpanded: false },
             { sectionKey: 'legalAuthorities', sectionName: 'Legal Authorities', isExpanded: false },
             { sectionKey: 'legalAuthoritySections', sectionName: 'Legal Authority Sections', isExpanded: false },
-            { sectionKey: 'parcelYearHeadlines', sectionName: 'Parcel Year Headlines', isExpanded: false }
+            { sectionKey: 'parcelYearHeadlinesHeadlineSourceDocumentID', sectionName: 'Parcel Year Headlines (Headline Source Document)', isExpanded: false },
+            { sectionKey: 'parcelYearHeadlinesRevisedFromSourceDocumentID', sectionName: 'Parcel Year Headlines (Revised From Source Document)', isExpanded: false }
         ]);
     }
 }

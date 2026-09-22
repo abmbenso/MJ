@@ -24,7 +24,6 @@ export class indianataxCardSummaryFormComponent extends BaseFormComponent {
             { sectionKey: 'improvementSummaries', sectionName: 'Improvement Summaries', isExpanded: true },
             { sectionKey: 'valuationDetails', sectionName: 'Valuation Details', isExpanded: true },
             { sectionKey: 'cardAdministration', sectionName: 'Card Administration', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

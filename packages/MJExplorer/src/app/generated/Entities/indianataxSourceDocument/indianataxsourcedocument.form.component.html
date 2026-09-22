@@ -166,7 +166,7 @@
     <mj-collapsible-panel
         SectionKey="statuteSections"
         SectionName="Statute Sections"
-        Icon="fa fa-table"
+        Icon="fa fa-file-alt"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
@@ -241,7 +241,7 @@
     <mj-collapsible-panel
         SectionKey="documentCatalogs"
         SectionName="Document Catalogs"
-        Icon="fa fa-table"
+        Icon="fa fa-file"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
@@ -391,7 +391,7 @@
     <mj-collapsible-panel
         SectionKey="taxHistoryYears"
         SectionName="Tax History Years"
-        Icon="fa fa-table"
+        Icon="fa fa-calendar-alt"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
@@ -991,7 +991,7 @@
     <mj-collapsible-panel
         SectionKey="countyContacts"
         SectionName="County Contacts"
-        Icon="fa fa-table"
+        Icon="fa fa-address-card"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
@@ -1041,7 +1041,7 @@
     <mj-collapsible-panel
         SectionKey="assessmentNotices"
         SectionName="Assessment Notices"
-        Icon="fa fa-table"
+        Icon="fa fa-file-invoice"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
@@ -1112,25 +1112,50 @@
         }
     </mj-collapsible-panel>
 
-    <!-- Parcel Year Headlines Section -->
+    <!-- Parcel Year Headlines (Headline Source Document) Section -->
     <mj-collapsible-panel
-        SectionKey="parcelYearHeadlines"
-        SectionName="Parcel Year Headlines"
+        SectionKey="parcelYearHeadlinesHeadlineSourceDocumentID"
+        SectionName="Parcel Year Headlines (Headline Source Document)"
         Icon="fa fa-file-alt"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
-        [BadgeCount]="GetSectionRowCount('parcelYearHeadlines')"
+        [BadgeCount]="GetSectionRowCount('parcelYearHeadlinesHeadlineSourceDocumentID')"
         [DefaultExpanded]="false">
         @if (record.IsSaved) {
         <div>
             <mj-explorer-entity-data-grid
                 [Params]="BuildRelationshipViewParamsByEntityName('Parcel Year Headlines','HeadlineSourceDocumentID')"
                 [NewRecordValues]="NewRecordValues('Parcel Year Headlines')"
-                [AllowLoad]="IsSectionExpanded('parcelYearHeadlines')"
+                [AllowLoad]="IsSectionExpanded('parcelYearHeadlinesHeadlineSourceDocumentID')"
                 [ShowToolbar]="false"
                 (Navigate)="OnFormNavigate($event)"
-                (AfterDataLoad)="SetSectionRowCount('parcelYearHeadlines', $event.totalRowCount)"
+                (AfterDataLoad)="SetSectionRowCount('parcelYearHeadlinesHeadlineSourceDocumentID', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Parcel Year Headlines (Revised From Source Document) Section -->
+    <mj-collapsible-panel
+        SectionKey="parcelYearHeadlinesRevisedFromSourceDocumentID"
+        SectionName="Parcel Year Headlines (Revised From Source Document)"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('parcelYearHeadlinesRevisedFromSourceDocumentID')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Parcel Year Headlines','RevisedFromSourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Parcel Year Headlines')"
+                [AllowLoad]="IsSectionExpanded('parcelYearHeadlinesRevisedFromSourceDocumentID')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('parcelYearHeadlinesRevisedFromSourceDocumentID', $event.totalRowCount)"
                 >
             </mj-explorer-entity-data-grid>
         </div>

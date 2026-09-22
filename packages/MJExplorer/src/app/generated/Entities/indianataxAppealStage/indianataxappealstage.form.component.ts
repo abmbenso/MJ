@@ -18,9 +18,9 @@ export class indianataxAppealStageFormComponent extends BaseFormComponent {
         this.initSections([
             { sectionKey: 'appealProcessDefinition', sectionName: 'Appeal Process Definition', isExpanded: true },
             { sectionKey: 'proceduralRequirements', sectionName: 'Procedural Requirements', isExpanded: true },
+            { sectionKey: 'deadlineAndTiming', sectionName: 'Deadline and Timing', isExpanded: true },
             { sectionKey: 'jurisdictionalScope', sectionName: 'Jurisdictional Scope', isExpanded: true },
             { sectionKey: 'sourceAndContext', sectionName: 'Source and Context', isExpanded: true },
-            { sectionKey: 'deadlineAndTiming', sectionName: 'Deadline and Timing', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'appealStageStatutes', sectionName: 'Appeal Stage Statutes', isExpanded: false },
             { sectionKey: 'formCatalogsCorrespondingAppealStageID', sectionName: 'Form Catalogs (Corresponding Appeal Stage)', isExpanded: false },

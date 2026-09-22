@@ -18,8 +18,8 @@ export class indianataxPTABOAAppealFormComponent extends BaseFormComponent {
         this.initSections([
             { sectionKey: 'appealIdentification', sectionName: 'Appeal Identification', isExpanded: true },
             { sectionKey: 'appealDetails', sectionName: 'Appeal Details', isExpanded: true },
-            { sectionKey: 'assessedValues', sectionName: 'Assessed Values', isExpanded: true },
             { sectionKey: 'appealOutcome', sectionName: 'Appeal Outcome', isExpanded: true },
+            { sectionKey: 'assessedValues', sectionName: 'Assessed Values', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false }
         ]);

@@ -22,7 +22,6 @@ export class indianataxValuationCompFormComponent extends BaseFormComponent {
             { sectionKey: 'adjustmentResults', sectionName: 'Adjustment Results', isExpanded: true },
             { sectionKey: 'valuationResults', sectionName: 'Valuation Results', isExpanded: true },
             { sectionKey: 'selectionCriteria', sectionName: 'Selection Criteria', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

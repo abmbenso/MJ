@@ -15,7 +15,11 @@ export class indianataxDocumentCatalogFormComponent extends BaseFormComponent {
     override async ngOnInit() {
         await super.ngOnInit();
         this.initSections([
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true }
+            { sectionKey: 'documentIdentification', sectionName: 'Document Identification', isExpanded: true },
+            { sectionKey: 'documentTimeline', sectionName: 'Document Timeline', isExpanded: true },
+            { sectionKey: 'relevanceAssessment', sectionName: 'Relevance Assessment', isExpanded: true },
+            { sectionKey: 'ingestionStatus', sectionName: 'Ingestion Status', isExpanded: true },
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }
 }
