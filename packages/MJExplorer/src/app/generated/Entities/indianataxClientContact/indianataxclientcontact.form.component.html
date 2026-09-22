@@ -10,17 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Appeal Information Section -->
+    <!-- Contact Information Section -->
     <mj-collapsible-panel
-        SectionKey="appealInformation"
-        SectionName="Appeal Information"
-        Icon="fa fa-gavel"
+        SectionKey="contactInformation"
+        SectionName="Contact Information"
+        Icon="fa fa-address-card"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="IBTRAppealID"
+            FieldName="ClientID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -29,33 +29,40 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Side"
-            Type="select"
+            FieldName="FirstName"
+            Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Party Information Section -->
-    <mj-collapsible-panel
-        SectionKey="partyInformation"
-        SectionName="Party Information"
-        Icon="fa fa-id-card"
-        [Form]="this"
-        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="LastName"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Email"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Email"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Phone"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
             FieldName="Role"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="PersonName"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -63,50 +70,8 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="FirmName"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="NormalizedKey"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Source Information Section -->
-    <mj-collapsible-panel
-        SectionKey="sourceInformation"
-        SectionName="Source Information"
-        Icon="fa fa-file-alt"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="RawText"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Source"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Confidence"
-            Type="select"
+            FieldName="IsPrimary"
+            Type="checkbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>

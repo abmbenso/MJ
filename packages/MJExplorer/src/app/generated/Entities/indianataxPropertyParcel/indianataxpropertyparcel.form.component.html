@@ -10,55 +10,30 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Decision Reference Section -->
+    <!-- Parcel Association Section -->
     <mj-collapsible-panel
-        SectionKey="decisionReference"
-        SectionName="Decision Reference"
+        SectionKey="parcelAssociation"
+        SectionName="Parcel Association"
         Icon="fa fa-link"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="false"
-            FieldName="IBTRAppealID"
+            [ShowLabel]="true"
+            FieldName="PropertyID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
             LinkType="Record"
         ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Issue Classification Section -->
-    <mj-collapsible-panel
-        SectionKey="issueClassification"
-        SectionName="Issue Classification"
-        Icon="fa fa-tag"
-        [Form]="this"
-        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Issue"
-            Type="select"
+            FieldName="ParcelID"
+            Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Source"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Confidence"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
+            LinkType="Record"
         ></mj-form-field>
 
     </mj-collapsible-panel>

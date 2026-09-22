@@ -10,17 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Appeal Information Section -->
+    <!-- Parcel Identification Section -->
     <mj-collapsible-panel
-        SectionKey="appealInformation"
-        SectionName="Appeal Information"
-        Icon="fa fa-gavel"
+        SectionKey="parcelIdentification"
+        SectionName="Parcel Identification"
+        Icon="fa fa-map-marked-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="IBTRAppealID"
+            FieldName="ParcelID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -29,84 +29,165 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Side"
-            Type="select"
+            FieldName="AssessmentYear"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
 
     </mj-collapsible-panel>
 
-    <!-- Party Information Section -->
+    <!-- Assessed Values Section -->
     <mj-collapsible-panel
-        SectionKey="partyInformation"
-        SectionName="Party Information"
-        Icon="fa fa-id-card"
+        SectionKey="assessedValues"
+        SectionName="Assessed Values"
+        Icon="fa fa-dollar-sign"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Role"
-            Type="select"
+            FieldName="HeadlineLandAV"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="PersonName"
-            Type="textbox"
+            FieldName="HeadlineImprovementAV"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="FirmName"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="NormalizedKey"
-            Type="textbox"
+            FieldName="HeadlineTotalAV"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
 
     </mj-collapsible-panel>
 
-    <!-- Source Information Section -->
+    <!-- Source Tracking Section -->
     <mj-collapsible-panel
-        SectionKey="sourceInformation"
-        SectionName="Source Information"
-        Icon="fa fa-file-alt"
+        SectionKey="sourceTracking"
+        SectionName="Source Tracking"
+        Icon="fa fa-file-invoice"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="RawText"
+            FieldName="HeadlineDataSourceID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
+            LinkType="Record"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Source"
-            Type="select"
+            FieldName="HeadlineSourceDocumentID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="HeadlineDocumentDate"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Data Quality Section -->
+    <mj-collapsible-panel
+        SectionKey="dataQuality"
+        SectionName="Data Quality"
+        Icon="fa fa-chart-line"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="IsPlaceholder"
+            Type="checkbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Confidence"
-            Type="select"
+            FieldName="SourceCount"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="MaxSpreadPct"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="HasDisagreement"
+            Type="checkbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Tax Information Section -->
+    <mj-collapsible-panel
+        SectionKey="taxInformation"
+        SectionName="Tax Information"
+        Icon="fa fa-receipt"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="HeadlineTax"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="TaxDataSourceID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Processing Metadata Section -->
+    <mj-collapsible-panel
+        SectionKey="processingMetadata"
+        SectionName="Processing Metadata"
+        Icon="fa fa-history"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="false"
+            FieldName="ComputedAt"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>

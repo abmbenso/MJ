@@ -52,7 +52,10 @@ export class indianataxParcelFormComponent extends BaseFormComponent {
             { sectionKey: 'iBTRAppeals', sectionName: 'IBTR Appeals', isExpanded: false },
             { sectionKey: 'assessmentNotices', sectionName: 'Assessment Notices', isExpanded: false },
             { sectionKey: 'appealAnalysis', sectionName: 'Appeal Analysis', isExpanded: false },
-            { sectionKey: 'fairAndAccurateLeads', sectionName: 'Fair And Accurate Leads', isExpanded: false }
+            { sectionKey: 'fairAndAccurateLeads', sectionName: 'Fair And Accurate Leads', isExpanded: false },
+            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false },
+            { sectionKey: 'propertyParcels', sectionName: 'Property Parcels', isExpanded: false },
+            { sectionKey: 'parcelYearHeadlines', sectionName: 'Parcel Year Headlines', isExpanded: false }
         ]);
     }
 }

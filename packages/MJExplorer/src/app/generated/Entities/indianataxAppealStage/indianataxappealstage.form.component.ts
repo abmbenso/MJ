@@ -25,7 +25,8 @@ export class indianataxAppealStageFormComponent extends BaseFormComponent {
             { sectionKey: 'appealStageStatutes', sectionName: 'Appeal Stage Statutes', isExpanded: false },
             { sectionKey: 'formCatalogsCorrespondingAppealStageID', sectionName: 'Form Catalogs (Corresponding Appeal Stage)', isExpanded: false },
             { sectionKey: 'formCatalogsTriggersAppealStageID', sectionName: 'Form Catalogs (Triggers Appeal Stage)', isExpanded: false },
-            { sectionKey: 'appealStagePlaybookNotes', sectionName: 'Appeal Stage Playbook Notes', isExpanded: false }
+            { sectionKey: 'appealStagePlaybookNotes', sectionName: 'Appeal Stage Playbook Notes', isExpanded: false },
+            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false }
         ]);
     }
 }

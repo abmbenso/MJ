@@ -25,7 +25,9 @@ export class indianataxCountyFormComponent extends BaseFormComponent {
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'aPRARequests', sectionName: 'APRA Requests', isExpanded: false },
             { sectionKey: 'countyResources', sectionName: 'County Resources', isExpanded: false },
-            { sectionKey: 'countyContacts', sectionName: 'County Contacts', isExpanded: false }
+            { sectionKey: 'countyContacts', sectionName: 'County Contacts', isExpanded: false },
+            { sectionKey: 'dataSources', sectionName: 'Data Sources', isExpanded: false },
+            { sectionKey: 'properties', sectionName: 'Properties', isExpanded: false }
         ]);
     }
 }

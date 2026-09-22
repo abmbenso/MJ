@@ -25,7 +25,8 @@ export class indianataxAppealAnalysisFormComponent extends BaseFormComponent {
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'appealAnalysisAssumptions', sectionName: 'Appeal Analysis Assumptions', isExpanded: false },
             { sectionKey: 'appealAnalysisIndications', sectionName: 'Appeal Analysis Indications', isExpanded: false },
-            { sectionKey: 'appealAnalysisCompDecisions', sectionName: 'Appeal Analysis Comp Decisions', isExpanded: false }
+            { sectionKey: 'appealAnalysisCompDecisions', sectionName: 'Appeal Analysis Comp Decisions', isExpanded: false },
+            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false }
         ]);
     }
 }

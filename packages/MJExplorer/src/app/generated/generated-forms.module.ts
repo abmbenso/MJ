@@ -34,6 +34,11 @@ import { indianataxCardImprovementFormComponent } from "./Entities/indianataxCar
 import { indianataxCardNoteFormComponent } from "./Entities/indianataxCardNote/indianataxcardnote.form.component";
 import { indianataxCardSummaryFormComponent } from "./Entities/indianataxCardSummary/indianataxcardsummary.form.component";
 import { indianataxCardValuationColumnFormComponent } from "./Entities/indianataxCardValuationColumn/indianataxcardvaluationcolumn.form.component";
+import { indianataxClientAppealFormComponent } from "./Entities/indianataxClientAppeal/indianataxclientappeal.form.component";
+import { indianataxClientContactFormComponent } from "./Entities/indianataxClientContact/indianataxclientcontact.form.component";
+import { indianataxClientPropertyFormComponent } from "./Entities/indianataxClientProperty/indianataxclientproperty.form.component";
+import { indianataxClientTaskFormComponent } from "./Entities/indianataxClientTask/indianataxclienttask.form.component";
+import { indianataxClientFormComponent } from "./Entities/indianataxClient/indianataxclient.form.component";
 import { indianataxCoStarIncomeInputFormComponent } from "./Entities/indianataxCoStarIncomeInput/indianataxcostarincomeinput.form.component";
 import { indianataxCoStarPropertyFormComponent } from "./Entities/indianataxCoStarProperty/indianataxcostarproperty.form.component";
 import { indianataxComparableAssessmentMemberFormComponent } from "./Entities/indianataxComparableAssessmentMember/indianataxcomparableassessmentmember.form.component";
@@ -45,6 +50,7 @@ import { indianataxCountyAssessorRecordFormComponent } from "./Entities/indianat
 import { indianataxCountyAssessorSaleHistoryFormComponent } from "./Entities/indianataxCountyAssessorSaleHistory/indianataxcountyassessorsalehistory.form.component";
 import { indianataxCountyContactFormComponent } from "./Entities/indianataxCountyContact/indianataxcountycontact.form.component";
 import { indianataxCountyResourceFormComponent } from "./Entities/indianataxCountyResource/indianataxcountyresource.form.component";
+import { indianataxDataSourceFormComponent } from "./Entities/indianataxDataSource/indianataxdatasource.form.component";
 import { indianataxDLGFBuildingDetailFormComponent } from "./Entities/indianataxDLGFBuildingDetail/indianataxdlgfbuildingdetail.form.component";
 import { indianataxDLGFBuildingFormComponent } from "./Entities/indianataxDLGFBuilding/indianataxdlgfbuilding.form.component";
 import { indianataxDLGFImprovementFormComponent } from "./Entities/indianataxDLGFImprovement/indianataxdlgfimprovement.form.component";
@@ -70,8 +76,11 @@ import { indianataxOwnerPortfolioFormComponent } from "./Entities/indianataxOwne
 import { bigboxretailParcelBurdenShiftFormComponent } from "./Entities/bigboxretailParcelBurdenShift/bigboxretailparcelburdenshift.form.component";
 import { bigboxretailParcelSettlementFormComponent } from "./Entities/bigboxretailParcelSettlement/bigboxretailparcelsettlement.form.component";
 import { bigboxretailParcelTransferFormComponent } from "./Entities/bigboxretailParcelTransfer/bigboxretailparceltransfer.form.component";
+import { indianataxParcelYearHeadlineFormComponent } from "./Entities/indianataxParcelYearHeadline/indianataxparcelyearheadline.form.component";
 import { indianataxParcelFormComponent } from "./Entities/indianataxParcel/indianataxparcel.form.component";
+import { indianataxPropertyFormComponent } from "./Entities/indianataxProperty/indianataxproperty.form.component";
 import { indianataxPropertyClassMapFormComponent } from "./Entities/indianataxPropertyClassMap/indianataxpropertyclassmap.form.component";
+import { indianataxPropertyParcelFormComponent } from "./Entities/indianataxPropertyParcel/indianataxpropertyparcel.form.component";
 import { indianataxProspectActivityFormComponent } from "./Entities/indianataxProspectActivity/indianataxprospectactivity.form.component";
 import { indianataxProspectContactFormComponent } from "./Entities/indianataxProspectContact/indianataxprospectcontact.form.component";
 import { indianataxProspectParcelFormComponent } from "./Entities/indianataxProspectParcel/indianataxprospectparcel.form.component";
@@ -120,7 +129,7 @@ declarations: [
     indianataxCardNoteFormComponent,
     indianataxCardSummaryFormComponent,
     indianataxCardValuationColumnFormComponent,
-    indianataxCoStarIncomeInputFormComponent],
+    indianataxClientAppealFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -137,6 +146,11 @@ export class GeneratedForms_SubModule_0 { }
 
 @NgModule({
 declarations: [
+    indianataxClientContactFormComponent,
+    indianataxClientPropertyFormComponent,
+    indianataxClientTaskFormComponent,
+    indianataxClientFormComponent,
+    indianataxCoStarIncomeInputFormComponent,
     indianataxCoStarPropertyFormComponent,
     indianataxComparableAssessmentMemberFormComponent,
     indianataxComparableAssessmentSetFormComponent,
@@ -147,16 +161,11 @@ declarations: [
     indianataxCountyAssessorSaleHistoryFormComponent,
     indianataxCountyContactFormComponent,
     indianataxCountyResourceFormComponent,
+    indianataxDataSourceFormComponent,
     indianataxDLGFBuildingDetailFormComponent,
     indianataxDLGFBuildingFormComponent,
     indianataxDLGFImprovementFormComponent,
-    indianataxDLGFLandFormComponent,
-    indianataxDocumentAcquisitionFormComponent,
-    indianataxDocumentCatalogFormComponent,
-    indianataxFairAndAccurateLeadFormComponent,
-    indianataxFormCatalogFormComponent,
-    indianataxIBTRAppealFormComponent,
-    indianataxIBTRDecisionChunkFormComponent],
+    indianataxDLGFLandFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -173,6 +182,12 @@ export class GeneratedForms_SubModule_1 { }
 
 @NgModule({
 declarations: [
+    indianataxDocumentAcquisitionFormComponent,
+    indianataxDocumentCatalogFormComponent,
+    indianataxFairAndAccurateLeadFormComponent,
+    indianataxFormCatalogFormComponent,
+    indianataxIBTRAppealFormComponent,
+    indianataxIBTRDecisionChunkFormComponent,
     indianataxIBTRDecisionCitationFormComponent,
     indianataxIBTRDecisionHoldingFormComponent,
     indianataxIBTRDecisionIssueFormComponent,
@@ -186,13 +201,7 @@ declarations: [
     indianataxOwnerPortfolioRunFormComponent,
     indianataxOwnerPortfolioFormComponent,
     bigboxretailParcelBurdenShiftFormComponent,
-    bigboxretailParcelSettlementFormComponent,
-    bigboxretailParcelTransferFormComponent,
-    indianataxParcelFormComponent,
-    indianataxPropertyClassMapFormComponent,
-    indianataxProspectActivityFormComponent,
-    indianataxProspectContactFormComponent,
-    indianataxProspectParcelFormComponent],
+    bigboxretailParcelSettlementFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -209,6 +218,15 @@ export class GeneratedForms_SubModule_2 { }
 
 @NgModule({
 declarations: [
+    bigboxretailParcelTransferFormComponent,
+    indianataxParcelYearHeadlineFormComponent,
+    indianataxParcelFormComponent,
+    indianataxPropertyFormComponent,
+    indianataxPropertyClassMapFormComponent,
+    indianataxPropertyParcelFormComponent,
+    indianataxProspectActivityFormComponent,
+    indianataxProspectContactFormComponent,
+    indianataxProspectParcelFormComponent,
     indianataxProspectSnapshotFormComponent,
     indianataxProspectTaskFormComponent,
     indianataxProspectFormComponent,
@@ -219,16 +237,7 @@ declarations: [
     indianataxSourceDocumentFormComponent,
     indianataxSourceRegistryFormComponent,
     indianataxStatuteSectionFormComponent,
-    bigboxretailvwStoreAnalysisFormComponent,
-    bigboxretailStoreAssessmentFormComponent,
-    bigboxretailStoreTaxFormComponent,
-    bigboxretailvwStoreYearFormComponent,
-    bigboxretailStoreFormComponent,
-    indianataxTaxAdjustmentFormComponent,
-    indianataxTaxBillFormComponent,
-    indianataxTaxCourtCaseFormComponent,
-    indianataxTaxCourtIBTRLinkFormComponent,
-    indianataxTaxHistoryYearFormComponent],
+    bigboxretailvwStoreAnalysisFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -245,6 +254,15 @@ export class GeneratedForms_SubModule_3 { }
 
 @NgModule({
 declarations: [
+    bigboxretailStoreAssessmentFormComponent,
+    bigboxretailStoreTaxFormComponent,
+    bigboxretailvwStoreYearFormComponent,
+    bigboxretailStoreFormComponent,
+    indianataxTaxAdjustmentFormComponent,
+    indianataxTaxBillFormComponent,
+    indianataxTaxCourtCaseFormComponent,
+    indianataxTaxCourtIBTRLinkFormComponent,
+    indianataxTaxHistoryYearFormComponent,
     indianataxValuationAnalysisFormComponent,
     indianataxValuationCompFormComponent],
 imports: [

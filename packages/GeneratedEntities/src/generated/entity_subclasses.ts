@@ -72,7 +72,7 @@ export const indianataxAppealAnalysisSchema = z.object({
         * * Default Value: newsequentialid()`),
     ParcelID: z.string().describe(`
         * * Field Name: ParcelID
-        * * Display Name: Parcel
+        * * Display Name: Parcel ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
     AssessmentYear: z.number().describe(`
@@ -81,7 +81,7 @@ export const indianataxAppealAnalysisSchema = z.object({
         * * SQL Data Type: smallint`),
     Name: z.string().describe(`
         * * Field Name: Name
-        * * Display Name: Analysis Name
+        * * Display Name: Name
         * * SQL Data Type: nvarchar(200)`),
     PropertyTypeGroup: z.string().nullable().describe(`
         * * Field Name: PropertyTypeGroup
@@ -120,7 +120,7 @@ export const indianataxAppealAnalysisSchema = z.object({
         * * Description: Prior-year total AV as finally determined (PTABOA value first), the comparand for IC 6-1.1-15-17.2; rule owner: burden_shift_screen.sql.`),
     BurdenOnAssessor: z.boolean().nullable().describe(`
         * * Field Name: BurdenOnAssessor
-        * * Display Name: Burden on Assessor
+        * * Display Name: Burden On Assessor
         * * SQL Data Type: bit`),
     AskPolicy: z.union([z.literal('Lowest'), z.literal('SecondLowest')]).describe(`
         * * Field Name: AskPolicy
@@ -190,9 +190,14 @@ export const indianataxAppealAnalysisSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    PublishedToClientAt: z.date().nullable().describe(`
+        * * Field Name: PublishedToClientAt
+        * * Display Name: Published To Client At
+        * * SQL Data Type: datetime2
+        * * Description: When the practitioner published this analysis to the client. NULL = practitioner-only. Facts (notices, bills, headline values) reach the client automatically; this judgment does not until published.`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
-        * * Display Name: Parcel Name
+        * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
 });
 
@@ -2234,6 +2239,386 @@ export const indianataxCardValuationColumnSchema = z.object({
 export type indianataxCardValuationColumnEntityType = z.infer<typeof indianataxCardValuationColumnSchema>;
 
 /**
+ * zod schema definition for the entity Client Appeals
+ */
+export const indianataxClientAppealSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ClientID: z.string().describe(`
+        * * Field Name: ClientID
+        * * Display Name: Client
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+    ParcelID: z.string().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+    AssessmentYear: z.number().describe(`
+        * * Field Name: AssessmentYear
+        * * Display Name: Assessment Year
+        * * SQL Data Type: int`),
+    AssessmentNoticeID: z.string().nullable().describe(`
+        * * Field Name: AssessmentNoticeID
+        * * Display Name: Assessment Notice
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Assessment Notices (vwAssessmentNotices.ID)`),
+    AppealStageID: z.string().nullable().describe(`
+        * * Field Name: AppealStageID
+        * * Display Name: Appeal Stage
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Appeal Stages (vwAppealStages.ID)`),
+    AppealAnalysisID: z.string().nullable().describe(`
+        * * Field Name: AppealAnalysisID
+        * * Display Name: Appeal Analysis
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Appeal Analysis (vwAppealAnalysis.ID)`),
+    PTABOAAppealID: z.string().nullable().describe(`
+        * * Field Name: PTABOAAppealID
+        * * Display Name: PTABOA Appeal
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)`),
+    IBTRAppealID: z.string().nullable().describe(`
+        * * Field Name: IBTRAppealID
+        * * Display Name: IBTR Appeal
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)`),
+    FilingDeadline: z.date().nullable().describe(`
+        * * Field Name: FilingDeadline
+        * * Display Name: Filing Deadline
+        * * SQL Data Type: date`),
+    FiledAt: z.date().nullable().describe(`
+        * * Field Name: FiledAt
+        * * Display Name: Filed At
+        * * SQL Data Type: date`),
+    Status: z.union([z.literal('Declined'), z.literal('Evaluating'), z.literal('Filed'), z.literal('IBTR'), z.literal('Informal Meeting'), z.literal('PTABOA'), z.literal('Recommended'), z.literal('Resolved'), z.literal('Tax Court'), z.literal('Withdrawn')]).describe(`
+        * * Field Name: Status
+        * * Display Name: Status
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Evaluating
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Declined
+    *   * Evaluating
+    *   * Filed
+    *   * IBTR
+    *   * Informal Meeting
+    *   * PTABOA
+    *   * Recommended
+    *   * Resolved
+    *   * Tax Court
+    *   * Withdrawn`),
+    OriginalTotalAV: z.number().nullable().describe(`
+        * * Field Name: OriginalTotalAV
+        * * Display Name: Original Total AV
+        * * SQL Data Type: decimal(18, 2)`),
+    ResolvedTotalAV: z.number().nullable().describe(`
+        * * Field Name: ResolvedTotalAV
+        * * Display Name: Resolved Total AV
+        * * SQL Data Type: decimal(18, 2)`),
+    ResolvedAt: z.date().nullable().describe(`
+        * * Field Name: ResolvedAt
+        * * Display Name: Resolved At
+        * * SQL Data Type: date`),
+    Savings1Pct: z.number().nullable().describe(`
+        * * Field Name: Savings1Pct
+        * * Display Name: Savings (1%)
+        * * SQL Data Type: decimal(18, 2)`),
+    Savings2Pct: z.number().nullable().describe(`
+        * * Field Name: Savings2Pct
+        * * Display Name: Savings (2%)
+        * * SQL Data Type: decimal(18, 2)`),
+    Savings3Pct: z.number().nullable().describe(`
+        * * Field Name: Savings3Pct
+        * * Display Name: Savings (3%)
+        * * SQL Data Type: decimal(18, 2)`),
+    Notes: z.string().nullable().describe(`
+        * * Field Name: Notes
+        * * Display Name: Notes
+        * * SQL Data Type: nvarchar(MAX)`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Client: z.string().describe(`
+        * * Field Name: Client
+        * * Display Name: Client
+        * * SQL Data Type: nvarchar(200)`),
+    Parcel: z.string().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel
+        * * SQL Data Type: nvarchar(30)`),
+    AppealStage: z.string().nullable().describe(`
+        * * Field Name: AppealStage
+        * * Display Name: Appeal Stage
+        * * SQL Data Type: nvarchar(200)`),
+    AppealAnalysis: z.string().nullable().describe(`
+        * * Field Name: AppealAnalysis
+        * * Display Name: Appeal Analysis
+        * * SQL Data Type: nvarchar(200)`),
+    PTABOAAppeal: z.string().nullable().describe(`
+        * * Field Name: PTABOAAppeal
+        * * Display Name: PTABOA Appeal
+        * * SQL Data Type: nvarchar(50)`),
+    IBTRAppeal: z.string().nullable().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxClientAppealEntityType = z.infer<typeof indianataxClientAppealSchema>;
+
+/**
+ * zod schema definition for the entity Client Contacts
+ */
+export const indianataxClientContactSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ClientID: z.string().describe(`
+        * * Field Name: ClientID
+        * * Display Name: Client
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+    FirstName: z.string().describe(`
+        * * Field Name: FirstName
+        * * Display Name: First Name
+        * * SQL Data Type: nvarchar(100)`),
+    LastName: z.string().describe(`
+        * * Field Name: LastName
+        * * Display Name: Last Name
+        * * SQL Data Type: nvarchar(100)`),
+    Email: z.string().nullable().describe(`
+        * * Field Name: Email
+        * * Display Name: Email
+        * * SQL Data Type: nvarchar(255)`),
+    Phone: z.string().nullable().describe(`
+        * * Field Name: Phone
+        * * Display Name: Phone
+        * * SQL Data Type: nvarchar(50)`),
+    Role: z.string().nullable().describe(`
+        * * Field Name: Role
+        * * Display Name: Role
+        * * SQL Data Type: nvarchar(100)`),
+    IsPrimary: z.boolean().describe(`
+        * * Field Name: IsPrimary
+        * * Display Name: Primary Contact
+        * * SQL Data Type: bit
+        * * Default Value: 0`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Client: z.string().describe(`
+        * * Field Name: Client
+        * * Display Name: Client Name
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxClientContactEntityType = z.infer<typeof indianataxClientContactSchema>;
+
+/**
+ * zod schema definition for the entity Client Properties
+ */
+export const indianataxClientPropertySchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ClientID: z.string().describe(`
+        * * Field Name: ClientID
+        * * Display Name: Client
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+    PropertyID: z.string().describe(`
+        * * Field Name: PropertyID
+        * * Display Name: Property
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Properties (vwProperties.ID)`),
+    DisplayName: z.string().nullable().describe(`
+        * * Field Name: DisplayName
+        * * Display Name: Display Name
+        * * SQL Data Type: nvarchar(200)`),
+    OwningEntityName: z.string().nullable().describe(`
+        * * Field Name: OwningEntityName
+        * * Display Name: Owning Entity Name
+        * * SQL Data Type: nvarchar(200)`),
+    Status: z.union([z.literal('Monitored'), z.literal('Represented')]).describe(`
+        * * Field Name: Status
+        * * Display Name: Status
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Monitored
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Monitored
+    *   * Represented`),
+    StartedAt: z.date().nullable().describe(`
+        * * Field Name: StartedAt
+        * * Display Name: Started At
+        * * SQL Data Type: date`),
+    EndedAt: z.date().nullable().describe(`
+        * * Field Name: EndedAt
+        * * Display Name: Ended At
+        * * SQL Data Type: date`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Client: z.string().describe(`
+        * * Field Name: Client
+        * * Display Name: Client
+        * * SQL Data Type: nvarchar(200)`),
+    Property: z.string().describe(`
+        * * Field Name: Property
+        * * Display Name: Property
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxClientPropertyEntityType = z.infer<typeof indianataxClientPropertySchema>;
+
+/**
+ * zod schema definition for the entity Client Tasks
+ */
+export const indianataxClientTaskSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ClientID: z.string().describe(`
+        * * Field Name: ClientID
+        * * Display Name: Client
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+    ClientPropertyID: z.string().nullable().describe(`
+        * * Field Name: ClientPropertyID
+        * * Display Name: Property
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Client Properties (vwClientProperties.ID)`),
+    ClientAppealID: z.string().nullable().describe(`
+        * * Field Name: ClientAppealID
+        * * Display Name: Appeal
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Client Appeals (vwClientAppeals.ID)`),
+    Title: z.string().describe(`
+        * * Field Name: Title
+        * * Display Name: Title
+        * * SQL Data Type: nvarchar(200)`),
+    Description: z.string().nullable().describe(`
+        * * Field Name: Description
+        * * Display Name: Description
+        * * SQL Data Type: nvarchar(MAX)`),
+    DueDate: z.date().nullable().describe(`
+        * * Field Name: DueDate
+        * * Display Name: Due Date
+        * * SQL Data Type: date`),
+    AssignedTo: z.union([z.literal('Client'), z.literal('Practitioner')]).describe(`
+        * * Field Name: AssignedTo
+        * * Display Name: Assigned To
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Client
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Client
+    *   * Practitioner`),
+    Status: z.union([z.literal('Cancelled'), z.literal('Done'), z.literal('Open')]).describe(`
+        * * Field Name: Status
+        * * Display Name: Status
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Open
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Cancelled
+    *   * Done
+    *   * Open`),
+    CompletedAt: z.date().nullable().describe(`
+        * * Field Name: CompletedAt
+        * * Display Name: Completed At
+        * * SQL Data Type: datetime2`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Client: z.string().describe(`
+        * * Field Name: Client
+        * * Display Name: Client Name
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxClientTaskEntityType = z.infer<typeof indianataxClientTaskSchema>;
+
+/**
+ * zod schema definition for the entity Clients
+ */
+export const indianataxClientSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    Name: z.string().describe(`
+        * * Field Name: Name
+        * * Display Name: Name
+        * * SQL Data Type: nvarchar(200)`),
+    Status: z.union([z.literal('Active'), z.literal('Inactive'), z.literal('Prospect')]).describe(`
+        * * Field Name: Status
+        * * Display Name: Status
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Prospect
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Active
+    *   * Inactive
+    *   * Prospect`),
+    Notes: z.string().nullable().describe(`
+        * * Field Name: Notes
+        * * Display Name: Notes
+        * * SQL Data Type: nvarchar(MAX)`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+});
+
+export type indianataxClientEntityType = z.infer<typeof indianataxClientSchema>;
+
+/**
  * zod schema definition for the entity Co Star Income Inputs
  */
 export const indianataxCoStarIncomeInputSchema = z.object({
@@ -3963,6 +4348,86 @@ export const indianataxCountyResourceSchema = z.object({
 export type indianataxCountyResourceEntityType = z.infer<typeof indianataxCountyResourceSchema>;
 
 /**
+ * zod schema definition for the entity Data Sources
+ */
+export const indianataxDataSourceSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    Name: z.string().describe(`
+        * * Field Name: Name
+        * * Display Name: Name
+        * * SQL Data Type: nvarchar(100)
+        * * Description: The loader's key for this source (MarionPRC, dlgf_gdb_2025, marion_foia_2026, MarionTS1A ...). Matches the legacy Assessment.Source text where one exists.`),
+    Kind: z.union([z.literal('Commercial'), z.literal('County Notice'), z.literal('County Record Card'), z.literal('County Tax Bill'), z.literal('County Tax History'), z.literal('Practitioner'), z.literal('Public Records Response'), z.literal('State DLGF'), z.literal('Taxpayer Provided')]).describe(`
+        * * Field Name: Kind
+        * * Display Name: Kind
+        * * SQL Data Type: nvarchar(40)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Commercial
+    *   * County Notice
+    *   * County Record Card
+    *   * County Tax Bill
+    *   * County Tax History
+    *   * Practitioner
+    *   * Public Records Response
+    *   * State DLGF
+    *   * Taxpayer Provided
+        * * Description: What kind of source this is. Drives the headline rule: County * kinds and Public Records Response are official; State DLGF is a placeholder; Commercial, Taxpayer Provided and Practitioner are never a headline for assessed value.`),
+    Label: z.string().describe(`
+        * * Field Name: Label
+        * * Display Name: Label
+        * * SQL Data Type: nvarchar(200)
+        * * Description: Plain-language name shown to a taxpayer beside every figure, e.g. "Marion County record card".`),
+    Precedence: z.number().describe(`
+        * * Field Name: Precedence
+        * * Display Name: Precedence
+        * * SQL Data Type: int
+        * * Description: Tie-breaker when two official documents carry the same date: higher wins. Official county documents 100-199, public-records responses 50-99, DLGF 10, commercial 1.`),
+    IsOfficial: z.boolean().describe(`
+        * * Field Name: IsOfficial
+        * * Display Name: Is Official
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 for documents the assessing or taxing authority itself issues (card, bill, tax history, notice) and for public-records responses; 0 for DLGF, commercial, taxpayer and practitioner data.`),
+    IsPlaceholder: z.boolean().describe(`
+        * * Field Name: IsPlaceholder
+        * * Display Name: Is Placeholder
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 only for the statewide DLGF roll: shown as the headline only where no official county document exists, and labelled as a placeholder when it is.`),
+    CountyID: z.string().nullable().describe(`
+        * * Field Name: CountyID
+        * * Display Name: County
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Counties (vwCounties.ID)
+        * * Description: The county this source belongs to; NULL for statewide and non-county sources.`),
+    Description: z.string().nullable().describe(`
+        * * Field Name: Description
+        * * Display Name: Description
+        * * SQL Data Type: nvarchar(MAX)`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    County: z.string().nullable().describe(`
+        * * Field Name: County
+        * * Display Name: County Name
+        * * SQL Data Type: nvarchar(50)`),
+});
+
+export type indianataxDataSourceEntityType = z.infer<typeof indianataxDataSourceSchema>;
+
+/**
  * zod schema definition for the entity DLGF Building Details
  */
 export const indianataxDLGFBuildingDetailSchema = z.object({
@@ -5030,13 +5495,13 @@ export const indianataxIBTRDecisionChunkSchema = z.object({
         * * Default Value: newsequentialid()`),
     IBTRAppealID: z.string().describe(`
         * * Field Name: IBTRAppealID
-        * * Display Name: IBTR Appeal ID
+        * * Display Name: IBTR Appeal
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
         * * Description: The decision.`),
     SourceDocumentID: z.string().nullable().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Source Document ID
+        * * Display Name: Source Document
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
         * * Description: The decision file the text came from.`),
@@ -5047,12 +5512,12 @@ export const indianataxIBTRDecisionChunkSchema = z.object({
         * * Description: Heading the chunk falls under, or Other.`),
     Ordinal: z.number().describe(`
         * * Field Name: Ordinal
-        * * Display Name: Ordinal
+        * * Display Name: Position
         * * SQL Data Type: int
         * * Description: Position within the decision, from 0.`),
     ChunkText: z.string().describe(`
         * * Field Name: ChunkText
-        * * Display Name: Chunk Text
+        * * Display Name: Text
         * * SQL Data Type: nvarchar(MAX)
         * * Description: The passage, verbatim.`),
     TokenCount: z.number().nullable().describe(`
@@ -5075,6 +5540,10 @@ export const indianataxIBTRDecisionChunkSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    IBTRAppeal: z.string().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: Appeal Identifier
+        * * SQL Data Type: nvarchar(200)`),
 });
 
 export type indianataxIBTRDecisionChunkEntityType = z.infer<typeof indianataxIBTRDecisionChunkSchema>;
@@ -5113,7 +5582,7 @@ export const indianataxIBTRDecisionCitationSchema = z.object({
         * * Description: Statute, Rule, Manual, Guidelines, TaxCourt, CourtOfAppeals, SupremeCourt, Case (court not recognised), IBTR (the Board citing itself), USPAP.`),
     CiteKey: z.string().describe(`
         * * Field Name: CiteKey
-        * * Display Name: Citation Key
+        * * Display Name: Cite Key
         * * SQL Data Type: nvarchar(200)
         * * Description: Normalised key: IC 6-1.1-15-17.2; 50 IAC 2.4-1-2; 821 N.E.2d 466; a petition number for IBTR self-cites; Manual / Guidelines / USPAP.`),
     CaseName: z.string().nullable().describe(`
@@ -5157,9 +5626,13 @@ export const indianataxIBTRDecisionCitationSchema = z.object({
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Legal Authority Sections (vwLegalAuthoritySections.ID)
         * * Description: The LegalAuthoritySection this citation's CiteKey resolves to, where a match exists (statute/rule cites only -- case citations are out of scope for this column).`),
+    IBTRAppeal: z.string().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal Details
+        * * SQL Data Type: nvarchar(200)`),
     ResolvedLegalAuthoritySection: z.string().nullable().describe(`
         * * Field Name: ResolvedLegalAuthoritySection
-        * * Display Name: Resolved Legal Authority Section Name
+        * * Display Name: Resolved Legal Authority Section Details
         * * SQL Data Type: nvarchar(120)`),
 });
 
@@ -5176,7 +5649,7 @@ export const indianataxIBTRDecisionHoldingSchema = z.object({
         * * Default Value: newsequentialid()`),
     IBTRAppealID: z.string().describe(`
         * * Field Name: IBTRAppealID
-        * * Display Name: IBTR Appeal ID
+        * * Display Name: IBTR Appeal
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
         * * Description: The decision.`),
@@ -5272,6 +5745,10 @@ export const indianataxIBTRDecisionHoldingSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    IBTRAppeal: z.string().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal Details
+        * * SQL Data Type: nvarchar(200)`),
 });
 
 export type indianataxIBTRDecisionHoldingEntityType = z.infer<typeof indianataxIBTRDecisionHoldingSchema>;
@@ -5287,7 +5764,7 @@ export const indianataxIBTRDecisionIssueSchema = z.object({
         * * Default Value: newsequentialid()`),
     IBTRAppealID: z.string().describe(`
         * * Field Name: IBTRAppealID
-        * * Display Name: IBTR Appeal ID
+        * * Display Name: IBTR Appeal
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
         * * Description: The decision.`),
@@ -5347,6 +5824,10 @@ export const indianataxIBTRDecisionIssueSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    IBTRAppeal: z.string().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal Reference
+        * * SQL Data Type: nvarchar(200)`),
 });
 
 export type indianataxIBTRDecisionIssueEntityType = z.infer<typeof indianataxIBTRDecisionIssueSchema>;
@@ -5362,7 +5843,7 @@ export const indianataxIBTRDecisionPartySchema = z.object({
         * * Default Value: newsequentialid()`),
     IBTRAppealID: z.string().describe(`
         * * Field Name: IBTRAppealID
-        * * Display Name: IBTR Appeal ID
+        * * Display Name: Appeal
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
         * * Description: The decision.`),
@@ -5438,6 +5919,10 @@ export const indianataxIBTRDecisionPartySchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    IBTRAppeal: z.string().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal
+        * * SQL Data Type: nvarchar(200)`),
 });
 
 export type indianataxIBTRDecisionPartyEntityType = z.infer<typeof indianataxIBTRDecisionPartySchema>;
@@ -6728,6 +7213,114 @@ export const bigboxretailParcelTransferSchema = z.object({
 export type bigboxretailParcelTransferEntityType = z.infer<typeof bigboxretailParcelTransferSchema>;
 
 /**
+ * zod schema definition for the entity Parcel Year Headlines
+ */
+export const indianataxParcelYearHeadlineSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ParcelID: z.string().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+    AssessmentYear: z.number().describe(`
+        * * Field Name: AssessmentYear
+        * * Display Name: Assessment Year
+        * * SQL Data Type: int`),
+    HeadlineLandAV: z.number().nullable().describe(`
+        * * Field Name: HeadlineLandAV
+        * * Display Name: Headline Land Assessed Value
+        * * SQL Data Type: decimal(18, 2)`),
+    HeadlineImprovementAV: z.number().nullable().describe(`
+        * * Field Name: HeadlineImprovementAV
+        * * Display Name: Headline Improvement Assessed Value
+        * * SQL Data Type: decimal(18, 2)`),
+    HeadlineTotalAV: z.number().nullable().describe(`
+        * * Field Name: HeadlineTotalAV
+        * * Display Name: Headline Total Assessed Value
+        * * SQL Data Type: decimal(18, 2)`),
+    HeadlineDataSourceID: z.string().nullable().describe(`
+        * * Field Name: HeadlineDataSourceID
+        * * Display Name: Headline Data Source
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)`),
+    HeadlineSourceDocumentID: z.string().nullable().describe(`
+        * * Field Name: HeadlineSourceDocumentID
+        * * Display Name: Headline Source Document
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
+    HeadlineDocumentDate: z.date().nullable().describe(`
+        * * Field Name: HeadlineDocumentDate
+        * * Display Name: Headline Document Date
+        * * SQL Data Type: date`),
+    IsPlaceholder: z.boolean().describe(`
+        * * Field Name: IsPlaceholder
+        * * Display Name: Is Placeholder
+        * * SQL Data Type: bit
+        * * Default Value: 0`),
+    SourceCount: z.number().describe(`
+        * * Field Name: SourceCount
+        * * Display Name: Source Count
+        * * SQL Data Type: int`),
+    MaxSpreadPct: z.number().nullable().describe(`
+        * * Field Name: MaxSpreadPct
+        * * Display Name: Maximum Spread Percent
+        * * SQL Data Type: decimal(9, 4)
+        * * Description: Largest difference between any two sources' totals for this parcel-year, as a percent of the headline total. NULL with fewer than two sources.`),
+    HasDisagreement: z.boolean().describe(`
+        * * Field Name: HasDisagreement
+        * * Display Name: Has Disagreement
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 when MaxSpreadPct exceeds 1% -- a lead for the practitioner, transparency for the client.`),
+    HeadlineTax: z.number().nullable().describe(`
+        * * Field Name: HeadlineTax
+        * * Display Name: Headline Tax
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The tax billed on this assessment year: the county tax history row with TaxYear = AssessmentYear, else the DLGF TaxBill row with PayYear = AssessmentYear + 1. NULL for the newest year until it is billed (pay-year lag).`),
+    TaxDataSourceID: z.string().nullable().describe(`
+        * * Field Name: TaxDataSourceID
+        * * Display Name: Tax Data Source
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)`),
+    ComputedAt: z.date().describe(`
+        * * Field Name: ComputedAt
+        * * Display Name: Computed At
+        * * SQL Data Type: datetime2`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Parcel: z.string().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel
+        * * SQL Data Type: nvarchar(30)`),
+    HeadlineDataSource: z.string().nullable().describe(`
+        * * Field Name: HeadlineDataSource
+        * * Display Name: Headline Data Source
+        * * SQL Data Type: nvarchar(100)`),
+    HeadlineSourceDocument: z.string().nullable().describe(`
+        * * Field Name: HeadlineSourceDocument
+        * * Display Name: Headline Source Document
+        * * SQL Data Type: nvarchar(500)`),
+    TaxDataSource: z.string().nullable().describe(`
+        * * Field Name: TaxDataSource
+        * * Display Name: Tax Data Source
+        * * SQL Data Type: nvarchar(100)`),
+});
+
+export type indianataxParcelYearHeadlineEntityType = z.infer<typeof indianataxParcelYearHeadlineSchema>;
+
+/**
  * zod schema definition for the entity Parcels
  */
 export const indianataxParcelSchema = z.object({
@@ -6879,6 +7472,98 @@ export const indianataxParcelSchema = z.object({
 export type indianataxParcelEntityType = z.infer<typeof indianataxParcelSchema>;
 
 /**
+ * zod schema definition for the entity Properties
+ */
+export const indianataxPropertySchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    Name: z.string().describe(`
+        * * Field Name: Name
+        * * Display Name: Name
+        * * SQL Data Type: nvarchar(200)`),
+    CountyID: z.string().describe(`
+        * * Field Name: CountyID
+        * * Display Name: County
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Counties (vwCounties.ID)`),
+    PropertyType: z.union([z.literal('Apartment'), z.literal('Hotel'), z.literal('Industrial'), z.literal('Land'), z.literal('Mixed Use'), z.literal('Office'), z.literal('Other'), z.literal('Retail')]).describe(`
+        * * Field Name: PropertyType
+        * * Display Name: Property Type
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Other
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Apartment
+    *   * Hotel
+    *   * Industrial
+    *   * Land
+    *   * Mixed Use
+    *   * Office
+    *   * Other
+    *   * Retail`),
+    UnitCount: z.number().nullable().describe(`
+        * * Field Name: UnitCount
+        * * Display Name: Unit Count
+        * * SQL Data Type: int
+        * * Description: Confirmed unit count for per-unit analysis and Form 11-A peer comparison; NULL until confirmed. UnitCountSource says where it came from.`),
+    UnitCountSource: z.union([z.literal('Client'), z.literal('CoStar'), z.literal('PRC'), z.literal('Practitioner')]).nullable().describe(`
+        * * Field Name: UnitCountSource
+        * * Display Name: Unit Count Source
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Client
+    *   * CoStar
+    *   * PRC
+    *   * Practitioner`),
+    GroupingStatus: z.union([z.literal('Confirmed'), z.literal('Suggested')]).describe(`
+        * * Field Name: GroupingStatus
+        * * Display Name: Grouping Status
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Suggested
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Confirmed
+    *   * Suggested`),
+    ConfirmedByUserID: z.string().nullable().describe(`
+        * * Field Name: ConfirmedByUserID
+        * * Display Name: Confirmed By
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)`),
+    ConfirmedAt: z.date().nullable().describe(`
+        * * Field Name: ConfirmedAt
+        * * Display Name: Confirmed At
+        * * SQL Data Type: datetime2`),
+    Notes: z.string().nullable().describe(`
+        * * Field Name: Notes
+        * * Display Name: Notes
+        * * SQL Data Type: nvarchar(MAX)`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    County: z.string().describe(`
+        * * Field Name: County
+        * * Display Name: County Name
+        * * SQL Data Type: nvarchar(50)`),
+    ConfirmedByUser: z.string().nullable().describe(`
+        * * Field Name: ConfirmedByUser
+        * * Display Name: Confirmed By User
+        * * SQL Data Type: nvarchar(100)`),
+});
+
+export type indianataxPropertyEntityType = z.infer<typeof indianataxPropertySchema>;
+
+/**
  * zod schema definition for the entity Property Class Maps
  */
 export const indianataxPropertyClassMapSchema = z.object({
@@ -6940,6 +7625,47 @@ export const indianataxPropertyClassMapSchema = z.object({
 });
 
 export type indianataxPropertyClassMapEntityType = z.infer<typeof indianataxPropertyClassMapSchema>;
+
+/**
+ * zod schema definition for the entity Property Parcels
+ */
+export const indianataxPropertyParcelSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    PropertyID: z.string().describe(`
+        * * Field Name: PropertyID
+        * * Display Name: Property
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Properties (vwProperties.ID)`),
+    ParcelID: z.string().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Property: z.string().describe(`
+        * * Field Name: Property
+        * * Display Name: Property Name
+        * * SQL Data Type: nvarchar(200)`),
+    Parcel: z.string().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel Number
+        * * SQL Data Type: nvarchar(30)`),
+});
+
+export type indianataxPropertyParcelEntityType = z.infer<typeof indianataxPropertyParcelSchema>;
 
 /**
  * zod schema definition for the entity Prospect Activities
@@ -8106,6 +8832,16 @@ export const indianataxSourceDocumentSchema = z.object({
         * * Display Name: Last Verified At
         * * SQL Data Type: datetimeoffset
         * * Description: The last time this exact document was re-checked, whether or not the content had changed (RetrievedAt only updates on a real change). Updated on every scan so "checked recently, unchanged" is distinguishable from "not looked at in months."`),
+    DataSourceID: z.string().nullable().describe(`
+        * * Field Name: DataSourceID
+        * * Display Name: Data Source
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+        * * Description: Which DataSource this document came from. NULL only for documents that carry no fact rows (statutes, memos, reference texts). Backfilled by scripts/backfill-data-source.js from Assessment.Source and DocumentType; set by every loader from now on.`),
+    DataSource: z.string().nullable().describe(`
+        * * Field Name: DataSource
+        * * Display Name: Data Source Name
+        * * SQL Data Type: nvarchar(100)`),
 });
 
 export type indianataxSourceDocumentEntityType = z.infer<typeof indianataxSourceDocumentSchema>;
@@ -9549,6 +10285,14 @@ export const indianataxTaxCourtIBTRLinkSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    TaxCourtCase: z.string().describe(`
+        * * Field Name: TaxCourtCase
+        * * Display Name: Tax Court Case Details
+        * * SQL Data Type: nvarchar(40)`),
+    IBTRAppeal: z.string().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal Details
+        * * SQL Data Type: nvarchar(200)`),
 });
 
 export type indianataxTaxCourtIBTRLinkEntityType = z.infer<typeof indianataxTaxCourtIBTRLinkSchema>;
@@ -10165,7 +10909,7 @@ export class indianataxAppealAnalysisEntity extends BaseEntity<indianataxAppealA
 
     /**
     * * Field Name: ParcelID
-    * * Display Name: Parcel
+    * * Display Name: Parcel ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
     */
@@ -10190,7 +10934,7 @@ export class indianataxAppealAnalysisEntity extends BaseEntity<indianataxAppealA
 
     /**
     * * Field Name: Name
-    * * Display Name: Analysis Name
+    * * Display Name: Name
     * * SQL Data Type: nvarchar(200)
     */
     get Name(): string {
@@ -10285,7 +11029,7 @@ export class indianataxAppealAnalysisEntity extends BaseEntity<indianataxAppealA
 
     /**
     * * Field Name: BurdenOnAssessor
-    * * Display Name: Burden on Assessor
+    * * Display Name: Burden On Assessor
     * * SQL Data Type: bit
     */
     get BurdenOnAssessor(): boolean | null {
@@ -10462,8 +11206,21 @@ export class indianataxAppealAnalysisEntity extends BaseEntity<indianataxAppealA
     }
 
     /**
+    * * Field Name: PublishedToClientAt
+    * * Display Name: Published To Client At
+    * * SQL Data Type: datetime2
+    * * Description: When the practitioner published this analysis to the client. NULL = practitioner-only. Facts (notices, bills, headline values) reach the client automatically; this judgment does not until published.
+    */
+    get PublishedToClientAt(): Date | null {
+        return this.Get('PublishedToClientAt');
+    }
+    set PublishedToClientAt(value: Date | null) {
+        this.Set('PublishedToClientAt', value);
+    }
+
+    /**
     * * Field Name: Parcel
-    * * Display Name: Parcel Name
+    * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
     */
     get Parcel(): string {
@@ -13685,7 +14442,6 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
     * Validate() method override for Assessments entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
     * * RevisionForm: The RevisionForm field, when populated, must contain one of the approved revision form types (136, 134, 133, 131, 130, 115, or 113). This ensures that property assessment revisions are only processed using valid, standardized form types recognized by the assessment system.
     * * Table-Level: All assessed property values (total, land, and improvement assessments) must be zero or positive amounts. Negative values are not permitted for any of these assessment fields, as they represent financial amounts that cannot be less than zero.
-    * * Table-Level: Property assessment values must be internally consistent: the sum of land and improvement values should equal the total value (within a $1 tolerance). This validation only applies to records from specific county PRC sources (Washington, Elkhart, Fountain, Posey, Randolph, Daviess, Shelby, Knox, Warrick, DeKalb, Hendricks, Porter, Clark, Vanderburgh, Allen, St. Joseph, Lake, and Marion). Records from other sources or records missing any of these three value fields are exempt from this check to prevent data quality errors during import.
     * @public
     * @method
     * @override
@@ -13694,7 +14450,6 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
         const result = super.Validate();
         this.ValidateRevisionFormInAllowedValues(result);
         this.ValidateAssessmentValuesNonNegative(result);
-        this.ValidateOriginalAssessmentValueBalance(result);
         result.Success = result.Success && (result.Errors.length === 0);
 
         return result;
@@ -13749,52 +14504,6 @@ export class indianataxAssessmentEntity extends BaseEntity<indianataxAssessmentE
     			this.OriginalImprovementAV,
     			ValidationErrorType.Failure
     		));
-    	}
-    }
-
-    /**
-    * Property assessment values must be internally consistent: the sum of land and improvement values should equal the total value (within a $1 tolerance). This validation only applies to records from specific county PRC sources (Washington, Elkhart, Fountain, Posey, Randolph, Daviess, Shelby, Knox, Warrick, DeKalb, Hendricks, Porter, Clark, Vanderburgh, Allen, St. Joseph, Lake, and Marion). Records from other sources or records missing any of these three value fields are exempt from this check to prevent data quality errors during import.
-    * @param result - the ValidationResult object to add any errors or warnings to
-    * @public
-    * @method
-    */
-    public ValidateOriginalAssessmentValueBalance(result: ValidationResult) {
-    	const validSources = [
-    		"WashingtonPRC",
-    		"ElkhartPRC",
-    		"FountainPRC",
-    		"PoseyPRC",
-    		"RandolphPRC",
-    		"DaviessPRC",
-    		"ShelbyPRC",
-    		"KnoxPRC",
-    		"WarrickPRC",
-    		"DeKalbPRC",
-    		"HendricksPRC",
-    		"PorterPRC",
-    		"ClarkPRC",
-    		"VanderburghPRC",
-    		"AllenPRC",
-    		"StJosephPRC",
-    		"LakePRC",
-    		"marion_foia_2026",
-    		"MarionPRC"
-    	];
-    
-    	const isValidSource = validSources.includes(this.Source);
-    
-    	if (isValidSource && this.OriginalLandAV != null && this.OriginalImprovementAV != null && this.OriginalTotalAV != null) {
-    		const calculatedTotal = this.OriginalLandAV + this.OriginalImprovementAV;
-    		const difference = Math.abs(calculatedTotal - this.OriginalTotalAV);
-    
-    		if (difference > 1) {
-    			result.Errors.push(new ValidationErrorInfo(
-    				"OriginalTotalAV",
-    				"Original assessment total value must equal the sum of land and improvement values (within $1). Land: " + this.OriginalLandAV + ", Improvement: " + this.OriginalImprovementAV + ", Total: " + this.OriginalTotalAV,
-    				this.OriginalTotalAV,
-    				ValidationErrorType.Failure
-    			));
-    		}
     	}
     }
 
@@ -15760,6 +16469,998 @@ export class indianataxCardValuationColumnEntity extends BaseEntity<indianataxCa
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+}
+
+
+/**
+ * Client Appeals - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: ClientAppeal
+ * * Base View: vwClientAppeals
+ * * @description An appeal the practice is handling or evaluating for a client, one per parcel and assessment year (Form 130 is filed per parcel). Links the notice that started the clock, the position on the appeal ladder, the workbench analysis (a judgment, visible to the client only once published), and the public PTABOA / IBTR record once one exists. The reduction actually won (Original vs Resolved) is a fact; savings are split by circuit-breaker cap class because the bill taxes by class.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Client Appeals')
+export class indianataxClientAppealEntity extends BaseEntity<indianataxClientAppealEntityType> {
+    /**
+    * Loads the Client Appeals record from the database
+    * @param ID: string - primary key value to load the Client Appeals record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxClientAppealEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ClientID
+    * * Display Name: Client
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    */
+    get ClientID(): string {
+        return this.Get('ClientID');
+    }
+    set ClientID(value: string) {
+        this.Set('ClientID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    */
+    get ParcelID(): string {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: AssessmentYear
+    * * Display Name: Assessment Year
+    * * SQL Data Type: int
+    */
+    get AssessmentYear(): number {
+        return this.Get('AssessmentYear');
+    }
+    set AssessmentYear(value: number) {
+        this.Set('AssessmentYear', value);
+    }
+
+    /**
+    * * Field Name: AssessmentNoticeID
+    * * Display Name: Assessment Notice
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Assessment Notices (vwAssessmentNotices.ID)
+    */
+    get AssessmentNoticeID(): string | null {
+        return this.Get('AssessmentNoticeID');
+    }
+    set AssessmentNoticeID(value: string | null) {
+        this.Set('AssessmentNoticeID', value);
+    }
+
+    /**
+    * * Field Name: AppealStageID
+    * * Display Name: Appeal Stage
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Appeal Stages (vwAppealStages.ID)
+    */
+    get AppealStageID(): string | null {
+        return this.Get('AppealStageID');
+    }
+    set AppealStageID(value: string | null) {
+        this.Set('AppealStageID', value);
+    }
+
+    /**
+    * * Field Name: AppealAnalysisID
+    * * Display Name: Appeal Analysis
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Appeal Analysis (vwAppealAnalysis.ID)
+    */
+    get AppealAnalysisID(): string | null {
+        return this.Get('AppealAnalysisID');
+    }
+    set AppealAnalysisID(value: string | null) {
+        this.Set('AppealAnalysisID', value);
+    }
+
+    /**
+    * * Field Name: PTABOAAppealID
+    * * Display Name: PTABOA Appeal
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)
+    */
+    get PTABOAAppealID(): string | null {
+        return this.Get('PTABOAAppealID');
+    }
+    set PTABOAAppealID(value: string | null) {
+        this.Set('PTABOAAppealID', value);
+    }
+
+    /**
+    * * Field Name: IBTRAppealID
+    * * Display Name: IBTR Appeal
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+    */
+    get IBTRAppealID(): string | null {
+        return this.Get('IBTRAppealID');
+    }
+    set IBTRAppealID(value: string | null) {
+        this.Set('IBTRAppealID', value);
+    }
+
+    /**
+    * * Field Name: FilingDeadline
+    * * Display Name: Filing Deadline
+    * * SQL Data Type: date
+    */
+    get FilingDeadline(): Date | null {
+        return this.Get('FilingDeadline');
+    }
+    set FilingDeadline(value: Date | null) {
+        this.Set('FilingDeadline', value);
+    }
+
+    /**
+    * * Field Name: FiledAt
+    * * Display Name: Filed At
+    * * SQL Data Type: date
+    */
+    get FiledAt(): Date | null {
+        return this.Get('FiledAt');
+    }
+    set FiledAt(value: Date | null) {
+        this.Set('FiledAt', value);
+    }
+
+    /**
+    * * Field Name: Status
+    * * Display Name: Status
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Evaluating
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Declined
+    *   * Evaluating
+    *   * Filed
+    *   * IBTR
+    *   * Informal Meeting
+    *   * PTABOA
+    *   * Recommended
+    *   * Resolved
+    *   * Tax Court
+    *   * Withdrawn
+    */
+    get Status(): 'Declined' | 'Evaluating' | 'Filed' | 'IBTR' | 'Informal Meeting' | 'PTABOA' | 'Recommended' | 'Resolved' | 'Tax Court' | 'Withdrawn' {
+        return this.Get('Status');
+    }
+    set Status(value: 'Declined' | 'Evaluating' | 'Filed' | 'IBTR' | 'Informal Meeting' | 'PTABOA' | 'Recommended' | 'Resolved' | 'Tax Court' | 'Withdrawn') {
+        this.Set('Status', value);
+    }
+
+    /**
+    * * Field Name: OriginalTotalAV
+    * * Display Name: Original Total AV
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get OriginalTotalAV(): number | null {
+        return this.Get('OriginalTotalAV');
+    }
+    set OriginalTotalAV(value: number | null) {
+        this.Set('OriginalTotalAV', value);
+    }
+
+    /**
+    * * Field Name: ResolvedTotalAV
+    * * Display Name: Resolved Total AV
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get ResolvedTotalAV(): number | null {
+        return this.Get('ResolvedTotalAV');
+    }
+    set ResolvedTotalAV(value: number | null) {
+        this.Set('ResolvedTotalAV', value);
+    }
+
+    /**
+    * * Field Name: ResolvedAt
+    * * Display Name: Resolved At
+    * * SQL Data Type: date
+    */
+    get ResolvedAt(): Date | null {
+        return this.Get('ResolvedAt');
+    }
+    set ResolvedAt(value: Date | null) {
+        this.Set('ResolvedAt', value);
+    }
+
+    /**
+    * * Field Name: Savings1Pct
+    * * Display Name: Savings (1%)
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get Savings1Pct(): number | null {
+        return this.Get('Savings1Pct');
+    }
+    set Savings1Pct(value: number | null) {
+        this.Set('Savings1Pct', value);
+    }
+
+    /**
+    * * Field Name: Savings2Pct
+    * * Display Name: Savings (2%)
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get Savings2Pct(): number | null {
+        return this.Get('Savings2Pct');
+    }
+    set Savings2Pct(value: number | null) {
+        this.Set('Savings2Pct', value);
+    }
+
+    /**
+    * * Field Name: Savings3Pct
+    * * Display Name: Savings (3%)
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get Savings3Pct(): number | null {
+        return this.Get('Savings3Pct');
+    }
+    set Savings3Pct(value: number | null) {
+        this.Set('Savings3Pct', value);
+    }
+
+    /**
+    * * Field Name: Notes
+    * * Display Name: Notes
+    * * SQL Data Type: nvarchar(MAX)
+    */
+    get Notes(): string | null {
+        return this.Get('Notes');
+    }
+    set Notes(value: string | null) {
+        this.Set('Notes', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Client
+    * * Display Name: Client
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Client(): string {
+        return this.Get('Client');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string {
+        return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: AppealStage
+    * * Display Name: Appeal Stage
+    * * SQL Data Type: nvarchar(200)
+    */
+    get AppealStage(): string | null {
+        return this.Get('AppealStage');
+    }
+
+    /**
+    * * Field Name: AppealAnalysis
+    * * Display Name: Appeal Analysis
+    * * SQL Data Type: nvarchar(200)
+    */
+    get AppealAnalysis(): string | null {
+        return this.Get('AppealAnalysis');
+    }
+
+    /**
+    * * Field Name: PTABOAAppeal
+    * * Display Name: PTABOA Appeal
+    * * SQL Data Type: nvarchar(50)
+    */
+    get PTABOAAppeal(): string | null {
+        return this.Get('PTABOAAppeal');
+    }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string | null {
+        return this.Get('IBTRAppeal');
+    }
+}
+
+
+/**
+ * Client Contacts - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: ClientContact
+ * * Base View: vwClientContacts
+ * * @description A person at a client. Logins attach here later through MJ: Users.LinkedEntityID / LinkedEntityRecordID.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Client Contacts')
+export class indianataxClientContactEntity extends BaseEntity<indianataxClientContactEntityType> {
+    /**
+    * Loads the Client Contacts record from the database
+    * @param ID: string - primary key value to load the Client Contacts record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxClientContactEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ClientID
+    * * Display Name: Client
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    */
+    get ClientID(): string {
+        return this.Get('ClientID');
+    }
+    set ClientID(value: string) {
+        this.Set('ClientID', value);
+    }
+
+    /**
+    * * Field Name: FirstName
+    * * Display Name: First Name
+    * * SQL Data Type: nvarchar(100)
+    */
+    get FirstName(): string {
+        return this.Get('FirstName');
+    }
+    set FirstName(value: string) {
+        this.Set('FirstName', value);
+    }
+
+    /**
+    * * Field Name: LastName
+    * * Display Name: Last Name
+    * * SQL Data Type: nvarchar(100)
+    */
+    get LastName(): string {
+        return this.Get('LastName');
+    }
+    set LastName(value: string) {
+        this.Set('LastName', value);
+    }
+
+    /**
+    * * Field Name: Email
+    * * Display Name: Email
+    * * SQL Data Type: nvarchar(255)
+    */
+    get Email(): string | null {
+        return this.Get('Email');
+    }
+    set Email(value: string | null) {
+        this.Set('Email', value);
+    }
+
+    /**
+    * * Field Name: Phone
+    * * Display Name: Phone
+    * * SQL Data Type: nvarchar(50)
+    */
+    get Phone(): string | null {
+        return this.Get('Phone');
+    }
+    set Phone(value: string | null) {
+        this.Set('Phone', value);
+    }
+
+    /**
+    * * Field Name: Role
+    * * Display Name: Role
+    * * SQL Data Type: nvarchar(100)
+    */
+    get Role(): string | null {
+        return this.Get('Role');
+    }
+    set Role(value: string | null) {
+        this.Set('Role', value);
+    }
+
+    /**
+    * * Field Name: IsPrimary
+    * * Display Name: Primary Contact
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    */
+    get IsPrimary(): boolean {
+        return this.Get('IsPrimary');
+    }
+    set IsPrimary(value: boolean) {
+        this.Set('IsPrimary', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Client
+    * * Display Name: Client Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Client(): string {
+        return this.Get('Client');
+    }
+}
+
+
+/**
+ * Client Properties - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: ClientProperty
+ * * Base View: vwClientProperties
+ * * @description A client's link to a shared property: the client's own display name for it, the owning entity, and whether the practice merely monitors it or represents it.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Client Properties')
+export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientPropertyEntityType> {
+    /**
+    * Loads the Client Properties record from the database
+    * @param ID: string - primary key value to load the Client Properties record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxClientPropertyEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ClientID
+    * * Display Name: Client
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    */
+    get ClientID(): string {
+        return this.Get('ClientID');
+    }
+    set ClientID(value: string) {
+        this.Set('ClientID', value);
+    }
+
+    /**
+    * * Field Name: PropertyID
+    * * Display Name: Property
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+    */
+    get PropertyID(): string {
+        return this.Get('PropertyID');
+    }
+    set PropertyID(value: string) {
+        this.Set('PropertyID', value);
+    }
+
+    /**
+    * * Field Name: DisplayName
+    * * Display Name: Display Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get DisplayName(): string | null {
+        return this.Get('DisplayName');
+    }
+    set DisplayName(value: string | null) {
+        this.Set('DisplayName', value);
+    }
+
+    /**
+    * * Field Name: OwningEntityName
+    * * Display Name: Owning Entity Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get OwningEntityName(): string | null {
+        return this.Get('OwningEntityName');
+    }
+    set OwningEntityName(value: string | null) {
+        this.Set('OwningEntityName', value);
+    }
+
+    /**
+    * * Field Name: Status
+    * * Display Name: Status
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Monitored
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Monitored
+    *   * Represented
+    */
+    get Status(): 'Monitored' | 'Represented' {
+        return this.Get('Status');
+    }
+    set Status(value: 'Monitored' | 'Represented') {
+        this.Set('Status', value);
+    }
+
+    /**
+    * * Field Name: StartedAt
+    * * Display Name: Started At
+    * * SQL Data Type: date
+    */
+    get StartedAt(): Date | null {
+        return this.Get('StartedAt');
+    }
+    set StartedAt(value: Date | null) {
+        this.Set('StartedAt', value);
+    }
+
+    /**
+    * * Field Name: EndedAt
+    * * Display Name: Ended At
+    * * SQL Data Type: date
+    */
+    get EndedAt(): Date | null {
+        return this.Get('EndedAt');
+    }
+    set EndedAt(value: Date | null) {
+        this.Set('EndedAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Client
+    * * Display Name: Client
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Client(): string {
+        return this.Get('Client');
+    }
+
+    /**
+    * * Field Name: Property
+    * * Display Name: Property
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Property(): string {
+        return this.Get('Property');
+    }
+}
+
+
+/**
+ * Client Tasks - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: ClientTask
+ * * Base View: vwClientTasks
+ * * @description A to-do between the client and the practice, e.g. "upload income & expense data before January 1" on an apartment property.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Client Tasks')
+export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskEntityType> {
+    /**
+    * Loads the Client Tasks record from the database
+    * @param ID: string - primary key value to load the Client Tasks record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxClientTaskEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ClientID
+    * * Display Name: Client
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    */
+    get ClientID(): string {
+        return this.Get('ClientID');
+    }
+    set ClientID(value: string) {
+        this.Set('ClientID', value);
+    }
+
+    /**
+    * * Field Name: ClientPropertyID
+    * * Display Name: Property
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Client Properties (vwClientProperties.ID)
+    */
+    get ClientPropertyID(): string | null {
+        return this.Get('ClientPropertyID');
+    }
+    set ClientPropertyID(value: string | null) {
+        this.Set('ClientPropertyID', value);
+    }
+
+    /**
+    * * Field Name: ClientAppealID
+    * * Display Name: Appeal
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Client Appeals (vwClientAppeals.ID)
+    */
+    get ClientAppealID(): string | null {
+        return this.Get('ClientAppealID');
+    }
+    set ClientAppealID(value: string | null) {
+        this.Set('ClientAppealID', value);
+    }
+
+    /**
+    * * Field Name: Title
+    * * Display Name: Title
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Title(): string {
+        return this.Get('Title');
+    }
+    set Title(value: string) {
+        this.Set('Title', value);
+    }
+
+    /**
+    * * Field Name: Description
+    * * Display Name: Description
+    * * SQL Data Type: nvarchar(MAX)
+    */
+    get Description(): string | null {
+        return this.Get('Description');
+    }
+    set Description(value: string | null) {
+        this.Set('Description', value);
+    }
+
+    /**
+    * * Field Name: DueDate
+    * * Display Name: Due Date
+    * * SQL Data Type: date
+    */
+    get DueDate(): Date | null {
+        return this.Get('DueDate');
+    }
+    set DueDate(value: Date | null) {
+        this.Set('DueDate', value);
+    }
+
+    /**
+    * * Field Name: AssignedTo
+    * * Display Name: Assigned To
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Client
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Client
+    *   * Practitioner
+    */
+    get AssignedTo(): 'Client' | 'Practitioner' {
+        return this.Get('AssignedTo');
+    }
+    set AssignedTo(value: 'Client' | 'Practitioner') {
+        this.Set('AssignedTo', value);
+    }
+
+    /**
+    * * Field Name: Status
+    * * Display Name: Status
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Open
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Cancelled
+    *   * Done
+    *   * Open
+    */
+    get Status(): 'Cancelled' | 'Done' | 'Open' {
+        return this.Get('Status');
+    }
+    set Status(value: 'Cancelled' | 'Done' | 'Open') {
+        this.Set('Status', value);
+    }
+
+    /**
+    * * Field Name: CompletedAt
+    * * Display Name: Completed At
+    * * SQL Data Type: datetime2
+    */
+    get CompletedAt(): Date | null {
+        return this.Get('CompletedAt');
+    }
+    set CompletedAt(value: Date | null) {
+        this.Set('CompletedAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Client
+    * * Display Name: Client Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Client(): string {
+        return this.Get('Client');
+    }
+}
+
+
+/**
+ * Clients - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: Client
+ * * Base View: vwClients
+ * * @description A taxpayer client of the practice -- the account every property, appeal, task and (later) login hangs off. Never the login itself.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Clients')
+export class indianataxClientEntity extends BaseEntity<indianataxClientEntityType> {
+    /**
+    * Loads the Clients record from the database
+    * @param ID: string - primary key value to load the Clients record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxClientEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: Name
+    * * Display Name: Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Name(): string {
+        return this.Get('Name');
+    }
+    set Name(value: string) {
+        this.Set('Name', value);
+    }
+
+    /**
+    * * Field Name: Status
+    * * Display Name: Status
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Prospect
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Active
+    *   * Inactive
+    *   * Prospect
+    */
+    get Status(): 'Active' | 'Inactive' | 'Prospect' {
+        return this.Get('Status');
+    }
+    set Status(value: 'Active' | 'Inactive' | 'Prospect') {
+        this.Set('Status', value);
+    }
+
+    /**
+    * * Field Name: Notes
+    * * Display Name: Notes
+    * * SQL Data Type: nvarchar(MAX)
+    */
+    get Notes(): string | null {
+        return this.Get('Notes');
+    }
+    set Notes(value: string | null) {
+        this.Set('Notes', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
     }
 }
 
@@ -20310,6 +22011,197 @@ export class indianataxCountyResourceEntity extends BaseEntity<indianataxCountyR
 
 
 /**
+ * Data Sources - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: DataSource
+ * * Base View: vwDataSources
+ * * @description One row per place a fact can come from: a county's record cards, its tax bills (TS-1A), its tax history reports, its Form 11/11-A notices, the statewide DLGF roll, a public-records response, CoStar, the taxpayer, or the practitioner. Every SourceDocument points at one, so every fact row inherits its source through its document. Adding a source (a new county, the 2027 DLGF drop) is one row plus a load -- no schema change.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Data Sources')
+export class indianataxDataSourceEntity extends BaseEntity<indianataxDataSourceEntityType> {
+    /**
+    * Loads the Data Sources record from the database
+    * @param ID: string - primary key value to load the Data Sources record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxDataSourceEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: Name
+    * * Display Name: Name
+    * * SQL Data Type: nvarchar(100)
+    * * Description: The loader's key for this source (MarionPRC, dlgf_gdb_2025, marion_foia_2026, MarionTS1A ...). Matches the legacy Assessment.Source text where one exists.
+    */
+    get Name(): string {
+        return this.Get('Name');
+    }
+    set Name(value: string) {
+        this.Set('Name', value);
+    }
+
+    /**
+    * * Field Name: Kind
+    * * Display Name: Kind
+    * * SQL Data Type: nvarchar(40)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Commercial
+    *   * County Notice
+    *   * County Record Card
+    *   * County Tax Bill
+    *   * County Tax History
+    *   * Practitioner
+    *   * Public Records Response
+    *   * State DLGF
+    *   * Taxpayer Provided
+    * * Description: What kind of source this is. Drives the headline rule: County * kinds and Public Records Response are official; State DLGF is a placeholder; Commercial, Taxpayer Provided and Practitioner are never a headline for assessed value.
+    */
+    get Kind(): 'Commercial' | 'County Notice' | 'County Record Card' | 'County Tax Bill' | 'County Tax History' | 'Practitioner' | 'Public Records Response' | 'State DLGF' | 'Taxpayer Provided' {
+        return this.Get('Kind');
+    }
+    set Kind(value: 'Commercial' | 'County Notice' | 'County Record Card' | 'County Tax Bill' | 'County Tax History' | 'Practitioner' | 'Public Records Response' | 'State DLGF' | 'Taxpayer Provided') {
+        this.Set('Kind', value);
+    }
+
+    /**
+    * * Field Name: Label
+    * * Display Name: Label
+    * * SQL Data Type: nvarchar(200)
+    * * Description: Plain-language name shown to a taxpayer beside every figure, e.g. "Marion County record card".
+    */
+    get Label(): string {
+        return this.Get('Label');
+    }
+    set Label(value: string) {
+        this.Set('Label', value);
+    }
+
+    /**
+    * * Field Name: Precedence
+    * * Display Name: Precedence
+    * * SQL Data Type: int
+    * * Description: Tie-breaker when two official documents carry the same date: higher wins. Official county documents 100-199, public-records responses 50-99, DLGF 10, commercial 1.
+    */
+    get Precedence(): number {
+        return this.Get('Precedence');
+    }
+    set Precedence(value: number) {
+        this.Set('Precedence', value);
+    }
+
+    /**
+    * * Field Name: IsOfficial
+    * * Display Name: Is Official
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 for documents the assessing or taxing authority itself issues (card, bill, tax history, notice) and for public-records responses; 0 for DLGF, commercial, taxpayer and practitioner data.
+    */
+    get IsOfficial(): boolean {
+        return this.Get('IsOfficial');
+    }
+    set IsOfficial(value: boolean) {
+        this.Set('IsOfficial', value);
+    }
+
+    /**
+    * * Field Name: IsPlaceholder
+    * * Display Name: Is Placeholder
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 only for the statewide DLGF roll: shown as the headline only where no official county document exists, and labelled as a placeholder when it is.
+    */
+    get IsPlaceholder(): boolean {
+        return this.Get('IsPlaceholder');
+    }
+    set IsPlaceholder(value: boolean) {
+        this.Set('IsPlaceholder', value);
+    }
+
+    /**
+    * * Field Name: CountyID
+    * * Display Name: County
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Counties (vwCounties.ID)
+    * * Description: The county this source belongs to; NULL for statewide and non-county sources.
+    */
+    get CountyID(): string | null {
+        return this.Get('CountyID');
+    }
+    set CountyID(value: string | null) {
+        this.Set('CountyID', value);
+    }
+
+    /**
+    * * Field Name: Description
+    * * Display Name: Description
+    * * SQL Data Type: nvarchar(MAX)
+    */
+    get Description(): string | null {
+        return this.Get('Description');
+    }
+    set Description(value: string | null) {
+        this.Set('Description', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: County
+    * * Display Name: County Name
+    * * SQL Data Type: nvarchar(50)
+    */
+    get County(): string | null {
+        return this.Get('County');
+    }
+}
+
+
+/**
  * DLGF Building Details - strongly typed entity sub-class
  * * Schema: indiana_tax
  * * Base Table: DLGFBuildingDetail
@@ -23184,7 +25076,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: IBTRAppealID
-    * * Display Name: IBTR Appeal ID
+    * * Display Name: IBTR Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
     * * Description: The decision.
@@ -23198,7 +25090,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Source Document ID
+    * * Display Name: Source Document
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     * * Description: The decision file the text came from.
@@ -23225,7 +25117,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: Ordinal
-    * * Display Name: Ordinal
+    * * Display Name: Position
     * * SQL Data Type: int
     * * Description: Position within the decision, from 0.
     */
@@ -23238,7 +25130,7 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: ChunkText
-    * * Display Name: Chunk Text
+    * * Display Name: Text
     * * SQL Data Type: nvarchar(MAX)
     * * Description: The passage, verbatim.
     */
@@ -23293,6 +25185,15 @@ export class indianataxIBTRDecisionChunkEntity extends BaseEntity<indianataxIBTR
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: Appeal Identifier
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string {
+        return this.Get('IBTRAppeal');
     }
 }
 
@@ -23413,7 +25314,7 @@ export class indianataxIBTRDecisionCitationEntity extends BaseEntity<indianataxI
 
     /**
     * * Field Name: CiteKey
-    * * Display Name: Citation Key
+    * * Display Name: Cite Key
     * * SQL Data Type: nvarchar(200)
     * * Description: Normalised key: IC 6-1.1-15-17.2; 50 IAC 2.4-1-2; 821 N.E.2d 466; a petition number for IBTR self-cites; Manual / Guidelines / USPAP.
     */
@@ -23524,8 +25425,17 @@ export class indianataxIBTRDecisionCitationEntity extends BaseEntity<indianataxI
     }
 
     /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal Details
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string {
+        return this.Get('IBTRAppeal');
+    }
+
+    /**
     * * Field Name: ResolvedLegalAuthoritySection
-    * * Display Name: Resolved Legal Authority Section Name
+    * * Display Name: Resolved Legal Authority Section Details
     * * SQL Data Type: nvarchar(120)
     */
     get ResolvedLegalAuthoritySection(): string | null {
@@ -23619,7 +25529,7 @@ export class indianataxIBTRDecisionHoldingEntity extends BaseEntity<indianataxIB
 
     /**
     * * Field Name: IBTRAppealID
-    * * Display Name: IBTR Appeal ID
+    * * Display Name: IBTR Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
     * * Description: The decision.
@@ -23820,6 +25730,15 @@ export class indianataxIBTRDecisionHoldingEntity extends BaseEntity<indianataxIB
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
     }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal Details
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string {
+        return this.Get('IBTRAppeal');
+    }
 }
 
 
@@ -23868,7 +25787,7 @@ export class indianataxIBTRDecisionIssueEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: IBTRAppealID
-    * * Display Name: IBTR Appeal ID
+    * * Display Name: IBTR Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
     * * Description: The decision.
@@ -23969,6 +25888,15 @@ export class indianataxIBTRDecisionIssueEntity extends BaseEntity<indianataxIBTR
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
     }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal Reference
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string {
+        return this.Get('IBTRAppeal');
+    }
 }
 
 
@@ -24017,7 +25945,7 @@ export class indianataxIBTRDecisionPartyEntity extends BaseEntity<indianataxIBTR
 
     /**
     * * Field Name: IBTRAppealID
-    * * Display Name: IBTR Appeal ID
+    * * Display Name: Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
     * * Description: The decision.
@@ -24173,6 +26101,15 @@ export class indianataxIBTRDecisionPartyEntity extends BaseEntity<indianataxIBTR
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string {
+        return this.Get('IBTRAppeal');
     }
 }
 
@@ -27386,6 +29323,296 @@ export class bigboxretailParcelTransferEntity extends BaseEntity<bigboxretailPar
 
 
 /**
+ * Parcel Year Headlines - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: ParcelYearHeadline
+ * * Base View: vwParcelYearHeadlines
+ * * @description The headline assessed value and tax for one parcel-year, resolved by one shared rule (latest-dated official county document wins; the DLGF roll only as a placeholder; commercial data never) and stored so statewide grids, portfolio totals, budgets and savings all read the same number. Rebuilt after every load. The detail view shows every source side by side from the raw rows.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Parcel Year Headlines')
+export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxParcelYearHeadlineEntityType> {
+    /**
+    * Loads the Parcel Year Headlines record from the database
+    * @param ID: string - primary key value to load the Parcel Year Headlines record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxParcelYearHeadlineEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    */
+    get ParcelID(): string {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: AssessmentYear
+    * * Display Name: Assessment Year
+    * * SQL Data Type: int
+    */
+    get AssessmentYear(): number {
+        return this.Get('AssessmentYear');
+    }
+    set AssessmentYear(value: number) {
+        this.Set('AssessmentYear', value);
+    }
+
+    /**
+    * * Field Name: HeadlineLandAV
+    * * Display Name: Headline Land Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get HeadlineLandAV(): number | null {
+        return this.Get('HeadlineLandAV');
+    }
+    set HeadlineLandAV(value: number | null) {
+        this.Set('HeadlineLandAV', value);
+    }
+
+    /**
+    * * Field Name: HeadlineImprovementAV
+    * * Display Name: Headline Improvement Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get HeadlineImprovementAV(): number | null {
+        return this.Get('HeadlineImprovementAV');
+    }
+    set HeadlineImprovementAV(value: number | null) {
+        this.Set('HeadlineImprovementAV', value);
+    }
+
+    /**
+    * * Field Name: HeadlineTotalAV
+    * * Display Name: Headline Total Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    */
+    get HeadlineTotalAV(): number | null {
+        return this.Get('HeadlineTotalAV');
+    }
+    set HeadlineTotalAV(value: number | null) {
+        this.Set('HeadlineTotalAV', value);
+    }
+
+    /**
+    * * Field Name: HeadlineDataSourceID
+    * * Display Name: Headline Data Source
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+    */
+    get HeadlineDataSourceID(): string | null {
+        return this.Get('HeadlineDataSourceID');
+    }
+    set HeadlineDataSourceID(value: string | null) {
+        this.Set('HeadlineDataSourceID', value);
+    }
+
+    /**
+    * * Field Name: HeadlineSourceDocumentID
+    * * Display Name: Headline Source Document
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+    */
+    get HeadlineSourceDocumentID(): string | null {
+        return this.Get('HeadlineSourceDocumentID');
+    }
+    set HeadlineSourceDocumentID(value: string | null) {
+        this.Set('HeadlineSourceDocumentID', value);
+    }
+
+    /**
+    * * Field Name: HeadlineDocumentDate
+    * * Display Name: Headline Document Date
+    * * SQL Data Type: date
+    */
+    get HeadlineDocumentDate(): Date | null {
+        return this.Get('HeadlineDocumentDate');
+    }
+    set HeadlineDocumentDate(value: Date | null) {
+        this.Set('HeadlineDocumentDate', value);
+    }
+
+    /**
+    * * Field Name: IsPlaceholder
+    * * Display Name: Is Placeholder
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    */
+    get IsPlaceholder(): boolean {
+        return this.Get('IsPlaceholder');
+    }
+    set IsPlaceholder(value: boolean) {
+        this.Set('IsPlaceholder', value);
+    }
+
+    /**
+    * * Field Name: SourceCount
+    * * Display Name: Source Count
+    * * SQL Data Type: int
+    */
+    get SourceCount(): number {
+        return this.Get('SourceCount');
+    }
+    set SourceCount(value: number) {
+        this.Set('SourceCount', value);
+    }
+
+    /**
+    * * Field Name: MaxSpreadPct
+    * * Display Name: Maximum Spread Percent
+    * * SQL Data Type: decimal(9, 4)
+    * * Description: Largest difference between any two sources' totals for this parcel-year, as a percent of the headline total. NULL with fewer than two sources.
+    */
+    get MaxSpreadPct(): number | null {
+        return this.Get('MaxSpreadPct');
+    }
+    set MaxSpreadPct(value: number | null) {
+        this.Set('MaxSpreadPct', value);
+    }
+
+    /**
+    * * Field Name: HasDisagreement
+    * * Display Name: Has Disagreement
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 when MaxSpreadPct exceeds 1% -- a lead for the practitioner, transparency for the client.
+    */
+    get HasDisagreement(): boolean {
+        return this.Get('HasDisagreement');
+    }
+    set HasDisagreement(value: boolean) {
+        this.Set('HasDisagreement', value);
+    }
+
+    /**
+    * * Field Name: HeadlineTax
+    * * Display Name: Headline Tax
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The tax billed on this assessment year: the county tax history row with TaxYear = AssessmentYear, else the DLGF TaxBill row with PayYear = AssessmentYear + 1. NULL for the newest year until it is billed (pay-year lag).
+    */
+    get HeadlineTax(): number | null {
+        return this.Get('HeadlineTax');
+    }
+    set HeadlineTax(value: number | null) {
+        this.Set('HeadlineTax', value);
+    }
+
+    /**
+    * * Field Name: TaxDataSourceID
+    * * Display Name: Tax Data Source
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+    */
+    get TaxDataSourceID(): string | null {
+        return this.Get('TaxDataSourceID');
+    }
+    set TaxDataSourceID(value: string | null) {
+        this.Set('TaxDataSourceID', value);
+    }
+
+    /**
+    * * Field Name: ComputedAt
+    * * Display Name: Computed At
+    * * SQL Data Type: datetime2
+    */
+    get ComputedAt(): Date {
+        return this.Get('ComputedAt');
+    }
+    set ComputedAt(value: Date) {
+        this.Set('ComputedAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string {
+        return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: HeadlineDataSource
+    * * Display Name: Headline Data Source
+    * * SQL Data Type: nvarchar(100)
+    */
+    get HeadlineDataSource(): string | null {
+        return this.Get('HeadlineDataSource');
+    }
+
+    /**
+    * * Field Name: HeadlineSourceDocument
+    * * Display Name: Headline Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get HeadlineSourceDocument(): string | null {
+        return this.Get('HeadlineSourceDocument');
+    }
+
+    /**
+    * * Field Name: TaxDataSource
+    * * Display Name: Tax Data Source
+    * * SQL Data Type: nvarchar(100)
+    */
+    get TaxDataSource(): string | null {
+        return this.Get('TaxDataSource');
+    }
+}
+
+
+/**
  * Parcels - strongly typed entity sub-class
  * * Schema: indiana_tax
  * * Base Table: Parcel
@@ -27778,6 +30005,222 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
 
 
 /**
+ * Properties - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: Property
+ * * Base View: vwProperties
+ * * @description One real-estate property made of one or more parcels -- a fact about the real estate, shared across clients. Suggested by the system (CoStar multi-parcel flags, owner + address adjacency, a client's spreadsheet), confirmed by the practitioner. A property lies in exactly one county; a property straddling a county line is two properties.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Properties')
+export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntityType> {
+    /**
+    * Loads the Properties record from the database
+    * @param ID: string - primary key value to load the Properties record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxPropertyEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: Name
+    * * Display Name: Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Name(): string {
+        return this.Get('Name');
+    }
+    set Name(value: string) {
+        this.Set('Name', value);
+    }
+
+    /**
+    * * Field Name: CountyID
+    * * Display Name: County
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Counties (vwCounties.ID)
+    */
+    get CountyID(): string {
+        return this.Get('CountyID');
+    }
+    set CountyID(value: string) {
+        this.Set('CountyID', value);
+    }
+
+    /**
+    * * Field Name: PropertyType
+    * * Display Name: Property Type
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Other
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Apartment
+    *   * Hotel
+    *   * Industrial
+    *   * Land
+    *   * Mixed Use
+    *   * Office
+    *   * Other
+    *   * Retail
+    */
+    get PropertyType(): 'Apartment' | 'Hotel' | 'Industrial' | 'Land' | 'Mixed Use' | 'Office' | 'Other' | 'Retail' {
+        return this.Get('PropertyType');
+    }
+    set PropertyType(value: 'Apartment' | 'Hotel' | 'Industrial' | 'Land' | 'Mixed Use' | 'Office' | 'Other' | 'Retail') {
+        this.Set('PropertyType', value);
+    }
+
+    /**
+    * * Field Name: UnitCount
+    * * Display Name: Unit Count
+    * * SQL Data Type: int
+    * * Description: Confirmed unit count for per-unit analysis and Form 11-A peer comparison; NULL until confirmed. UnitCountSource says where it came from.
+    */
+    get UnitCount(): number | null {
+        return this.Get('UnitCount');
+    }
+    set UnitCount(value: number | null) {
+        this.Set('UnitCount', value);
+    }
+
+    /**
+    * * Field Name: UnitCountSource
+    * * Display Name: Unit Count Source
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Client
+    *   * CoStar
+    *   * PRC
+    *   * Practitioner
+    */
+    get UnitCountSource(): 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | null {
+        return this.Get('UnitCountSource');
+    }
+    set UnitCountSource(value: 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | null) {
+        this.Set('UnitCountSource', value);
+    }
+
+    /**
+    * * Field Name: GroupingStatus
+    * * Display Name: Grouping Status
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Suggested
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Confirmed
+    *   * Suggested
+    */
+    get GroupingStatus(): 'Confirmed' | 'Suggested' {
+        return this.Get('GroupingStatus');
+    }
+    set GroupingStatus(value: 'Confirmed' | 'Suggested') {
+        this.Set('GroupingStatus', value);
+    }
+
+    /**
+    * * Field Name: ConfirmedByUserID
+    * * Display Name: Confirmed By
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)
+    */
+    get ConfirmedByUserID(): string | null {
+        return this.Get('ConfirmedByUserID');
+    }
+    set ConfirmedByUserID(value: string | null) {
+        this.Set('ConfirmedByUserID', value);
+    }
+
+    /**
+    * * Field Name: ConfirmedAt
+    * * Display Name: Confirmed At
+    * * SQL Data Type: datetime2
+    */
+    get ConfirmedAt(): Date | null {
+        return this.Get('ConfirmedAt');
+    }
+    set ConfirmedAt(value: Date | null) {
+        this.Set('ConfirmedAt', value);
+    }
+
+    /**
+    * * Field Name: Notes
+    * * Display Name: Notes
+    * * SQL Data Type: nvarchar(MAX)
+    */
+    get Notes(): string | null {
+        return this.Get('Notes');
+    }
+    set Notes(value: string | null) {
+        this.Set('Notes', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: County
+    * * Display Name: County Name
+    * * SQL Data Type: nvarchar(50)
+    */
+    get County(): string {
+        return this.Get('County');
+    }
+
+    /**
+    * * Field Name: ConfirmedByUser
+    * * Display Name: Confirmed By User
+    * * SQL Data Type: nvarchar(100)
+    */
+    get ConfirmedByUser(): string | null {
+        return this.Get('ConfirmedByUser');
+    }
+}
+
+
+/**
  * Property Class Maps - strongly typed entity sub-class
  * * Schema: indiana_tax
  * * Base Table: PropertyClassMap
@@ -27910,6 +30353,115 @@ export class indianataxPropertyClassMapEntity extends BaseEntity<indianataxPrope
     }
     set StatutoryGroup(value: 'Agricultural' | 'Commercial' | 'Exempt' | 'Industrial' | 'Mineral' | 'Residential' | 'Utility' | null) {
         this.Set('StatutoryGroup', value);
+    }
+}
+
+
+/**
+ * Property Parcels - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: PropertyParcel
+ * * Base View: vwPropertyParcels
+ * * @description Which parcels make up a property. A parcel may belong to at most one CONFIRMED property -- enforced by the integrity suite (a filtered unique index cannot see the parent's status).
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Property Parcels')
+export class indianataxPropertyParcelEntity extends BaseEntity<indianataxPropertyParcelEntityType> {
+    /**
+    * Loads the Property Parcels record from the database
+    * @param ID: string - primary key value to load the Property Parcels record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxPropertyParcelEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: PropertyID
+    * * Display Name: Property
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+    */
+    get PropertyID(): string {
+        return this.Get('PropertyID');
+    }
+    set PropertyID(value: string) {
+        this.Set('PropertyID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    */
+    get ParcelID(): string {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Property
+    * * Display Name: Property Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Property(): string {
+        return this.Get('Property');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel Number
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string {
+        return this.Get('Parcel');
     }
 }
 
@@ -30987,6 +33539,29 @@ export class indianataxSourceDocumentEntity extends BaseEntity<indianataxSourceD
     }
     set LastVerifiedAt(value: Date | null) {
         this.Set('LastVerifiedAt', value);
+    }
+
+    /**
+    * * Field Name: DataSourceID
+    * * Display Name: Data Source
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+    * * Description: Which DataSource this document came from. NULL only for documents that carry no fact rows (statutes, memos, reference texts). Backfilled by scripts/backfill-data-source.js from Assessment.Source and DocumentType; set by every loader from now on.
+    */
+    get DataSourceID(): string | null {
+        return this.Get('DataSourceID');
+    }
+    set DataSourceID(value: string | null) {
+        this.Set('DataSourceID', value);
+    }
+
+    /**
+    * * Field Name: DataSource
+    * * Display Name: Data Source Name
+    * * SQL Data Type: nvarchar(100)
+    */
+    get DataSource(): string | null {
+        return this.Get('DataSource');
     }
 }
 
@@ -34828,6 +37403,24 @@ export class indianataxTaxCourtIBTRLinkEntity extends BaseEntity<indianataxTaxCo
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: TaxCourtCase
+    * * Display Name: Tax Court Case Details
+    * * SQL Data Type: nvarchar(40)
+    */
+    get TaxCourtCase(): string {
+        return this.Get('TaxCourtCase');
+    }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal Details
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string {
+        return this.Get('IBTRAppeal');
     }
 }
 

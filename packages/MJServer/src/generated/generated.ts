@@ -94220,7 +94220,8 @@ export class MJUser_ {
     
     @Field(() => [MJUserRoutineRecipient_])
     MJUserRoutineRecipients_UserIDArray: MJUserRoutineRecipient_[]; // Link to MJUserRoutineRecipients
-    
+    // Relationship field to Properties not generated: its GraphQL type is not declared in this file.
+
 }
 
 //****************************************************************************
@@ -95485,7 +95486,8 @@ export class MJUserResolverBase extends ResolverBase {
         const result = await this.ArrayMapFieldNamesToCodeNames('MJ: User Routine Recipients', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
-        
+        // Relationship to Properties not generated: its GraphQL type is not declared in this file.
+
     @Mutation(() => MJUser_)
     async CreateMJUser(
         @Arg('input', () => CreateMJUserInput) input: CreateMJUserInput,

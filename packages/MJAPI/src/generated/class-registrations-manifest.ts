@@ -11,7 +11,7 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-// mj_generatedentities (82 classes)
+// mj_generatedentities (91 classes)
 import {
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -40,6 +40,11 @@ import {
     indianataxCardNoteEntity,
     indianataxCardSummaryEntity,
     indianataxCardValuationColumnEntity,
+    indianataxClientAppealEntity,
+    indianataxClientContactEntity,
+    indianataxClientEntity,
+    indianataxClientPropertyEntity,
+    indianataxClientTaskEntity,
     indianataxCoStarIncomeInputEntity,
     indianataxCoStarPropertyEntity,
     indianataxComparableAssessmentMemberEntity,
@@ -55,6 +60,7 @@ import {
     indianataxDLGFBuildingEntity,
     indianataxDLGFImprovementEntity,
     indianataxDLGFLandEntity,
+    indianataxDataSourceEntity,
     indianataxDocumentAcquisitionEntity,
     indianataxDocumentCatalogEntity,
     indianataxFairAndAccurateLeadEntity,
@@ -75,7 +81,10 @@ import {
     indianataxOwnerPortfolioRunEntity,
     indianataxPTABOAAppealEntity,
     indianataxParcelEntity,
+    indianataxParcelYearHeadlineEntity,
     indianataxPropertyClassMapEntity,
+    indianataxPropertyEntity,
+    indianataxPropertyParcelEntity,
     indianataxProspectActivityEntity,
     indianataxProspectContactEntity,
     indianataxProspectEntity,
@@ -130,6 +139,11 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxCardNoteEntity,
     indianataxCardSummaryEntity,
     indianataxCardValuationColumnEntity,
+    indianataxClientAppealEntity,
+    indianataxClientContactEntity,
+    indianataxClientEntity,
+    indianataxClientPropertyEntity,
+    indianataxClientTaskEntity,
     indianataxCoStarIncomeInputEntity,
     indianataxCoStarPropertyEntity,
     indianataxComparableAssessmentMemberEntity,
@@ -145,6 +159,7 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxDLGFBuildingEntity,
     indianataxDLGFImprovementEntity,
     indianataxDLGFLandEntity,
+    indianataxDataSourceEntity,
     indianataxDocumentAcquisitionEntity,
     indianataxDocumentCatalogEntity,
     indianataxFairAndAccurateLeadEntity,
@@ -165,7 +180,10 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxOwnerPortfolioRunEntity,
     indianataxPTABOAAppealEntity,
     indianataxParcelEntity,
+    indianataxParcelYearHeadlineEntity,
     indianataxPropertyClassMapEntity,
+    indianataxPropertyEntity,
+    indianataxPropertyParcelEntity,
     indianataxProspectActivityEntity,
     indianataxProspectContactEntity,
     indianataxProspectEntity,
@@ -191,7 +209,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 82;
+export const CLASS_REGISTRATIONS_COUNT = 91;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

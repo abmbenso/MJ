@@ -10,11 +10,11 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Details Section -->
+    <!-- Document Identity Section -->
     <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
+        SectionKey="documentIdentity"
+        SectionName="Document Identity"
+        Icon="fa fa-file-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -36,10 +36,29 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
+            FieldName="DocumentDate"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Source and Retrieval Section -->
+    <mj-collapsible-panel
+        SectionKey="sourceAndRetrieval"
+        SectionName="Source and Retrieval"
+        Icon="fa fa-download"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
             FieldName="SourceURL"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
+            LinkType="URL"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
@@ -52,8 +71,35 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="ContentHash"
+            FieldName="LastVerifiedAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="DataSourceID"
             Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Content Management Section -->
+    <mj-collapsible-panel
+        SectionKey="contentManagement"
+        SectionName="Content Management"
+        Icon="fa fa-file-invoice"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ContentHash"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -81,6 +127,16 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- System Metadata Section -->
+    <mj-collapsible-panel
+        SectionKey="systemMetadata"
+        SectionName="System Metadata"
+        Icon="fa fa-cog"
+        [Form]="this"
+        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
@@ -94,22 +150,6 @@
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
             Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="DocumentDate"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="LastVerifiedAt"
-            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -876,7 +916,7 @@
     <mj-collapsible-panel
         SectionKey="iBTRDecisionChunks"
         SectionName="IBTR Decision Chunks"
-        Icon="fa fa-table"
+        Icon="fa fa-file-alt"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
@@ -1066,6 +1106,31 @@
                 [ShowToolbar]="false"
                 (Navigate)="OnFormNavigate($event)"
                 (AfterDataLoad)="SetSectionRowCount('legalAuthoritySections', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Parcel Year Headlines Section -->
+    <mj-collapsible-panel
+        SectionKey="parcelYearHeadlines"
+        SectionName="Parcel Year Headlines"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('parcelYearHeadlines')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Parcel Year Headlines','HeadlineSourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Parcel Year Headlines')"
+                [AllowLoad]="IsSectionExpanded('parcelYearHeadlines')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('parcelYearHeadlines', $event.totalRowCount)"
                 >
             </mj-explorer-entity-data-grid>
         </div>

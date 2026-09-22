@@ -10,17 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Appeal Information Section -->
+    <!-- Task Assignment Section -->
     <mj-collapsible-panel
-        SectionKey="appealInformation"
-        SectionName="Appeal Information"
-        Icon="fa fa-gavel"
+        SectionKey="taskAssignment"
+        SectionName="Task Assignment"
+        Icon="fa fa-user-check"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="IBTRAppealID"
+            FieldName="ClientID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -29,7 +29,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Side"
+            FieldName="AssignedTo"
             Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -37,25 +37,45 @@
 
     </mj-collapsible-panel>
 
-    <!-- Party Information Section -->
+    <!-- Task Context Section -->
     <mj-collapsible-panel
-        SectionKey="partyInformation"
-        SectionName="Party Information"
-        Icon="fa fa-id-card"
+        SectionKey="taskContext"
+        SectionName="Task Context"
+        Icon="fa fa-link"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Role"
-            Type="select"
+            FieldName="ClientPropertyID"
+            Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
+            LinkType="Record"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="PersonName"
+            FieldName="ClientAppealID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Task Details Section -->
+    <mj-collapsible-panel
+        SectionKey="taskDetails"
+        SectionName="Task Details"
+        Icon="fa fa-align-left"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Title"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -63,41 +83,33 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="FirmName"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="NormalizedKey"
-            Type="textbox"
+            FieldName="Description"
+            Type="textarea"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
 
     </mj-collapsible-panel>
 
-    <!-- Source Information Section -->
+    <!-- Task Timeline Section -->
     <mj-collapsible-panel
-        SectionKey="sourceInformation"
-        SectionName="Source Information"
-        Icon="fa fa-file-alt"
+        SectionKey="taskTimeline"
+        SectionName="Task Timeline"
+        Icon="fa fa-calendar-check"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="RawText"
-            Type="textbox"
+            FieldName="DueDate"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Source"
+            FieldName="Status"
             Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -105,8 +117,8 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Confidence"
-            Type="select"
+            FieldName="CompletedAt"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>

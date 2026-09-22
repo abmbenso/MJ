@@ -10,17 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Details Section -->
+    <!-- Appeal Identification Section -->
     <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
+        SectionKey="appealIdentification"
+        SectionName="Appeal Identification"
+        Icon="fa fa-tag"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="SourceDocumentID"
+            FieldName="ClientID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -43,10 +43,91 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Appeal Process Section -->
+    <mj-collapsible-panel
+        SectionKey="appealProcess"
+        SectionName="Appeal Process"
+        Icon="fa fa-gavel"
+        [Form]="this"
+        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="FormType"
+            FieldName="AssessmentNoticeID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AppealStageID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AppealAnalysisID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="PTABOAAppealID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="IBTRAppealID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Appeal Timeline Section -->
+    <mj-collapsible-panel
+        SectionKey="appealTimeline"
+        SectionName="Appeal Timeline"
+        Icon="fa fa-calendar"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="FilingDeadline"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="FiledAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Status"
             Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -54,31 +135,25 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="StateForm"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="NoticeDate"
+            FieldName="ResolvedAt"
             Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Assessment Values Section -->
+    <mj-collapsible-panel
+        SectionKey="assessmentValues"
+        SectionName="Assessment Values"
+        Icon="fa fa-dollar-sign"
+        [Form]="this"
+        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="AppealDeadline"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="PreviousLandAV"
+            FieldName="OriginalTotalAV"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -86,7 +161,25 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="PreviousImprovementAV"
+            FieldName="ResolvedTotalAV"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Tax Savings Section -->
+    <mj-collapsible-panel
+        SectionKey="taxSavings"
+        SectionName="Tax Savings"
+        Icon="fa fa-money-bill"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Savings1Pct"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -94,7 +187,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="PreviousTotalAV"
+            FieldName="Savings2Pct"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -102,123 +195,49 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="NewLandAV"
+            FieldName="Savings3Pct"
             Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Appeal Details Section -->
+    <mj-collapsible-panel
+        SectionKey="appealDetails"
+        SectionName="Appeal Details"
+        Icon="fa fa-align-left"
+        [Form]="this"
+        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="true"
-            FieldName="NewImprovementAV"
-            Type="number"
+            [ShowLabel]="false"
+            FieldName="Notes"
+            Type="textarea"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="NewTotalAV"
-            Type="number"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Reason"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="SalesComparisonValue"
-            Type="number"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="CostApproachValue"
-            Type="number"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="IncomeApproachValue"
-            Type="number"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="IncomeExpenseSubmitted"
-            Type="checkbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="IncomeExpenseUsed"
-            Type="checkbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Township"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="OwnerName"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="MailingAddress"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="PropertyAddress"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="AssessingOfficial"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="ParseNotes"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Related Entity Data Section -->
+    <mj-collapsible-panel
+        SectionKey="relatedEntityData"
+        SectionName="Related Entity Data"
+        Icon="fa fa-link"
+        [Form]="this"
+        [FormContext]="formContext">
+
+    </mj-collapsible-panel>
+
+    <!-- System Metadata Section -->
+    <mj-collapsible-panel
+        SectionKey="systemMetadata"
+        SectionName="System Metadata"
+        Icon="fa fa-cog"
+        [Form]="this"
+        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
@@ -244,25 +263,25 @@
          RELATED ENTITY PANELS
          ======================================== -->
 
-    <!-- Client Appeals Section -->
+    <!-- Client Tasks Section -->
     <mj-collapsible-panel
-        SectionKey="clientAppeals"
-        SectionName="Client Appeals"
-        Icon="fa fa-gavel"
+        SectionKey="clientTasks"
+        SectionName="Client Tasks"
+        Icon="fa fa-tasks"
         Variant="related-entity"
         [Form]="this"
         [FormContext]="formContext"
-        [BadgeCount]="GetSectionRowCount('clientAppeals')"
+        [BadgeCount]="GetSectionRowCount('clientTasks')"
         [DefaultExpanded]="false">
         @if (record.IsSaved) {
         <div>
             <mj-explorer-entity-data-grid
-                [Params]="BuildRelationshipViewParamsByEntityName('Client Appeals','AssessmentNoticeID')"
-                [NewRecordValues]="NewRecordValues('Client Appeals')"
-                [AllowLoad]="IsSectionExpanded('clientAppeals')"
+                [Params]="BuildRelationshipViewParamsByEntityName('Client Tasks','ClientAppealID')"
+                [NewRecordValues]="NewRecordValues('Client Tasks')"
+                [AllowLoad]="IsSectionExpanded('clientTasks')"
                 [ShowToolbar]="false"
                 (Navigate)="OnFormNavigate($event)"
-                (AfterDataLoad)="SetSectionRowCount('clientAppeals', $event.totalRowCount)"
+                (AfterDataLoad)="SetSectionRowCount('clientTasks', $event.totalRowCount)"
                 >
             </mj-explorer-entity-data-grid>
         </div>

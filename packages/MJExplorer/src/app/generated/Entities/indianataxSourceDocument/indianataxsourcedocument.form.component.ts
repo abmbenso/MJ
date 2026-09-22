@@ -16,7 +16,10 @@ export class indianataxSourceDocumentFormComponent extends BaseFormComponent {
     override async ngOnInit() {
         await super.ngOnInit();
         this.initSections([
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'documentIdentity', sectionName: 'Document Identity', isExpanded: true },
+            { sectionKey: 'sourceAndRetrieval', sectionName: 'Source and Retrieval', isExpanded: true },
+            { sectionKey: 'contentManagement', sectionName: 'Content Management', isExpanded: true },
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'statuteSections', sectionName: 'Statute Sections', isExpanded: false },
             { sectionKey: 'boardDecisions', sectionName: 'Board Decisions', isExpanded: false },
             { sectionKey: 'pTABOAAppealsSourceDocumentID', sectionName: 'PTABOA Appeals (Source Document)', isExpanded: false },
@@ -54,7 +57,8 @@ export class indianataxSourceDocumentFormComponent extends BaseFormComponent {
             { sectionKey: 'aPRAResponseFiles', sectionName: 'APRA Response Files', isExpanded: false },
             { sectionKey: 'assessmentNotices', sectionName: 'Assessment Notices', isExpanded: false },
             { sectionKey: 'legalAuthorities', sectionName: 'Legal Authorities', isExpanded: false },
-            { sectionKey: 'legalAuthoritySections', sectionName: 'Legal Authority Sections', isExpanded: false }
+            { sectionKey: 'legalAuthoritySections', sectionName: 'Legal Authority Sections', isExpanded: false },
+            { sectionKey: 'parcelYearHeadlines', sectionName: 'Parcel Year Headlines', isExpanded: false }
         ]);
     }
 }

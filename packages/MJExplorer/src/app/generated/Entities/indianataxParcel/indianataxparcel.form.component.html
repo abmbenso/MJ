@@ -1038,6 +1038,81 @@
         }
     </mj-collapsible-panel>
 
+    <!-- Client Appeals Section -->
+    <mj-collapsible-panel
+        SectionKey="clientAppeals"
+        SectionName="Client Appeals"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('clientAppeals')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Client Appeals','ParcelID')"
+                [NewRecordValues]="NewRecordValues('Client Appeals')"
+                [AllowLoad]="IsSectionExpanded('clientAppeals')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('clientAppeals', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Property Parcels Section -->
+    <mj-collapsible-panel
+        SectionKey="propertyParcels"
+        SectionName="Property Parcels"
+        Icon="fa fa-map"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('propertyParcels')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Property Parcels','ParcelID')"
+                [NewRecordValues]="NewRecordValues('Property Parcels')"
+                [AllowLoad]="IsSectionExpanded('propertyParcels')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('propertyParcels', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Parcel Year Headlines Section -->
+    <mj-collapsible-panel
+        SectionKey="parcelYearHeadlines"
+        SectionName="Parcel Year Headlines"
+        Icon="fa fa-file-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('parcelYearHeadlines')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Parcel Year Headlines','ParcelID')"
+                [NewRecordValues]="NewRecordValues('Parcel Year Headlines')"
+                [AllowLoad]="IsSectionExpanded('parcelYearHeadlines')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('parcelYearHeadlines', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         
