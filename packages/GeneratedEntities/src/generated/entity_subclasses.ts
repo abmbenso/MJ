@@ -2307,49 +2307,59 @@ export const indianataxClientAppealSchema = z.object({
         * * Field Name: ClientID
         * * Display Name: Client
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)
+        * * Description: The client the appeal is for.`),
     ParcelID: z.string().describe(`
         * * Field Name: ParcelID
         * * Display Name: Parcel
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The parcel under appeal. One appeal per parcel per assessment year (a Form 130 is filed per parcel); a multi-parcel property is several appeals.`),
     AssessmentYear: z.number().describe(`
         * * Field Name: AssessmentYear
         * * Display Name: Assessment Year
-        * * SQL Data Type: int`),
+        * * SQL Data Type: int
+        * * Description: The assessment year under appeal (January 1 valuation date), not the pay year.`),
     AssessmentNoticeID: z.string().nullable().describe(`
         * * Field Name: AssessmentNoticeID
         * * Display Name: Assessment Notice
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Assessment Notices (vwAssessmentNotices.ID)`),
+        * * Related Entity/Foreign Key: Assessment Notices (vwAssessmentNotices.ID)
+        * * Description: The Form 11 / 11-A notice that started the 45-day appeal clock, when one is on file. FilingDeadline is derived from it.`),
     AppealStageID: z.string().nullable().describe(`
         * * Field Name: AppealStageID
         * * Display Name: Appeal Stage
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Appeal Stages (vwAppealStages.ID)`),
+        * * Related Entity/Foreign Key: Appeal Stages (vwAppealStages.ID)
+        * * Description: Where the appeal stands on the ladder (informal meeting, PTABOA, IBTR, Tax Court) as an Appeal Stage record; Status is the short word for the same position.`),
     AppealAnalysisID: z.string().nullable().describe(`
         * * Field Name: AppealAnalysisID
         * * Display Name: Appeal Analysis
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Appeal Analysis (vwAppealAnalysis.ID)`),
+        * * Related Entity/Foreign Key: Appeal Analysis (vwAppealAnalysis.ID)
+        * * Description: The workbench analysis behind this appeal -- a judgment, visible to the client only once Appeal Analysis.PublishedToClientAt is set.`),
     PTABOAAppealID: z.string().nullable().describe(`
         * * Field Name: PTABOAAppealID
         * * Display Name: PTABOA Appeal
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)`),
+        * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)
+        * * Description: The public PTABOA record of this appeal once the county has docketed it. Links the practice's own file to the county's.`),
     IBTRAppealID: z.string().nullable().describe(`
         * * Field Name: IBTRAppealID
         * * Display Name: IBTR Appeal
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)`),
+        * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+        * * Description: The public IBTR record once the appeal reaches the Board. NULL below that level.`),
     FilingDeadline: z.date().nullable().describe(`
         * * Field Name: FilingDeadline
         * * Display Name: Filing Deadline
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: The last day a Form 130 can be filed: 45 days from the notice date, or the statutory fallback (June 15 following the assessment year) when no notice is on file. The date the practice works to.`),
     FiledAt: z.date().nullable().describe(`
         * * Field Name: FiledAt
         * * Display Name: Filed At
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: The date the Form 130 was actually filed (mailed or submitted online). NULL until filed.`),
     Status: z.union([z.literal('Declined'), z.literal('Evaluating'), z.literal('Filed'), z.literal('IBTR'), z.literal('Informal Meeting'), z.literal('PTABOA'), z.literal('Recommended'), z.literal('Resolved'), z.literal('Tax Court'), z.literal('Withdrawn')]).describe(`
         * * Field Name: Status
         * * Display Name: Status
@@ -2366,35 +2376,43 @@ export const indianataxClientAppealSchema = z.object({
     *   * Recommended
     *   * Resolved
     *   * Tax Court
-    *   * Withdrawn`),
+    *   * Withdrawn
+        * * Description: Evaluating (being screened), Recommended (the practice advises appealing; awaiting the client), Filed, Informal Meeting, PTABOA, IBTR, Tax Court (the level it is at), Resolved (a determination the client accepted), Withdrawn (the client pulled it), Declined (the practice or client decided not to appeal).`),
     OriginalTotalAV: z.number().nullable().describe(`
         * * Field Name: OriginalTotalAV
         * * Display Name: Original Total AV
-        * * SQL Data Type: decimal(18, 2)`),
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The assessed value under appeal, as noticed for this year. Copied from the headline at filing time so the record survives later corrections; NULL until the appeal is set up.`),
     ResolvedTotalAV: z.number().nullable().describe(`
         * * Field Name: ResolvedTotalAV
         * * Display Name: Resolved Total AV
-        * * SQL Data Type: decimal(18, 2)`),
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The assessed value as finally determined (informal agreement, PTABOA determination, IBTR order or court judgment). NULL while open. Original minus Resolved is the reduction won -- a fact.`),
     ResolvedAt: z.date().nullable().describe(`
         * * Field Name: ResolvedAt
         * * Display Name: Resolved At
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: The date of the determination ResolvedTotalAV came from.`),
     Savings1Pct: z.number().nullable().describe(`
         * * Field Name: Savings1Pct
-        * * Display Name: Savings (1%)
-        * * SQL Data Type: decimal(18, 2)`),
+        * * Display Name: Savings 1%
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Tax saved on the portion of the reduction that falls in the 1% circuit-breaker class (homestead). Indiana tax is not AV x rate: the cap binds per class, so savings are computed per class and summed.`),
     Savings2Pct: z.number().nullable().describe(`
         * * Field Name: Savings2Pct
-        * * Display Name: Savings (2%)
-        * * SQL Data Type: decimal(18, 2)`),
+        * * Display Name: Savings 2%
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Tax saved on the portion in the 2% class (other residential, agricultural land, long-term care).`),
     Savings3Pct: z.number().nullable().describe(`
         * * Field Name: Savings3Pct
-        * * Display Name: Savings (3%)
-        * * SQL Data Type: decimal(18, 2)`),
+        * * Display Name: Savings 3%
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Tax saved on the portion in the 3% class (commercial, industrial, personal property) -- the bulk of a C&I appeal.`),
     Notes: z.string().nullable().describe(`
         * * Field Name: Notes
         * * Display Name: Notes
-        * * SQL Data Type: nvarchar(MAX)`),
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: Practitioner-only notes on the appeal. Never shown to the client.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -2413,6 +2431,10 @@ export const indianataxClientAppealSchema = z.object({
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
+    AssessmentNotice: z.string().nullable().describe(`
+        * * Field Name: AssessmentNotice
+        * * Display Name: Assessment Notice
+        * * SQL Data Type: nvarchar(5)`),
     AppealStage: z.string().nullable().describe(`
         * * Field Name: AppealStage
         * * Display Name: Appeal Stage
@@ -2446,32 +2468,39 @@ export const indianataxClientContactSchema = z.object({
         * * Field Name: ClientID
         * * Display Name: Client
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)
+        * * Description: The client this person belongs to.`),
     FirstName: z.string().describe(`
         * * Field Name: FirstName
         * * Display Name: First Name
-        * * SQL Data Type: nvarchar(100)`),
+        * * SQL Data Type: nvarchar(100)
+        * * Description: Given name.`),
     LastName: z.string().describe(`
         * * Field Name: LastName
         * * Display Name: Last Name
-        * * SQL Data Type: nvarchar(100)`),
+        * * SQL Data Type: nvarchar(100)
+        * * Description: Family name.`),
     Email: z.string().nullable().describe(`
         * * Field Name: Email
         * * Display Name: Email
-        * * SQL Data Type: nvarchar(255)`),
+        * * SQL Data Type: nvarchar(255)
+        * * Description: Email for notices and, later, the login invitation. One person, one address.`),
     Phone: z.string().nullable().describe(`
         * * Field Name: Phone
         * * Display Name: Phone
-        * * SQL Data Type: nvarchar(50)`),
+        * * SQL Data Type: nvarchar(50)
+        * * Description: Phone number, as typed.`),
     Role: z.string().nullable().describe(`
         * * Field Name: Role
         * * Display Name: Role
-        * * SQL Data Type: nvarchar(100)`),
+        * * SQL Data Type: nvarchar(100)
+        * * Description: The person's role at the client, in the client's own words (CFO, asset manager, owner, controller).`),
     IsPrimary: z.boolean().describe(`
         * * Field Name: IsPrimary
         * * Display Name: Primary Contact
         * * SQL Data Type: bit
-        * * Default Value: 0`),
+        * * Default Value: 0
+        * * Description: 1 for the one person the practice deals with by default. At most one primary contact per client is the intent; not enforced by the database.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -2503,20 +2532,24 @@ export const indianataxClientPropertySchema = z.object({
         * * Field Name: ClientID
         * * Display Name: Client
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)
+        * * Description: The client.`),
     PropertyID: z.string().describe(`
         * * Field Name: PropertyID
         * * Display Name: Property
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Properties (vwProperties.ID)`),
+        * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+        * * Description: The shared property (a fact about the real estate) this client is linked to.`),
     DisplayName: z.string().nullable().describe(`
         * * Field Name: DisplayName
         * * Display Name: Display Name
-        * * SQL Data Type: nvarchar(200)`),
+        * * SQL Data Type: nvarchar(200)
+        * * Description: What this client calls the property ("HQ", "the Carmel store"). Shown on the client's own dashboard instead of Property.Name when set.`),
     OwningEntityName: z.string().nullable().describe(`
         * * Field Name: OwningEntityName
         * * Display Name: Owning Entity Name
-        * * SQL Data Type: nvarchar(200)`),
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The legal entity that owns the property for this client (the LLC on the deed), which is often not the client's own name. The name that goes on the Form 130.`),
     Status: z.union([z.literal('Monitored'), z.literal('Represented')]).describe(`
         * * Field Name: Status
         * * Display Name: Status
@@ -2525,15 +2558,18 @@ export const indianataxClientPropertySchema = z.object({
     * * Value List Type: List
     * * Possible Values 
     *   * Monitored
-    *   * Represented`),
+    *   * Represented
+        * * Description: Monitored = the practice watches it and reports; Represented = the practice is engaged to appeal it.`),
     StartedAt: z.date().nullable().describe(`
         * * Field Name: StartedAt
         * * Display Name: Started At
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: When the client's relationship to this property began (engagement date). NULL if not recorded.`),
     EndedAt: z.date().nullable().describe(`
         * * Field Name: EndedAt
         * * Display Name: Ended At
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: When it ended (sold, disengaged). NULL while current. The row is kept for history, never deleted.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -2569,29 +2605,35 @@ export const indianataxClientTaskSchema = z.object({
         * * Field Name: ClientID
         * * Display Name: Client
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Clients (vwClients.ID)`),
+        * * Related Entity/Foreign Key: Clients (vwClients.ID)
+        * * Description: The client the task belongs to.`),
     ClientPropertyID: z.string().nullable().describe(`
         * * Field Name: ClientPropertyID
-        * * Display Name: Property
+        * * Display Name: Client Property
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Client Properties (vwClientProperties.ID)`),
+        * * Related Entity/Foreign Key: Client Properties (vwClientProperties.ID)
+        * * Description: The client property the task is about, when it is about one (e.g. "send the rent roll for the Carmel store"). NULL for client-wide tasks.`),
     ClientAppealID: z.string().nullable().describe(`
         * * Field Name: ClientAppealID
-        * * Display Name: Appeal
+        * * Display Name: Client Appeal
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Client Appeals (vwClientAppeals.ID)`),
+        * * Related Entity/Foreign Key: Client Appeals (vwClientAppeals.ID)
+        * * Description: The appeal the task is about, when it is about one (e.g. "sign the Form 130 before June 15"). NULL otherwise.`),
     Title: z.string().describe(`
         * * Field Name: Title
         * * Display Name: Title
-        * * SQL Data Type: nvarchar(200)`),
+        * * SQL Data Type: nvarchar(200)
+        * * Description: One line the assignee reads on their dashboard.`),
     Description: z.string().nullable().describe(`
         * * Field Name: Description
         * * Display Name: Description
-        * * SQL Data Type: nvarchar(MAX)`),
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: What exactly is needed and why, in words the client can act on.`),
     DueDate: z.date().nullable().describe(`
         * * Field Name: DueDate
         * * Display Name: Due Date
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: When it is due. Statutory dates (the 45-day appeal window, the January 1 income-and-expense date) should be entered here so the dashboard can count down to them.`),
     AssignedTo: z.union([z.literal('Client'), z.literal('Practitioner')]).describe(`
         * * Field Name: AssignedTo
         * * Display Name: Assigned To
@@ -2600,7 +2642,8 @@ export const indianataxClientTaskSchema = z.object({
     * * Value List Type: List
     * * Possible Values 
     *   * Client
-    *   * Practitioner`),
+    *   * Practitioner
+        * * Description: Client (the client must act) or Practitioner (the practice must act). Decides whose dashboard shows the task as theirs.`),
     Status: z.union([z.literal('Cancelled'), z.literal('Done'), z.literal('Open')]).describe(`
         * * Field Name: Status
         * * Display Name: Status
@@ -2610,11 +2653,13 @@ export const indianataxClientTaskSchema = z.object({
     * * Possible Values 
     *   * Cancelled
     *   * Done
-    *   * Open`),
+    *   * Open
+        * * Description: Open, Done or Cancelled.`),
     CompletedAt: z.date().nullable().describe(`
         * * Field Name: CompletedAt
         * * Display Name: Completed At
-        * * SQL Data Type: datetime2`),
+        * * SQL Data Type: datetime2
+        * * Description: When it was marked Done. NULL while Open or Cancelled.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -2628,6 +2673,10 @@ export const indianataxClientTaskSchema = z.object({
     Client: z.string().describe(`
         * * Field Name: Client
         * * Display Name: Client Name
+        * * SQL Data Type: nvarchar(200)`),
+    ClientProperty: z.string().nullable().describe(`
+        * * Field Name: ClientProperty
+        * * Display Name: Property Name
         * * SQL Data Type: nvarchar(200)`),
 });
 
@@ -2645,7 +2694,8 @@ export const indianataxClientSchema = z.object({
     Name: z.string().describe(`
         * * Field Name: Name
         * * Display Name: Name
-        * * SQL Data Type: nvarchar(200)`),
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The client's name as the practice knows it (a company, a family office, an individual). Unique.`),
     Status: z.union([z.literal('Active'), z.literal('Inactive'), z.literal('Prospect')]).describe(`
         * * Field Name: Status
         * * Display Name: Status
@@ -2655,11 +2705,13 @@ export const indianataxClientSchema = z.object({
     * * Possible Values 
     *   * Active
     *   * Inactive
-    *   * Prospect`),
+    *   * Prospect
+        * * Description: Prospect (being pitched or evaluated), Active (engaged), Inactive (past client, kept for history).`),
     Notes: z.string().nullable().describe(`
         * * Field Name: Notes
         * * Display Name: Notes
-        * * SQL Data Type: nvarchar(MAX)`),
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: Practitioner-only notes about the relationship. Never shown to the client.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -4484,7 +4536,8 @@ export const indianataxDataSourceSchema = z.object({
     Description: z.string().nullable().describe(`
         * * Field Name: Description
         * * Display Name: Description
-        * * SQL Data Type: nvarchar(MAX)`),
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: Free text for the practitioner: where the source is fetched from, what it does and does not carry, known quirks (e.g. the DLGF abstract can predate an Auditor's Correction).`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -7349,46 +7402,56 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Field Name: ParcelID
         * * Display Name: Parcel ID
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The parcel this headline is for.`),
     AssessmentYear: z.number().describe(`
         * * Field Name: AssessmentYear
         * * Display Name: Assessment Year
-        * * SQL Data Type: int`),
+        * * SQL Data Type: int
+        * * Description: The assessment year (the January 1 valuation date), not the pay year. Tax for AY N is billed in N+1.`),
     HeadlineLandAV: z.number().nullable().describe(`
         * * Field Name: HeadlineLandAV
         * * Display Name: Headline Land Assessed Value
-        * * SQL Data Type: decimal(18, 2)`),
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Land assessed value from the headline document.`),
     HeadlineImprovementAV: z.number().nullable().describe(`
         * * Field Name: HeadlineImprovementAV
         * * Display Name: Headline Improvement Assessed Value
-        * * SQL Data Type: decimal(18, 2)`),
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Improvement assessed value from the headline document.`),
     HeadlineTotalAV: z.number().nullable().describe(`
         * * Field Name: HeadlineTotalAV
         * * Display Name: Headline Total Assessed Value
-        * * SQL Data Type: decimal(18, 2)`),
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: THE assessed value for this parcel-year: the figure every grid, total, budget and savings estimate uses. From the latest-dated official county document (card, bill, notice, public-records list); the DLGF roll only where no county document exists (IsPlaceholder = 1); never from a commercial, taxpayer or practitioner source.`),
     HeadlineDataSourceID: z.string().nullable().describe(`
         * * Field Name: HeadlineDataSourceID
         * * Display Name: Headline Data Source
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)`),
+        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+        * * Description: The Data Source the headline came from -- its Label is the words shown beside the figure.`),
     HeadlineSourceDocumentID: z.string().nullable().describe(`
         * * Field Name: HeadlineSourceDocumentID
         * * Display Name: Headline Source Document
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
+        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+        * * Description: The exact document (record card PDF, bill, list) the headline figure was read from -- the verification route.`),
     HeadlineDocumentDate: z.date().nullable().describe(`
         * * Field Name: HeadlineDocumentDate
         * * Display Name: Headline Document Date
-        * * SQL Data Type: date`),
+        * * SQL Data Type: date
+        * * Description: The date printed on (or, failing that, the retrieval date of) the headline document. Later beats earlier among official documents.`),
     IsPlaceholder: z.boolean().describe(`
         * * Field Name: IsPlaceholder
         * * Display Name: Is Placeholder
         * * SQL Data Type: bit
-        * * Default Value: 0`),
+        * * Default Value: 0
+        * * Description: 1 when the DLGF statewide roll is standing in because no official county document is on file for this parcel-year. Shown to the client as a placeholder, never as the county's number.`),
     SourceCount: z.number().describe(`
         * * Field Name: SourceCount
         * * Display Name: Source Count
-        * * SQL Data Type: int`),
+        * * SQL Data Type: int
+        * * Description: How many sources (Assessment rows from distinct documents) report this parcel-year, headline included.`),
     MaxSpreadPct: z.number().nullable().describe(`
         * * Field Name: MaxSpreadPct
         * * Display Name: Maximum Spread Percentage
@@ -7409,11 +7472,13 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Field Name: TaxDataSourceID
         * * Display Name: Tax Data Source
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)`),
+        * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+        * * Description: The Data Source HeadlineTax came from: a county tax history report, else the DLGF tax abstract. NULL when HeadlineTax is NULL.`),
     ComputedAt: z.date().describe(`
         * * Field Name: ComputedAt
         * * Display Name: Computed At
-        * * SQL Data Type: datetime2`),
+        * * SQL Data Type: datetime2
+        * * Description: When scripts/rebuild-headlines.js last computed this row. Rebuilt after every load; a stale value means a load has not been followed by a rebuild.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -7638,12 +7703,14 @@ export const indianataxPropertySchema = z.object({
     Name: z.string().describe(`
         * * Field Name: Name
         * * Display Name: Name
-        * * SQL Data Type: nvarchar(200)`),
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The property's name as the practitioner calls it, usually the street address or the building name ("300 N Meridian", "Keystone Crossing Tower"). A client can override it in Client Properties.DisplayName.`),
     CountyID: z.string().describe(`
         * * Field Name: CountyID
         * * Display Name: County
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Counties (vwCounties.ID)`),
+        * * Related Entity/Foreign Key: Counties (vwCounties.ID)
+        * * Description: The one county the property lies in. A property straddling a county line is two properties.`),
     PropertyType: z.union([z.literal('Apartment'), z.literal('Hotel'), z.literal('Industrial'), z.literal('Land'), z.literal('Mixed Use'), z.literal('Office'), z.literal('Other'), z.literal('Retail')]).describe(`
         * * Field Name: PropertyType
         * * Display Name: Property Type
@@ -7658,7 +7725,8 @@ export const indianataxPropertySchema = z.object({
     *   * Mixed Use
     *   * Office
     *   * Other
-    *   * Retail`),
+    *   * Retail
+        * * Description: Apartment, Office, Retail, Industrial, Hotel, Mixed Use, Land or Other -- the practitioner's classification of the whole property, which drives the analysis method and the Form 11-A peer set for apartments. Not the DLGF class code, which is per parcel.`),
     UnitCount: z.number().nullable().describe(`
         * * Field Name: UnitCount
         * * Display Name: Unit Count
@@ -7673,7 +7741,8 @@ export const indianataxPropertySchema = z.object({
     *   * Client
     *   * CoStar
     *   * PRC
-    *   * Practitioner`),
+    *   * Practitioner
+        * * Description: Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us) or Practitioner (counted or judged by the practice). NULL while UnitCount is NULL.`),
     GroupingStatus: z.union([z.literal('Confirmed'), z.literal('Suggested')]).describe(`
         * * Field Name: GroupingStatus
         * * Display Name: Grouping Status
@@ -7682,20 +7751,24 @@ export const indianataxPropertySchema = z.object({
     * * Value List Type: List
     * * Possible Values 
     *   * Confirmed
-    *   * Suggested`),
+    *   * Suggested
+        * * Description: Suggested = the system proposed this parcel grouping (CoStar multi-parcel flag, owner + address adjacency, a client spreadsheet) and nobody has checked it; Confirmed = the practitioner confirmed the parcels belong together. Only Confirmed properties are shown to a client, and a parcel may sit in at most one Confirmed property.`),
     ConfirmedByUserID: z.string().nullable().describe(`
         * * Field Name: ConfirmedByUserID
         * * Display Name: Confirmed By
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)`),
+        * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)
+        * * Description: The MJ user who confirmed the grouping. NULL while Suggested.`),
     ConfirmedAt: z.date().nullable().describe(`
         * * Field Name: ConfirmedAt
         * * Display Name: Confirmed At
-        * * SQL Data Type: datetime2`),
+        * * SQL Data Type: datetime2
+        * * Description: When the grouping was confirmed. NULL while Suggested.`),
     Notes: z.string().nullable().describe(`
         * * Field Name: Notes
         * * Display Name: Notes
-        * * SQL Data Type: nvarchar(MAX)`),
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: Practitioner notes about the real estate itself (not about any client): why these parcels go together, what is on the land, anything the card does not say.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -7794,12 +7867,14 @@ export const indianataxPropertyParcelSchema = z.object({
         * * Field Name: PropertyID
         * * Display Name: Property
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Properties (vwProperties.ID)`),
+        * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+        * * Description: The property this parcel is part of.`),
     ParcelID: z.string().describe(`
         * * Field Name: ParcelID
         * * Display Name: Parcel
         * * SQL Data Type: uniqueidentifier
-        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: A parcel that makes up the property. Each parcel keeps its own assessment, tax and appeal history; the property is the sum of its parcels.`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -16838,6 +16913,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: Client
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    * * Description: The client the appeal is for.
     */
     get ClientID(): string {
         return this.Get('ClientID');
@@ -16851,6 +16927,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: Parcel
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The parcel under appeal. One appeal per parcel per assessment year (a Form 130 is filed per parcel); a multi-parcel property is several appeals.
     */
     get ParcelID(): string {
         return this.Get('ParcelID');
@@ -16863,6 +16940,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: AssessmentYear
     * * Display Name: Assessment Year
     * * SQL Data Type: int
+    * * Description: The assessment year under appeal (January 1 valuation date), not the pay year.
     */
     get AssessmentYear(): number {
         return this.Get('AssessmentYear');
@@ -16876,6 +16954,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: Assessment Notice
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Assessment Notices (vwAssessmentNotices.ID)
+    * * Description: The Form 11 / 11-A notice that started the 45-day appeal clock, when one is on file. FilingDeadline is derived from it.
     */
     get AssessmentNoticeID(): string | null {
         return this.Get('AssessmentNoticeID');
@@ -16889,6 +16968,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: Appeal Stage
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Appeal Stages (vwAppealStages.ID)
+    * * Description: Where the appeal stands on the ladder (informal meeting, PTABOA, IBTR, Tax Court) as an Appeal Stage record; Status is the short word for the same position.
     */
     get AppealStageID(): string | null {
         return this.Get('AppealStageID');
@@ -16902,6 +16982,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: Appeal Analysis
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Appeal Analysis (vwAppealAnalysis.ID)
+    * * Description: The workbench analysis behind this appeal -- a judgment, visible to the client only once Appeal Analysis.PublishedToClientAt is set.
     */
     get AppealAnalysisID(): string | null {
         return this.Get('AppealAnalysisID');
@@ -16915,6 +16996,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: PTABOA Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)
+    * * Description: The public PTABOA record of this appeal once the county has docketed it. Links the practice's own file to the county's.
     */
     get PTABOAAppealID(): string | null {
         return this.Get('PTABOAAppealID');
@@ -16928,6 +17010,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Display Name: IBTR Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+    * * Description: The public IBTR record once the appeal reaches the Board. NULL below that level.
     */
     get IBTRAppealID(): string | null {
         return this.Get('IBTRAppealID');
@@ -16940,6 +17023,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: FilingDeadline
     * * Display Name: Filing Deadline
     * * SQL Data Type: date
+    * * Description: The last day a Form 130 can be filed: 45 days from the notice date, or the statutory fallback (June 15 following the assessment year) when no notice is on file. The date the practice works to.
     */
     get FilingDeadline(): Date | null {
         return this.Get('FilingDeadline');
@@ -16952,6 +17036,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: FiledAt
     * * Display Name: Filed At
     * * SQL Data Type: date
+    * * Description: The date the Form 130 was actually filed (mailed or submitted online). NULL until filed.
     */
     get FiledAt(): Date | null {
         return this.Get('FiledAt');
@@ -16977,6 +17062,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     *   * Resolved
     *   * Tax Court
     *   * Withdrawn
+    * * Description: Evaluating (being screened), Recommended (the practice advises appealing; awaiting the client), Filed, Informal Meeting, PTABOA, IBTR, Tax Court (the level it is at), Resolved (a determination the client accepted), Withdrawn (the client pulled it), Declined (the practice or client decided not to appeal).
     */
     get Status(): 'Declined' | 'Evaluating' | 'Filed' | 'IBTR' | 'Informal Meeting' | 'PTABOA' | 'Recommended' | 'Resolved' | 'Tax Court' | 'Withdrawn' {
         return this.Get('Status');
@@ -16989,6 +17075,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: OriginalTotalAV
     * * Display Name: Original Total AV
     * * SQL Data Type: decimal(18, 2)
+    * * Description: The assessed value under appeal, as noticed for this year. Copied from the headline at filing time so the record survives later corrections; NULL until the appeal is set up.
     */
     get OriginalTotalAV(): number | null {
         return this.Get('OriginalTotalAV');
@@ -17001,6 +17088,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: ResolvedTotalAV
     * * Display Name: Resolved Total AV
     * * SQL Data Type: decimal(18, 2)
+    * * Description: The assessed value as finally determined (informal agreement, PTABOA determination, IBTR order or court judgment). NULL while open. Original minus Resolved is the reduction won -- a fact.
     */
     get ResolvedTotalAV(): number | null {
         return this.Get('ResolvedTotalAV');
@@ -17013,6 +17101,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: ResolvedAt
     * * Display Name: Resolved At
     * * SQL Data Type: date
+    * * Description: The date of the determination ResolvedTotalAV came from.
     */
     get ResolvedAt(): Date | null {
         return this.Get('ResolvedAt');
@@ -17023,8 +17112,9 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: Savings1Pct
-    * * Display Name: Savings (1%)
+    * * Display Name: Savings 1%
     * * SQL Data Type: decimal(18, 2)
+    * * Description: Tax saved on the portion of the reduction that falls in the 1% circuit-breaker class (homestead). Indiana tax is not AV x rate: the cap binds per class, so savings are computed per class and summed.
     */
     get Savings1Pct(): number | null {
         return this.Get('Savings1Pct');
@@ -17035,8 +17125,9 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: Savings2Pct
-    * * Display Name: Savings (2%)
+    * * Display Name: Savings 2%
     * * SQL Data Type: decimal(18, 2)
+    * * Description: Tax saved on the portion in the 2% class (other residential, agricultural land, long-term care).
     */
     get Savings2Pct(): number | null {
         return this.Get('Savings2Pct');
@@ -17047,8 +17138,9 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: Savings3Pct
-    * * Display Name: Savings (3%)
+    * * Display Name: Savings 3%
     * * SQL Data Type: decimal(18, 2)
+    * * Description: Tax saved on the portion in the 3% class (commercial, industrial, personal property) -- the bulk of a C&I appeal.
     */
     get Savings3Pct(): number | null {
         return this.Get('Savings3Pct');
@@ -17061,6 +17153,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     * * Field Name: Notes
     * * Display Name: Notes
     * * SQL Data Type: nvarchar(MAX)
+    * * Description: Practitioner-only notes on the appeal. Never shown to the client.
     */
     get Notes(): string | null {
         return this.Get('Notes');
@@ -17105,6 +17198,15 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: AssessmentNotice
+    * * Display Name: Assessment Notice
+    * * SQL Data Type: nvarchar(5)
+    */
+    get AssessmentNotice(): string | null {
+        return this.Get('AssessmentNotice');
     }
 
     /**
@@ -17193,6 +17295,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Display Name: Client
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    * * Description: The client this person belongs to.
     */
     get ClientID(): string {
         return this.Get('ClientID');
@@ -17205,6 +17308,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Field Name: FirstName
     * * Display Name: First Name
     * * SQL Data Type: nvarchar(100)
+    * * Description: Given name.
     */
     get FirstName(): string {
         return this.Get('FirstName');
@@ -17217,6 +17321,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Field Name: LastName
     * * Display Name: Last Name
     * * SQL Data Type: nvarchar(100)
+    * * Description: Family name.
     */
     get LastName(): string {
         return this.Get('LastName');
@@ -17229,6 +17334,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Field Name: Email
     * * Display Name: Email
     * * SQL Data Type: nvarchar(255)
+    * * Description: Email for notices and, later, the login invitation. One person, one address.
     */
     get Email(): string | null {
         return this.Get('Email');
@@ -17241,6 +17347,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Field Name: Phone
     * * Display Name: Phone
     * * SQL Data Type: nvarchar(50)
+    * * Description: Phone number, as typed.
     */
     get Phone(): string | null {
         return this.Get('Phone');
@@ -17253,6 +17360,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Field Name: Role
     * * Display Name: Role
     * * SQL Data Type: nvarchar(100)
+    * * Description: The person's role at the client, in the client's own words (CFO, asset manager, owner, controller).
     */
     get Role(): string | null {
         return this.Get('Role');
@@ -17266,6 +17374,7 @@ export class indianataxClientContactEntity extends BaseEntity<indianataxClientCo
     * * Display Name: Primary Contact
     * * SQL Data Type: bit
     * * Default Value: 0
+    * * Description: 1 for the one person the practice deals with by default. At most one primary contact per client is the intent; not enforced by the database.
     */
     get IsPrimary(): boolean {
         return this.Get('IsPrimary');
@@ -17353,6 +17462,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Display Name: Client
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    * * Description: The client.
     */
     get ClientID(): string {
         return this.Get('ClientID');
@@ -17366,6 +17476,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Display Name: Property
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+    * * Description: The shared property (a fact about the real estate) this client is linked to.
     */
     get PropertyID(): string {
         return this.Get('PropertyID');
@@ -17378,6 +17489,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Field Name: DisplayName
     * * Display Name: Display Name
     * * SQL Data Type: nvarchar(200)
+    * * Description: What this client calls the property ("HQ", "the Carmel store"). Shown on the client's own dashboard instead of Property.Name when set.
     */
     get DisplayName(): string | null {
         return this.Get('DisplayName');
@@ -17390,6 +17502,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Field Name: OwningEntityName
     * * Display Name: Owning Entity Name
     * * SQL Data Type: nvarchar(200)
+    * * Description: The legal entity that owns the property for this client (the LLC on the deed), which is often not the client's own name. The name that goes on the Form 130.
     */
     get OwningEntityName(): string | null {
         return this.Get('OwningEntityName');
@@ -17407,6 +17520,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Possible Values 
     *   * Monitored
     *   * Represented
+    * * Description: Monitored = the practice watches it and reports; Represented = the practice is engaged to appeal it.
     */
     get Status(): 'Monitored' | 'Represented' {
         return this.Get('Status');
@@ -17419,6 +17533,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Field Name: StartedAt
     * * Display Name: Started At
     * * SQL Data Type: date
+    * * Description: When the client's relationship to this property began (engagement date). NULL if not recorded.
     */
     get StartedAt(): Date | null {
         return this.Get('StartedAt');
@@ -17431,6 +17546,7 @@ export class indianataxClientPropertyEntity extends BaseEntity<indianataxClientP
     * * Field Name: EndedAt
     * * Display Name: Ended At
     * * SQL Data Type: date
+    * * Description: When it ended (sold, disengaged). NULL while current. The row is kept for history, never deleted.
     */
     get EndedAt(): Date | null {
         return this.Get('EndedAt');
@@ -17527,6 +17643,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     * * Display Name: Client
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Clients (vwClients.ID)
+    * * Description: The client the task belongs to.
     */
     get ClientID(): string {
         return this.Get('ClientID');
@@ -17537,9 +17654,10 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
 
     /**
     * * Field Name: ClientPropertyID
-    * * Display Name: Property
+    * * Display Name: Client Property
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Client Properties (vwClientProperties.ID)
+    * * Description: The client property the task is about, when it is about one (e.g. "send the rent roll for the Carmel store"). NULL for client-wide tasks.
     */
     get ClientPropertyID(): string | null {
         return this.Get('ClientPropertyID');
@@ -17550,9 +17668,10 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
 
     /**
     * * Field Name: ClientAppealID
-    * * Display Name: Appeal
+    * * Display Name: Client Appeal
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Client Appeals (vwClientAppeals.ID)
+    * * Description: The appeal the task is about, when it is about one (e.g. "sign the Form 130 before June 15"). NULL otherwise.
     */
     get ClientAppealID(): string | null {
         return this.Get('ClientAppealID');
@@ -17565,6 +17684,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     * * Field Name: Title
     * * Display Name: Title
     * * SQL Data Type: nvarchar(200)
+    * * Description: One line the assignee reads on their dashboard.
     */
     get Title(): string {
         return this.Get('Title');
@@ -17577,6 +17697,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     * * Field Name: Description
     * * Display Name: Description
     * * SQL Data Type: nvarchar(MAX)
+    * * Description: What exactly is needed and why, in words the client can act on.
     */
     get Description(): string | null {
         return this.Get('Description');
@@ -17589,6 +17710,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     * * Field Name: DueDate
     * * Display Name: Due Date
     * * SQL Data Type: date
+    * * Description: When it is due. Statutory dates (the 45-day appeal window, the January 1 income-and-expense date) should be entered here so the dashboard can count down to them.
     */
     get DueDate(): Date | null {
         return this.Get('DueDate');
@@ -17606,6 +17728,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     * * Possible Values 
     *   * Client
     *   * Practitioner
+    * * Description: Client (the client must act) or Practitioner (the practice must act). Decides whose dashboard shows the task as theirs.
     */
     get AssignedTo(): 'Client' | 'Practitioner' {
         return this.Get('AssignedTo');
@@ -17624,6 +17747,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     *   * Cancelled
     *   * Done
     *   * Open
+    * * Description: Open, Done or Cancelled.
     */
     get Status(): 'Cancelled' | 'Done' | 'Open' {
         return this.Get('Status');
@@ -17636,6 +17760,7 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     * * Field Name: CompletedAt
     * * Display Name: Completed At
     * * SQL Data Type: datetime2
+    * * Description: When it was marked Done. NULL while Open or Cancelled.
     */
     get CompletedAt(): Date | null {
         return this.Get('CompletedAt');
@@ -17671,6 +17796,15 @@ export class indianataxClientTaskEntity extends BaseEntity<indianataxClientTaskE
     */
     get Client(): string {
         return this.Get('Client');
+    }
+
+    /**
+    * * Field Name: ClientProperty
+    * * Display Name: Property Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get ClientProperty(): string | null {
+        return this.Get('ClientProperty');
     }
 }
 
@@ -17722,6 +17856,7 @@ export class indianataxClientEntity extends BaseEntity<indianataxClientEntityTyp
     * * Field Name: Name
     * * Display Name: Name
     * * SQL Data Type: nvarchar(200)
+    * * Description: The client's name as the practice knows it (a company, a family office, an individual). Unique.
     */
     get Name(): string {
         return this.Get('Name');
@@ -17740,6 +17875,7 @@ export class indianataxClientEntity extends BaseEntity<indianataxClientEntityTyp
     *   * Active
     *   * Inactive
     *   * Prospect
+    * * Description: Prospect (being pitched or evaluated), Active (engaged), Inactive (past client, kept for history).
     */
     get Status(): 'Active' | 'Inactive' | 'Prospect' {
         return this.Get('Status');
@@ -17752,6 +17888,7 @@ export class indianataxClientEntity extends BaseEntity<indianataxClientEntityTyp
     * * Field Name: Notes
     * * Display Name: Notes
     * * SQL Data Type: nvarchar(MAX)
+    * * Description: Practitioner-only notes about the relationship. Never shown to the client.
     */
     get Notes(): string | null {
         return this.Get('Notes');
@@ -22524,6 +22661,7 @@ export class indianataxDataSourceEntity extends BaseEntity<indianataxDataSourceE
     * * Field Name: Description
     * * Display Name: Description
     * * SQL Data Type: nvarchar(MAX)
+    * * Description: Free text for the practitioner: where the source is fetched from, what it does and does not carry, known quirks (e.g. the DLGF abstract can predate an Auditor's Correction).
     */
     get Description(): string | null {
         return this.Get('Description');
@@ -29840,6 +29978,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Parcel ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The parcel this headline is for.
     */
     get ParcelID(): string {
         return this.Get('ParcelID');
@@ -29852,6 +29991,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: AssessmentYear
     * * Display Name: Assessment Year
     * * SQL Data Type: int
+    * * Description: The assessment year (the January 1 valuation date), not the pay year. Tax for AY N is billed in N+1.
     */
     get AssessmentYear(): number {
         return this.Get('AssessmentYear');
@@ -29864,6 +30004,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: HeadlineLandAV
     * * Display Name: Headline Land Assessed Value
     * * SQL Data Type: decimal(18, 2)
+    * * Description: Land assessed value from the headline document.
     */
     get HeadlineLandAV(): number | null {
         return this.Get('HeadlineLandAV');
@@ -29876,6 +30017,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: HeadlineImprovementAV
     * * Display Name: Headline Improvement Assessed Value
     * * SQL Data Type: decimal(18, 2)
+    * * Description: Improvement assessed value from the headline document.
     */
     get HeadlineImprovementAV(): number | null {
         return this.Get('HeadlineImprovementAV');
@@ -29888,6 +30030,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: HeadlineTotalAV
     * * Display Name: Headline Total Assessed Value
     * * SQL Data Type: decimal(18, 2)
+    * * Description: THE assessed value for this parcel-year: the figure every grid, total, budget and savings estimate uses. From the latest-dated official county document (card, bill, notice, public-records list); the DLGF roll only where no county document exists (IsPlaceholder = 1); never from a commercial, taxpayer or practitioner source.
     */
     get HeadlineTotalAV(): number | null {
         return this.Get('HeadlineTotalAV');
@@ -29901,6 +30044,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Headline Data Source
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+    * * Description: The Data Source the headline came from -- its Label is the words shown beside the figure.
     */
     get HeadlineDataSourceID(): string | null {
         return this.Get('HeadlineDataSourceID');
@@ -29914,6 +30058,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Headline Source Document
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+    * * Description: The exact document (record card PDF, bill, list) the headline figure was read from -- the verification route.
     */
     get HeadlineSourceDocumentID(): string | null {
         return this.Get('HeadlineSourceDocumentID');
@@ -29926,6 +30071,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: HeadlineDocumentDate
     * * Display Name: Headline Document Date
     * * SQL Data Type: date
+    * * Description: The date printed on (or, failing that, the retrieval date of) the headline document. Later beats earlier among official documents.
     */
     get HeadlineDocumentDate(): Date | null {
         return this.Get('HeadlineDocumentDate');
@@ -29939,6 +30085,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Is Placeholder
     * * SQL Data Type: bit
     * * Default Value: 0
+    * * Description: 1 when the DLGF statewide roll is standing in because no official county document is on file for this parcel-year. Shown to the client as a placeholder, never as the county's number.
     */
     get IsPlaceholder(): boolean {
         return this.Get('IsPlaceholder');
@@ -29951,6 +30098,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: SourceCount
     * * Display Name: Source Count
     * * SQL Data Type: int
+    * * Description: How many sources (Assessment rows from distinct documents) report this parcel-year, headline included.
     */
     get SourceCount(): number {
         return this.Get('SourceCount');
@@ -30004,6 +30152,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Tax Data Source
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Data Sources (vwDataSources.ID)
+    * * Description: The Data Source HeadlineTax came from: a county tax history report, else the DLGF tax abstract. NULL when HeadlineTax is NULL.
     */
     get TaxDataSourceID(): string | null {
         return this.Get('TaxDataSourceID');
@@ -30016,6 +30165,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Field Name: ComputedAt
     * * Display Name: Computed At
     * * SQL Data Type: datetime2
+    * * Description: When scripts/rebuild-headlines.js last computed this row. Rebuilt after every load; a stale value means a load has not been followed by a rebuild.
     */
     get ComputedAt(): Date {
         return this.Get('ComputedAt');
@@ -30597,6 +30747,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     * * Field Name: Name
     * * Display Name: Name
     * * SQL Data Type: nvarchar(200)
+    * * Description: The property's name as the practitioner calls it, usually the street address or the building name ("300 N Meridian", "Keystone Crossing Tower"). A client can override it in Client Properties.DisplayName.
     */
     get Name(): string {
         return this.Get('Name');
@@ -30610,6 +30761,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     * * Display Name: County
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Counties (vwCounties.ID)
+    * * Description: The one county the property lies in. A property straddling a county line is two properties.
     */
     get CountyID(): string {
         return this.Get('CountyID');
@@ -30633,6 +30785,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     *   * Office
     *   * Other
     *   * Retail
+    * * Description: Apartment, Office, Retail, Industrial, Hotel, Mixed Use, Land or Other -- the practitioner's classification of the whole property, which drives the analysis method and the Form 11-A peer set for apartments. Not the DLGF class code, which is per parcel.
     */
     get PropertyType(): 'Apartment' | 'Hotel' | 'Industrial' | 'Land' | 'Mixed Use' | 'Office' | 'Other' | 'Retail' {
         return this.Get('PropertyType');
@@ -30664,6 +30817,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     *   * CoStar
     *   * PRC
     *   * Practitioner
+    * * Description: Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us) or Practitioner (counted or judged by the practice). NULL while UnitCount is NULL.
     */
     get UnitCountSource(): 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | null {
         return this.Get('UnitCountSource');
@@ -30681,6 +30835,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     * * Possible Values 
     *   * Confirmed
     *   * Suggested
+    * * Description: Suggested = the system proposed this parcel grouping (CoStar multi-parcel flag, owner + address adjacency, a client spreadsheet) and nobody has checked it; Confirmed = the practitioner confirmed the parcels belong together. Only Confirmed properties are shown to a client, and a parcel may sit in at most one Confirmed property.
     */
     get GroupingStatus(): 'Confirmed' | 'Suggested' {
         return this.Get('GroupingStatus');
@@ -30694,6 +30849,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     * * Display Name: Confirmed By
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)
+    * * Description: The MJ user who confirmed the grouping. NULL while Suggested.
     */
     get ConfirmedByUserID(): string | null {
         return this.Get('ConfirmedByUserID');
@@ -30706,6 +30862,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     * * Field Name: ConfirmedAt
     * * Display Name: Confirmed At
     * * SQL Data Type: datetime2
+    * * Description: When the grouping was confirmed. NULL while Suggested.
     */
     get ConfirmedAt(): Date | null {
         return this.Get('ConfirmedAt');
@@ -30718,6 +30875,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     * * Field Name: Notes
     * * Display Name: Notes
     * * SQL Data Type: nvarchar(MAX)
+    * * Description: Practitioner notes about the real estate itself (not about any client): why these parcels go together, what is on the land, anything the card does not say.
     */
     get Notes(): string | null {
         return this.Get('Notes');
@@ -30951,6 +31109,7 @@ export class indianataxPropertyParcelEntity extends BaseEntity<indianataxPropert
     * * Display Name: Property
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+    * * Description: The property this parcel is part of.
     */
     get PropertyID(): string {
         return this.Get('PropertyID');
@@ -30964,6 +31123,7 @@ export class indianataxPropertyParcelEntity extends BaseEntity<indianataxPropert
     * * Display Name: Parcel
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: A parcel that makes up the property. Each parcel keeps its own assessment, tax and appeal history; the property is the sum of its parcels.
     */
     get ParcelID(): string {
         return this.Get('ParcelID');

@@ -5743,66 +5743,66 @@ export class indianataxClientAppeal_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The client the appeal is for.`}) 
     @MaxLength(36)
     ClientID: string;
         
-    @Field() 
+    @Field({description: `The parcel under appeal. One appeal per parcel per assessment year (a Form 130 is filed per parcel); a multi-parcel property is several appeals.`}) 
     @MaxLength(36)
     ParcelID: string;
         
-    @Field(() => Int) 
+    @Field(() => Int, {description: `The assessment year under appeal (January 1 valuation date), not the pay year.`}) 
     AssessmentYear: number;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The Form 11 / 11-A notice that started the 45-day appeal clock, when one is on file. FilingDeadline is derived from it.`}) 
     @MaxLength(36)
     AssessmentNoticeID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Where the appeal stands on the ladder (informal meeting, PTABOA, IBTR, Tax Court) as an Appeal Stage record; Status is the short word for the same position.`}) 
     @MaxLength(36)
     AppealStageID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The workbench analysis behind this appeal -- a judgment, visible to the client only once Appeal Analysis.PublishedToClientAt is set.`}) 
     @MaxLength(36)
     AppealAnalysisID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The public PTABOA record of this appeal once the county has docketed it. Links the practice's own file to the county's.`}) 
     @MaxLength(36)
     PTABOAAppealID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The public IBTR record once the appeal reaches the Board. NULL below that level.`}) 
     @MaxLength(36)
     IBTRAppealID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The last day a Form 130 can be filed: 45 days from the notice date, or the statutory fallback (June 15 following the assessment year) when no notice is on file. The date the practice works to.`}) 
     FilingDeadline?: Date;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The date the Form 130 was actually filed (mailed or submitted online). NULL until filed.`}) 
     FiledAt?: Date;
         
-    @Field() 
+    @Field({description: `Evaluating (being screened), Recommended (the practice advises appealing; awaiting the client), Filed, Informal Meeting, PTABOA, IBTR, Tax Court (the level it is at), Resolved (a determination the client accepted), Withdrawn (the client pulled it), Declined (the practice or client decided not to appeal).`}) 
     @MaxLength(20)
     Status: string;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `The assessed value under appeal, as noticed for this year. Copied from the headline at filing time so the record survives later corrections; NULL until the appeal is set up.`}) 
     OriginalTotalAV?: number;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `The assessed value as finally determined (informal agreement, PTABOA determination, IBTR order or court judgment). NULL while open. Original minus Resolved is the reduction won -- a fact.`}) 
     ResolvedTotalAV?: number;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The date of the determination ResolvedTotalAV came from.`}) 
     ResolvedAt?: Date;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `Tax saved on the portion of the reduction that falls in the 1% circuit-breaker class (homestead). Indiana tax is not AV x rate: the cap binds per class, so savings are computed per class and summed.`}) 
     Savings1Pct?: number;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `Tax saved on the portion in the 2% class (other residential, agricultural land, long-term care).`}) 
     Savings2Pct?: number;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `Tax saved on the portion in the 3% class (commercial, industrial, personal property) -- the bulk of a C&I appeal.`}) 
     Savings3Pct?: number;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Practitioner-only notes on the appeal. Never shown to the client.`}) 
     Notes?: string;
         
     @Field() 
@@ -5818,6 +5818,10 @@ export class indianataxClientAppeal_ {
     @Field() 
     @MaxLength(30)
     Parcel: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(5)
+    AssessmentNotice?: string;
         
     @Field({nullable: true}) 
     @MaxLength(200)
@@ -6081,31 +6085,31 @@ export class indianataxClientContact_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The client this person belongs to.`}) 
     @MaxLength(36)
     ClientID: string;
         
-    @Field() 
+    @Field({description: `Given name.`}) 
     @MaxLength(100)
     FirstName: string;
         
-    @Field() 
+    @Field({description: `Family name.`}) 
     @MaxLength(100)
     LastName: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Email for notices and, later, the login invitation. One person, one address.`}) 
     @MaxLength(255)
     Email?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Phone number, as typed.`}) 
     @MaxLength(50)
     Phone?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The person's role at the client, in the client's own words (CFO, asset manager, owner, controller).`}) 
     @MaxLength(100)
     Role?: string;
         
-    @Field(() => Boolean) 
+    @Field(() => Boolean, {description: `1 for the one person the practice deals with by default. At most one primary contact per client is the intent; not enforced by the database.`}) 
     IsPrimary: boolean;
         
     @Field() 
@@ -6285,30 +6289,30 @@ export class indianataxClientProperty_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The client.`}) 
     @MaxLength(36)
     ClientID: string;
         
-    @Field() 
+    @Field({description: `The shared property (a fact about the real estate) this client is linked to.`}) 
     @MaxLength(36)
     PropertyID: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `What this client calls the property ("HQ", "the Carmel store"). Shown on the client's own dashboard instead of Property.Name when set.`}) 
     @MaxLength(200)
     DisplayName?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The legal entity that owns the property for this client (the LLC on the deed), which is often not the client's own name. The name that goes on the Form 130.`}) 
     @MaxLength(200)
     OwningEntityName?: string;
         
-    @Field() 
+    @Field({description: `Monitored = the practice watches it and reports; Represented = the practice is engaged to appeal it.`}) 
     @MaxLength(20)
     Status: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `When the client's relationship to this property began (engagement date). NULL if not recorded.`}) 
     StartedAt?: Date;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `When it ended (sold, disengaged). NULL while current. The row is kept for history, never deleted.`}) 
     EndedAt?: Date;
         
     @Field() 
@@ -6505,37 +6509,37 @@ export class indianataxClientTask_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The client the task belongs to.`}) 
     @MaxLength(36)
     ClientID: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The client property the task is about, when it is about one (e.g. "send the rent roll for the Carmel store"). NULL for client-wide tasks.`}) 
     @MaxLength(36)
     ClientPropertyID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The appeal the task is about, when it is about one (e.g. "sign the Form 130 before June 15"). NULL otherwise.`}) 
     @MaxLength(36)
     ClientAppealID?: string;
         
-    @Field() 
+    @Field({description: `One line the assignee reads on their dashboard.`}) 
     @MaxLength(200)
     Title: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `What exactly is needed and why, in words the client can act on.`}) 
     Description?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `When it is due. Statutory dates (the 45-day appeal window, the January 1 income-and-expense date) should be entered here so the dashboard can count down to them.`}) 
     DueDate?: Date;
         
-    @Field() 
+    @Field({description: `Client (the client must act) or Practitioner (the practice must act). Decides whose dashboard shows the task as theirs.`}) 
     @MaxLength(20)
     AssignedTo: string;
         
-    @Field() 
+    @Field({description: `Open, Done or Cancelled.`}) 
     @MaxLength(20)
     Status: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `When it was marked Done. NULL while Open or Cancelled.`}) 
     CompletedAt?: Date;
         
     @Field() 
@@ -6547,6 +6551,10 @@ export class indianataxClientTask_ {
     @Field() 
     @MaxLength(200)
     Client: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(200)
+    ClientProperty?: string;
         
 }
 
@@ -6727,15 +6735,15 @@ export class indianataxClient_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The client's name as the practice knows it (a company, a family office, an individual). Unique.`}) 
     @MaxLength(200)
     Name: string;
         
-    @Field() 
+    @Field({description: `Prospect (being pitched or evaluated), Active (engaged), Inactive (past client, kept for history).`}) 
     @MaxLength(20)
     Status: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Practitioner-only notes about the relationship. Never shown to the client.`}) 
     Notes?: string;
         
     @Field() 
@@ -11150,7 +11158,7 @@ export class indianataxDataSource_ {
     @MaxLength(36)
     CountyID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Free text for the practitioner: where the source is fetched from, what it does and does not carry, known quirks (e.g. the DLGF abstract can predate an Auditor's Correction).`}) 
     Description?: string;
         
     @Field() 
@@ -18500,37 +18508,37 @@ export class indianataxParcelYearHeadline_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The parcel this headline is for.`}) 
     @MaxLength(36)
     ParcelID: string;
         
-    @Field(() => Int) 
+    @Field(() => Int, {description: `The assessment year (the January 1 valuation date), not the pay year. Tax for AY N is billed in N+1.`}) 
     AssessmentYear: number;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `Land assessed value from the headline document.`}) 
     HeadlineLandAV?: number;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `Improvement assessed value from the headline document.`}) 
     HeadlineImprovementAV?: number;
         
-    @Field(() => Float, {nullable: true}) 
+    @Field(() => Float, {nullable: true, description: `THE assessed value for this parcel-year: the figure every grid, total, budget and savings estimate uses. From the latest-dated official county document (card, bill, notice, public-records list); the DLGF roll only where no county document exists (IsPlaceholder = 1); never from a commercial, taxpayer or practitioner source.`}) 
     HeadlineTotalAV?: number;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The Data Source the headline came from -- its Label is the words shown beside the figure.`}) 
     @MaxLength(36)
     HeadlineDataSourceID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The exact document (record card PDF, bill, list) the headline figure was read from -- the verification route.`}) 
     @MaxLength(36)
     HeadlineSourceDocumentID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The date printed on (or, failing that, the retrieval date of) the headline document. Later beats earlier among official documents.`}) 
     HeadlineDocumentDate?: Date;
         
-    @Field(() => Boolean) 
+    @Field(() => Boolean, {description: `1 when the DLGF statewide roll is standing in because no official county document is on file for this parcel-year. Shown to the client as a placeholder, never as the county's number.`}) 
     IsPlaceholder: boolean;
         
-    @Field(() => Int) 
+    @Field(() => Int, {description: `How many sources (Assessment rows from distinct documents) report this parcel-year, headline included.`}) 
     SourceCount: number;
         
     @Field(() => Float, {nullable: true, description: `Largest difference between the totals compared for disagreement -- official documents of the headline's own vintage (same document year) plus every non-official source -- as a percent of the headline total. Older-vintage official documents are revisions (see HasRevision), not disagreements. NULL with fewer than two compared rows.`}) 
@@ -18542,11 +18550,11 @@ export class indianataxParcelYearHeadline_ {
     @Field(() => Float, {nullable: true, description: `The tax billed on this assessment year: the county tax history row with TaxYear = AssessmentYear, else the DLGF TaxBill row with PayYear = AssessmentYear + 1. NULL for the newest year until it is billed (pay-year lag).`}) 
     HeadlineTax?: number;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The Data Source HeadlineTax came from: a county tax history report, else the DLGF tax abstract. NULL when HeadlineTax is NULL.`}) 
     @MaxLength(36)
     TaxDataSourceID?: string;
         
-    @Field() 
+    @Field({description: `When scripts/rebuild-headlines.js last computed this row. Rebuilt after every load; a stale value means a load has not been followed by a rebuild.`}) 
     ComputedAt: Date;
         
     @Field() 
@@ -19614,37 +19622,37 @@ export class indianataxProperty_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The property's name as the practitioner calls it, usually the street address or the building name ("300 N Meridian", "Keystone Crossing Tower"). A client can override it in Client Properties.DisplayName.`}) 
     @MaxLength(200)
     Name: string;
         
-    @Field() 
+    @Field({description: `The one county the property lies in. A property straddling a county line is two properties.`}) 
     @MaxLength(36)
     CountyID: string;
         
-    @Field() 
+    @Field({description: `Apartment, Office, Retail, Industrial, Hotel, Mixed Use, Land or Other -- the practitioner's classification of the whole property, which drives the analysis method and the Form 11-A peer set for apartments. Not the DLGF class code, which is per parcel.`}) 
     @MaxLength(20)
     PropertyType: string;
         
     @Field(() => Int, {nullable: true, description: `Confirmed unit count for per-unit analysis and Form 11-A peer comparison; NULL until confirmed. UnitCountSource says where it came from.`}) 
     UnitCount?: number;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us) or Practitioner (counted or judged by the practice). NULL while UnitCount is NULL.`}) 
     @MaxLength(20)
     UnitCountSource?: string;
         
-    @Field() 
+    @Field({description: `Suggested = the system proposed this parcel grouping (CoStar multi-parcel flag, owner + address adjacency, a client spreadsheet) and nobody has checked it; Confirmed = the practitioner confirmed the parcels belong together. Only Confirmed properties are shown to a client, and a parcel may sit in at most one Confirmed property.`}) 
     @MaxLength(20)
     GroupingStatus: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `The MJ user who confirmed the grouping. NULL while Suggested.`}) 
     @MaxLength(36)
     ConfirmedByUserID?: string;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `When the grouping was confirmed. NULL while Suggested.`}) 
     ConfirmedAt?: Date;
         
-    @Field({nullable: true}) 
+    @Field({nullable: true, description: `Practitioner notes about the real estate itself (not about any client): why these parcels go together, what is on the land, anything the card does not say.`}) 
     Notes?: string;
         
     @Field() 
@@ -20037,11 +20045,11 @@ export class indianataxPropertyParcel_ {
     @MaxLength(36)
     ID: string;
         
-    @Field() 
+    @Field({description: `The property this parcel is part of.`}) 
     @MaxLength(36)
     PropertyID: string;
         
-    @Field() 
+    @Field({description: `A parcel that makes up the property. Each parcel keeps its own assessment, tax and appeal history; the property is the sum of its parcels.`}) 
     @MaxLength(36)
     ParcelID: string;
         
