@@ -41,6 +41,17 @@ export function TypeScriptTypeFromSQLType(sqlType: string): 'string' | 'number' 
     return 'number';
 }
 
+/**
+ * True when a field name denotes a calendar/fiscal/assessment year (`Year`, `TaxYear`,
+ * `AssessmentYear`, `PayYear`, `FiscalYear`, ...). Year fields are integers that are labels,
+ * not quantities, so display code must never group them with thousands separators
+ * (an AssessmentYear of 2026 renders as "2026", never "2,026"). Plural/duration names such
+ * as `Years` or `YearsOwned` are quantities and are deliberately not matched.
+ */
+export function IsYearFieldName(fieldName: string | null | undefined): boolean {
+    return !!fieldName && /year$/i.test(fieldName.trim());
+}
+
 export function TypeScriptTypeFromSQLTypeWithNullableOption(sqlType: string, addNullableOption: boolean): 'string' | 'string | null' | 'number' | 'number | null' | 'boolean' | 'boolean | null' | 'Date' | 'Date | null' {
     const retVal = TypeScriptTypeFromSQLType(sqlType);
     if (addNullableOption) {

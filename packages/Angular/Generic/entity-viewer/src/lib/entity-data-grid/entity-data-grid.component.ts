@@ -15,7 +15,8 @@ import { BaseAngularComponent } from '@memberjunction/ng-base-types';
 import type { EntityActionUXContext, EntityActionUXResult } from '@memberjunction/ng-entity-action-ux';
 import { Subject } from 'rxjs';
 import { debounceTime, takeUntil } from 'rxjs/operators';
-import { RunView, RunViewParams, Metadata, EntityInfo, EntityFieldInfo, AggregateResult, AggregateValue, AggregateExpression } from '@memberjunction/core';
+import { RunView, RunViewParams, Metadata, EntityInfo, EntityFieldInfo, AggregateResult, AggregateValue, AggregateExpression, IsYearFieldName } from '@memberjunction/core';
+import { IsCurrencyFieldName } from '../utils/currency-field.util';
 import { UUIDsEqual } from '@memberjunction/global';
 import { EntityActionEngineBase } from '@memberjunction/actions-base';
 import { PageChangeEvent } from '@memberjunction/ng-pagination';
@@ -2499,11 +2500,7 @@ export class EntityDataGridComponent extends BaseAngularComponent implements OnI
     const vc = this.effectiveVisualConfig;
 
     // Determine special field types using ExtendedType metadata first, then field name patterns as fallback
-    const isCurrency = customFormat?.type === 'currency' ||
-                       fieldNameLower.includes('amount') ||
-                       fieldNameLower.includes('price') ||
-                       fieldNameLower.includes('cost') ||
-                       fieldNameLower.includes('total');
+    const isCurrency = customFormat?.type === 'currency' || IsCurrencyFieldName(field.Name, field.Type);
     // Use ExtendedType='Email' from metadata, fallback to field name pattern
     const isEmail = extendedType === 'email' ||
                     (!extendedType && fieldNameLower.includes('email'));
@@ -2665,9 +2662,10 @@ export class EntityDataGridComponent extends BaseAngularComponent implements OnI
           const num = Number(params.value);
           if (isNaN(num)) {
             displayValue = String(params.value);
-          } else if (field.IsPrimaryKey) {
+          } else if (field.IsPrimaryKey || IsYearFieldName(field.Name)) {
             // Primary-key integers are identifiers, not quantities — never group them with
             // thousands separators (an ID of 12345 must render as "12345", not "12,345").
+            // The same holds for year fields (AssessmentYear 2026 is "2026", not "2,026").
             displayValue = String(params.value);
           } else {
             displayValue = num.toLocaleString();

@@ -1,5 +1,18 @@
 import { describe, it, expect, vi } from 'vitest';
-import { FormatValue, RunMaybeSerial, SQLFullType, SQLMaxLength, TypeScriptTypeFromSQLType } from '../generic/util';
+import { FormatValue, IsYearFieldName, RunMaybeSerial, SQLFullType, SQLMaxLength, TypeScriptTypeFromSQLType } from '../generic/util';
+
+describe('IsYearFieldName', () => {
+    it('matches year-suffixed field names regardless of case', () => {
+        for (const name of ['Year', 'AssessmentYear', 'TaxYear', 'PayYear', 'FiscalYear', 'fiscal_year', 'YEAR', ' TaxYear ']) {
+            expect(IsYearFieldName(name), name).toBe(true);
+        }
+    });
+    it('does not match durations, plurals or unrelated names', () => {
+        for (const name of ['Years', 'YearsOwned', 'YearBuilt', 'TotalAV', 'ID', '', null, undefined]) {
+            expect(IsYearFieldName(name), String(name)).toBe(false);
+        }
+    });
+});
 
 describe('FormatValue / FormatValueInternal', () => {
     describe('SQL Server types', () => {

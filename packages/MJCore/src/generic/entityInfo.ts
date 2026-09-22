@@ -4,7 +4,7 @@ import { IMetadataProvider } from "./interfaces"
 import { RunViewParams } from "../views/runView"
 import { BaseEntity } from "./baseEntity"
 import { RowLevelSecurityFilterInfo, UserInfo, UserRoleInfo } from "./securityInfo"
-import { TypeScriptTypeFromSQLType, SQLFullType, SQLMaxLength, FormatValue, CodeNameFromString } from "./util"
+import { TypeScriptTypeFromSQLType, SQLFullType, SQLMaxLength, FormatValue, CodeNameFromString, IsYearFieldName } from "./util"
 import { IsFixedWidthStringSQLType } from "@memberjunction/sql-dialect"
 import { LogError } from "./logging"
 import { CompositeKey } from "./compositeKey"
@@ -1242,6 +1242,11 @@ export class EntityFieldInfo extends BaseInfo {
                        currency: string = 'USD', 
                        maxLength: number = 0, 
                        trailingChars: string = "..."): string {
+        // Year fields (AssessmentYear, TaxYear, ...) are integer labels, not quantities: never
+        // "2,026". See IsYearFieldName().
+        if (value != null && IsYearFieldName(this.Name) && TypeScriptTypeFromSQLType(this.Type) === 'number') {
+            return String(value);
+        }
         return FormatValue(this.Type, value, decimals, currency, maxLength, trailingChars);
     }
 

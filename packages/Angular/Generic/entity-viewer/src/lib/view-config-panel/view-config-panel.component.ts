@@ -1,6 +1,7 @@
 import { Component, Input, Output, EventEmitter, OnChanges, OnInit, SimpleChanges, ChangeDetectorRef, HostListener } from '@angular/core';
 import { BaseAngularComponent } from '@memberjunction/ng-base-types';
-import { EntityInfo, EntityFieldInfo, Metadata } from '@memberjunction/core';
+import { EntityInfo, EntityFieldInfo, Metadata, IsYearFieldName } from '@memberjunction/core';
+import { IsCurrencyFieldName } from '../utils/currency-field.util';
 import {
   MJUserViewEntityExtended,
   ViewColumnInfo,
@@ -1160,7 +1161,7 @@ export class ViewConfigPanelComponent extends BaseAngularComponent implements On
   private getDefaultFormat(field: EntityFieldInfo): ColumnFormat {
     const sqlType = field.Type.toLowerCase();
 
-    if (sqlType.includes('money') || sqlType.includes('currency')) {
+    if (sqlType.includes('money') || sqlType.includes('currency') || IsCurrencyFieldName(field.Name, field.Type)) {
       return { type: 'currency', decimals: 2, currencyCode: 'USD', thousandsSeparator: true };
     }
     if (sqlType.includes('percent')) {
@@ -1170,7 +1171,8 @@ export class ViewConfigPanelComponent extends BaseAngularComponent implements On
       return { type: 'number', decimals: 2, thousandsSeparator: true };
     }
     if (sqlType.includes('int')) {
-      return { type: 'number', decimals: 0, thousandsSeparator: true };
+      // Year fields are labels, not quantities: no "2,026".
+      return { type: 'number', decimals: 0, thousandsSeparator: !IsYearFieldName(field.Name) };
     }
     if (sqlType.includes('datetime')) {
       return { type: 'datetime', dateFormat: 'medium' };
