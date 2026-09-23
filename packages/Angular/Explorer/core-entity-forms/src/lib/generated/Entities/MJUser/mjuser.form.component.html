@@ -2987,6 +2987,31 @@
         }
     </mj-collapsible-panel>
 
+    <!-- Client Imports Section -->
+    <mj-collapsible-panel
+        SectionKey="clientImports"
+        SectionName="Client Imports"
+        Icon="fa fa-file-import"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('clientImports')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Client Imports','ImportedByUserID')"
+                [NewRecordValues]="NewRecordValues('Client Imports')"
+                [AllowLoad]="IsSectionExpanded('clientImports')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('clientImports', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         

@@ -94221,6 +94221,7 @@ export class MJUser_ {
     @Field(() => [MJUserRoutineRecipient_])
     MJUserRoutineRecipients_UserIDArray: MJUserRoutineRecipient_[]; // Link to MJUserRoutineRecipients
     // Relationship field to Properties not generated: its GraphQL type is not declared in this file.
+// Relationship field to Client Imports not generated: its GraphQL type is not declared in this file.
 
 }
 
@@ -95487,6 +95488,7 @@ export class MJUserResolverBase extends ResolverBase {
         return result;
     }
         // Relationship to Properties not generated: its GraphQL type is not declared in this file.
+// Relationship to Client Imports not generated: its GraphQL type is not declared in this file.
 
     @Mutation(() => MJUser_)
     async CreateMJUser(

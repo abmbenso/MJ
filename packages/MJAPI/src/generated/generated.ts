@@ -24016,7 +24016,7 @@ export class indianataxSourceDocument_ {
     @MaxLength(36)
     ID: string;
         
-    @Field({description: `What kind of document this is. APRARequest = a public-records request letter as sent; APRAResponse = a file a county returned in response. Other values: PropertyRecordCard, TaxHistoryReport, PTABOAAgenda, PTABOAFinalDeterminationApproval/Withdrawal, BoardDecision, IBTRDecision (if present), Form, Statute, Regulation, ReferenceText, Memo, StatewideParcelDataset, CountyParcelList, MarketDataExport, Other.`}) 
+    @Field({description: `What kind of document this is. APRARequest = a public-records request letter as sent; APRAResponse = a file a county returned in response; ClientSpreadsheet = a portfolio spreadsheet a taxpayer supplied, stored by the ClientPortfolio.Import operation under DataSource TaxpayerProvided. Other values: PropertyRecordCard, TaxHistoryReport, PTABOAAgenda, PTABOAFinalDeterminationApproval/Withdrawal, BoardDecision, IBTRDecision (if present), Form, Statute, Regulation, ReferenceText, Memo, StatewideParcelDataset, CountyParcelList, MarketDataExport, Other.`}) 
     @MaxLength(50)
     DocumentType: string;
         

@@ -9357,7 +9357,7 @@ export const indianataxSourceDocumentSchema = z.object({
         * * Display Name: ID
         * * SQL Data Type: uniqueidentifier
         * * Default Value: newsequentialid()`),
-    DocumentType: z.union([z.literal('APRARequest'), z.literal('APRAResponse'), z.literal('BoardDecision'), z.literal('CountyParcelList'), z.literal('Form'), z.literal('Form11'), z.literal('IBTRDecision'), z.literal('MarketDataExport'), z.literal('Memo'), z.literal('Other'), z.literal('PTABOAAgenda'), z.literal('PTABOAFinalDeterminationApproval'), z.literal('PTABOAFinalDeterminationWithdrawal'), z.literal('PropertyRecordCard'), z.literal('ReferenceText'), z.literal('Regulation'), z.literal('StatewideParcelDataset'), z.literal('Statute'), z.literal('TaxHistoryReport')]).describe(`
+    DocumentType: z.union([z.literal('APRARequest'), z.literal('APRAResponse'), z.literal('BoardDecision'), z.literal('ClientSpreadsheet'), z.literal('CountyParcelList'), z.literal('Form'), z.literal('Form11'), z.literal('IBTRDecision'), z.literal('MarketDataExport'), z.literal('Memo'), z.literal('Other'), z.literal('PTABOAAgenda'), z.literal('PTABOAFinalDeterminationApproval'), z.literal('PTABOAFinalDeterminationWithdrawal'), z.literal('PropertyRecordCard'), z.literal('ReferenceText'), z.literal('Regulation'), z.literal('StatewideParcelDataset'), z.literal('Statute'), z.literal('TaxHistoryReport')]).describe(`
         * * Field Name: DocumentType
         * * Display Name: Document Type
         * * SQL Data Type: nvarchar(50)
@@ -9366,6 +9366,7 @@ export const indianataxSourceDocumentSchema = z.object({
     *   * APRARequest
     *   * APRAResponse
     *   * BoardDecision
+    *   * ClientSpreadsheet
     *   * CountyParcelList
     *   * Form
     *   * Form11
@@ -9382,7 +9383,7 @@ export const indianataxSourceDocumentSchema = z.object({
     *   * StatewideParcelDataset
     *   * Statute
     *   * TaxHistoryReport
-        * * Description: What kind of document this is. APRARequest = a public-records request letter as sent; APRAResponse = a file a county returned in response. Other values: PropertyRecordCard, TaxHistoryReport, PTABOAAgenda, PTABOAFinalDeterminationApproval/Withdrawal, BoardDecision, IBTRDecision (if present), Form, Statute, Regulation, ReferenceText, Memo, StatewideParcelDataset, CountyParcelList, MarketDataExport, Other.`),
+        * * Description: What kind of document this is. APRARequest = a public-records request letter as sent; APRAResponse = a file a county returned in response; ClientSpreadsheet = a portfolio spreadsheet a taxpayer supplied, stored by the ClientPortfolio.Import operation under DataSource TaxpayerProvided. Other values: PropertyRecordCard, TaxHistoryReport, PTABOAAgenda, PTABOAFinalDeterminationApproval/Withdrawal, BoardDecision, IBTRDecision (if present), Form, Statute, Regulation, ReferenceText, Memo, StatewideParcelDataset, CountyParcelList, MarketDataExport, Other.`),
     Title: z.string().describe(`
         * * Field Name: Title
         * * Display Name: Title
@@ -35341,6 +35342,7 @@ export class indianataxSourceDocumentEntity extends BaseEntity<indianataxSourceD
     *   * APRARequest
     *   * APRAResponse
     *   * BoardDecision
+    *   * ClientSpreadsheet
     *   * CountyParcelList
     *   * Form
     *   * Form11
@@ -35357,12 +35359,12 @@ export class indianataxSourceDocumentEntity extends BaseEntity<indianataxSourceD
     *   * StatewideParcelDataset
     *   * Statute
     *   * TaxHistoryReport
-    * * Description: What kind of document this is. APRARequest = a public-records request letter as sent; APRAResponse = a file a county returned in response. Other values: PropertyRecordCard, TaxHistoryReport, PTABOAAgenda, PTABOAFinalDeterminationApproval/Withdrawal, BoardDecision, IBTRDecision (if present), Form, Statute, Regulation, ReferenceText, Memo, StatewideParcelDataset, CountyParcelList, MarketDataExport, Other.
+    * * Description: What kind of document this is. APRARequest = a public-records request letter as sent; APRAResponse = a file a county returned in response; ClientSpreadsheet = a portfolio spreadsheet a taxpayer supplied, stored by the ClientPortfolio.Import operation under DataSource TaxpayerProvided. Other values: PropertyRecordCard, TaxHistoryReport, PTABOAAgenda, PTABOAFinalDeterminationApproval/Withdrawal, BoardDecision, IBTRDecision (if present), Form, Statute, Regulation, ReferenceText, Memo, StatewideParcelDataset, CountyParcelList, MarketDataExport, Other.
     */
-    get DocumentType(): 'APRARequest' | 'APRAResponse' | 'BoardDecision' | 'CountyParcelList' | 'Form' | 'Form11' | 'IBTRDecision' | 'MarketDataExport' | 'Memo' | 'Other' | 'PTABOAAgenda' | 'PTABOAFinalDeterminationApproval' | 'PTABOAFinalDeterminationWithdrawal' | 'PropertyRecordCard' | 'ReferenceText' | 'Regulation' | 'StatewideParcelDataset' | 'Statute' | 'TaxHistoryReport' {
+    get DocumentType(): 'APRARequest' | 'APRAResponse' | 'BoardDecision' | 'ClientSpreadsheet' | 'CountyParcelList' | 'Form' | 'Form11' | 'IBTRDecision' | 'MarketDataExport' | 'Memo' | 'Other' | 'PTABOAAgenda' | 'PTABOAFinalDeterminationApproval' | 'PTABOAFinalDeterminationWithdrawal' | 'PropertyRecordCard' | 'ReferenceText' | 'Regulation' | 'StatewideParcelDataset' | 'Statute' | 'TaxHistoryReport' {
         return this.Get('DocumentType');
     }
-    set DocumentType(value: 'APRARequest' | 'APRAResponse' | 'BoardDecision' | 'CountyParcelList' | 'Form' | 'Form11' | 'IBTRDecision' | 'MarketDataExport' | 'Memo' | 'Other' | 'PTABOAAgenda' | 'PTABOAFinalDeterminationApproval' | 'PTABOAFinalDeterminationWithdrawal' | 'PropertyRecordCard' | 'ReferenceText' | 'Regulation' | 'StatewideParcelDataset' | 'Statute' | 'TaxHistoryReport') {
+    set DocumentType(value: 'APRARequest' | 'APRAResponse' | 'BoardDecision' | 'ClientSpreadsheet' | 'CountyParcelList' | 'Form' | 'Form11' | 'IBTRDecision' | 'MarketDataExport' | 'Memo' | 'Other' | 'PTABOAAgenda' | 'PTABOAFinalDeterminationApproval' | 'PTABOAFinalDeterminationWithdrawal' | 'PropertyRecordCard' | 'ReferenceText' | 'Regulation' | 'StatewideParcelDataset' | 'Statute' | 'TaxHistoryReport') {
         this.Set('DocumentType', value);
     }
 

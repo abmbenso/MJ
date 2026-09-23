@@ -11,8 +11,9 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-// @abmbenso/mj-indiana-tax-server (1 classes)
+// @abmbenso/mj-indiana-tax-server (2 classes)
 import {
+    ClientAppealEntityServer,
     ClientPortfolioImportServerOperation,
 } from '@abmbenso/mj-indiana-tax-server';
 
@@ -121,6 +122,7 @@ import {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CLASS_REGISTRATIONS: any[] = [
+    ClientAppealEntityServer,
     ClientPortfolioImportServerOperation,
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -223,7 +225,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 96;
+export const CLASS_REGISTRATIONS_COUNT = 97;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

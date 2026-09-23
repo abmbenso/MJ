@@ -130,7 +130,8 @@ export class MJUserFormComponent extends BaseFormComponent {
             { sectionKey: 'mJAISkills', sectionName: 'AI Skills', isExpanded: false },
             { sectionKey: 'mJUserRoutines', sectionName: 'User Routines', isExpanded: false },
             { sectionKey: 'mJUserRoutineRecipients', sectionName: 'User Routine Recipients', isExpanded: false },
-            { sectionKey: 'properties', sectionName: 'Properties', isExpanded: false }
+            { sectionKey: 'properties', sectionName: 'Properties', isExpanded: false },
+            { sectionKey: 'clientImports', sectionName: 'Client Imports', isExpanded: false }
         ]);
     }
 }
