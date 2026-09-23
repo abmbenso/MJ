@@ -188,10 +188,10 @@ module.exports = {
     // Remote Operations typed bases — parallel to the entity-subclass split: core MJ ops ship in
     // @memberjunction/core-entities; downstream/user repos add a `RemoteOperations` entry pointing at
     // their GeneratedEntities package. NOTE (5.51.2): neither emitter filters by category — each one
-    // emits every "MJ: Remote Operations" row, so with both targets set the typed bases are duplicated
-    // across the two packages. They are decorator-free type-only shells, so this is harmless.
+    // emits EVERY "MJ: Remote Operations" row, so setting both targets duplicates all the typed bases
+    // across the two packages. We therefore keep only the core target, and downstream ops (e.g. the
+    // mj-indiana-tax app's ClientPortfolio.Import) are imported from @memberjunction/core-entities.
     { type: 'CoreRemoteOperations', directory: './packages/MJCoreEntities/src/generated' },
-    { type: 'RemoteOperations', directory: './packages/GeneratedEntities/src/generated' },
     { type: 'DBSchemaJSON', directory: './Schema Files' },
   ],
 
