@@ -78,6 +78,13 @@ export interface ClientPortfolioImportMatch {
     rowIndex: number;
     /** `Parcels.ID`, or null when the row is Not found. */
     parcelID: string | null;
+    /**
+     * The practitioner has acknowledged that this parcel is held in another client's Confirmed
+     * property and is represented for both (spec §3.2 rule 5). False for every other row: a parcel
+     * held by another client without this flag is still refused, so an older caller gets the old
+     * behaviour.
+     */
+    sharedAcknowledged: boolean;
 }
 export interface ClientPortfolioImportProperty {
     /** Null = create a new Property; otherwise reuse this existing Confirmed `Properties.ID`. */
@@ -102,6 +109,8 @@ export interface ClientPortfolioImportOutput {
     matchedCount: number;
     notFoundCount: number;
     conflictCount: number;
+    /** Acknowledged shared parcels: imported against the held Confirmed property, with a practitioner task. */
+    sharedCount: number;
     propertiesCreated: number;
     propertiesReused: number;
     clientPropertiesCreated: number;
@@ -114,12 +123,13 @@ export interface ClientPortfolioImportOutput {
 }
 export interface ClientPortfolioImportRowResult {
     rowIndex: number;
-    outcome: 'Matched' | 'NotFound' | 'Conflict';
+    /** `Shared`: an acknowledged shared parcel — imported against the Confirmed property another client holds. */
+    outcome: 'Matched' | 'NotFound' | 'Conflict' | 'Shared';
     parcelID: string | null;
     propertyID: string | null;
     clientPropertyID: string | null;
     appealIDs: string[];
-    /** For Conflict: the Confirmed property (and client) the parcel already belongs to. */
+    /** For Conflict and Shared: the Confirmed property (and client) the parcel already belongs to. */
     conflictPropertyID: string | null;
     message: string | null;
 }
@@ -142,7 +152,8 @@ export interface ClientPortfolioPrepareInput {
 
 export interface ClientPortfolioPrepareRow { rowIndex: number; entityName: string | null; propertyName: string | null; address: string | null; city: string | null; stateParcelNumber: string | null; gisParcelNumber: string | null; extra: Record<string, string>; }
 export interface ClientPortfolioPrepareCandidate { parcelID: string; parcelNumber: string | null; gisParcelNumber: string | null; address: string | null; ownerName: string | null; countyNumber: number; confirmedPropertyID: string | null; confirmedClientID: string | null; }
-export interface ClientPortfolioPrepareMatch { rowIndex: number; outcome: 'Matched' | 'Ambiguous' | 'NotFound' | 'Conflict'; parcel: ClientPortfolioPrepareCandidate | null; candidates: ClientPortfolioPrepareCandidate[]; needsConfirmation: boolean; reason: string; }
+/** `SharedParcel`: the parcel is in a Confirmed property held by ANOTHER client — flagged, never refused (spec §3.2 rule 5). */
+export interface ClientPortfolioPrepareMatch { rowIndex: number; outcome: 'Matched' | 'Ambiguous' | 'NotFound' | 'SharedParcel'; parcel: ClientPortfolioPrepareCandidate | null; candidates: ClientPortfolioPrepareCandidate[]; needsConfirmation: boolean; reason: string; }
 /** One per parcel any row matched or listed as a candidate. */
 export interface ClientPortfolioPrepareFacts {
     parcelID: string; countyNumber: number; classCode: string | null; classLabel: string | null;
@@ -150,7 +161,7 @@ export interface ClientPortfolioPrepareFacts {
     existingConfirmedPropertyID: string | null; existingConfirmedPropertyName: string | null;
     /** The headline the AV came from: its assessment year, its data source's name and whether it is a placeholder. */
     headlineAssessmentYear: number | null; headlineSourceName: string | null; headlineIsPlaceholder: boolean;
-    /** The Confirmed property's OTHER client, when there is one (drives the Conflict badge text). */
+    /** The Confirmed property's OTHER client, when there is one (drives the shared-parcel flag text). Kept under its original name for wire compatibility. */
     conflictClientName: string | null;
 }
 export interface ClientPortfolioPrepareCycle { id: string; countyID: string; countyNumber: number; countyName: string; assessmentYear: number; noticeMechanism: 'Form 11' | 'Tax Bill'; cycleStatus: 'Upcoming' | 'Open' | 'Closed'; filingDeadline: string; }
