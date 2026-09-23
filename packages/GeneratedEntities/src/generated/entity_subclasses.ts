@@ -694,6 +694,10 @@ export const indianataxAppealStagePlaybookNoteSchema = z.object({
         * * Field Name: AppealStage
         * * Display Name: Appeal Stage Name
         * * SQL Data Type: nvarchar(200)`),
+    StatuteSection: z.string().nullable().describe(`
+        * * Field Name: StatuteSection
+        * * Display Name: Statute Section Details
+        * * SQL Data Type: nvarchar(20)`),
     SourceDocument: z.string().nullable().describe(`
         * * Field Name: SourceDocument
         * * Display Name: Source Document Details
@@ -747,6 +751,10 @@ export const indianataxAppealStageStatuteSchema = z.object({
         * * Field Name: AppealStage
         * * Display Name: Appeal Stage Name
         * * SQL Data Type: nvarchar(200)`),
+    StatuteSection: z.string().nullable().describe(`
+        * * Field Name: StatuteSection
+        * * Display Name: Statute Section Name
+        * * SQL Data Type: nvarchar(20)`),
 });
 
 export type indianataxAppealStageStatuteEntityType = z.infer<typeof indianataxAppealStageStatuteSchema>;
@@ -12749,6 +12757,15 @@ export class indianataxAppealStagePlaybookNoteEntity extends BaseEntity<indianat
     }
 
     /**
+    * * Field Name: StatuteSection
+    * * Display Name: Statute Section Details
+    * * SQL Data Type: nvarchar(20)
+    */
+    get StatuteSection(): string | null {
+        return this.Get('StatuteSection');
+    }
+
+    /**
     * * Field Name: SourceDocument
     * * Display Name: Source Document Details
     * * SQL Data Type: nvarchar(500)
@@ -12883,6 +12900,15 @@ export class indianataxAppealStageStatuteEntity extends BaseEntity<indianataxApp
     */
     get AppealStage(): string {
         return this.Get('AppealStage');
+    }
+
+    /**
+    * * Field Name: StatuteSection
+    * * Display Name: Statute Section Name
+    * * SQL Data Type: nvarchar(20)
+    */
+    get StatuteSection(): string | null {
+        return this.Get('StatuteSection');
     }
 }
 

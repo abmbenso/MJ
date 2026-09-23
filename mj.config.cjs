@@ -187,8 +187,11 @@ module.exports = {
     { type: 'EntitySubclasses', directory: './packages/GeneratedEntities/src/generated' },
     // Remote Operations typed bases — parallel to the entity-subclass split: core MJ ops ship in
     // @memberjunction/core-entities; downstream/user repos add a `RemoteOperations` entry pointing at
-    // their GeneratedEntities package (this repo doesn't generate non-core ops, so only the core target is set).
+    // their GeneratedEntities package. NOTE (5.51.2): neither emitter filters by category — each one
+    // emits every "MJ: Remote Operations" row, so with both targets set the typed bases are duplicated
+    // across the two packages. They are decorator-free type-only shells, so this is harmless.
     { type: 'CoreRemoteOperations', directory: './packages/MJCoreEntities/src/generated' },
+    { type: 'RemoteOperations', directory: './packages/GeneratedEntities/src/generated' },
     { type: 'DBSchemaJSON', directory: './Schema Files' },
   ],
 
@@ -237,6 +240,20 @@ module.exports = {
     //   when: 'after',
     // },
   ],
+
+  /**
+   * ====================
+   * Open App dynamic packages
+   * ====================
+   *
+   * MJAPI imports each enabled server entry at startup and calls its StartupExport,
+   * which triggers the package's @RegisterClass decorators. See packages/OpenApp/README.md
+   * ("Building Server-Side Packages").
+   */
+  dynamicPackages: {
+    server: [{ PackageName: '@abmbenso/mj-indiana-tax-server', StartupExport: 'LoadIndianaTaxServer', AppName: 'mj-indiana-tax', Enabled: true }],
+    client: [],
+  },
 
   /**
    * ====================

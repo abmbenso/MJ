@@ -1720,6 +1720,10 @@ export class indianataxAppealStagePlaybookNote_ {
     AppealStage: string;
         
     @Field({nullable: true}) 
+    @MaxLength(20)
+    StatuteSection?: string;
+        
+    @Field({nullable: true}) 
     @MaxLength(500)
     SourceDocument?: string;
         
@@ -1933,6 +1937,10 @@ export class indianataxAppealStageStatute_ {
     @Field() 
     @MaxLength(200)
     AppealStage: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(20)
+    StatuteSection?: string;
         
 }
 

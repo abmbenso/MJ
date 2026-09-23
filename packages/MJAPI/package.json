@@ -27,6 +27,7 @@
     "vitest": "^4.0.18"
   },
   "dependencies": {
+    "@abmbenso/mj-indiana-tax-server": "file:../../../mj-indiana-tax/packages/server",
     "@memberjunction/ai": "5.51.2",
     "@memberjunction/communication-sendgrid": "5.51.2",
     "@memberjunction/core": "5.51.2",
