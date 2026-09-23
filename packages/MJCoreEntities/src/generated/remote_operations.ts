@@ -124,6 +124,50 @@ export interface ClientPortfolioImportRowResult {
     message: string | null;
 }
 
+/** Which sheet column feeds which intake field (spec §3.1). */
+export type ClientPortfolioSheetColumnKey = 'entityName' | 'propertyName' | 'address' | 'city' | 'stateParcelNumber' | 'gisParcelNumber';
+/** Input for `ClientPortfolio.Prepare` (spec §3.1–3.3): the parsed sheet, matched against the parcel database. Writes nothing. */
+export interface ClientPortfolioPrepareInput {
+    /** Existing `Clients.ID` — the conflict rule (§3.2 rule 5) is judged against it. */
+    clientID: string;
+    /** The header row, verbatim. */
+    headers: string[];
+    /** Every data row as strings, in sheet order (max 5,000). */
+    cells: string[][];
+    /** Header index → field, when the practitioner re-mapped a column; null = recognize by header. */
+    mapping: Record<number, ClientPortfolioSheetColumnKey> | null;
+    /** County number for rows whose state parcel number does not name one; null = none. */
+    defaultCountyNumber: number | null;
+}
+
+export interface ClientPortfolioPrepareRow { rowIndex: number; entityName: string | null; propertyName: string | null; address: string | null; city: string | null; stateParcelNumber: string | null; gisParcelNumber: string | null; extra: Record<string, string>; }
+export interface ClientPortfolioPrepareCandidate { parcelID: string; parcelNumber: string | null; gisParcelNumber: string | null; address: string | null; ownerName: string | null; countyNumber: number; confirmedPropertyID: string | null; confirmedClientID: string | null; }
+export interface ClientPortfolioPrepareMatch { rowIndex: number; outcome: 'Matched' | 'Ambiguous' | 'NotFound' | 'Conflict'; parcel: ClientPortfolioPrepareCandidate | null; candidates: ClientPortfolioPrepareCandidate[]; needsConfirmation: boolean; reason: string; }
+/** One per parcel any row matched or listed as a candidate. */
+export interface ClientPortfolioPrepareFacts {
+    parcelID: string; countyNumber: number; classCode: string | null; classLabel: string | null;
+    headlineTotalAV: number | null; unitCount: number | null; unitCountSource: string | null;
+    existingConfirmedPropertyID: string | null; existingConfirmedPropertyName: string | null;
+    /** The headline the AV came from: its assessment year, its data source's name and whether it is a placeholder. */
+    headlineAssessmentYear: number | null; headlineSourceName: string | null; headlineIsPlaceholder: boolean;
+    /** The Confirmed property's OTHER client, when there is one (drives the Conflict badge text). */
+    conflictClientName: string | null;
+}
+export interface ClientPortfolioPrepareCycle { id: string; countyID: string; countyNumber: number; countyName: string; assessmentYear: number; noticeMechanism: 'Form 11' | 'Tax Bill'; cycleStatus: 'Upcoming' | 'Open' | 'Closed'; filingDeadline: string; }
+export interface ClientPortfolioPrepareHint { parcelID: string; hint: string; }
+/** Output for `ClientPortfolio.Prepare`: everything the Match and Properties steps render. */
+export interface ClientPortfolioPrepareOutput {
+    rows: ClientPortfolioPrepareRow[];
+    matches: ClientPortfolioPrepareMatch[];
+    facts: ClientPortfolioPrepareFacts[];
+    hints: ClientPortfolioPrepareHint[];
+    cycles: ClientPortfolioPrepareCycle[];
+    /** Every non-Closed cycle — the picker's default selection. */
+    defaultCycleIDs: string[];
+    /** How many rows needed the bounded address probe (§3.2 rule 3). */
+    addressProbes: number;
+}
+
 /** The control action to apply to a running/paused experiment session. */
 export type PredictiveStudioExperimentSessionAction = 'pause' | 'resume' | 'cancel';
 
@@ -673,6 +717,22 @@ export class AISkillImportMarkdownOperation extends BaseRemotableOperation<AISki
 export class ClientPortfolioImportOperation extends BaseRemotableOperation<ClientPortfolioImportInput, ClientPortfolioImportOutput> {
     public readonly OperationKey = "ClientPortfolio.Import";
     public readonly ExecutionMode = 'LongRunning' as const;
+    public readonly RequiredScope = "clientportfolio:import";
+    public readonly RequiresSystemUser = false;
+}
+
+// ============================================================
+// ClientPortfolio.Prepare — Prepare Client Portfolio
+// ============================================================
+/**
+ * Prepare Client Portfolio
+ * Matches a client's parsed spreadsheet rows to parcels (state number → county GIS number → address, always-confirm), loads the facts each matched parcel carries into a candidate property (class label, latest headline with source, unit count, existing Confirmed property) and the open assessment cycles. Read-only; the Client Setup screen calls it before Create.
+ * GenerationType=Manual — the server body is supplied by a hand-authored subclass registered
+ * under 'ClientPortfolio.Prepare'. This generated base provides the typed contract only (client-safe).
+ */
+export class ClientPortfolioPrepareOperation extends BaseRemotableOperation<ClientPortfolioPrepareInput, ClientPortfolioPrepareOutput> {
+    public readonly OperationKey = "ClientPortfolio.Prepare";
+    public readonly ExecutionMode = 'Sync' as const;
     public readonly RequiredScope = "clientportfolio:import";
     public readonly RequiresSystemUser = false;
 }
