@@ -106,6 +106,8 @@ export interface ClientPortfolioImportOutput {
     propertiesReused: number;
     clientPropertiesCreated: number;
     appealsCreated: number;
+    /** Matched parcels whose county has no Open or Upcoming cycle, so no appeal could be created. */
+    appealsSkippedNoCycle: number;
     tasksCreated: number;
     /** Per-row outcome, for the audit JSON and the caller's grid. */
     rows: ClientPortfolioImportRowResult[];
