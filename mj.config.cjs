@@ -252,7 +252,7 @@ module.exports = {
    */
   dynamicPackages: {
     server: [{ PackageName: '@abmbenso/mj-indiana-tax-server', StartupExport: 'LoadIndianaTaxServer', AppName: 'mj-indiana-tax', Enabled: true }],
-    client: [],
+    client: [{ PackageName: '@abmbenso/mj-indiana-tax-ng-client-setup', AppName: 'mj-indiana-tax', Enabled: true }],
   },
 
   /**

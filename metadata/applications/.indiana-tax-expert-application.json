@@ -49,6 +49,20 @@
           "ResourceType": "Custom",
           "DriverClass": "LegalResearchResource",
           "isDefault": false
+        },
+        {
+          "Label": "Client Setup",
+          "Icon": "fa-solid fa-folder-plus",
+          "ResourceType": "Custom",
+          "DriverClass": "ClientSetupResource",
+          "isDefault": false
+        },
+        {
+          "Label": "Client View",
+          "Icon": "fa-solid fa-user-tie",
+          "ResourceType": "Custom",
+          "DriverClass": "ClientViewResource",
+          "isDefault": false
         }
       ]
     },
@@ -113,6 +127,10 @@
     },
     "primaryKey": {
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
+    },
+    "sync": {
+      "lastModified": "2026-09-23T11:13:51.742Z",
+      "checksum": "3096e2b6174235a8d549bee9812992514247e88909a68c8f1c7d89650c1dba25"
     }
   }
 ]
