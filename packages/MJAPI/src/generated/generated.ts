@@ -6760,16 +6760,16 @@ export class indianataxClientImport_ {
     @Field(() => Int, {description: `Rows on the sheet.`}) 
     RowCount: number;
         
-    @Field(() => Int, {description: `Rows matched to one parcel.`}) 
+    @Field(() => Int, {description: `Rows matched to one parcel and imported as this client's own. Excludes rows shared with another client -- those are counted in Summary.sharedCount.`}) 
     MatchedCount: number;
         
     @Field(() => Int, {description: `Rows with no parcel found; each became a Verification task.`}) 
     NotFoundCount: number;
         
-    @Field(() => Int, {description: `Rows whose parcel already sits in another client's Confirmed property; not linked.`}) 
+    @Field(() => Int, {description: `Rows REFUSED: the parcel sits in another client's Confirmed property and the practitioner did not acknowledge the sharing, so nothing was created for the row. A row they did acknowledge is not counted here -- it was imported against the property that already holds the parcel, and is counted in Summary.sharedCount.`}) 
     ConflictCount: number;
         
-    @Field({nullable: true, description: `JSON: the per-row outcomes (rowIndex, outcome, parcel, property, appeals, message).`}) 
+    @Field({nullable: true, description: `JSON: the run's counts (including sharedCount, the acknowledged shared parcels) and the per-row outcomes (rowIndex, outcome Matched/Shared/NotFound/Conflict, parcel, property, appeals, message).`}) 
     Summary?: string;
         
     @Field() 

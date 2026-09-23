@@ -2734,7 +2734,7 @@ export const indianataxClientImportSchema = z.object({
         * * Field Name: MatchedCount
         * * Display Name: Matched Count
         * * SQL Data Type: int
-        * * Description: Rows matched to one parcel.`),
+        * * Description: Rows matched to one parcel and imported as this client's own. Excludes rows shared with another client -- those are counted in Summary.sharedCount.`),
     NotFoundCount: z.number().describe(`
         * * Field Name: NotFoundCount
         * * Display Name: Not Found Count
@@ -2744,12 +2744,12 @@ export const indianataxClientImportSchema = z.object({
         * * Field Name: ConflictCount
         * * Display Name: Conflict Count
         * * SQL Data Type: int
-        * * Description: Rows whose parcel already sits in another client's Confirmed property; not linked.`),
+        * * Description: Rows REFUSED: the parcel sits in another client's Confirmed property and the practitioner did not acknowledge the sharing, so nothing was created for the row. A row they did acknowledge is not counted here -- it was imported against the property that already holds the parcel, and is counted in Summary.sharedCount.`),
     Summary: z.string().nullable().describe(`
         * * Field Name: Summary
         * * Display Name: Summary
         * * SQL Data Type: nvarchar(MAX)
-        * * Description: JSON: the per-row outcomes (rowIndex, outcome, parcel, property, appeals, message).`),
+        * * Description: JSON: the run's counts (including sharedCount, the acknowledged shared parcels) and the per-row outcomes (rowIndex, outcome Matched/Shared/NotFound/Conflict, parcel, property, appeals, message).`),
     __mj_CreatedAt: z.date().describe(`
         * * Field Name: __mj_CreatedAt
         * * Display Name: Created At
@@ -18306,7 +18306,7 @@ export class indianataxClientImportEntity extends BaseEntity<indianataxClientImp
     * * Field Name: MatchedCount
     * * Display Name: Matched Count
     * * SQL Data Type: int
-    * * Description: Rows matched to one parcel.
+    * * Description: Rows matched to one parcel and imported as this client's own. Excludes rows shared with another client -- those are counted in Summary.sharedCount.
     */
     get MatchedCount(): number {
         return this.Get('MatchedCount');
@@ -18332,7 +18332,7 @@ export class indianataxClientImportEntity extends BaseEntity<indianataxClientImp
     * * Field Name: ConflictCount
     * * Display Name: Conflict Count
     * * SQL Data Type: int
-    * * Description: Rows whose parcel already sits in another client's Confirmed property; not linked.
+    * * Description: Rows REFUSED: the parcel sits in another client's Confirmed property and the practitioner did not acknowledge the sharing, so nothing was created for the row. A row they did acknowledge is not counted here -- it was imported against the property that already holds the parcel, and is counted in Summary.sharedCount.
     */
     get ConflictCount(): number {
         return this.Get('ConflictCount');
@@ -18345,7 +18345,7 @@ export class indianataxClientImportEntity extends BaseEntity<indianataxClientImp
     * * Field Name: Summary
     * * Display Name: Summary
     * * SQL Data Type: nvarchar(MAX)
-    * * Description: JSON: the per-row outcomes (rowIndex, outcome, parcel, property, appeals, message).
+    * * Description: JSON: the run's counts (including sharedCount, the acknowledged shared parcels) and the per-row outcomes (rowIndex, outcome Matched/Shared/NotFound/Conflict, parcel, property, appeals, message).
     */
     get Summary(): string | null {
         return this.Get('Summary');
