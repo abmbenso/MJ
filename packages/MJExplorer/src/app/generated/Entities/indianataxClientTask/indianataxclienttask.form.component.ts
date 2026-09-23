@@ -19,6 +19,7 @@ export class indianataxClientTaskFormComponent extends BaseFormComponent {
             { sectionKey: 'taskContext', sectionName: 'Task Context', isExpanded: true },
             { sectionKey: 'taskDetails', sectionName: 'Task Details', isExpanded: true },
             { sectionKey: 'taskTimeline', sectionName: 'Task Timeline', isExpanded: true },
+            { sectionKey: 'taskEvidence', sectionName: 'Task Evidence', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

@@ -407,6 +407,56 @@
         }
     </mj-collapsible-panel>
 
+    <!-- Client Authorizations Section -->
+    <mj-collapsible-panel
+        SectionKey="clientAuthorizations"
+        SectionName="Client Authorizations"
+        Icon="fa fa-file-contract"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('clientAuthorizations')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Client Authorizations','CountyID')"
+                [NewRecordValues]="NewRecordValues('Client Authorizations')"
+                [AllowLoad]="IsSectionExpanded('clientAuthorizations')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('clientAuthorizations', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- County Assessment Cycles Section -->
+    <mj-collapsible-panel
+        SectionKey="countyAssessmentCycles"
+        SectionName="County Assessment Cycles"
+        Icon="fa fa-calendar-alt"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('countyAssessmentCycles')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('County Assessment Cycles','CountyID')"
+                [NewRecordValues]="NewRecordValues('County Assessment Cycles')"
+                [AllowLoad]="IsSectionExpanded('countyAssessmentCycles')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('countyAssessmentCycles', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         

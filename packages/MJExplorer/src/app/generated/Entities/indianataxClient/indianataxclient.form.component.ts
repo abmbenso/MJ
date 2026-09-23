@@ -21,7 +21,9 @@ export class indianataxClientFormComponent extends BaseFormComponent {
             { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false },
             { sectionKey: 'clientProperties', sectionName: 'Client Properties', isExpanded: false },
             { sectionKey: 'clientContacts', sectionName: 'Client Contacts', isExpanded: false },
-            { sectionKey: 'clientTasks', sectionName: 'Client Tasks', isExpanded: false }
+            { sectionKey: 'clientTasks', sectionName: 'Client Tasks', isExpanded: false },
+            { sectionKey: 'clientAuthorizations', sectionName: 'Client Authorizations', isExpanded: false },
+            { sectionKey: 'clientImports', sectionName: 'Client Imports', isExpanded: false }
         ]);
     }
 }

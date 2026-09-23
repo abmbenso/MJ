@@ -22,6 +22,7 @@ export class indianataxClientAppealFormComponent extends BaseFormComponent {
             { sectionKey: 'assessmentValues', sectionName: 'Assessment Values', isExpanded: true },
             { sectionKey: 'taxSavings', sectionName: 'Tax Savings', isExpanded: true },
             { sectionKey: 'appealDetails', sectionName: 'Appeal Details', isExpanded: true },
+            { sectionKey: 'clientCommunication', sectionName: 'Client Communication', isExpanded: true },
             { sectionKey: 'relatedEntityData', sectionName: 'Related Entity Data', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'clientTasks', sectionName: 'Client Tasks', isExpanded: false }

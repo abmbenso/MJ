@@ -10,11 +10,11 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Task Assignment Section -->
+    <!-- Authorization Details Section -->
     <mj-collapsible-panel
-        SectionKey="taskAssignment"
-        SectionName="Task Assignment"
-        Icon="fa fa-info-circle"
+        SectionKey="authorizationDetails"
+        SectionName="Authorization Details"
+        Icon="fa fa-file-contract"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -29,25 +29,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="AssignedTo"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Context Section -->
-    <mj-collapsible-panel
-        SectionKey="taskContext"
-        SectionName="Task Context"
-        Icon="fa fa-info-circle"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="ClientPropertyID"
+            FieldName="CountyID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -56,68 +38,7 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="ClientAppealID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Details Section -->
-    <mj-collapsible-panel
-        SectionKey="taskDetails"
-        SectionName="Task Details"
-        Icon="fa fa-align-left"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Title"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Description"
-            Type="textarea"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="TaskType"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Timeline Section -->
-    <mj-collapsible-panel
-        SectionKey="taskTimeline"
-        SectionName="Task Timeline"
-        Icon="fa fa-calendar"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="DueDate"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Status"
+            FieldName="AuthorizationType"
             Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -125,30 +46,48 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="CompletedAt"
-            Type="datepicker"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Evidence Section -->
-    <mj-collapsible-panel
-        SectionKey="taskEvidence"
-        SectionName="Task Evidence"
-        Icon="fa fa-file-upload"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="false"
             FieldName="SourceDocumentID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
             LinkType="Record"
         ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Authorization Timeline Section -->
+    <mj-collapsible-panel
+        SectionKey="authorizationTimeline"
+        SectionName="Authorization Timeline"
+        Icon="fa fa-calendar"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="SignedAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ExpiresAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Related Information Section -->
+    <mj-collapsible-panel
+        SectionKey="relatedInformation"
+        SectionName="Related Information"
+        Icon="fa fa-link"
+        [Form]="this"
+        [FormContext]="formContext">
 
     </mj-collapsible-panel>
 

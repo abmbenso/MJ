@@ -18,6 +18,7 @@ export class indianataxClientPropertyFormComponent extends BaseFormComponent {
         this.initSections([
             { sectionKey: 'relationships', sectionName: 'Relationships', isExpanded: true },
             { sectionKey: 'propertyAssociationDetails', sectionName: 'Property Association Details', isExpanded: true },
+            { sectionKey: 'importInformation', sectionName: 'Import Information', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'clientTasks', sectionName: 'Client Tasks', isExpanded: false }
         ]);

@@ -16,7 +16,7 @@ import {
     ClientPortfolioImportServerOperation,
 } from '@abmbenso/mj-indiana-tax-server';
 
-// mj_generatedentities (91 classes)
+// mj_generatedentities (95 classes)
 import {
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -46,14 +46,18 @@ import {
     indianataxCardSummaryEntity,
     indianataxCardValuationColumnEntity,
     indianataxClientAppealEntity,
+    indianataxClientAppealStatusEntity,
+    indianataxClientAuthorizationEntity,
     indianataxClientContactEntity,
     indianataxClientEntity,
+    indianataxClientImportEntity,
     indianataxClientPropertyEntity,
     indianataxClientTaskEntity,
     indianataxCoStarIncomeInputEntity,
     indianataxCoStarPropertyEntity,
     indianataxComparableAssessmentMemberEntity,
     indianataxComparableAssessmentSetEntity,
+    indianataxCountyAssessmentCycleEntity,
     indianataxCountyAssessorImprovementEntity,
     indianataxCountyAssessorImprovementSegmentEntity,
     indianataxCountyAssessorRecordEntity,
@@ -146,14 +150,18 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxCardSummaryEntity,
     indianataxCardValuationColumnEntity,
     indianataxClientAppealEntity,
+    indianataxClientAppealStatusEntity,
+    indianataxClientAuthorizationEntity,
     indianataxClientContactEntity,
     indianataxClientEntity,
+    indianataxClientImportEntity,
     indianataxClientPropertyEntity,
     indianataxClientTaskEntity,
     indianataxCoStarIncomeInputEntity,
     indianataxCoStarPropertyEntity,
     indianataxComparableAssessmentMemberEntity,
     indianataxComparableAssessmentSetEntity,
+    indianataxCountyAssessmentCycleEntity,
     indianataxCountyAssessorImprovementEntity,
     indianataxCountyAssessorImprovementSegmentEntity,
     indianataxCountyAssessorRecordEntity,
@@ -215,7 +223,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 92;
+export const CLASS_REGISTRATIONS_COUNT = 96;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

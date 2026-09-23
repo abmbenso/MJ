@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="relationships"
         SectionName="Relationships"
-        Icon="fa fa-link"
+        Icon="fa fa-truck"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -42,7 +42,7 @@
     <mj-collapsible-panel
         SectionKey="propertyAssociationDetails"
         SectionName="Property Association Details"
-        Icon="fa fa-file-alt"
+        Icon="fa fa-align-left"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -84,6 +84,25 @@
             Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Import Information Section -->
+    <mj-collapsible-panel
+        SectionKey="importInformation"
+        SectionName="Import Information"
+        Icon="fa fa-file-import"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="false"
+            FieldName="ImportSourceDocumentID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
         ></mj-form-field>
 
     </mj-collapsible-panel>

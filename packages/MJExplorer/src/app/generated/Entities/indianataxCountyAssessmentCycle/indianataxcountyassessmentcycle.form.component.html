@@ -10,17 +10,17 @@
     <!-- ========================================
          FIELD PANELS
          ======================================== -->
-    <!-- Task Assignment Section -->
+    <!-- Assessment Cycle Details Section -->
     <mj-collapsible-panel
-        SectionKey="taskAssignment"
-        SectionName="Task Assignment"
-        Icon="fa fa-info-circle"
+        SectionKey="assessmentCycleDetails"
+        SectionName="Assessment Cycle Details"
+        Icon="fa fa-calendar-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="ClientID"
+            FieldName="CountyID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -29,7 +29,15 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="AssignedTo"
+            FieldName="AssessmentYear"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="CycleStatus"
             Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -37,79 +45,25 @@
 
     </mj-collapsible-panel>
 
-    <!-- Task Context Section -->
+    <!-- Notice and Deadline Details Section -->
     <mj-collapsible-panel
-        SectionKey="taskContext"
-        SectionName="Task Context"
-        Icon="fa fa-info-circle"
+        SectionKey="noticeAndDeadlineDetails"
+        SectionName="Notice and Deadline Details"
+        Icon="fa fa-bell"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="ClientPropertyID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="ClientAppealID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Details Section -->
-    <mj-collapsible-panel
-        SectionKey="taskDetails"
-        SectionName="Task Details"
-        Icon="fa fa-align-left"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Title"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="Description"
-            Type="textarea"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="TaskType"
+            FieldName="NoticeMechanism"
             Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Timeline Section -->
-    <mj-collapsible-panel
-        SectionKey="taskTimeline"
-        SectionName="Task Timeline"
-        Icon="fa fa-calendar"
-        [Form]="this"
-        [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="DueDate"
+            FieldName="ExpectedNoticeDate"
             Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -117,37 +71,10 @@
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="Status"
-            Type="select"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="CompletedAt"
+            FieldName="FilingDeadline"
             Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
-        ></mj-form-field>
-
-    </mj-collapsible-panel>
-
-    <!-- Task Evidence Section -->
-    <mj-collapsible-panel
-        SectionKey="taskEvidence"
-        SectionName="Task Evidence"
-        Icon="fa fa-file-upload"
-        [Form]="this"
-        [FormContext]="formContext">
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="false"
-            FieldName="SourceDocumentID"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-            LinkType="Record"
         ></mj-form-field>
 
     </mj-collapsible-panel>
@@ -179,6 +106,35 @@
     </mj-collapsible-panel>
 
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-fields" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
+
+    <!-- ========================================
+         RELATED ENTITY PANELS
+         ======================================== -->
+
+    <!-- Client Appeals Section -->
+    <mj-collapsible-panel
+        SectionKey="clientAppeals"
+        SectionName="Client Appeals"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('clientAppeals')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Client Appeals','CountyAssessmentCycleID')"
+                [NewRecordValues]="NewRecordValues('Client Appeals')"
+                [AllowLoad]="IsSectionExpanded('clientAppeals')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('clientAppeals', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
 
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>

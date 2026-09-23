@@ -27,7 +27,9 @@ export class indianataxCountyFormComponent extends BaseFormComponent {
             { sectionKey: 'countyResources', sectionName: 'County Resources', isExpanded: false },
             { sectionKey: 'countyContacts', sectionName: 'County Contacts', isExpanded: false },
             { sectionKey: 'dataSources', sectionName: 'Data Sources', isExpanded: false },
-            { sectionKey: 'properties', sectionName: 'Properties', isExpanded: false }
+            { sectionKey: 'properties', sectionName: 'Properties', isExpanded: false },
+            { sectionKey: 'clientAuthorizations', sectionName: 'Client Authorizations', isExpanded: false },
+            { sectionKey: 'countyAssessmentCycles', sectionName: 'County Assessment Cycles', isExpanded: false }
         ]);
     }
 }

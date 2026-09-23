@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="appealIdentification"
         SectionName="Appeal Identification"
-        Icon="fa fa-tag"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -50,7 +50,7 @@
     <mj-collapsible-panel
         SectionKey="appealProcess"
         SectionName="Appeal Process"
-        Icon="fa fa-gavel"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -93,6 +93,15 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="IBTRAppealID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="CountyAssessmentCycleID"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
@@ -147,7 +156,7 @@
     <mj-collapsible-panel
         SectionKey="assessmentValues"
         SectionName="Assessment Values"
-        Icon="fa fa-dollar-sign"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -173,7 +182,7 @@
     <mj-collapsible-panel
         SectionKey="taxSavings"
         SectionName="Tax Savings"
-        Icon="fa fa-money-bill"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -221,11 +230,46 @@
 
     </mj-collapsible-panel>
 
+    <!-- Client Communication Section -->
+    <mj-collapsible-panel
+        SectionKey="clientCommunication"
+        SectionName="Client Communication"
+        Icon="fa fa-envelope"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ClientStatusID"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ClientStatusIsManual"
+            Type="checkbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ClientStatusChangedAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
     <!-- Related Entity Data Section -->
     <mj-collapsible-panel
         SectionKey="relatedEntityData"
         SectionName="Related Entity Data"
-        Icon="fa fa-link"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
 
