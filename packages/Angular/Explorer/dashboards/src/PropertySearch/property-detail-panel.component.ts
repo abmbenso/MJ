@@ -15,6 +15,7 @@ import {
   CoStarPropertyRow,
 } from './property-search-agent-context';
 import { ParcelAppealLayerDetail } from './property-search-appeal-layers';
+import { AppealOutcomeRow } from './property-search-outcomes';
 
 interface SqFtConfidenceBadge {
   label: string;
@@ -198,6 +199,37 @@ export class PropertyDetailPanelComponent {
       case 'pending':
         return 'Pending confirmation';
     }
+  }
+
+  // ───── Appeal outcomes ─────
+
+  /** Every outcome of the parcel (Appeal Outcomes), loaded with the appeal layers. */
+  public get Outcomes(): AppealOutcomeRow[] {
+    return this.AppealLayers?.outcomes ?? [];
+  }
+
+  /** "$2,450,000 → $1,980,000 (−19.2%)" for a valuation; the kind or disposition text otherwise. */
+  public outcomeChange(o: AppealOutcomeRow): string {
+    if (o.kind === 'Valuation' && o.determinedTotalAV != null) {
+      if (o.originalTotalAV == null) return `→ ${formatCurrency(o.determinedTotalAV)}`;
+      const pct = o.originalTotalAV ? ((o.determinedTotalAV - o.originalTotalAV) / o.originalTotalAV) * 100 : null;
+      const pctText = pct == null ? '' : ` (${pct > 0 ? '+' : ''}${pct.toFixed(1)}%)`;
+      return `${formatCurrency(o.originalTotalAV)} → ${formatCurrency(o.determinedTotalAV)}${pctText}`;
+    }
+    if (o.kind === 'Withdrawal') return 'Withdrawn';
+    if (o.kind === 'Exemption') return 'Exemption (not a valuation)';
+    return o.dispositionText ?? o.kind ?? '—';
+  }
+
+  public outcomeSourceLabel(o: AppealOutcomeRow): string {
+    const label = o.source === 'PTABOA' ? (o.certainty === 'Ratified' ? 'Form 115' : 'PTABOA agenda') : o.source === 'Record card' ? 'Card revision' : 'IBTR';
+    return o.caseNumber ? `${label} · ${o.caseNumber}` : label;
+  }
+
+  public certaintyTitle(o: AppealOutcomeRow): string {
+    if (o.certainty === 'Ratified') return 'Ratified: on a Form 115 final determination, a revised record-card column, or a Board determination.';
+    if (o.certainty === 'Provisional') return 'Provisional: the agenda recommendation only -- not yet ratified by a Form 115, and it can change.';
+    return 'A Board disposition with no value (dismissal, settlement, withdrawal, remand).';
   }
 
   // ───── CoStar ─────

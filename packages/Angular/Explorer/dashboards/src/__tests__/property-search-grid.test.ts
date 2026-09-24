@@ -63,3 +63,37 @@ describe('appeal-layer columns (spec §12)', () => {
     }
   });
 });
+
+describe('appeal-outcome columns', () => {
+  const find = (key: string) => PROPERTY_SEARCH_GRID_COLUMNS.find((c) => c.key === key);
+  it('adds the certainty pill to Appeals (PTABOA), the year-scoped IBTR value and the later-appeal badge', () => {
+    expect(find('PTABOACertainty')?.category).toBe('Appeals (PTABOA)');
+    expect(find('IBTRYearValue')?.category).toBe('Appeals (IBTR)');
+    expect(find('HasLaterAppeal')?.category).toBe('Appeals (IBTR)');
+  });
+  it('renders the certainty as a pill, blank when there is no County outcome', () => {
+    const render = find('PTABOACertainty')!.colDef.cellRenderer as (p: { value: string | null }) => string;
+    expect(render({ value: 'Ratified' })).toBe('<span class="psg-pill psg-pill-ratified">Ratified</span>');
+    expect(render({ value: 'Provisional' })).toBe('<span class="psg-pill psg-pill-provisional">Provisional</span>');
+    expect(render({ value: null })).toBe('');
+  });
+  it('says Withdrawn / Exemption in the PTABOA Value cell rather than a bare dash', () => {
+    const fmt = find('PTABOAValue')!.colDef.valueFormatter as (p: { value: number | null; data?: { PTABOAOutcomeKind: string | null } }) => string;
+    expect(fmt({ value: null, data: { PTABOAOutcomeKind: 'Withdrawal' } })).toBe('Withdrawn');
+    expect(fmt({ value: null, data: { PTABOAOutcomeKind: 'Exemption' } })).toBe('Exemption');
+    expect(fmt({ value: null, data: { PTABOAOutcomeKind: null } })).toBe('—');
+    expect(fmt({ value: 1_980_000, data: { PTABOAOutcomeKind: 'Valuation' } })).toContain('1,980,000');
+  });
+  it('shows a date-only PTABOA Date as that calendar day in any time zone (never the day before)', () => {
+    const fmt = find('PTABOADate')!.colDef.valueFormatter as (p: { value: string | null }) => string;
+    expect(fmt({ value: '2025-08-01' })).toBe('8/1/2025');
+    expect(fmt({ value: null })).toBe('—');
+  });
+  it('badges HasLaterAppeal with the text as its tooltip, and sorts true first on a descending sort', () => {
+    const col = find('HasLaterAppeal')!;
+    const render = col.colDef.cellRenderer as (p: { value: boolean | null }) => string;
+    expect(render({ value: true })).toContain('psg-pill-later');
+    expect(render({ value: false })).toBe('');
+    expect(col.colDef.tooltipField).toBe('LaterAppealText');
+  });
+});

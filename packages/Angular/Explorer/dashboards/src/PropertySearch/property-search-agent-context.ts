@@ -13,9 +13,10 @@ import { MARION_COUNTY_NUMBER, CountySourceTier } from './property-search-county
 // value import back here would be a cycle -- `import type` is erased at compile time and never
 // executes, so it can't participate in a runtime cycle.
 import type { AppealLayerFields } from './property-search-appeal-layers';
+import type { OutcomeLayerFields } from './property-search-outcomes';
 
 /** A single merged parcel row (CountyAssessorRecord fields + joined Parcel geometry/identity fields). */
-export interface MergedParcelRow extends AppealLayerFields {
+export interface MergedParcelRow extends AppealLayerFields, OutcomeLayerFields {
   // Index signature so this satisfies <mj-map-view>'s [Records]: Record<string, unknown>[] input.
   [key: string]: unknown;
   // The Parcel's own ID -- deliberately what <mj-map-view> keys markers by,
@@ -96,6 +97,9 @@ export interface MergedParcelRow extends AppealLayerFields {
   /** The total an older-vintage official document carried when it differs from the headline (what was noticed vs. what stands) -- appeal history, not a data conflict. */
   RevisedFromTotalAV: number | null;
   HasRevision: boolean;
+  /** From the headline: a later State-IBTR disposition stands over this year's County determination. LaterAppealText says which ("IBTR: Settlement - withdrawal, 2026-01-30"). */
+  HasLaterAppeal: boolean;
+  LaterAppealText: string | null;
   /** The route to the county's own record card for this parcel, from buildVerifyLink(...).url -- null when none can be built (see the Verify column's "not on file" cell). */
   VerifyURL: string | null;
   // The headline tax for the selected assessment year (ParcelYearHeadline.HeadlineTax):
@@ -104,25 +108,11 @@ export interface MergedParcelRow extends AppealLayerFields {
   // (pay-year lag) or where neither source covers the parcel. TaxSource names which.
   TotalTax: number | null;
   TaxSource: string | null;
-  // The assessed value AFTER a PTABOA appeal decision, for the SELECTED
-  // AssessmentYear -- sourced from indiana_tax.PTABOAAppeal.AfterTotalAV
-  // (the latest-hearing-dated appeal for this parcel+year when more than one
-  // exists), NOT indiana_tax.Assessment.PTABOATotalAV -- confirmed
-  // 2026-08-25 that column is only ever populated for 2025/2026 statewide-
-  // source rows, so it would show "no data" for a perfectly real,
-  // user-selectable appeal year like 2024. Null means no appeal was decided
-  // for this parcel in the selected year, not a data gap.
-  PTABOAValue: number | null;
-  // The hearing date of the SAME appeal PTABOAValue came from -- both are
-  // read from one row, so they always describe one appeal, never a value
-  // from one hearing paired with a date from another.
-  PTABOADate: string | null;
-  // The Indiana form this same appeal was filed under -- "130S" (subjective/
-  // market-value, the most directly informative type for assessed-value
-  // accuracy), "130O" (objective/mathematical error), or "136"/"136C"
-  // (charitable/nonprofit Exemption -- NOT a valuation dispute; see the
-  // PTABOAAppeal migration comment on why this distinction matters).
-  PTABOAAppealType: string | null;
+  // PTABOAValue / PTABOADate / PTABOAAppealType / PTABOACertainty / PTABOAOutcomeKind /
+  // IBTRYearValue come from OutcomeLayerFields (property-search-outcomes.ts): the CURRENT
+  // County-PTABOA row of Appeal Outcomes for the selected year (all four PTABOA columns from that
+  // one row), and the current State-IBTR valuation for the same year. They replaced the direct
+  // PTABOA Appeals read (latest hearing, FinalDetermination over AfterTotalAV) on 2026-09-24.
   // Most recent row from indiana_tax.CountyAssessorSaleHistory for this
   // parcel's CountyAssessorRecord, by SaleDate DESC then SaleAmount DESC (the
   // amount tiebreak matters -- a real parcel has two same-day sale rows, a

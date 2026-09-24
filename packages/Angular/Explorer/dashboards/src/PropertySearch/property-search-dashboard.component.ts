@@ -57,7 +57,8 @@ import {
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { DataSourceIndex, DATA_SOURCE_FIELDS, PARCEL_YEAR_HEADLINE_FIELDS, buildHeadlineFields, indexDataSources, indexHeadlinesByParcel } from './property-search-headline';
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
-import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers, fetchParcelAppealLayerDetail, ParcelAppealLayerDetail } from './property-search-appeal-layers';
+import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers, fetchCurrentOutcomes, fetchParcelAppealLayerDetail, ParcelAppealLayerDetail } from './property-search-appeal-layers';
+import { EMPTY_OUTCOME_LAYERS, applyOutcomeLayers } from './property-search-outcomes';
 
 /** Parses CountyAssessorRecord.Acreage (NVARCHAR(10), legacy ArcGIS-sourced text) into a number, or null for blank/non-numeric/non-positive values -- the analytics panel's per-acre calculations need a real number, not the raw string RunView('simple') returns. */
 function parseAcreage(raw: string | null): number | null {
@@ -165,7 +166,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   public IsLoading = false;
   public MergedResults: MergedParcelRow[] = [];
   public IsTruncated = false;
-  /** Set when the card / IBTR / Tax Court layer queries failed -- the layer columns are then blank because the load failed, not because nothing exists, and the banner says so (spec §12). */
+  /** Set when the card / IBTR / Tax Court layer queries or the appeal-outcome read failed -- those columns are then blank because the load failed, not because nothing exists, and the banner says so (spec §12). */
   public AppealLayerError: string | null = null;
   /** Bumped by whatever STARTS a search (runSearch, loadData, reloadForCounty) before its own first await, and passed down into runSearchInternal -- lets a search tell, after any await, whether it is still the newest one in flight. Guards against a slower earlier search's results landing after a faster later search's and overwriting them (mj-page-search fires per keystroke, unthrottled, and runSearch() is never awaited by its callers). reloadForCounty claims it BEFORE its metadata loads specifically so that changing the county invalidates an in-flight search immediately (I-4), not two awaits later. Mirrors loadParcelDetail's own `SelectedParcel?.ParcelID !== parcelID` staleness guard. */
   private searchGeneration = 0;
@@ -570,7 +571,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   }
 
   /**
-   * Card / IBTR / Tax Court layers for whichever path built the rows (spec §12). A failure
+   * Card / IBTR / Tax Court layers AND the year's current appeal outcomes (PTABOA columns,
+   * IBTR Value this AY) for whichever path built the rows (spec §12). A failure
    * never blocks the search: the rows come back with empty layers and an error message for
    * the caller to assign. Returns rather than writes AppealLayerError itself -- the caller
    * (runSearchInternal / runDlgfSearchInternal) is the one that knows whether its own search
@@ -580,16 +582,27 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
    * which may already belong to a newer county by the time this runs (I-4).
    */
   private async withAppealLayers(rows: MergedParcelRow[], includeCard: boolean, assessmentYear: number): Promise<{ rows: MergedParcelRow[]; error: string | null }> {
-    try {
-      const rv = RunView.FromMetadataProvider(this.ProviderToUse);
-      const layers = await fetchAppealLayers(rv, rows.map((r) => r.ParcelID), assessmentYear, includeCard);
-      return { rows: applyAppealLayers(rows, layers), error: null };
-    } catch (e) {
-      return {
-        rows,
-        error: `Card, IBTR and Tax Court columns could not be loaded (${e instanceof Error ? e.message : 'unknown error'}). Blank here means "not loaded", not "none".`,
-      };
-    }
+    const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    const parcelIds = rows.map((r) => r.ParcelID);
+    // Independent reads, so a failure of one leaves the other's columns loaded (allSettled).
+    const [layers, outcomes] = await Promise.allSettled([
+      fetchAppealLayers(rv, parcelIds, assessmentYear, includeCard),
+      fetchCurrentOutcomes(rv, parcelIds, assessmentYear),
+    ]);
+    let out = rows;
+    const failures: string[] = [];
+    if (layers.status === 'fulfilled') out = applyAppealLayers(out, layers.value);
+    else failures.push(`Card, IBTR and Tax Court columns (${this.reasonText(layers.reason)})`);
+    if (outcomes.status === 'fulfilled') out = applyOutcomeLayers(out, outcomes.value);
+    else failures.push(`PTABOA and IBTR Value (this AY) columns (${this.reasonText(outcomes.reason)})`);
+    return {
+      rows: out,
+      error: failures.length ? `${failures.join('; ')} could not be loaded. Blank there means "not loaded", not "none".` : null,
+    };
+  }
+
+  private reasonText(reason: unknown): string {
+    return reason instanceof Error ? reason.message : 'unknown error';
   }
 
   /**
@@ -720,6 +733,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'TotalTax', displayName: 'Total Tax', dataType: 'currency' },
       { name: 'TaxSource', displayName: 'Tax Source' },
       { name: 'PTABOAValue', displayName: 'PTABOA Value', dataType: 'currency' },
+      { name: 'PTABOACertainty', displayName: 'PTABOA Certainty' },
+      { name: 'PTABOAOutcomeKind', displayName: 'PTABOA Outcome' },
       { name: 'PTABOADate', displayName: 'PTABOA Date', dataType: 'date' },
       { name: 'PTABOAAppealType', displayName: 'Appeal Type' },
       { name: 'TaxRep', displayName: 'Rep' },
@@ -735,7 +750,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       { name: 'IBTRDecisionDate', displayName: 'IBTR Decision Date', dataType: 'date' },
       { name: 'IBTRAssessmentYear', displayName: 'IBTR Year', dataType: 'number' },
       { name: 'IBTRDisposition', displayName: 'IBTR Disposition' },
-      { name: 'IBTRValue', displayName: 'IBTR Value', dataType: 'currency' },
+      { name: 'IBTRValue', displayName: 'IBTR Value (newest decision)', dataType: 'currency' },
+      { name: 'IBTRYearValue', displayName: 'IBTR Value (this AY)', dataType: 'currency' },
+      { name: 'HasLaterAppeal', displayName: 'Later IBTR Appeal?', dataType: 'boolean' },
+      { name: 'LaterAppealText', displayName: 'Later IBTR Appeal' },
       { name: 'IBTRDecisionCount', displayName: 'IBTR Decisions', dataType: 'number' },
       { name: 'TaxCourtDecision', displayName: 'Tax Court' },
       { name: 'LastSaleDate', displayName: 'Last Sale Date', dataType: 'date' },
@@ -763,8 +781,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     // dashboard must not read ten blank appeal columns as "no appeals" (I-2).
     if (this.AppealLayerError) {
       sourceNotes.push({
-        Address: 'SOURCE NOTE: the Card Appeal, IBTR and Tax Court columns were NOT LOADED for this export '
-          + '(the layer queries failed). Blank in those ten columns means "not loaded", not "none".',
+        Address: `SOURCE NOTE: appeal columns were NOT LOADED for this export -- ${this.AppealLayerError}`,
       });
     }
     const rowsToExport = sourceNotes.length ? [...sourceNotes, ...exportRows] : exportRows;
@@ -1202,7 +1219,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     // than sequential RunView calls. The Data Sources lookup the headline
     // labels need is a one-time load, awaited here so the first search has it.
     await this.loadDataSourcesIfNeeded();
-    const [parcelResult, headlineResult, saleHistoryResult, ptaboaDateResult, parkingSegmentResult, ownerPortfolioResult] = await rv.RunViews<Record<string, unknown>>([
+    const [parcelResult, headlineResult, saleHistoryResult, parkingSegmentResult, ownerPortfolioResult] = await rv.RunViews<Record<string, unknown>>([
       {
         EntityName: 'Parcels',
         Fields: ['ID', 'ParcelNumber', 'GISParcelNumber', 'Address', 'OwnerName', 'Latitude', 'Longitude', 'BoundaryGeoJSON'],
@@ -1272,32 +1289,6 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         ResultType: 'simple',
       },
       {
-        EntityName: 'PTABOA Appeals',
-        // Sourced directly from PTABOAAppeal.AfterTotalAV, NOT
-        // Assessment.PTABOATotalAV -- confirmed 2026-08-25 that
-        // Assessment.PTABOATotalAV is only ever populated on the 2025/2026
-        // statewide-source rows (238+7 of 245 total, zero for any other
-        // year), so a parcel appealed in e.g. 2024 -- a perfectly normal,
-        // user-selectable year -- would show "no data" every time despite a
-        // real AfterTotalAV existing right here. Reading it straight from
-        // the appeal itself has no such gap.
-        // FinalDeterminationTotalAV is the ratified Form 115 value where one has been
-        // matched (2026-09-24): it wins over the agenda's AfterTotalAV -- the board
-        // reversed or revised the agenda figure on 11 cases (e.g. NG 211 N Pennsylvania,
-        // where the agenda showed a cut the board did not adopt).
-        Fields: ['ParcelID', 'HearingDate', 'AfterTotalAV', 'FinalDeterminationTotalAV', 'AppealType'],
-        ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${scope.assessmentYear}`,
-        // Latest hearing wins when a parcel has more than one appeal case for
-        // the same year (confirmed real: the same case can appear on two
-        // agendas, e.g. a "scheduled" pass then a "final" pass). Measured
-        // live 2026-09-11 at RESULT_CAP=5000: max 283 rows (2024, the busiest
-        // appeal year in the data) -- 10000 remains comfortable headroom,
-        // left unchanged.
-        OrderBy: 'HearingDate DESC',
-        MaxRows: 10000,
-        ResultType: 'simple',
-      },
-      {
         // Structured-parking floor/use-segments only -- the county codes a
         // parking deck as a Building segment, so CountyAssessorRecord.
         // EstimatedSqFt includes it. Summed per CountyAssessorRecordID below
@@ -1361,26 +1352,6 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     // statewide roll at all, so a parcel not yet PRC-fetched has no row for that
     // year -- shown as null/"No data", not silently substituted from another year.
     const headlineByParcel = headlineResult.Success ? indexHeadlinesByParcel(headlineResult.Results ?? []) : new Map<string, Record<string, unknown>>();
-
-    // Query already returns rows ORDER BY HearingDate DESC, so the first row
-    // per parcel is this year's latest-hearing appeal -- PTABOA Value, Date,
-    // and Type all come from that SAME row, so they always describe the same
-    // appeal (never a value from one hearing paired with a type from another).
-    const ptaboaValueByParcel = new Map<string, number>();
-    const ptaboaDateByParcel = new Map<string, string>();
-    const ptaboaAppealTypeByParcel = new Map<string, string>();
-    if (ptaboaDateResult.Success) {
-      for (const d of ptaboaDateResult.Results ?? []) {
-        const pid = d['ParcelID'] as string;
-        if (ptaboaDateByParcel.has(pid)) continue;
-        const value = (d['FinalDeterminationTotalAV'] as number | null) ?? (d['AfterTotalAV'] as number | null);
-        const date = d['HearingDate'] as string | null;
-        const appealType = d['AppealType'] as string | null;
-        if (value != null) ptaboaValueByParcel.set(pid, value);
-        if (date != null) ptaboaDateByParcel.set(pid, date);
-        if (appealType != null) ptaboaAppealTypeByParcel.set(pid, appealType);
-      }
-    }
 
     // Query already returns rows ORDER BY SaleDate DESC, SaleAmount DESC, so
     // the first row encountered per CountyAssessorRecordID is the one to
@@ -1476,9 +1447,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
           gisParcelNumber: (p['GISParcelNumber'] as string) ?? null,
           assessmentYear: rowAssessmentYear,
         }).url,
-        PTABOAValue: ptaboaValueByParcel.get(parcelID) ?? null,
-        PTABOADate: ptaboaDateByParcel.get(parcelID) ?? null,
-        PTABOAAppealType: ptaboaAppealTypeByParcel.get(parcelID) ?? null,
+        // PTABOA / year-scoped IBTR columns: filled from Appeal Outcomes by withAppealLayers.
+        ...EMPTY_OUTCOME_LAYERS,
         ...EMPTY_APPEAL_LAYERS,
         LastSaleDate: (lastSale?.['SaleDate'] as string) ?? null,
         LastSalePrice: (lastSale?.['SaleAmount'] as number) ?? null,

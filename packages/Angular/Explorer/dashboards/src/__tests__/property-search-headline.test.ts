@@ -88,6 +88,7 @@ describe('buildHeadlineFields', () => {
       AssessmentYear: 2024, AssessmentSource: 'MarionPRC', DataSource: 'Marion County record card (2026)',
       IsPlaceholder: false, HeadlineDocumentYear: 2026, MaxSpreadPct: null, HasDisagreement: false,
       RevisedFromTotalAV: null, HasRevision: false, TotalTax: 1_100_594.36, TaxSource: 'Marion County tax history report',
+      HasLaterAppeal: false, LaterAppealText: null,
     });
   });
   it('no headline row -> every value null, AssessmentYear null (so the Verify link never claims a year), DataSource = no assessment', () => {
@@ -104,6 +105,15 @@ describe('buildHeadlineFields', () => {
     expect(f.HasDisagreement).toBe(true);
     expect(f.HasRevision).toBe(true);
     expect(f.RevisedFromTotalAV).toBe(41_000_000);
+  });
+  it('maps HasLaterAppeal and its text from the headline (a later IBTR disposition the grid badges)', () => {
+    const f = buildHeadlineFields({ ...ay2024, HasLaterAppeal: true, LaterAppealText: 'IBTR: Settlement - withdrawal, 2026-01-30' }, sources, 2024);
+    expect(f.HasLaterAppeal).toBe(true);
+    expect(f.LaterAppealText).toBe('IBTR: Settlement - withdrawal, 2026-01-30');
+    expect(buildHeadlineFields(undefined, sources, 2024)).toMatchObject({ HasLaterAppeal: false, LaterAppealText: null });
+  });
+  it('reads HasLaterAppeal and LaterAppealText from Parcel Year Headlines', () => {
+    expect(PARCEL_YEAR_HEADLINE_FIELDS).toEqual(expect.arrayContaining(['HasLaterAppeal', 'LaterAppealText']));
   });
   it('a placeholder headline is flagged IsPlaceholder and labelled as one', () => {
     const f = buildHeadlineFields({ ...ay2024, HeadlineDataSourceID: DLGF, IsPlaceholder: true, HeadlineDocumentYear: 2025, HeadlineTax: null, TaxDataSourceID: null }, sources, 2025);

@@ -2,9 +2,10 @@ import { describe, it, expect, vi } from 'vitest';
 import type { RunView } from '@memberjunction/core';
 import {
   EMPTY_APPEAL_LAYERS, reduceCardAppeals, reduceIbtr, reduceTaxCourtParcels, fetchAppealLayers, applyAppealLayers,
-  pickHoldingValue, rowsOrThrow, APPEAL_LAYER_MAX_ROWS,
+  pickHoldingValue, rowsOrThrow, APPEAL_LAYER_MAX_ROWS, fetchCurrentOutcomes, fetchParcelAppealLayerDetail,
 } from '../PropertySearch/property-search-appeal-layers';
 import { buildCardRevisionRows, buildCardNoteRows } from '../PropertySearch/property-search-appeal-layers';
+import { PROPERTY_SEARCH_RESULT_CAP } from '../PropertySearch/property-search-agent-context';
 
 describe('reduceCardAppeals', () => {
   // Hand-read from a real card (Hendricks, AY2024): original 123,700 on 2024-04-18, revised by Form 134 to 90,700 on 2024-07-29.
@@ -235,5 +236,68 @@ describe('buildCardNoteRows', () => {
       { NoteKey: 'k3', NoteKind: 'permit', NoteForm: null, NoteDate: '2022-06-01', NoteCode: 'BP', NoteText: 'new roof' },
     ];
     expect(buildCardNoteRows(notes).map((n) => [n.kind, n.printings])).toEqual([['appeal', 2], ['permit', 1], ['other', 1]]);
+  });
+});
+
+describe('fetchCurrentOutcomes', () => {
+  const ok = (Results: Record<string, unknown>[]) => ({ Success: true, Results });
+  it('queries nothing for an empty parcel list', async () => {
+    const RunViews = vi.fn();
+    expect((await fetchCurrentOutcomes({ RunViews } as unknown as RunView, [], 2023)).size).toBe(0);
+    expect(RunViews).not.toHaveBeenCalled();
+  });
+  it('one Appeal Outcomes read per year scope -- IsCurrent only, capped at RESULT_CAP x 2 (two levels) -- plus the year\'s PTABOA appeals for Appeal Type, in one round trip', async () => {
+    const RunViews = vi.fn().mockResolvedValueOnce([
+      ok([{ ParcelID: 'P1', AssessmentYear: 2023, Level: 'County-PTABOA', Kind: 'Valuation', Certainty: 'Provisional', DeterminedTotalAV: 2_100_000,
+        DecidedAt: '2024-03-14', PTABOAAppealID: 'A-1', IsCurrent: true }]),
+      ok([{ ID: 'A-1', AppealType: '130S' }]),
+    ]);
+    const out = await fetchCurrentOutcomes({ RunViews } as unknown as RunView, ['P1', "P'2"], 2023);
+    expect(RunViews).toHaveBeenCalledTimes(1);
+    const [outcomes, appeals] = RunViews.mock.calls[0][0];
+    expect(outcomes.EntityName).toBe('Appeal Outcomes');
+    expect(outcomes.ExtraFilter).toBe("ParcelID IN ('P1','P''2') AND AssessmentYear = 2023 AND IsCurrent = 1");
+    expect(outcomes.MaxRows).toBe(APPEAL_LAYER_MAX_ROWS.currentOutcomes);
+    expect(APPEAL_LAYER_MAX_ROWS.currentOutcomes).toBeGreaterThan(PROPERTY_SEARCH_RESULT_CAP * 2);
+    expect(outcomes.Fields).toEqual(expect.arrayContaining(['ParcelID', 'Level', 'Kind', 'Certainty', 'DeterminedTotalAV', 'DecidedAt', 'PTABOAAppealID', 'IsCurrent']));
+    expect(appeals.EntityName).toBe('PTABOA Appeals');
+    expect(appeals.ExtraFilter).toContain('AssessmentYear = 2023');
+    for (const p of [outcomes, appeals]) { expect(p.MaxRows).toBeGreaterThan(0); expect(p.ResultType).toBe('simple'); }
+    expect(out.get('P1')).toMatchObject({ PTABOAValue: 2_100_000, PTABOACertainty: 'Provisional', PTABOAAppealType: '130S' });
+    // Every requested parcel gets an entry on a successful load; no outcome -> nulls.
+    expect(out.get("P'2")).toMatchObject({ PTABOAValue: null, PTABOACertainty: null, IBTRYearValue: null });
+  });
+  it('throws at the MaxRows cap (truncated) and on a failed query -- never "no outcome"', async () => {
+    const full = Array.from({ length: APPEAL_LAYER_MAX_ROWS.currentOutcomes }, () => ({ ParcelID: 'P1' }));
+    const truncated = vi.fn().mockResolvedValueOnce([ok(full), ok([])]);
+    await expect(fetchCurrentOutcomes({ RunViews: truncated } as unknown as RunView, ['P1'], 2023)).rejects.toThrow(/Appeal Outcomes.*MaxRows/);
+    const failed = vi.fn().mockResolvedValueOnce([{ Success: false, ErrorMessage: 'boom', Results: [] }, ok([])]);
+    await expect(fetchCurrentOutcomes({ RunViews: failed } as unknown as RunView, ['P1'], 2023)).rejects.toThrow(/Appeal Outcomes.*boom/);
+  });
+});
+
+describe('fetchParcelAppealLayerDetail -- outcomes', () => {
+  const ok = (Results: Record<string, unknown>[]) => ({ Success: true, Results });
+  it('reads every outcome of the parcel (current or not) and links each to its source document', async () => {
+    const RunViews = vi.fn()
+      .mockResolvedValueOnce([ok([]), ok([]), ok([]), ok([
+        { ID: 'o1', AssessmentYear: 2023, Level: 'County-PTABOA', Kind: 'Valuation', Certainty: 'Ratified', OriginalTotalAV: 10, DeterminedTotalAV: 8,
+          DecidedAt: '2024-03-14', SourceDocumentID: 'DOC-1', PTABOAAppealID: 'A-1', IsCurrent: true, Agenda115Differs: false },
+      ])])
+      .mockResolvedValueOnce([ok([{ ID: 'DOC-1', SourceURL: 'https://example.test/115.pdf' }])]);
+    const detail = await fetchParcelAppealLayerDetail({ RunViews } as unknown as RunView, 'P1');
+    const outcomeQuery = RunViews.mock.calls[0][0][3];
+    expect(outcomeQuery.EntityName).toBe('Appeal Outcomes');
+    expect(outcomeQuery.ExtraFilter).toBe("ParcelID = 'P1'");
+    expect(outcomeQuery.MaxRows).toBe(APPEAL_LAYER_MAX_ROWS.detailOutcomes);
+    expect(RunViews.mock.calls[1][0][0].ExtraFilter).toBe("ID IN ('DOC-1')");
+    expect(detail.outcomes).toHaveLength(1);
+    expect(detail.outcomes[0]).toMatchObject({ certainty: 'Ratified', originalTotalAV: 10, determinedTotalAV: 8, documentURL: 'https://example.test/115.pdf' });
+  });
+  it('makes no second round trip when there is neither an IBTR decision nor an outcome document', async () => {
+    const RunViews = vi.fn().mockResolvedValueOnce([ok([]), ok([]), ok([]), ok([])]);
+    const detail = await fetchParcelAppealLayerDetail({ RunViews } as unknown as RunView, 'P1');
+    expect(RunViews).toHaveBeenCalledTimes(1);
+    expect(detail.outcomes).toEqual([]);
   });
 });

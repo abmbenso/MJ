@@ -32,3 +32,30 @@
   font-weight: 600;
   background: color-mix(in srgb, var(--mj-status-warning) 10%, transparent);
 }
+
+/* Appeal-outcome pills (PTABOA Certainty, Later IBTR Appeal) -- rendered as HTML strings by the
+   column cellRenderers, so ::ng-deep for the same reason as the rules above. */
+.psg-grid ::ng-deep .psg-pill {
+  display: inline-block;
+  padding: 0 var(--mj-space-2);
+  border-radius: var(--mj-radius-full);
+  font-size: var(--mj-text-xs);
+  font-weight: 600;
+  line-height: 1.6;
+  border: 1px solid transparent;
+}
+.psg-grid ::ng-deep .psg-pill-ratified {
+  color: var(--mj-status-success-text);
+  background: var(--mj-status-success-bg);
+  border-color: var(--mj-status-success-border);
+}
+.psg-grid ::ng-deep .psg-pill-provisional {
+  color: var(--mj-status-warning-text);
+  background: var(--mj-status-warning-bg);
+  border-color: var(--mj-status-warning-border);
+}
+.psg-grid ::ng-deep .psg-pill-later {
+  color: var(--mj-status-info-text);
+  background: var(--mj-status-info-bg);
+  border-color: var(--mj-status-info-border);
+}

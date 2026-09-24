@@ -315,3 +315,40 @@
   padding-top: var(--mj-space-2);
   border-top: 1px solid var(--mj-border-default);
 }
+
+/* Appeal outcomes list (Appeal History) -- reuses .appeal-av-table's look. */
+.outcome-table-wrap {
+  border: 1px solid var(--mj-border-subtle);
+  border-radius: var(--mj-radius-sm);
+  margin-bottom: var(--mj-space-2);
+}
+
+.outcome-table th,
+.outcome-table td {
+  text-align: left;
+  vertical-align: top;
+}
+
+.outcome-change {
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+}
+
+.outcome-superseded td {
+  color: var(--mj-text-muted);
+}
+
+.outcome-note {
+  color: var(--mj-text-muted);
+  font-size: var(--mj-text-xs);
+  margin-left: var(--mj-space-1);
+}
+
+.detail-sublabel {
+  margin: var(--mj-space-2) 0 var(--mj-space-1);
+  color: var(--mj-text-secondary);
+  font-size: var(--mj-text-xs);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.02em;
+}

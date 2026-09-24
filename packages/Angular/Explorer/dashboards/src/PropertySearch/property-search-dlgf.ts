@@ -16,6 +16,7 @@ import { RunView } from '@memberjunction/core';
 import { MergedParcelRow, classifySearchTerm, escapeSqlLiteral, SearchTermKind } from './property-search-agent-context';
 import { buildVerifyLink, CI_CLASS_CODE_FILTER } from './property-search-county';
 import { EMPTY_APPEAL_LAYERS } from './property-search-appeal-layers';
+import { EMPTY_OUTCOME_LAYERS } from './property-search-outcomes';
 import { DataSourceIndex, PARCEL_YEAR_HEADLINE_FIELDS, buildHeadlineFields, indexHeadlinesByParcel } from './property-search-headline';
 
 export interface DlgfSearchParams {
@@ -150,9 +151,8 @@ export function buildDlgfMergedRows(
         gisParcelNumber: (p['GISParcelNumber'] as string) ?? null,
         assessmentYear,
       }).url,
-      PTABOAValue: null,
-      PTABOADate: null,
-      PTABOAAppealType: null,
+      // Filled by fetchCurrentOutcomes on both paths (State-IBTR outcomes exist statewide).
+      ...EMPTY_OUTCOME_LAYERS,
       ...EMPTY_APPEAL_LAYERS,
       // Owner Prospects rollup fields are Marion-only today (OwnerPortfolio runs
       // cover Marion commercial), so a DLGF-sourced row for another county has

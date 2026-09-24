@@ -7,7 +7,11 @@
  * 🚨 SAFETY: read-only. Nothing here writes.
  */
 import { RunView } from '@memberjunction/core';
-import { escapeSqlLiteral } from './property-search-agent-context';
+import { escapeSqlLiteral, PROPERTY_SEARCH_RESULT_CAP } from './property-search-agent-context';
+import {
+  APPEAL_OUTCOMES_ENTITY, PTABOA_APPEALS_ENTITY, CURRENT_OUTCOME_FIELDS, OUTCOME_HISTORY_FIELDS,
+  AppealOutcomeRow, OutcomeLayerFields, EMPTY_OUTCOME_LAYERS, buildAppealOutcomeRows, reduceCurrentOutcomes,
+} from './property-search-outcomes';
 
 type Row = Record<string, unknown>;
 
@@ -43,6 +47,16 @@ export const APPEAL_LAYER_MAX_ROWS = {
   detailTaxCourtLinks: 1000,
   detailSourceDocuments: 500,
   detailTaxCourtCases: 500,
+  /**
+   * Current outcomes for one result page and year: at most one per (parcel, level) and there are
+   * two levels, so the true ceiling is RESULT_CAP x 2. +1 so a page that genuinely has every
+   * parcel appealed at both levels does not trip rowsOrThrow's at-the-cap test.
+   */
+  currentOutcomes: PROPERTY_SEARCH_RESULT_CAP * 2 + 1,
+  /** This year's PTABOA appeals for the page (for Appeal Type): measured max 283 rows (AY2024, RESULT_CAP=5000, 2026-09-11). */
+  ptaboaYearAppeals: 10000,
+  /** Every outcome of one parcel, all years and levels: measured max 20 (2026-09-24). */
+  detailOutcomes: 500,
 } as const;
 
 export interface AppealLayerFields {
@@ -278,6 +292,33 @@ export async function fetchAppealLayers(rv: RunView, parcelIds: string[], assess
   return out;
 }
 
+/**
+ * The current County and State outcome of every parcel on a result page, for ONE assessment year
+ * (Appeal Outcomes, IsCurrent = 1), plus that year's PTABOA appeals so the County row's Appeal
+ * Type can be joined on PTABOAAppealID. One round trip; throws on a failed or truncated read so a
+ * failed load is never shown as "no appeal". Every requested parcel gets an entry on success.
+ */
+export async function fetchCurrentOutcomes(rv: RunView, parcelIds: string[], assessmentYear: number): Promise<Map<string, OutcomeLayerFields>> {
+  const out = new Map<string, OutcomeLayerFields>();
+  if (!parcelIds.length) return out;
+  const ids = inList(parcelIds);
+  const year = Number(assessmentYear);
+  const [outcomeRes, ptaboaRes] = await rv.RunViews<Row>([
+    { EntityName: APPEAL_OUTCOMES_ENTITY, Fields: [...CURRENT_OUTCOME_FIELDS],
+      ExtraFilter: `ParcelID IN (${ids}) AND AssessmentYear = ${year} AND IsCurrent = 1`,
+      MaxRows: APPEAL_LAYER_MAX_ROWS.currentOutcomes, ResultType: 'simple' },
+    { EntityName: PTABOA_APPEALS_ENTITY, Fields: ['ID', 'AppealType'],
+      ExtraFilter: `ParcelID IN (${ids}) AND AssessmentYear = ${year}`,
+      MaxRows: APPEAL_LAYER_MAX_ROWS.ptaboaYearAppeals, ResultType: 'simple' },
+  ]);
+  const reduced = reduceCurrentOutcomes(
+    rowsOrThrow(APPEAL_OUTCOMES_ENTITY, outcomeRes, APPEAL_LAYER_MAX_ROWS.currentOutcomes),
+    rowsOrThrow(PTABOA_APPEALS_ENTITY, ptaboaRes, APPEAL_LAYER_MAX_ROWS.ptaboaYearAppeals),
+  );
+  for (const pid of parcelIds) out.set(pid, reduced.get(pid) ?? { ...EMPTY_OUTCOME_LAYERS });
+  return out;
+}
+
 export function applyAppealLayers<T extends { ParcelID: string }>(rows: T[], layers: Map<string, AppealLayerFields>): (T & AppealLayerFields)[] {
   return rows.map((r) => ({ ...EMPTY_APPEAL_LAYERS, ...r, ...(layers.get(r.ParcelID) ?? {}) }));
 }
@@ -286,7 +327,7 @@ export interface CardRevisionRow { assessmentYear: number; form: number | null; 
 export interface CardNoteRow { kind: 'appeal' | 'permit' | 'other'; form: number | null; date: string | null; code: string | null; text: string; printings: number; }
 export interface IbtrDecisionRow { petitionNumber: string; decisionDate: string | null; assessmentYear: number | null; disposition: string | null; appealType: string | null; valueAfter: number | null; documentURL: string | null; }
 export interface TaxCourtCaseRow { docketNumber: string; caseName: string; lastDecisionDate: string | null; opinionURL: string | null; nameScore: number; isHighConfidence: boolean; }
-export interface ParcelAppealLayerDetail { cardRevisions: CardRevisionRow[]; cardNotes: CardNoteRow[]; ibtrDecisions: IbtrDecisionRow[]; taxCourtCases: TaxCourtCaseRow[]; }
+export interface ParcelAppealLayerDetail { cardRevisions: CardRevisionRow[]; cardNotes: CardNoteRow[]; ibtrDecisions: IbtrDecisionRow[]; taxCourtCases: TaxCourtCaseRow[]; outcomes: AppealOutcomeRow[]; }
 
 /** @param columnRows every non-WIP CardValuationColumn row of ONE parcel, all cards and years. */
 export function buildCardRevisionRows(columnRows: Row[]): CardRevisionRow[] {
@@ -326,44 +367,58 @@ export function buildCardNoteRows(noteRows: Row[]): CardNoteRow[] {
 /** Everything the detail panel shows for one parcel. Three round trips at most; throws on a failed query. */
 export async function fetchParcelAppealLayerDetail(rv: RunView, parcelID: string): Promise<ParcelAppealLayerDetail> {
   const pid = escapeSqlLiteral(parcelID);
-  const [colRes, noteRes, ibtrRes] = await rv.RunViews<Row>([
+  const [colRes, noteRes, ibtrRes, outcomeRes] = await rv.RunViews<Row>([
     { EntityName: CARD_COLUMNS_ENTITY, Fields: ['CardAssessmentYear', 'AssessmentYear', 'IsCertified', 'ReasonKind', 'ReasonForm', 'ReasonForChange', 'AsOfDate', 'TotalAV'],
       ExtraFilter: `ParcelID = '${pid}' AND ReasonKind <> 'wip'`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailCardColumns, ResultType: 'simple' },
     { EntityName: CARD_NOTES_ENTITY, Fields: ['NoteKey', 'NoteKind', 'NoteForm', 'NoteDate', 'NoteCode', 'NoteText'],
       ExtraFilter: `ParcelID = '${pid}'`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailCardNotes, ResultType: 'simple' },
     { EntityName: IBTR_APPEALS_ENTITY, Fields: ['ID', 'PetitionNumber', 'DecisionDate', 'AssessmentYear', 'DispositionType', 'AppealType', 'SourceDocumentID'],
       ExtraFilter: `ParcelID = '${pid}'`, OrderBy: 'DecisionDate DESC', MaxRows: APPEAL_LAYER_MAX_ROWS.detailIbtrAppeals, ResultType: 'simple' },
+    // Every outcome, current or not -- the practitioner sees relistings and superseded agenda rows too.
+    { EntityName: APPEAL_OUTCOMES_ENTITY, Fields: [...OUTCOME_HISTORY_FIELDS],
+      ExtraFilter: `ParcelID = '${pid}'`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailOutcomes, ResultType: 'simple' },
   ]);
   const ibtrRows = rowsOrThrow(IBTR_APPEALS_ENTITY, ibtrRes, APPEAL_LAYER_MAX_ROWS.detailIbtrAppeals);
+  const outcomeRows = rowsOrThrow(APPEAL_OUTCOMES_ENTITY, outcomeRes, APPEAL_LAYER_MAX_ROWS.detailOutcomes);
   const detail: ParcelAppealLayerDetail = {
     cardRevisions: buildCardRevisionRows(rowsOrThrow(CARD_COLUMNS_ENTITY, colRes, APPEAL_LAYER_MAX_ROWS.detailCardColumns)),
     cardNotes: buildCardNoteRows(rowsOrThrow(CARD_NOTES_ENTITY, noteRes, APPEAL_LAYER_MAX_ROWS.detailCardNotes)), ibtrDecisions: [], taxCourtCases: [],
+    outcomes: buildAppealOutcomeRows(outcomeRows, new Map()),
   };
-  if (!ibtrRows.length) return detail;
+  const docIds = [...new Set([...ibtrRows, ...outcomeRows].map((r) => r['SourceDocumentID'] as string | null).filter((v): v is string => !!v))];
+  if (!ibtrRows.length && !docIds.length) return detail;
 
   const appealIds = inList(ibtrRows.map((r) => r['ID'] as string));
-  const docIds = ibtrRows.map((r) => r['SourceDocumentID'] as string | null).filter((v): v is string => !!v);
-  const [holdRes, linkRes, docRes] = await rv.RunViews<Row>([
-    { EntityName: IBTR_HOLDINGS_ENTITY, Fields: ['IBTRAppealID', 'PetitionNumbers', 'AssessmentYears', 'ValueAfter'], ExtraFilter: `IBTRAppealID IN (${appealIds})`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailHoldings, ResultType: 'simple' },
-    { EntityName: TAX_COURT_LINKS_ENTITY, Fields: ['TaxCourtCaseID', 'NameScore'], ExtraFilter: `IBTRAppealID IN (${appealIds})`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailTaxCourtLinks, ResultType: 'simple' },
-    { EntityName: SOURCE_DOCUMENTS_ENTITY, Fields: ['ID', 'SourceURL'], ExtraFilter: docIds.length ? `ID IN (${inList(docIds)})` : '1=0', MaxRows: APPEAL_LAYER_MAX_ROWS.detailSourceDocuments, ResultType: 'simple' },
-  ]);
+  const second: { EntityName: string; Fields: string[]; ExtraFilter: string; MaxRows: number; ResultType: 'simple' }[] = [];
+  if (docIds.length) second.push({ EntityName: SOURCE_DOCUMENTS_ENTITY, Fields: ['ID', 'SourceURL'], ExtraFilter: `ID IN (${inList(docIds)})`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailSourceDocuments, ResultType: 'simple' });
+  if (ibtrRows.length) {
+    second.push({ EntityName: IBTR_HOLDINGS_ENTITY, Fields: ['IBTRAppealID', 'PetitionNumbers', 'AssessmentYears', 'ValueAfter'], ExtraFilter: `IBTRAppealID IN (${appealIds})`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailHoldings, ResultType: 'simple' });
+    second.push({ EntityName: TAX_COURT_LINKS_ENTITY, Fields: ['TaxCourtCaseID', 'NameScore'], ExtraFilter: `IBTRAppealID IN (${appealIds})`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailTaxCourtLinks, ResultType: 'simple' });
+  }
+  const results = await rv.RunViews<Row>(second);
+  const rowsFor = (entity: string): Row[] => {
+    const i = second.findIndex((p) => p.EntityName === entity);
+    return i < 0 ? [] : rowsOrThrow(entity, results[i], second[i].MaxRows);
+  };
+  const urlByDoc = new Map(rowsFor(SOURCE_DOCUMENTS_ENTITY).map((d) => [String(d['ID']).toLowerCase(), str(d['SourceURL'])]));
+  detail.outcomes = buildAppealOutcomeRows(outcomeRows, urlByDoc);
+  if (!ibtrRows.length) return detail;
+
   const holdingsByAppeal = new Map<string, Row[]>();
-  for (const h of rowsOrThrow(IBTR_HOLDINGS_ENTITY, holdRes, APPEAL_LAYER_MAX_ROWS.detailHoldings)) {
+  for (const h of rowsFor(IBTR_HOLDINGS_ENTITY)) {
     const id = h['IBTRAppealID'] as string;
     holdingsByAppeal.set(id, [...(holdingsByAppeal.get(id) ?? []), h]);
   }
-  const urlByDoc = new Map(rowsOrThrow(SOURCE_DOCUMENTS_ENTITY, docRes, APPEAL_LAYER_MAX_ROWS.detailSourceDocuments).map((d) => [d['ID'] as string, str(d['SourceURL'])]));
   detail.ibtrDecisions = ibtrRows.map((r) => ({
     petitionNumber: String(r['PetitionNumber'] ?? ''), decisionDate: str(r['DecisionDate']), assessmentYear: num(r['AssessmentYear']),
     disposition: str(r['DispositionType']), appealType: str(r['AppealType']),
     // Same attribution rule as the grid -- this decision's OWN holding, never another year's.
     valueAfter: pickHoldingValue(appealKey(r), holdingsByAppeal.get(r['ID'] as string) ?? []),
-    documentURL: urlByDoc.get(r['SourceDocumentID'] as string) ?? null,
+    documentURL: urlByDoc.get(String(r['SourceDocumentID'] ?? '').toLowerCase()) ?? null,
   }));
 
   const bestScoreByCase = new Map<string, number>();
-  for (const l of rowsOrThrow(TAX_COURT_LINKS_ENTITY, linkRes, APPEAL_LAYER_MAX_ROWS.detailTaxCourtLinks)) {
+  for (const l of rowsFor(TAX_COURT_LINKS_ENTITY)) {
     const id = l['TaxCourtCaseID'] as string; const s = Number(l['NameScore']);
     if (s > (bestScoreByCase.get(id) ?? -1)) bestScoreByCase.set(id, s);
   }

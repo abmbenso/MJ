@@ -151,6 +151,45 @@
       <div class="detail-section">
         <div class="detail-label">Appeal History</div>
 
+        <!-- Every appeal outcome on record (Appeal Outcomes), newest year first. Provisional rows are shown: this is a practitioner tool. -->
+        @if (IsAppealLayersLoading) {
+          <mj-loading text="Loading appeal outcomes..." size="small"></mj-loading>
+        } @else if (AppealLayersError) {
+          <p class="trend-empty">Appeal outcomes could not be loaded: {{ AppealLayersError }}</p>
+        } @else if (!Outcomes.length) {
+          <p class="trend-empty">No appeal outcome on record for this parcel.</p>
+        } @else {
+          <div class="appeal-av-table-wrap outcome-table-wrap">
+            <table class="appeal-av-table outcome-table">
+              <thead><tr><th>Year</th><th>Level</th><th>Certainty</th><th>From → To</th><th>Decided</th><th>Source</th></tr></thead>
+              <tbody>
+                @for (o of Outcomes; track o.id) {
+                  <tr [class.outcome-superseded]="!o.isCurrent">
+                    <td>{{ o.assessmentYear ?? '—' }}</td>
+                    <td>{{ o.level }}</td>
+                    <td>
+                      <span class="chip" [class.chip-success]="o.certainty === 'Ratified'" [class.chip-warning]="o.certainty === 'Provisional'"
+                        [title]="certaintyTitle(o)">{{ o.certainty ?? '—' }}</span>
+                    </td>
+                    <td class="outcome-change">{{ outcomeChange(o) }}</td>
+                    <td>{{ o.decidedAt ?? 'undated' }}</td>
+                    <td class="outcome-source">
+                      @if (o.documentURL) {
+                        <a [href]="o.documentURL" target="_blank" rel="noopener noreferrer">{{ outcomeSourceLabel(o) }}</a>
+                      } @else {
+                        {{ outcomeSourceLabel(o) }}
+                      }
+                      @if (!o.isCurrent) { <span class="outcome-note">(superseded)</span> }
+                      @if (o.agenda115Differs) { <span class="outcome-note" title="The Form 115 total differs from the agenda's after-value; the Form 115 figure is shown.">(115 ≠ agenda)</span> }
+                    </td>
+                  </tr>
+                }
+              </tbody>
+            </table>
+          </div>
+        }
+
+        <div class="detail-sublabel">PTABOA agenda detail</div>
         @if (IsAppealsLoading) {
           <mj-loading text="Loading appeal history..." size="small"></mj-loading>
         } @else if (!Appeals.length) {

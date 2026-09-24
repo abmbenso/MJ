@@ -54,7 +54,7 @@ export const PARCEL_YEAR_HEADLINE_FIELDS = [
   'HeadlineLandAV', 'HeadlineImprovementAV', 'HeadlineTotalAV',
   'HeadlineDataSourceID', 'HeadlineDocumentYear', 'HeadlineDocumentDate', 'IsPlaceholder',
   'SourceCount', 'MaxSpreadPct', 'HasDisagreement', 'HasRevision', 'RevisedFromTotalAV',
-  'HeadlineTax', 'TaxDataSourceID',
+  'HeadlineTax', 'TaxDataSourceID', 'HasLaterAppeal', 'LaterAppealText',
 ] as const;
 
 export const NO_ASSESSMENT_LABEL = 'No assessment on file';
@@ -115,6 +115,9 @@ export interface HeadlineFields {
   HasRevision: boolean;
   TotalTax: number | null;
   TaxSource: string | null;
+  /** A later State-IBTR disposition stands over this year's County determination (the headline fell back to the ordinary ranking); LaterAppealText says which, e.g. "IBTR: Settlement - withdrawal, 2026-01-30". */
+  HasLaterAppeal: boolean;
+  LaterAppealText: string | null;
 }
 
 export function buildHeadlineFields(headline: Record<string, unknown> | undefined, sources: DataSourceIndex, assessmentYear: number): HeadlineFields {
@@ -124,6 +127,7 @@ export function buildHeadlineFields(headline: Record<string, unknown> | undefine
       AssessmentYear: null, AssessmentSource: null, DataSource: NO_ASSESSMENT_LABEL,
       IsPlaceholder: false, HeadlineDocumentYear: null, MaxSpreadPct: null, HasDisagreement: false,
       RevisedFromTotalAV: null, HasRevision: false, TotalTax: null, TaxSource: null,
+      HasLaterAppeal: false, LaterAppealText: null,
     };
   }
   const ds = lookupDataSource(sources, headline['HeadlineDataSourceID'] as string | null);
@@ -142,6 +146,8 @@ export function buildHeadlineFields(headline: Record<string, unknown> | undefine
     HasRevision: headline['HasRevision'] === true,
     TotalTax: (headline['HeadlineTax'] as number) ?? null,
     TaxSource: taxSourceLabel(headline, sources),
+    HasLaterAppeal: headline['HasLaterAppeal'] === true,
+    LaterAppealText: (headline['LaterAppealText'] as string) ?? null,
   };
 }
 

@@ -53,11 +53,34 @@ function escapeHtmlAttribute(value: string): string {
 /** Plain date formatter for LastSaleDate -- 'date' SQL type comes through RunView('simple') as an ISO string, not a Date instance. */
 function formatDate(params: { value: string | null }): string {
   if (!params.value) return '—';
+  // A date-only value ('2025-08-01') is a calendar day, not an instant: new Date() would read it as
+  // UTC midnight and show the day before in any US time zone.
+  const day = /^(\d{4})-(\d{2})-(\d{2})$/.exec(params.value);
+  if (day) return `${Number(day[2])}/${Number(day[3])}/${day[1]}`;
   const d = new Date(params.value);
   return Number.isNaN(d.getTime()) ? '—' : d.toLocaleDateString('en-US');
 }
 
 /** Last Sale Price with a validity suffix -- same ✓/~ confidence-marker convention as the Sq Ft column, here signaling whether the county flagged this as an arm's-length market sale. */
+/** PTABOA Value: the determined (or, when Provisional, recommended) total; an Exemption / Withdrawal has no value by design and says so instead of a bare dash. */
+function formatPTABOAValue(params: { value: number | null; data?: Pick<MergedParcelRow, 'PTABOAOutcomeKind'> }): string {
+  if (params.value != null) return formatCurrencyValue(params.value);
+  const kind = params.data?.PTABOAOutcomeKind;
+  return kind === 'Withdrawal' ? 'Withdrawn' : kind === 'Exemption' ? 'Exemption' : '—';
+}
+
+/** Certainty pill: Ratified (a Form 115 or a revised card column) vs Provisional (agenda only). Blank = no County outcome. */
+function renderCertaintyPill(params: { value: string | null }): string {
+  if (params.value === 'Ratified') return '<span class="psg-pill psg-pill-ratified">Ratified</span>';
+  if (params.value === 'Provisional') return '<span class="psg-pill psg-pill-provisional">Provisional</span>';
+  return '';
+}
+
+/** Later-appeal badge; the text (e.g. "IBTR: Settlement - withdrawal, 2026-01-30") is the cell tooltip. */
+function renderLaterAppealBadge(params: { value: boolean | null }): string {
+  return params.value ? '<span class="psg-pill psg-pill-later">Later IBTR</span>' : '';
+}
+
 function formatLastSalePrice(params: { value: number | null; data?: MergedParcelRow }): string {
   if (params.value == null) return '—';
   const formatted = formatCurrencyValue(params.value);
@@ -426,8 +449,21 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       headerName: 'PTABOA Value',
       width: 150,
       type: 'numericColumn',
-      valueFormatter: formatCurrency,
-      headerTooltip: 'Assessed value after a PTABOA appeal decision, for the selected assessment year. "No data" (—) means no appeal has been decided for this parcel in that year -- true for most parcels/years.',
+      valueFormatter: formatPTABOAValue,
+      headerTooltip: 'The county-level appeal outcome for the selected assessment year (the current Appeal Outcomes row): the ratified Form 115 or revised-card total, or -- when PTABOA Certainty says Provisional -- the agenda\'s recommended value. "Withdrawn" / "Exemption" = an outcome that is not a valuation. Dash = no county appeal outcome for this parcel in that year -- true for most parcels/years.',
+    },
+  },
+  {
+    key: 'PTABOACertainty',
+    label: 'PTABOA Certainty',
+    defaultVisible: false,
+    category: 'Appeals (PTABOA)',
+    colDef: {
+      field: 'PTABOACertainty',
+      headerName: 'PTABOA Certainty',
+      width: 140,
+      cellRenderer: renderCertaintyPill,
+      headerTooltip: 'Ratified = the value is on a Form 115 final determination or a revised record-card column. Provisional = the agenda\'s recommendation only (not yet ratified) -- it can still change. Blank = no county appeal outcome for this parcel in the selected year. Same outcome as PTABOA Value/Date.',
     },
   },
   {
@@ -440,7 +476,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       headerName: 'PTABOA Date',
       width: 130,
       valueFormatter: formatDate,
-      headerTooltip: 'Hearing date of the appeal that produced the PTABOA Value shown for this parcel/year.',
+      headerTooltip: 'Decision date of the outcome behind PTABOA Value: the Form 115 date where ratified, else the hearing date, else the record card\'s as-of date.',
     },
   },
   {
@@ -639,16 +675,44 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
   },
   {
     key: 'IBTRValue',
-    label: 'IBTR Value',
+    label: 'IBTR Value (newest decision)',
     defaultVisible: false,
     category: 'Appeals (IBTR)',
     colDef: {
       field: 'IBTRValue',
-      headerName: 'IBTR Value',
+      headerName: 'IBTR Value (newest decision)',
       width: 150,
       type: 'numericColumn',
       valueFormatter: formatCurrency,
       headerTooltip: 'The value the Board set in that newest decision, where it has been extracted from the written determination AND can be attributed to that decision unambiguously (one determination often prints several petitions\' and several years\' figures). Extracted for only a small share of decisions so far -- blank means "not extracted" or "not unambiguous", never "unchanged".',
+    },
+  },
+  {
+    key: 'IBTRYearValue',
+    label: 'IBTR Value (this AY)',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'IBTRYearValue',
+      headerName: 'IBTR Value (this AY)',
+      width: 160,
+      type: 'numericColumn',
+      valueFormatter: formatCurrency,
+      headerTooltip: 'The value the Indiana Board of Tax Review set for the SELECTED assessment year (the current State-level Appeal Outcomes row). Unlike IBTR Value, which follows the parcel\'s newest Board decision whatever year it concerned. Blank = no Board valuation on file for this year (most Board decisions carry no extracted value).',
+    },
+  },
+  {
+    key: 'HasLaterAppeal',
+    label: 'Later IBTR Appeal',
+    defaultVisible: false,
+    category: 'Appeals (IBTR)',
+    colDef: {
+      field: 'HasLaterAppeal',
+      headerName: 'Later IBTR Appeal',
+      width: 150,
+      cellRenderer: renderLaterAppealBadge,
+      tooltipField: 'LaterAppealText',
+      headerTooltip: 'The selected year\'s county determination was taken on to the Indiana Board of Tax Review and a later Board disposition (settlement, withdrawal, dismissal...) stands over it -- so the Assessed Value shown is not the county\'s appeal result. Hover a badge for the disposition and date. Sort descending to bring these to the top.',
     },
   },
   {
