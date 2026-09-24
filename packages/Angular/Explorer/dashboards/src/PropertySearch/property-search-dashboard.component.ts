@@ -1281,7 +1281,11 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
         // user-selectable year -- would show "no data" every time despite a
         // real AfterTotalAV existing right here. Reading it straight from
         // the appeal itself has no such gap.
-        Fields: ['ParcelID', 'HearingDate', 'AfterTotalAV', 'AppealType'],
+        // FinalDeterminationTotalAV is the ratified Form 115 value where one has been
+        // matched (2026-09-24): it wins over the agenda's AfterTotalAV -- the board
+        // reversed or revised the agenda figure on 11 cases (e.g. NG 211 N Pennsylvania,
+        // where the agenda showed a cut the board did not adopt).
+        Fields: ['ParcelID', 'HearingDate', 'AfterTotalAV', 'FinalDeterminationTotalAV', 'AppealType'],
         ExtraFilter: `ParcelID IN (${parcelIdList}) AND AssessmentYear = ${scope.assessmentYear}`,
         // Latest hearing wins when a parcel has more than one appeal case for
         // the same year (confirmed real: the same case can appear on two
@@ -1369,7 +1373,7 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
       for (const d of ptaboaDateResult.Results ?? []) {
         const pid = d['ParcelID'] as string;
         if (ptaboaDateByParcel.has(pid)) continue;
-        const value = d['AfterTotalAV'] as number | null;
+        const value = (d['FinalDeterminationTotalAV'] as number | null) ?? (d['AfterTotalAV'] as number | null);
         const date = d['HearingDate'] as string | null;
         const appealType = d['AppealType'] as string | null;
         if (value != null) ptaboaValueByParcel.set(pid, value);
