@@ -21,7 +21,8 @@ export class indianataxPTABOAAppealFormComponent extends BaseFormComponent {
             { sectionKey: 'appealOutcome', sectionName: 'Appeal Outcome', isExpanded: true },
             { sectionKey: 'assessedValues', sectionName: 'Assessed Values', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
-            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false }
+            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false },
+            { sectionKey: 'appealOutcomes', sectionName: 'Appeal Outcomes', isExpanded: false }
         ]);
     }
 }

@@ -606,6 +606,162 @@ export const indianataxAppealLeadSchema = z.object({
 export type indianataxAppealLeadEntityType = z.infer<typeof indianataxAppealLeadSchema>;
 
 /**
+ * zod schema definition for the entity Appeal Outcomes
+ */
+export const indianataxAppealOutcomeSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    ParcelID: z.string().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The parcel the appeal outcome is recorded for.`),
+    AssessmentYear: z.number().describe(`
+        * * Field Name: AssessmentYear
+        * * Display Name: Assessment Year
+        * * SQL Data Type: int
+        * * Description: The assessment year (January 1 valuation date) the appeal decided.`),
+    Level: z.union([z.literal('County-PTABOA'), z.literal('State-IBTR')]).describe(`
+        * * Field Name: Level
+        * * Display Name: Appeal Level
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * County-PTABOA
+    *   * State-IBTR
+        * * Description: County-PTABOA or State-IBTR: which board decided.`),
+    Kind: z.union([z.literal('Disposition'), z.literal('Exemption'), z.literal('Valuation'), z.literal('Withdrawal')]).describe(`
+        * * Field Name: Kind
+        * * Display Name: Outcome Kind
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Disposition
+    *   * Exemption
+    *   * Valuation
+    *   * Withdrawal
+        * * Description: Valuation = a value was decided; Exemption = a Form 136 case (no valuation); Withdrawal = the petition was withdrawn; Disposition = an IBTR result with no extracted value.`),
+    Certainty: z.union([z.literal('Disposition'), z.literal('Provisional'), z.literal('Ratified')]).describe(`
+        * * Field Name: Certainty
+        * * Display Name: Decision Certainty
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Disposition
+    *   * Provisional
+    *   * Ratified
+        * * Description: Ratified = a Form 115, a Final Agreement, a revised card column or an IBTR holding with a value; Provisional = the assessor's agenda recommendation not yet ratified; Disposition = an IBTR result without a value.`),
+    OriginalTotalAV: z.number().nullable().describe(`
+        * * Field Name: OriginalTotalAV
+        * * Display Name: Original Total Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The value before the appeal as the record states it (agenda before-value, the card year's original column, or the IBTR holding's ValueBefore).`),
+    DeterminedLandAV: z.number().nullable().describe(`
+        * * Field Name: DeterminedLandAV
+        * * Display Name: Determined Land Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The land portion of the decided value where the record splits it (Form 115 or revised card column); null where the record gives only a total.`),
+    DeterminedImprovementAV: z.number().nullable().describe(`
+        * * Field Name: DeterminedImprovementAV
+        * * Display Name: Determined Improvement Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The improvement portion of the decided value where the record splits it (Form 115 or revised card column); null where the record gives only a total.`),
+    DeterminedTotalAV: z.number().nullable().describe(`
+        * * Field Name: DeterminedTotalAV
+        * * Display Name: Determined Total Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The value the record decided: the Form 115 total where matched, else the agenda after-value; the card's revised column; the IBTR holding's ValueAfter. Null for Exemption, Withdrawal and Disposition.`),
+    DecidedAt: z.date().nullable().describe(`
+        * * Field Name: DecidedAt
+        * * Display Name: Decided At
+        * * SQL Data Type: date
+        * * Description: The Form 115 date, else the hearing date; the card column's AsOfDate; the IBTR DecisionDate.`),
+    CaseNumber: z.string().nullable().describe(`
+        * * Field Name: CaseNumber
+        * * Display Name: Case Number
+        * * SQL Data Type: nvarchar(60)
+        * * Description: The board's own case or petition number as the record prints it; null where the record carries none.`),
+    DispositionText: z.string().nullable().describe(`
+        * * Field Name: DispositionText
+        * * Display Name: Disposition Text
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The result in the record's own words (the agenda action, the card column's revision reason, or the IBTR disposition).`),
+    SourceDocumentID: z.string().nullable().describe(`
+        * * Field Name: SourceDocumentID
+        * * Display Name: Source Document
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+        * * Description: The document the outcome is read from (the Form 115, the agenda, the record card or the IBTR decision), so every figure has a route to its source.`),
+    PTABOAAppealID: z.string().nullable().describe(`
+        * * Field Name: PTABOAAppealID
+        * * Display Name: PTABOA Appeal
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)
+        * * Description: The Marion PTABOA agenda row this outcome comes from; exactly one of the three source keys is set.`),
+    IBTRAppealID: z.string().nullable().describe(`
+        * * Field Name: IBTRAppealID
+        * * Display Name: IBTR Appeal
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+        * * Description: The IBTR appeal this outcome comes from; exactly one of the three source keys is set.`),
+    CardValuationColumnID: z.string().nullable().describe(`
+        * * Field Name: CardValuationColumnID
+        * * Display Name: Card Valuation Column
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Card Valuation Columns (vwCardValuationColumns.ID)
+        * * Description: The revised record-card valuation column this outcome comes from; exactly one of the three source keys is set.`),
+    IsCurrent: z.boolean().describe(`
+        * * Field Name: IsCurrent
+        * * Display Name: Is Current
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: The row that stands for this parcel-year at this level: the latest DecidedAt, ties broken Ratified over Provisional.`),
+    Agenda115Differs: z.boolean().describe(`
+        * * Field Name: Agenda115Differs
+        * * Display Name: Agenda and Form 115 Differ
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: The agenda after-value and the matched Form 115 total disagree (44 cases on 2026-09-24); the Form 115 wins.`),
+    RebuiltAt: z.date().describe(`
+        * * Field Name: RebuiltAt
+        * * Display Name: Rebuilt At
+        * * SQL Data Type: datetime2
+        * * Description: When scripts/rebuild-appeal-outcomes.js last wrote this row.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Parcel: z.string().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel Reference
+        * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().nullable().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document Reference
+        * * SQL Data Type: nvarchar(500)`),
+    PTABOAAppeal: z.string().nullable().describe(`
+        * * Field Name: PTABOAAppeal
+        * * Display Name: PTABOA Appeal Reference
+        * * SQL Data Type: nvarchar(50)`),
+    IBTRAppeal: z.string().nullable().describe(`
+        * * Field Name: IBTRAppeal
+        * * Display Name: IBTR Appeal Reference
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxAppealOutcomeEntityType = z.infer<typeof indianataxAppealOutcomeSchema>;
+
+/**
  * zod schema definition for the entity Appeal Stage Playbook Notes
  */
 export const indianataxAppealStagePlaybookNoteSchema = z.object({
@@ -2431,7 +2587,7 @@ export const indianataxClientAppealSchema = z.object({
         * * Description: The last day a Form 130 can be filed: 45 days from the notice date, or the statutory fallback (June 15 following the assessment year) when no notice is on file. The date the practice works to.`),
     FiledAt: z.date().nullable().describe(`
         * * Field Name: FiledAt
-        * * Display Name: Filed At
+        * * Display Name: Filed Date
         * * SQL Data Type: date
         * * Description: The date the Form 130 was actually filed (mailed or submitted online). NULL until filed.`),
     Status: z.union([z.literal('Declined'), z.literal('Evaluating'), z.literal('Filed'), z.literal('IBTR'), z.literal('Informal Meeting'), z.literal('PTABOA'), z.literal('Recommended'), z.literal('Resolved'), z.literal('Tax Court'), z.literal('Withdrawn')]).describe(`
@@ -2454,32 +2610,32 @@ export const indianataxClientAppealSchema = z.object({
         * * Description: Evaluating (being screened), Recommended (the practice advises appealing; awaiting the client), Filed, Informal Meeting, PTABOA, IBTR, Tax Court (the level it is at), Resolved (a determination the client accepted), Withdrawn (the client pulled it), Declined (the practice or client decided not to appeal).`),
     OriginalTotalAV: z.number().nullable().describe(`
         * * Field Name: OriginalTotalAV
-        * * Display Name: Original Total Assessed Value
+        * * Display Name: Original Assessed Value
         * * SQL Data Type: decimal(18, 2)
         * * Description: The assessed value under appeal, as noticed for this year. Copied from the headline at filing time so the record survives later corrections; NULL until the appeal is set up.`),
     ResolvedTotalAV: z.number().nullable().describe(`
         * * Field Name: ResolvedTotalAV
-        * * Display Name: Resolved Total Assessed Value
+        * * Display Name: Resolved Assessed Value
         * * SQL Data Type: decimal(18, 2)
         * * Description: The assessed value as finally determined (informal agreement, PTABOA determination, IBTR order or court judgment). NULL while open. Original minus Resolved is the reduction won -- a fact.`),
     ResolvedAt: z.date().nullable().describe(`
         * * Field Name: ResolvedAt
-        * * Display Name: Resolved At
+        * * Display Name: Resolved Date
         * * SQL Data Type: date
         * * Description: The date of the determination ResolvedTotalAV came from.`),
     Savings1Pct: z.number().nullable().describe(`
         * * Field Name: Savings1Pct
-        * * Display Name: Savings - 1% Class
+        * * Display Name: Savings (1% Class)
         * * SQL Data Type: decimal(18, 2)
         * * Description: Tax saved on the portion of the reduction that falls in the 1% circuit-breaker class (homestead). Indiana tax is not AV x rate: the cap binds per class, so savings are computed per class and summed.`),
     Savings2Pct: z.number().nullable().describe(`
         * * Field Name: Savings2Pct
-        * * Display Name: Savings - 2% Class
+        * * Display Name: Savings (2% Class)
         * * SQL Data Type: decimal(18, 2)
         * * Description: Tax saved on the portion in the 2% class (other residential, agricultural land, long-term care).`),
     Savings3Pct: z.number().nullable().describe(`
         * * Field Name: Savings3Pct
-        * * Display Name: Savings - 3% Class
+        * * Display Name: Savings (3% Class)
         * * SQL Data Type: decimal(18, 2)
         * * Description: Tax saved on the portion in the 3% class (commercial, industrial, personal property) -- the bulk of a C&I appeal.`),
     Notes: z.string().nullable().describe(`
@@ -2520,6 +2676,21 @@ export const indianataxClientAppealSchema = z.object({
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: County Assessment Cycles (vwCountyAssessmentCycles.ID)
         * * Description: The county cycle this appeal belongs to; supplies the default filing deadline and the notice mechanism.`),
+    EffectiveTaxRate: z.number().nullable().describe(`
+        * * Field Name: EffectiveTaxRate
+        * * Display Name: Effective Tax Rate
+        * * SQL Data Type: decimal(9, 6)
+        * * Description: Net tax billed divided by gross assessed value on the same record for this parcel-year (county Tax History first, DLGF bill second, the nearest billed year of the parcel third). The billed tax already includes the circuit-breaker cap and deductions.`),
+    EstimatedTaxSaving: z.number().nullable().describe(`
+        * * Field Name: EstimatedTaxSaving
+        * * Display Name: Estimated Tax Saving
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: EffectiveTaxRate x (OriginalTotalAV - ResolvedTotalAV) when the appeal resolved to a lower value; an estimate, not a bill. Null when no reduction or no rate.`),
+    SavingBasis: z.string().nullable().describe(`
+        * * Field Name: SavingBasis
+        * * Display Name: Saving Basis
+        * * SQL Data Type: nvarchar(40)
+        * * Description: Where the rate came from: "TaxHistory 2024", "DLGF bill 2024", "nearest 2023", or null.`),
     Client: z.string().describe(`
         * * Field Name: Client
         * * Display Name: Client
@@ -4849,12 +5020,13 @@ export const indianataxDataSourceSchema = z.object({
         * * Display Name: Name
         * * SQL Data Type: nvarchar(100)
         * * Description: The loader's key for this source (MarionPRC, dlgf_gdb_2025, marion_foia_2026, MarionTS1A ...). Matches the legacy Assessment.Source text where one exists.`),
-    Kind: z.union([z.literal('Commercial'), z.literal('County Notice'), z.literal('County Record Card'), z.literal('County Tax Bill'), z.literal('County Tax History'), z.literal('Practitioner'), z.literal('Public Records Response'), z.literal('State DLGF'), z.literal('Taxpayer Provided')]).describe(`
+    Kind: z.union([z.literal('Board Determination'), z.literal('Commercial'), z.literal('County Notice'), z.literal('County Record Card'), z.literal('County Tax Bill'), z.literal('County Tax History'), z.literal('Practitioner'), z.literal('Public Records Response'), z.literal('State DLGF'), z.literal('Taxpayer Provided')]).describe(`
         * * Field Name: Kind
         * * Display Name: Kind
         * * SQL Data Type: nvarchar(40)
     * * Value List Type: List
     * * Possible Values 
+    *   * Board Determination
     *   * Commercial
     *   * County Notice
     *   * County Record Card
@@ -4864,7 +5036,7 @@ export const indianataxDataSourceSchema = z.object({
     *   * Public Records Response
     *   * State DLGF
     *   * Taxpayer Provided
-        * * Description: What kind of source this is. Drives the headline rule: County * kinds and Public Records Response are official; State DLGF is a placeholder; Commercial, Taxpayer Provided and Practitioner are never a headline for assessed value.`),
+        * * Description: What kind of source this is. Drives the headline rule: County * kinds, Public Records Response and Board Determination are official; Board Determination (a PTABOA Form 115 / Final Agreement, or an IBTR holding with a value) outranks every card and roll for its year unless a later higher-level outcome exists; State DLGF is a placeholder; Commercial, Taxpayer Provided and Practitioner are never a headline for assessed value.`),
     Label: z.string().describe(`
         * * Field Name: Label
         * * Display Name: Label
@@ -7771,17 +7943,17 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Description: The assessment year (the January 1 valuation date), not the pay year. Tax for AY N is billed in N+1.`),
     HeadlineLandAV: z.number().nullable().describe(`
         * * Field Name: HeadlineLandAV
-        * * Display Name: Headline Land Assessed Value
+        * * Display Name: Headline Land AV
         * * SQL Data Type: decimal(18, 2)
         * * Description: Land assessed value from the headline document.`),
     HeadlineImprovementAV: z.number().nullable().describe(`
         * * Field Name: HeadlineImprovementAV
-        * * Display Name: Headline Improvement Assessed Value
+        * * Display Name: Headline Improvement AV
         * * SQL Data Type: decimal(18, 2)
         * * Description: Improvement assessed value from the headline document.`),
     HeadlineTotalAV: z.number().nullable().describe(`
         * * Field Name: HeadlineTotalAV
-        * * Display Name: Headline Total Assessed Value
+        * * Display Name: Headline Total AV
         * * SQL Data Type: decimal(18, 2)
         * * Description: THE assessed value for this parcel-year: the figure every grid, total, budget and savings estimate uses. From the latest-dated official county document (card, bill, notice, public-records list); the DLGF roll only where no county document exists (IsPlaceholder = 1); never from a commercial, taxpayer or practitioner source.`),
     HeadlineDataSourceID: z.string().nullable().describe(`
@@ -7814,7 +7986,7 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Description: How many sources (Assessment rows from distinct documents) report this parcel-year, headline included.`),
     MaxSpreadPct: z.number().nullable().describe(`
         * * Field Name: MaxSpreadPct
-        * * Display Name: Maximum Spread Percentage
+        * * Display Name: Max Spread Percent
         * * SQL Data Type: decimal(9, 4)
         * * Description: Largest difference between the totals compared for disagreement -- official documents of the headline's own vintage (same document year) plus every non-official source -- as a percent of the headline total. Older-vintage official documents are revisions (see HasRevision), not disagreements. NULL with fewer than two compared rows.`),
     HasDisagreement: z.boolean().describe(`
@@ -7862,7 +8034,7 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Description: 1 when an older-vintage official document carried a different total for this parcel-year: the headline supersedes it. Appeal history, not a data conflict.`),
     RevisedFromTotalAV: z.number().nullable().describe(`
         * * Field Name: RevisedFromTotalAV
-        * * Display Name: Revised From Total Assessed Value
+        * * Display Name: Revised From Total AV
         * * SQL Data Type: decimal(18, 2)
         * * Description: The total the newest older-vintage official document carried, when it differs from the headline (e.g. the AY2024 value on the 2024 card, superseded by the 2026 card). NULL when no revision.`),
     RevisedFromSourceDocumentID: z.string().nullable().describe(`
@@ -7876,25 +8048,36 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Display Name: Revised From Document Date
         * * SQL Data Type: date
         * * Description: Document date of the superseded older-vintage document.`),
+    HasLaterAppeal: z.boolean().describe(`
+        * * Field Name: HasLaterAppeal
+        * * Display Name: Has Later Appeal
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: A later, higher-level appeal outcome exists for this parcel-year without an extracted value (an IBTR disposition after the county determination), so the headline fell back to the latest official document and may not be the value as finally determined.`),
+    LaterAppealText: z.string().nullable().describe(`
+        * * Field Name: LaterAppealText
+        * * Display Name: Later Appeal Text
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The later outcome in words, e.g. "IBTR: Board Determination, 2025-08-14".`),
     Parcel: z.string().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
         * * SQL Data Type: nvarchar(30)`),
     HeadlineDataSource: z.string().nullable().describe(`
         * * Field Name: HeadlineDataSource
-        * * Display Name: Headline Data Source Name
+        * * Display Name: Headline Data Source
         * * SQL Data Type: nvarchar(100)`),
     HeadlineSourceDocument: z.string().nullable().describe(`
         * * Field Name: HeadlineSourceDocument
-        * * Display Name: Headline Source Document Name
+        * * Display Name: Headline Source Document
         * * SQL Data Type: nvarchar(500)`),
     TaxDataSource: z.string().nullable().describe(`
         * * Field Name: TaxDataSource
-        * * Display Name: Tax Data Source Name
+        * * Display Name: Tax Data Source
         * * SQL Data Type: nvarchar(100)`),
     RevisedFromSourceDocument: z.string().nullable().describe(`
         * * Field Name: RevisedFromSourceDocument
-        * * Display Name: Revised From Source Document Name
+        * * Display Name: Revised From Source Document
         * * SQL Data Type: nvarchar(500)`),
 });
 
@@ -12892,6 +13075,409 @@ export class indianataxAppealLeadEntity extends BaseEntity<indianataxAppealLeadE
 
 
 /**
+ * Appeal Outcomes - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: AppealOutcome
+ * * Base View: vwAppealOutcomes
+ * * @description One row per recorded appeal outcome on a parcel-year, from three records kept apart: a Marion PTABOA agenda listing (with its Form 115 where matched), a revised valuation column on a county record card, or an IBTR disposition (with the extracted determined value where a holding carries one). Rebuilt by scripts/rebuild-appeal-outcomes.js; never edited by hand. IsCurrent marks the row that stands for the parcel-year at its level.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Appeal Outcomes')
+export class indianataxAppealOutcomeEntity extends BaseEntity<indianataxAppealOutcomeEntityType> {
+    /**
+    * Loads the Appeal Outcomes record from the database
+    * @param ID: string - primary key value to load the Appeal Outcomes record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxAppealOutcomeEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * Validate() method override for Appeal Outcomes entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
+    * * Table-Level: Exactly one of the three appeal or valuation reference fields (PTABOAAppealID, IBTRAppealID, or CardValuationColumnID) must be populated. A record cannot have multiple references or no references - it must be associated with exactly one type of appeal or card valuation.
+    * @public
+    * @method
+    * @override
+    */
+    public override Validate(): ValidationResult {
+        const result = super.Validate();
+        this.ValidateExactlyOneAppealOrValuationReference(result);
+        result.Success = result.Success && (result.Errors.length === 0);
+
+        return result;
+    }
+
+    /**
+    * Exactly one of the three appeal or valuation reference fields (PTABOAAppealID, IBTRAppealID, or CardValuationColumnID) must be populated. A record cannot have multiple references or no references - it must be associated with exactly one type of appeal or card valuation.
+    * @param result - the ValidationResult object to add any errors or warnings to
+    * @public
+    * @method
+    */
+    public ValidateExactlyOneAppealOrValuationReference(result: ValidationResult) {
+    	const nonNullCount = (this.PTABOAAppealID != null ? 1 : 0) + (this.IBTRAppealID != null ? 1 : 0) + (this.CardValuationColumnID != null ? 1 : 0);
+    	if (nonNullCount !== 1) {
+    		result.Errors.push(new ValidationErrorInfo(
+    			"AppealOrValuation",
+    			"Exactly one of PTABOAAppealID, IBTRAppealID, or CardValuationColumnID must be provided. Currently " + nonNullCount + " field(s) are populated.",
+    			"PTABOAAppealID, IBTRAppealID, CardValuationColumnID",
+    			ValidationErrorType.Failure
+    		));
+    	}
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The parcel the appeal outcome is recorded for.
+    */
+    get ParcelID(): string {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: AssessmentYear
+    * * Display Name: Assessment Year
+    * * SQL Data Type: int
+    * * Description: The assessment year (January 1 valuation date) the appeal decided.
+    */
+    get AssessmentYear(): number {
+        return this.Get('AssessmentYear');
+    }
+    set AssessmentYear(value: number) {
+        this.Set('AssessmentYear', value);
+    }
+
+    /**
+    * * Field Name: Level
+    * * Display Name: Appeal Level
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * County-PTABOA
+    *   * State-IBTR
+    * * Description: County-PTABOA or State-IBTR: which board decided.
+    */
+    get Level(): 'County-PTABOA' | 'State-IBTR' {
+        return this.Get('Level');
+    }
+    set Level(value: 'County-PTABOA' | 'State-IBTR') {
+        this.Set('Level', value);
+    }
+
+    /**
+    * * Field Name: Kind
+    * * Display Name: Outcome Kind
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Disposition
+    *   * Exemption
+    *   * Valuation
+    *   * Withdrawal
+    * * Description: Valuation = a value was decided; Exemption = a Form 136 case (no valuation); Withdrawal = the petition was withdrawn; Disposition = an IBTR result with no extracted value.
+    */
+    get Kind(): 'Disposition' | 'Exemption' | 'Valuation' | 'Withdrawal' {
+        return this.Get('Kind');
+    }
+    set Kind(value: 'Disposition' | 'Exemption' | 'Valuation' | 'Withdrawal') {
+        this.Set('Kind', value);
+    }
+
+    /**
+    * * Field Name: Certainty
+    * * Display Name: Decision Certainty
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Disposition
+    *   * Provisional
+    *   * Ratified
+    * * Description: Ratified = a Form 115, a Final Agreement, a revised card column or an IBTR holding with a value; Provisional = the assessor's agenda recommendation not yet ratified; Disposition = an IBTR result without a value.
+    */
+    get Certainty(): 'Disposition' | 'Provisional' | 'Ratified' {
+        return this.Get('Certainty');
+    }
+    set Certainty(value: 'Disposition' | 'Provisional' | 'Ratified') {
+        this.Set('Certainty', value);
+    }
+
+    /**
+    * * Field Name: OriginalTotalAV
+    * * Display Name: Original Total Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The value before the appeal as the record states it (agenda before-value, the card year's original column, or the IBTR holding's ValueBefore).
+    */
+    get OriginalTotalAV(): number | null {
+        return this.Get('OriginalTotalAV');
+    }
+    set OriginalTotalAV(value: number | null) {
+        this.Set('OriginalTotalAV', value);
+    }
+
+    /**
+    * * Field Name: DeterminedLandAV
+    * * Display Name: Determined Land Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The land portion of the decided value where the record splits it (Form 115 or revised card column); null where the record gives only a total.
+    */
+    get DeterminedLandAV(): number | null {
+        return this.Get('DeterminedLandAV');
+    }
+    set DeterminedLandAV(value: number | null) {
+        this.Set('DeterminedLandAV', value);
+    }
+
+    /**
+    * * Field Name: DeterminedImprovementAV
+    * * Display Name: Determined Improvement Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The improvement portion of the decided value where the record splits it (Form 115 or revised card column); null where the record gives only a total.
+    */
+    get DeterminedImprovementAV(): number | null {
+        return this.Get('DeterminedImprovementAV');
+    }
+    set DeterminedImprovementAV(value: number | null) {
+        this.Set('DeterminedImprovementAV', value);
+    }
+
+    /**
+    * * Field Name: DeterminedTotalAV
+    * * Display Name: Determined Total Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The value the record decided: the Form 115 total where matched, else the agenda after-value; the card's revised column; the IBTR holding's ValueAfter. Null for Exemption, Withdrawal and Disposition.
+    */
+    get DeterminedTotalAV(): number | null {
+        return this.Get('DeterminedTotalAV');
+    }
+    set DeterminedTotalAV(value: number | null) {
+        this.Set('DeterminedTotalAV', value);
+    }
+
+    /**
+    * * Field Name: DecidedAt
+    * * Display Name: Decided At
+    * * SQL Data Type: date
+    * * Description: The Form 115 date, else the hearing date; the card column's AsOfDate; the IBTR DecisionDate.
+    */
+    get DecidedAt(): Date | null {
+        return this.Get('DecidedAt');
+    }
+    set DecidedAt(value: Date | null) {
+        this.Set('DecidedAt', value);
+    }
+
+    /**
+    * * Field Name: CaseNumber
+    * * Display Name: Case Number
+    * * SQL Data Type: nvarchar(60)
+    * * Description: The board's own case or petition number as the record prints it; null where the record carries none.
+    */
+    get CaseNumber(): string | null {
+        return this.Get('CaseNumber');
+    }
+    set CaseNumber(value: string | null) {
+        this.Set('CaseNumber', value);
+    }
+
+    /**
+    * * Field Name: DispositionText
+    * * Display Name: Disposition Text
+    * * SQL Data Type: nvarchar(200)
+    * * Description: The result in the record's own words (the agenda action, the card column's revision reason, or the IBTR disposition).
+    */
+    get DispositionText(): string | null {
+        return this.Get('DispositionText');
+    }
+    set DispositionText(value: string | null) {
+        this.Set('DispositionText', value);
+    }
+
+    /**
+    * * Field Name: SourceDocumentID
+    * * Display Name: Source Document
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+    * * Description: The document the outcome is read from (the Form 115, the agenda, the record card or the IBTR decision), so every figure has a route to its source.
+    */
+    get SourceDocumentID(): string | null {
+        return this.Get('SourceDocumentID');
+    }
+    set SourceDocumentID(value: string | null) {
+        this.Set('SourceDocumentID', value);
+    }
+
+    /**
+    * * Field Name: PTABOAAppealID
+    * * Display Name: PTABOA Appeal
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: PTABOA Appeals (vwPTABOAAppeals.ID)
+    * * Description: The Marion PTABOA agenda row this outcome comes from; exactly one of the three source keys is set.
+    */
+    get PTABOAAppealID(): string | null {
+        return this.Get('PTABOAAppealID');
+    }
+    set PTABOAAppealID(value: string | null) {
+        this.Set('PTABOAAppealID', value);
+    }
+
+    /**
+    * * Field Name: IBTRAppealID
+    * * Display Name: IBTR Appeal
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: IBTR Appeals (vwIBTRAppeals.ID)
+    * * Description: The IBTR appeal this outcome comes from; exactly one of the three source keys is set.
+    */
+    get IBTRAppealID(): string | null {
+        return this.Get('IBTRAppealID');
+    }
+    set IBTRAppealID(value: string | null) {
+        this.Set('IBTRAppealID', value);
+    }
+
+    /**
+    * * Field Name: CardValuationColumnID
+    * * Display Name: Card Valuation Column
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Card Valuation Columns (vwCardValuationColumns.ID)
+    * * Description: The revised record-card valuation column this outcome comes from; exactly one of the three source keys is set.
+    */
+    get CardValuationColumnID(): string | null {
+        return this.Get('CardValuationColumnID');
+    }
+    set CardValuationColumnID(value: string | null) {
+        this.Set('CardValuationColumnID', value);
+    }
+
+    /**
+    * * Field Name: IsCurrent
+    * * Display Name: Is Current
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: The row that stands for this parcel-year at this level: the latest DecidedAt, ties broken Ratified over Provisional.
+    */
+    get IsCurrent(): boolean {
+        return this.Get('IsCurrent');
+    }
+    set IsCurrent(value: boolean) {
+        this.Set('IsCurrent', value);
+    }
+
+    /**
+    * * Field Name: Agenda115Differs
+    * * Display Name: Agenda and Form 115 Differ
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: The agenda after-value and the matched Form 115 total disagree (44 cases on 2026-09-24); the Form 115 wins.
+    */
+    get Agenda115Differs(): boolean {
+        return this.Get('Agenda115Differs');
+    }
+    set Agenda115Differs(value: boolean) {
+        this.Set('Agenda115Differs', value);
+    }
+
+    /**
+    * * Field Name: RebuiltAt
+    * * Display Name: Rebuilt At
+    * * SQL Data Type: datetime2
+    * * Description: When scripts/rebuild-appeal-outcomes.js last wrote this row.
+    */
+    get RebuiltAt(): Date {
+        return this.Get('RebuiltAt');
+    }
+    set RebuiltAt(value: Date) {
+        this.Set('RebuiltAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel Reference
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string {
+        return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document Reference
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string | null {
+        return this.Get('SourceDocument');
+    }
+
+    /**
+    * * Field Name: PTABOAAppeal
+    * * Display Name: PTABOA Appeal Reference
+    * * SQL Data Type: nvarchar(50)
+    */
+    get PTABOAAppeal(): string | null {
+        return this.Get('PTABOAAppeal');
+    }
+
+    /**
+    * * Field Name: IBTRAppeal
+    * * Display Name: IBTR Appeal Reference
+    * * SQL Data Type: nvarchar(200)
+    */
+    get IBTRAppeal(): string | null {
+        return this.Get('IBTRAppeal');
+    }
+}
+
+
+/**
  * Appeal Stage Playbook Notes - strongly typed entity sub-class
  * * Schema: indiana_tax
  * * Base Table: AppealStagePlaybookNote
@@ -17569,7 +18155,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: FiledAt
-    * * Display Name: Filed At
+    * * Display Name: Filed Date
     * * SQL Data Type: date
     * * Description: The date the Form 130 was actually filed (mailed or submitted online). NULL until filed.
     */
@@ -17608,7 +18194,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: OriginalTotalAV
-    * * Display Name: Original Total Assessed Value
+    * * Display Name: Original Assessed Value
     * * SQL Data Type: decimal(18, 2)
     * * Description: The assessed value under appeal, as noticed for this year. Copied from the headline at filing time so the record survives later corrections; NULL until the appeal is set up.
     */
@@ -17621,7 +18207,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: ResolvedTotalAV
-    * * Display Name: Resolved Total Assessed Value
+    * * Display Name: Resolved Assessed Value
     * * SQL Data Type: decimal(18, 2)
     * * Description: The assessed value as finally determined (informal agreement, PTABOA determination, IBTR order or court judgment). NULL while open. Original minus Resolved is the reduction won -- a fact.
     */
@@ -17634,7 +18220,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: ResolvedAt
-    * * Display Name: Resolved At
+    * * Display Name: Resolved Date
     * * SQL Data Type: date
     * * Description: The date of the determination ResolvedTotalAV came from.
     */
@@ -17647,7 +18233,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: Savings1Pct
-    * * Display Name: Savings - 1% Class
+    * * Display Name: Savings (1% Class)
     * * SQL Data Type: decimal(18, 2)
     * * Description: Tax saved on the portion of the reduction that falls in the 1% circuit-breaker class (homestead). Indiana tax is not AV x rate: the cap binds per class, so savings are computed per class and summed.
     */
@@ -17660,7 +18246,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: Savings2Pct
-    * * Display Name: Savings - 2% Class
+    * * Display Name: Savings (2% Class)
     * * SQL Data Type: decimal(18, 2)
     * * Description: Tax saved on the portion in the 2% class (other residential, agricultural land, long-term care).
     */
@@ -17673,7 +18259,7 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
 
     /**
     * * Field Name: Savings3Pct
-    * * Display Name: Savings - 3% Class
+    * * Display Name: Savings (3% Class)
     * * SQL Data Type: decimal(18, 2)
     * * Description: Tax saved on the portion in the 3% class (commercial, industrial, personal property) -- the bulk of a C&I appeal.
     */
@@ -17770,6 +18356,45 @@ export class indianataxClientAppealEntity extends BaseEntity<indianataxClientApp
     }
     set CountyAssessmentCycleID(value: string | null) {
         this.Set('CountyAssessmentCycleID', value);
+    }
+
+    /**
+    * * Field Name: EffectiveTaxRate
+    * * Display Name: Effective Tax Rate
+    * * SQL Data Type: decimal(9, 6)
+    * * Description: Net tax billed divided by gross assessed value on the same record for this parcel-year (county Tax History first, DLGF bill second, the nearest billed year of the parcel third). The billed tax already includes the circuit-breaker cap and deductions.
+    */
+    get EffectiveTaxRate(): number | null {
+        return this.Get('EffectiveTaxRate');
+    }
+    set EffectiveTaxRate(value: number | null) {
+        this.Set('EffectiveTaxRate', value);
+    }
+
+    /**
+    * * Field Name: EstimatedTaxSaving
+    * * Display Name: Estimated Tax Saving
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: EffectiveTaxRate x (OriginalTotalAV - ResolvedTotalAV) when the appeal resolved to a lower value; an estimate, not a bill. Null when no reduction or no rate.
+    */
+    get EstimatedTaxSaving(): number | null {
+        return this.Get('EstimatedTaxSaving');
+    }
+    set EstimatedTaxSaving(value: number | null) {
+        this.Set('EstimatedTaxSaving', value);
+    }
+
+    /**
+    * * Field Name: SavingBasis
+    * * Display Name: Saving Basis
+    * * SQL Data Type: nvarchar(40)
+    * * Description: Where the rate came from: "TaxHistory 2024", "DLGF bill 2024", "nearest 2023", or null.
+    */
+    get SavingBasis(): string | null {
+        return this.Get('SavingBasis');
+    }
+    set SavingBasis(value: string | null) {
+        this.Set('SavingBasis', value);
     }
 
     /**
@@ -23792,6 +24417,7 @@ export class indianataxDataSourceEntity extends BaseEntity<indianataxDataSourceE
     * * SQL Data Type: nvarchar(40)
     * * Value List Type: List
     * * Possible Values 
+    *   * Board Determination
     *   * Commercial
     *   * County Notice
     *   * County Record Card
@@ -23801,12 +24427,12 @@ export class indianataxDataSourceEntity extends BaseEntity<indianataxDataSourceE
     *   * Public Records Response
     *   * State DLGF
     *   * Taxpayer Provided
-    * * Description: What kind of source this is. Drives the headline rule: County * kinds and Public Records Response are official; State DLGF is a placeholder; Commercial, Taxpayer Provided and Practitioner are never a headline for assessed value.
+    * * Description: What kind of source this is. Drives the headline rule: County * kinds, Public Records Response and Board Determination are official; Board Determination (a PTABOA Form 115 / Final Agreement, or an IBTR holding with a value) outranks every card and roll for its year unless a later higher-level outcome exists; State DLGF is a placeholder; Commercial, Taxpayer Provided and Practitioner are never a headline for assessed value.
     */
-    get Kind(): 'Commercial' | 'County Notice' | 'County Record Card' | 'County Tax Bill' | 'County Tax History' | 'Practitioner' | 'Public Records Response' | 'State DLGF' | 'Taxpayer Provided' {
+    get Kind(): 'Board Determination' | 'Commercial' | 'County Notice' | 'County Record Card' | 'County Tax Bill' | 'County Tax History' | 'Practitioner' | 'Public Records Response' | 'State DLGF' | 'Taxpayer Provided' {
         return this.Get('Kind');
     }
-    set Kind(value: 'Commercial' | 'County Notice' | 'County Record Card' | 'County Tax Bill' | 'County Tax History' | 'Practitioner' | 'Public Records Response' | 'State DLGF' | 'Taxpayer Provided') {
+    set Kind(value: 'Board Determination' | 'Commercial' | 'County Notice' | 'County Record Card' | 'County Tax Bill' | 'County Tax History' | 'Practitioner' | 'Public Records Response' | 'State DLGF' | 'Taxpayer Provided') {
         this.Set('Kind', value);
     }
 
@@ -31223,7 +31849,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineLandAV
-    * * Display Name: Headline Land Assessed Value
+    * * Display Name: Headline Land AV
     * * SQL Data Type: decimal(18, 2)
     * * Description: Land assessed value from the headline document.
     */
@@ -31236,7 +31862,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineImprovementAV
-    * * Display Name: Headline Improvement Assessed Value
+    * * Display Name: Headline Improvement AV
     * * SQL Data Type: decimal(18, 2)
     * * Description: Improvement assessed value from the headline document.
     */
@@ -31249,7 +31875,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineTotalAV
-    * * Display Name: Headline Total Assessed Value
+    * * Display Name: Headline Total AV
     * * SQL Data Type: decimal(18, 2)
     * * Description: THE assessed value for this parcel-year: the figure every grid, total, budget and savings estimate uses. From the latest-dated official county document (card, bill, notice, public-records list); the DLGF roll only where no county document exists (IsPlaceholder = 1); never from a commercial, taxpayer or practitioner source.
     */
@@ -31330,7 +31956,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: MaxSpreadPct
-    * * Display Name: Maximum Spread Percentage
+    * * Display Name: Max Spread Percent
     * * SQL Data Type: decimal(9, 4)
     * * Description: Largest difference between the totals compared for disagreement -- official documents of the headline's own vintage (same document year) plus every non-official source -- as a percent of the headline total. Older-vintage official documents are revisions (see HasRevision), not disagreements. NULL with fewer than two compared rows.
     */
@@ -31444,7 +32070,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: RevisedFromTotalAV
-    * * Display Name: Revised From Total Assessed Value
+    * * Display Name: Revised From Total AV
     * * SQL Data Type: decimal(18, 2)
     * * Description: The total the newest older-vintage official document carried, when it differs from the headline (e.g. the AY2024 value on the 2024 card, superseded by the 2026 card). NULL when no revision.
     */
@@ -31483,6 +32109,33 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     }
 
     /**
+    * * Field Name: HasLaterAppeal
+    * * Display Name: Has Later Appeal
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: A later, higher-level appeal outcome exists for this parcel-year without an extracted value (an IBTR disposition after the county determination), so the headline fell back to the latest official document and may not be the value as finally determined.
+    */
+    get HasLaterAppeal(): boolean {
+        return this.Get('HasLaterAppeal');
+    }
+    set HasLaterAppeal(value: boolean) {
+        this.Set('HasLaterAppeal', value);
+    }
+
+    /**
+    * * Field Name: LaterAppealText
+    * * Display Name: Later Appeal Text
+    * * SQL Data Type: nvarchar(200)
+    * * Description: The later outcome in words, e.g. "IBTR: Board Determination, 2025-08-14".
+    */
+    get LaterAppealText(): string | null {
+        return this.Get('LaterAppealText');
+    }
+    set LaterAppealText(value: string | null) {
+        this.Set('LaterAppealText', value);
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
@@ -31493,7 +32146,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineDataSource
-    * * Display Name: Headline Data Source Name
+    * * Display Name: Headline Data Source
     * * SQL Data Type: nvarchar(100)
     */
     get HeadlineDataSource(): string | null {
@@ -31502,7 +32155,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: HeadlineSourceDocument
-    * * Display Name: Headline Source Document Name
+    * * Display Name: Headline Source Document
     * * SQL Data Type: nvarchar(500)
     */
     get HeadlineSourceDocument(): string | null {
@@ -31511,7 +32164,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: TaxDataSource
-    * * Display Name: Tax Data Source Name
+    * * Display Name: Tax Data Source
     * * SQL Data Type: nvarchar(100)
     */
     get TaxDataSource(): string | null {
@@ -31520,7 +32173,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
 
     /**
     * * Field Name: RevisedFromSourceDocument
-    * * Display Name: Revised From Source Document Name
+    * * Display Name: Revised From Source Document
     * * SQL Data Type: nvarchar(500)
     */
     get RevisedFromSourceDocument(): string | null {

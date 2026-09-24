@@ -35,7 +35,8 @@ export class indianataxIBTRAppealFormComponent extends BaseFormComponent {
             { sectionKey: 'iBTRDecisionParties', sectionName: 'IBTR Decision Parties', isExpanded: false },
             { sectionKey: 'iBTRDecisionChunks', sectionName: 'IBTR Decision Chunks', isExpanded: false },
             { sectionKey: 'taxCourtIBTRLinks', sectionName: 'Tax Court IBTR Links', isExpanded: false },
-            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false }
+            { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false },
+            { sectionKey: 'appealOutcomes', sectionName: 'Appeal Outcomes', isExpanded: false }
         ]);
     }
 }

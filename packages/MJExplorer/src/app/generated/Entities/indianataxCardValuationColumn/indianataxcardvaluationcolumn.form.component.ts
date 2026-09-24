@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { indianataxCardValuationColumnEntity } from 'mj_generatedentities';
 import { RegisterClass } from '@memberjunction/global';
 import { BaseFormComponent } from '@memberjunction/ng-base-forms';
+import {  } from "@memberjunction/ng-entity-viewer"
 
 @RegisterClass(BaseFormComponent, 'Card Valuation Columns') // Tell MemberJunction about this class
 @Component({
@@ -22,7 +23,8 @@ export class indianataxCardValuationColumnFormComponent extends BaseFormComponen
             { sectionKey: 'landValuation', sectionName: 'Land Valuation', isExpanded: true },
             { sectionKey: 'improvementValuation', sectionName: 'Improvement Valuation', isExpanded: true },
             { sectionKey: 'totalValuation', sectionName: 'Total Valuation', isExpanded: true },
-            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
+            { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
+            { sectionKey: 'appealOutcomes', sectionName: 'Appeal Outcomes', isExpanded: false }
         ]);
     }
 }

@@ -21,6 +21,7 @@ import { indianataxAppealAnalysisAssumptionFormComponent } from "./Entities/indi
 import { indianataxAppealAnalysisCompDecisionFormComponent } from "./Entities/indianataxAppealAnalysisCompDecision/indianataxappealanalysiscompdecision.form.component";
 import { indianataxAppealAnalysisIndicationFormComponent } from "./Entities/indianataxAppealAnalysisIndication/indianataxappealanalysisindication.form.component";
 import { indianataxAppealLeadFormComponent } from "./Entities/indianataxAppealLead/indianataxappeallead.form.component";
+import { indianataxAppealOutcomeFormComponent } from "./Entities/indianataxAppealOutcome/indianataxappealoutcome.form.component";
 import { indianataxAppealStagePlaybookNoteFormComponent } from "./Entities/indianataxAppealStagePlaybookNote/indianataxappealstageplaybooknote.form.component";
 import { indianataxAppealStageStatuteFormComponent } from "./Entities/indianataxAppealStageStatute/indianataxappealstagestatute.form.component";
 import { indianataxAppealStageFormComponent } from "./Entities/indianataxAppealStage/indianataxappealstage.form.component";
@@ -120,6 +121,7 @@ declarations: [
     indianataxAppealAnalysisCompDecisionFormComponent,
     indianataxAppealAnalysisIndicationFormComponent,
     indianataxAppealLeadFormComponent,
+    indianataxAppealOutcomeFormComponent,
     indianataxAppealStagePlaybookNoteFormComponent,
     indianataxAppealStageStatuteFormComponent,
     indianataxAppealStageFormComponent,
@@ -132,8 +134,7 @@ declarations: [
     indianataxCardImprovementFormComponent,
     indianataxCardNoteFormComponent,
     indianataxCardSummaryFormComponent,
-    indianataxCardValuationColumnFormComponent,
-    indianataxClientAppealStatusFormComponent],
+    indianataxCardValuationColumnFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -150,6 +151,7 @@ export class GeneratedForms_SubModule_0 { }
 
 @NgModule({
 declarations: [
+    indianataxClientAppealStatusFormComponent,
     indianataxClientAppealFormComponent,
     indianataxClientAuthorizationFormComponent,
     indianataxClientContactFormComponent,
@@ -168,8 +170,7 @@ declarations: [
     indianataxCountyAssessorRecordFormComponent,
     indianataxCountyAssessorSaleHistoryFormComponent,
     indianataxCountyContactFormComponent,
-    indianataxCountyResourceFormComponent,
-    indianataxDataSourceFormComponent],
+    indianataxCountyResourceFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -186,6 +187,7 @@ export class GeneratedForms_SubModule_1 { }
 
 @NgModule({
 declarations: [
+    indianataxDataSourceFormComponent,
     indianataxDLGFBuildingDetailFormComponent,
     indianataxDLGFBuildingFormComponent,
     indianataxDLGFImprovementFormComponent,
@@ -204,8 +206,7 @@ declarations: [
     indianataxLegalAuthorityFormComponent,
     indianataxLegalAuthorityChunkFormComponent,
     indianataxLegalAuthoritySectionFormComponent,
-    indianataxMarketAssumptionFormComponent,
-    indianataxOwnerPortfolioParcelFormComponent],
+    indianataxMarketAssumptionFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -222,6 +223,7 @@ export class GeneratedForms_SubModule_2 { }
 
 @NgModule({
 declarations: [
+    indianataxOwnerPortfolioParcelFormComponent,
     indianataxOwnerPortfolioRunFormComponent,
     indianataxOwnerPortfolioFormComponent,
     bigboxretailParcelBurdenShiftFormComponent,
@@ -240,8 +242,7 @@ declarations: [
     indianataxProspectFormComponent,
     indianataxPTABOAAppealFormComponent,
     indianataxResearchTaskFormComponent,
-    indianataxSaleReassessmentScenarioProbabilityFormComponent,
-    indianataxSaleTransactionFormComponent],
+    indianataxSaleReassessmentScenarioProbabilityFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -258,6 +259,7 @@ export class GeneratedForms_SubModule_3 { }
 
 @NgModule({
 declarations: [
+    indianataxSaleTransactionFormComponent,
     indianataxSourceDocumentFormComponent,
     indianataxSourceRegistryFormComponent,
     indianataxStatuteSectionFormComponent,

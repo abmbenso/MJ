@@ -1262,6 +1262,31 @@
         }
     </mj-collapsible-panel>
 
+    <!-- Appeal Outcomes Section -->
+    <mj-collapsible-panel
+        SectionKey="appealOutcomes"
+        SectionName="Appeal Outcomes"
+        Icon="fa fa-gavel"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('appealOutcomes')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Appeal Outcomes','SourceDocumentID')"
+                [NewRecordValues]="NewRecordValues('Appeal Outcomes')"
+                [AllowLoad]="IsSectionExpanded('appealOutcomes')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('appealOutcomes', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
     <mj-form-panel-slot Entity="{{record.EntityInfo.Name}}" Slot="after-related" [Record]="record" [FormComponent]="this" [FormContext]="formContext"></mj-form-panel-slot>
 </mj-record-form-container>
         

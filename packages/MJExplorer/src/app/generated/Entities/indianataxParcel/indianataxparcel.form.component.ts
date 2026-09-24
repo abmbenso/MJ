@@ -55,7 +55,8 @@ export class indianataxParcelFormComponent extends BaseFormComponent {
             { sectionKey: 'fairAndAccurateLeads', sectionName: 'Fair And Accurate Leads', isExpanded: false },
             { sectionKey: 'clientAppeals', sectionName: 'Client Appeals', isExpanded: false },
             { sectionKey: 'propertyParcels', sectionName: 'Property Parcels', isExpanded: false },
-            { sectionKey: 'parcelYearHeadlines', sectionName: 'Parcel Year Headlines', isExpanded: false }
+            { sectionKey: 'parcelYearHeadlines', sectionName: 'Parcel Year Headlines', isExpanded: false },
+            { sectionKey: 'appealOutcomes', sectionName: 'Appeal Outcomes', isExpanded: false }
         ]);
     }
 }
