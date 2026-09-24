@@ -10,6 +10,7 @@ import {
   UNIT_OF_COMPARISON_DEFS,
 } from './property-search-agent-context';
 import { OWNER_PROSPECTS_COVERAGE_NOTE } from './property-search-county';
+import { PROVISIONAL_PTABOA_TOOLTIP, formatOutcomeDate, isProvisionalPTABOAValue } from './property-search-outcomes';
 
 // Register AG Grid community modules once (idempotent across grids in the bundle).
 ModuleRegistry.registerModules([AllCommunityModule]);
@@ -63,10 +64,21 @@ function formatDate(params: { value: string | null }): string {
 
 /** Last Sale Price with a validity suffix -- same ✓/~ confidence-marker convention as the Sq Ft column, here signaling whether the county flagged this as an arm's-length market sale. */
 /** PTABOA Value: the determined (or, when Provisional, recommended) total; an Exemption / Withdrawal has no value by design and says so instead of a bare dash. */
-function formatPTABOAValue(params: { value: number | null; data?: Pick<MergedParcelRow, 'PTABOAOutcomeKind'> }): string {
-  if (params.value != null) return formatCurrencyValue(params.value);
+function formatPTABOAValue(params: { value: number | null; data?: Pick<MergedParcelRow, 'PTABOAOutcomeKind' | 'PTABOACertainty'> }): string {
+  // "~" = the assessor's recommendation, not yet ratified (the grid's existing ✓/~ confidence convention).
+  if (params.value != null) return `${formatCurrencyValue(params.value)}${params.data?.PTABOACertainty === 'Provisional' ? ' ~' : ''}`;
   const kind = params.data?.PTABOAOutcomeKind;
   return kind === 'Withdrawal' ? 'Withdrawn' : kind === 'Exemption' ? 'Exemption' : '—';
+}
+
+/** Cell tooltip for any PTABOA-derived figure: only a provisional row gets one. */
+function provisionalPTABOATooltip(params: { data?: Pick<MergedParcelRow, 'PTABOAValue' | 'PTABOACertainty'> }): string | undefined {
+  return params.data && isProvisionalPTABOAValue(params.data) ? PROVISIONAL_PTABOA_TOOLTIP : undefined;
+}
+
+/** PTABOA Date at its precision: a Form 115 batch month reads "Aug 2025" (it is not the mailing date); anything else is the exact day. */
+function formatPTABOADate(params: { value: string | null; data?: Pick<MergedParcelRow, 'PTABOADatePrecision'> }): string {
+  return params.value ? formatOutcomeDate(params.value, params.data?.PTABOADatePrecision ?? 'day') : '—';
 }
 
 /** Certainty pill: Ratified (a Form 115 or a revised card column) vs Provisional (agenda only). Blank = no County outcome. */
@@ -450,7 +462,8 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       width: 150,
       type: 'numericColumn',
       valueFormatter: formatPTABOAValue,
-      headerTooltip: 'The county-level appeal outcome for the selected assessment year (the current Appeal Outcomes row): the ratified Form 115 or revised-card total, or -- when PTABOA Certainty says Provisional -- the agenda\'s recommended value. "Withdrawn" / "Exemption" = an outcome that is not a valuation. Dash = no county appeal outcome for this parcel in that year -- true for most parcels/years.',
+      tooltipValueGetter: provisionalPTABOATooltip,
+      headerTooltip: 'The county-level appeal outcome for the selected assessment year (the current Appeal Outcomes row): the ratified Form 115 or revised-card total, or -- when PTABOA Certainty says Provisional -- the agenda\'s recommended value, marked "~". "Withdrawn" / "Exemption" = an outcome that is not a valuation. Dash = no county appeal outcome for this parcel in that year -- true for most parcels/years.',
     },
   },
   {
@@ -475,8 +488,8 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       field: 'PTABOADate',
       headerName: 'PTABOA Date',
       width: 130,
-      valueFormatter: formatDate,
-      headerTooltip: 'Decision date of the outcome behind PTABOA Value: the Form 115 date where ratified, else the hearing date, else the record card\'s as-of date.',
+      valueFormatter: formatPTABOADate,
+      headerTooltip: 'When the outcome behind PTABOA Value was decided: the Form 115 batch month where ratified (shown as a month, e.g. "Aug 2025"), else the hearing date, else the record card\'s as-of date -- not the 115\'s mailing date.',
     },
   },
   {
@@ -808,7 +821,12 @@ function buildRatioColumns(): PropertySearchColumnConfig[] {
             const num = metric.numerator(p.data);
             return denom == null || num == null ? null : num / denom;
           },
-          valueFormatter: (p: { value: number | null }) => (p.value == null ? '—' : `${formatCurrencyValue(Math.round(p.value))}/${shortUnitSuffix}`),
+          valueFormatter: (p: { value: number | null; data?: MergedParcelRow }) => {
+            if (p.value == null) return '—';
+            const marker = p.data && metric.isProvisional?.(p.data) ? ' ~' : '';
+            return `${formatCurrencyValue(Math.round(p.value))}/${shortUnitSuffix}${marker}`;
+          },
+          ...(metric.isProvisional ? { tooltipValueGetter: provisionalPTABOATooltip } : {}),
           headerTooltip: `${metric.fullLabel} divided by ${unit.label} -- "—" when this parcel is missing either figure (most rows, for the CoStar-sourced units).`,
         },
       });

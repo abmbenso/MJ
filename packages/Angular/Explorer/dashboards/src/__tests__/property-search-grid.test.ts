@@ -77,6 +77,27 @@ describe('appeal-outcome columns', () => {
     expect(render({ value: 'Provisional' })).toBe('<span class="psg-pill psg-pill-provisional">Provisional</span>');
     expect(render({ value: null })).toBe('');
   });
+  it('marks a provisional PTABOA Value with "~" (the ✓/~ convention) and tooltips it as a recommendation', () => {
+    const col = find('PTABOAValue')!;
+    const fmt = col.colDef.valueFormatter as (p: { value: number | null; data?: { PTABOAOutcomeKind: string | null; PTABOACertainty: string | null } }) => string;
+    expect(fmt({ value: 2_100_000, data: { PTABOAOutcomeKind: 'Valuation', PTABOACertainty: 'Provisional' } })).toBe('$2,100,000 ~');
+    expect(fmt({ value: 2_100_000, data: { PTABOAOutcomeKind: 'Valuation', PTABOACertainty: 'Ratified' } })).toBe('$2,100,000');
+    const tip = col.colDef.tooltipValueGetter as (p: { data?: { PTABOAValue: number | null; PTABOACertainty: string | null } }) => string | undefined;
+    expect(tip({ data: { PTABOAValue: 2_100_000, PTABOACertainty: 'Provisional' } })).toMatch(/recommendation, not yet ratified/i);
+    expect(tip({ data: { PTABOAValue: 2_100_000, PTABOACertainty: 'Ratified' } })).toBeUndefined();
+  });
+  it('marks the PTABOA $/unit ratio of a provisional row with "~" too', () => {
+    const col = find('PTABOAValuePerSFCountyXG')!;
+    const fmt = col.colDef.valueFormatter as (p: { value: number | null; data?: { PTABOAValue: number | null; PTABOACertainty: string | null } }) => string;
+    expect(fmt({ value: 42.4, data: { PTABOAValue: 1, PTABOACertainty: 'Provisional' } })).toBe('$42/SF ~');
+    expect(fmt({ value: 42.4, data: { PTABOAValue: 1, PTABOACertainty: 'Ratified' } })).toBe('$42/SF');
+    expect(find('AssessedValuePerSFCountyXG')!.colDef.valueFormatter!({ value: 42.4, data: { PTABOAValue: 1, PTABOACertainty: 'Provisional' } } as never)).toBe('$42/SF');
+  });
+  it('shows a month-precision PTABOA Date as "Aug 2025"', () => {
+    const fmt = find('PTABOADate')!.colDef.valueFormatter as (p: { value: string | null; data?: { PTABOADatePrecision: string | null } }) => string;
+    expect(fmt({ value: '2025-08-01', data: { PTABOADatePrecision: 'month' } })).toBe('Aug 2025');
+    expect(fmt({ value: '2025-08-21', data: { PTABOADatePrecision: 'day' } })).toBe('8/21/2025');
+  });
   it('says Withdrawn / Exemption in the PTABOA Value cell rather than a bare dash', () => {
     const fmt = find('PTABOAValue')!.colDef.valueFormatter as (p: { value: number | null; data?: { PTABOAOutcomeKind: string | null } }) => string;
     expect(fmt({ value: null, data: { PTABOAOutcomeKind: 'Withdrawal' } })).toBe('Withdrawn');
@@ -89,7 +110,7 @@ describe('appeal-outcome columns', () => {
     expect(fmt({ value: '2025-08-01' })).toBe('8/1/2025');
     expect(fmt({ value: null })).toBe('—');
   });
-  it('badges HasLaterAppeal with the text as its tooltip, and sorts true first on a descending sort', () => {
+  it('badges HasLaterAppeal with the text as its tooltip', () => {
     const col = find('HasLaterAppeal')!;
     const render = col.colDef.cellRenderer as (p: { value: boolean | null }) => string;
     expect(render({ value: true })).toContain('psg-pill-later');

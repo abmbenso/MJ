@@ -23,7 +23,7 @@ export const PTABOA_APPEALS_ENTITY = 'PTABOA Appeals';
 
 /** The `Appeal Outcomes` columns the grid's current-outcome read needs. */
 export const CURRENT_OUTCOME_FIELDS = [
-  'ParcelID', 'AssessmentYear', 'Level', 'Kind', 'Certainty', 'DeterminedTotalAV', 'DecidedAt', 'PTABOAAppealID', 'IsCurrent',
+  'ParcelID', 'AssessmentYear', 'Level', 'Kind', 'Certainty', 'DeterminedTotalAV', 'DecidedAt', 'PTABOAAppealID', 'SourceDocumentID', 'IsCurrent',
 ] as const;
 
 /** The `Appeal Outcomes` columns the detail panel's outcome list needs. */
@@ -36,6 +36,13 @@ export const OUTCOME_HISTORY_FIELDS = [
 export type OutcomeCertainty = Exclude<OutcomeCertaintyValue, 'Disposition'>;
 /** A County outcome's kind -- the entity's value list minus 'Disposition'. */
 export type CountyOutcomeKind = Exclude<OutcomeKindValue, 'Disposition'>;
+/**
+ * How exact DecidedAt is. A ratified PTABOA outcome's DecidedAt is the Form 115 BATCH month (the
+ * 115 bundle's own date, first of the month) -- it can precede the hearing and is never the
+ * mailing date, so it is shown as "Aug 2025". Hearing dates, card as-of dates and IBTR decision
+ * dates are exact days.
+ */
+export type OutcomeDatePrecision = 'month' | 'day';
 
 /** The outcome-derived slice of MergedParcelRow, for the SELECTED assessment year. */
 export interface OutcomeLayerFields {
@@ -45,8 +52,10 @@ export interface OutcomeLayerFields {
    * (not a valuation) and when the parcel has no County outcome for the year.
    */
   PTABOAValue: number | null;
-  /** DecidedAt of that SAME outcome (Form 115 date, else hearing date, else card as-of date). */
+  /** DecidedAt of that SAME outcome: the Form 115 batch month where ratified, else the hearing date, else the card as-of date -- never the 115's mailing date. */
   PTABOADate: string | null;
+  /** 'month' when PTABOADate is a Form 115 batch month (show "Aug 2025"); 'day' otherwise; null with no County outcome. */
+  PTABOADatePrecision: OutcomeDatePrecision | null;
   /** The linked PTABOA appeal's form ("130S", "130O", "136"...); null for a card-revision outcome, which has no agenda row. */
   PTABOAAppealType: string | null;
   /** Ratified (a Form 115 or a revised card column) vs Provisional (agenda only). Null = no County outcome. */
@@ -62,8 +71,30 @@ export interface OutcomeLayerFields {
 }
 
 export const EMPTY_OUTCOME_LAYERS: OutcomeLayerFields = {
-  PTABOAValue: null, PTABOADate: null, PTABOAAppealType: null, PTABOACertainty: null, PTABOAOutcomeKind: null, IBTRYearValue: null,
+  PTABOAValue: null, PTABOADate: null, PTABOADatePrecision: null, PTABOAAppealType: null, PTABOACertainty: null, PTABOAOutcomeKind: null, IBTRYearValue: null,
 };
+
+/** True when a row's PTABOA Value is the assessor's recommendation, not yet ratified -- the grid marks it "~" and the analytics leave it out. */
+export function isProvisionalPTABOAValue(row: Pick<OutcomeLayerFields, 'PTABOAValue' | 'PTABOACertainty'>): boolean {
+  return row.PTABOAValue != null && row.PTABOACertainty === 'Provisional';
+}
+
+export const PROVISIONAL_PTABOA_TOOLTIP = "Assessor's recommendation, not yet ratified by a Form 115 -- it can still change.";
+
+const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** A calendar-day string ('2025-08-01') at its precision: "Aug 2025" for a Form 115 batch month, "8/1/2025" for an exact day. Never goes through a local-time Date. */
+export function formatOutcomeDate(day: string | null, precision: OutcomeDatePrecision | null): string {
+  const m = day ? /^(\d{4})-(\d{2})-(\d{2})$/.exec(day) : null;
+  if (!m) return day ?? '—';
+  return precision === 'month' ? `${MONTHS[Number(m[2]) - 1]} ${m[1]}` : `${Number(m[2])}/${Number(m[3])}/${m[1]}`;
+}
+
+/** A ratified PTABOA-sourced outcome that carries its Form 115 document: DecidedAt is that 115 batch's month. */
+function datePrecision(r: Row): OutcomeDatePrecision {
+  const form115 = r['Certainty'] === 'Ratified' && r['PTABOAAppealID'] != null && r['SourceDocumentID'] != null;
+  return form115 ? 'month' : 'day';
+}
 
 const str = (v: unknown): string | null => (v == null ? null : v instanceof Date ? v.toISOString().slice(0, 10) : String(v));
 const num = (v: unknown): number | null => (v == null ? null : Number(v));
@@ -96,6 +127,7 @@ function countyFields(r: Row, appealTypeById: Map<string, string | null>): Omit<
     // Only a valuation carries a value -- an exemption or withdrawal is not an assessed value.
     PTABOAValue: kind === 'Valuation' ? num(r['DeterminedTotalAV']) : null,
     PTABOADate: calendarDay(r['DecidedAt']),
+    PTABOADatePrecision: r['DecidedAt'] == null ? null : datePrecision(r),
     PTABOAAppealType: ptaboaId ? (appealTypeById.get(ptaboaId) ?? null) : null,
     PTABOACertainty: asCertainty(r['Certainty']),
     PTABOAOutcomeKind: kind,
@@ -140,6 +172,8 @@ export interface AppealOutcomeRow {
   originalTotalAV: number | null;
   determinedTotalAV: number | null;
   decidedAt: string | null;
+  /** 'month' for a Form 115 batch month (see OutcomeDatePrecision). */
+  decidedAtPrecision: OutcomeDatePrecision;
   caseNumber: string | null;
   dispositionText: string | null;
   /** Which record the outcome came from: a PTABOA agenda/Form 115, a revised record-card column, or an IBTR docket row. */
@@ -169,6 +203,7 @@ function toOutcomeRow(r: Row, urlByDocId: ReadonlyMap<string, string | null>): A
     originalTotalAV: num(r['OriginalTotalAV']),
     determinedTotalAV: num(r['DeterminedTotalAV']),
     decidedAt: calendarDay(r['DecidedAt']),
+    decidedAtPrecision: datePrecision(r),
     caseNumber: str(r['CaseNumber']),
     dispositionText: str(r['DispositionText']),
     source: outcomeSource(r),

@@ -1,7 +1,8 @@
 import { describe, it, expect } from 'vitest';
 import {
-  EMPTY_OUTCOME_LAYERS, reduceCurrentOutcomes, applyOutcomeLayers, buildAppealOutcomeRows,
+  EMPTY_OUTCOME_LAYERS, reduceCurrentOutcomes, applyOutcomeLayers, buildAppealOutcomeRows, isProvisionalPTABOAValue, formatOutcomeDate,
 } from '../PropertySearch/property-search-outcomes';
+import { computeResultSetAnalytics, MergedParcelRow } from '../PropertySearch/property-search-agent-context';
 
 /**
  * The Appeal Outcomes read (indiana_tax.vwAppealOutcomes, one IsCurrent row per parcel-year-level)
@@ -23,6 +24,7 @@ describe('reduceCurrentOutcomes', () => {
     expect(reduceCurrentOutcomes([county()], ptaboa).get('P1')).toEqual({
       ...EMPTY_OUTCOME_LAYERS,
       PTABOAValue: 1_980_000, PTABOADate: '2024-03-14', PTABOAAppealType: '130S', PTABOACertainty: 'Ratified', PTABOAOutcomeKind: 'Valuation',
+      PTABOADatePrecision: 'month',
     });
   });
   it('a provisional County valuation -> certainty Provisional and PTABOA Value = the recommended (agenda) value', () => {
@@ -86,11 +88,47 @@ describe('buildAppealOutcomeRows', () => {
     expect(rows[1]).toEqual({
       id: 'c', assessmentYear: 2023, level: 'County', kind: 'Valuation', certainty: 'Ratified', originalTotalAV: 2_450_000,
       determinedTotalAV: 1_980_000, decidedAt: '2024-03-14', caseNumber: '49-800-23-0-4-00123', dispositionText: null,
-      source: 'PTABOA', documentURL: 'https://example.test/115.pdf', isCurrent: true, agenda115Differs: false,
+      source: 'PTABOA', documentURL: 'https://example.test/115.pdf', isCurrent: true, agenda115Differs: false, decidedAtPrecision: 'month',
     });
     expect(rows[0]).toMatchObject({ level: 'State', certainty: 'Disposition', source: 'IBTR', dispositionText: 'Settlement - withdrawal', documentURL: null });
   });
   it('names a card-revision outcome as such', () => {
     expect(buildAppealOutcomeRows([county({ PTABOAAppealID: null, CardValuationColumnID: 'C-1' })], urls)[0].source).toBe('Record card');
+  });
+});
+
+describe('DecidedAt precision (Form 115 batch month vs an exact date)', () => {
+  it('a ratified PTABOA outcome with a Form 115 document is month-precision -- DecidedAt is the 115 batch month, not the mailing date', () => {
+    expect(reduceCurrentOutcomes([county()], ptaboa).get('P1')?.PTABOADatePrecision).toBe('month');
+  });
+  it('a provisional PTABOA outcome (hearing date), a card revision (as-of date) and a 115-less row are day-precision', () => {
+    expect(reduceCurrentOutcomes([county({ Certainty: 'Provisional', SourceDocumentID: null })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+    expect(reduceCurrentOutcomes([county({ PTABOAAppealID: null, CardValuationColumnID: 'C-1' })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+    expect(reduceCurrentOutcomes([county({ SourceDocumentID: null })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+  });
+  it('formats a month-precision date as "Aug 2025" and a day-precision one in full', () => {
+    expect(formatOutcomeDate('2025-08-01', 'month')).toBe('Aug 2025');
+    expect(formatOutcomeDate('2025-08-21', 'day')).toBe('8/21/2025');
+    expect(formatOutcomeDate(null, 'day')).toBe('—');
+  });
+});
+
+describe('provisional PTABOA values', () => {
+  it('flags a provisional valuation for the "~" marker; a ratified one or a blank value is not flagged', () => {
+    const prov = reduceCurrentOutcomes([county({ Certainty: 'Provisional', DeterminedTotalAV: 2_100_000 })], ptaboa).get('P1')!;
+    const rat = reduceCurrentOutcomes([county()], ptaboa).get('P1')!;
+    expect(isProvisionalPTABOAValue(prov)).toBe(true);
+    expect(isProvisionalPTABOAValue(rat)).toBe(false);
+    expect(isProvisionalPTABOAValue({ PTABOAValue: null, PTABOACertainty: 'Provisional' })).toBe(false);
+  });
+  it('Result Set Analytics excludes provisional values from PTABOA Value / unit and reports how many it excluded', () => {
+    const row = (id: string, value: number, certainty: 'Ratified' | 'Provisional'): MergedParcelRow => ({
+      ParcelID: id, EstimatedSqFt: 1000, SqFtSource: 'PropertyRecordCard', AssessedTotalAV: 200_000,
+      PTABOAValue: value, PTABOACertainty: certainty,
+    } as MergedParcelRow);
+    const a = computeResultSetAnalytics([row('A', 100_000, 'Ratified'), row('B', 150_000, 'Ratified'), row('C', 900_000, 'Provisional')], 'sqft');
+    expect(a.ptaboaValuePerUnit).toMatchObject({ sampleSize: 2, max: 150 });
+    expect(a.ptaboaProvisionalExcluded).toBe(1);
+    expect(a.assessedValuePerUnit?.sampleSize).toBe(3);
   });
 });

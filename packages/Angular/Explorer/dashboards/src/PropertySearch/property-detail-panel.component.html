@@ -161,7 +161,7 @@
         } @else {
           <div class="appeal-av-table-wrap outcome-table-wrap">
             <table class="appeal-av-table outcome-table">
-              <thead><tr><th>Year</th><th>Level</th><th>Certainty</th><th>From → To</th><th>Decided</th><th>Source</th></tr></thead>
+              <thead><tr><th>Year</th><th>Level</th><th>Certainty</th><th>From → To</th><th title="Form 115 batch month where ratified, else the hearing date — not the mailing date">Decided</th><th>Source</th></tr></thead>
               <tbody>
                 @for (o of Outcomes; track o.id) {
                   <tr [class.outcome-superseded]="!o.isCurrent">
@@ -172,7 +172,7 @@
                         [title]="certaintyTitle(o)">{{ o.certainty ?? '—' }}</span>
                     </td>
                     <td class="outcome-change">{{ outcomeChange(o) }}</td>
-                    <td>{{ o.decidedAt ?? 'undated' }}</td>
+                    <td [title]="o.decidedAtPrecision === 'month' ? 'Form 115 batch month — not the mailing date' : ''">{{ o.decidedAt ? formatOutcomeDate(o.decidedAt, o.decidedAtPrecision) : 'undated' }}</td>
                     <td class="outcome-source">
                       @if (o.documentURL) {
                         <a [href]="o.documentURL" target="_blank" rel="noopener noreferrer">{{ outcomeSourceLabel(o) }}</a>

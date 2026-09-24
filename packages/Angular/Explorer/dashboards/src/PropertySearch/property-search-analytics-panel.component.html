@@ -52,9 +52,10 @@
                     <dd>{{ formatStat(row.stats.avg, row.formatKind) }}</dd>
                   </div>
                 </dl>
-                <div class="analytics-metric-card-sample">{{ row.stats.sampleSize }} of {{ Rows.length }}</div>
+                <div class="analytics-metric-card-sample">{{ row.sampleNote ?? (row.stats.sampleSize + ' of ' + Rows.length) }}</div>
               } @else {
                 <div class="analytics-metric-card-no-data">No data</div>
+                @if (row.sampleNote) { <div class="analytics-metric-card-sample">{{ row.sampleNote }}</div> }
               }
             </div>
           }

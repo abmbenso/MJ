@@ -13,7 +13,7 @@ import { MARION_COUNTY_NUMBER, CountySourceTier } from './property-search-county
 // value import back here would be a cycle -- `import type` is erased at compile time and never
 // executes, so it can't participate in a runtime cycle.
 import type { AppealLayerFields } from './property-search-appeal-layers';
-import type { OutcomeLayerFields } from './property-search-outcomes';
+import { OutcomeLayerFields, isProvisionalPTABOAValue } from './property-search-outcomes';
 
 /** A single merged parcel row (CountyAssessorRecord fields + joined Parcel geometry/identity fields). */
 export interface MergedParcelRow extends AppealLayerFields, OutcomeLayerFields {
@@ -662,11 +662,13 @@ export interface RatioMetricDef {
   shortLabel: string;
   fullLabel: string;
   numerator: (row: MergedParcelRow) => number | null;
+  /** True when this row's numerator is provisional (a PTABOA recommendation) -- the grid marks the ratio "~". */
+  isProvisional?: (row: MergedParcelRow) => boolean;
 }
 
 export const RATIO_METRIC_DEFS: RatioMetricDef[] = [
   { key: 'AssessedValue', shortLabel: '$', fullLabel: 'Assessed Value', numerator: (r) => r.AssessedTotalAV },
-  { key: 'PTABOAValue', shortLabel: 'PTABOA', fullLabel: 'PTABOA Value', numerator: (r) => r.PTABOAValue },
+  { key: 'PTABOAValue', shortLabel: 'PTABOA', fullLabel: 'PTABOA Value', numerator: (r) => r.PTABOAValue, isProvisional: isProvisionalPTABOAValue },
   { key: 'SalePrice', shortLabel: 'Sale', fullLabel: 'Sale Price', numerator: (r) => r.LastSalePrice },
 ];
 
@@ -739,7 +741,10 @@ export interface ResultSetAnalytics {
   size: MetricStats | null;
   assessedValuePerUnit: MetricStats | null;
   totalTaxPerUnit: MetricStats | null;
+  /** RATIFIED PTABOA values only -- a provisional recommendation is not a determination, so it never enters the statistic. */
   ptaboaValuePerUnit: MetricStats | null;
+  /** How many rows with a usable denominator carried a provisional PTABOA value and were left out of ptaboaValuePerUnit. */
+  ptaboaProvisionalExcluded: number;
   salePricePerUnit: MetricStats | null;
 }
 
@@ -759,6 +764,7 @@ export function computeResultSetAnalytics(rows: MergedParcelRow[], unit: Compari
   const taxPerUnit: number[] = [];
   const ptaboaPerUnit: number[] = [];
   const salePricePerUnit: number[] = [];
+  let ptaboaProvisionalExcluded = 0;
 
   for (const row of rows) {
     // Collected unconditionally -- see yearBuilt's own doc comment on
@@ -772,7 +778,8 @@ export function computeResultSetAnalytics(rows: MergedParcelRow[], unit: Compari
     sizes.push(denom);
     if (row.AssessedTotalAV != null) avPerUnit.push(row.AssessedTotalAV / denom);
     if (row.TotalTax != null) taxPerUnit.push(row.TotalTax / denom);
-    if (row.PTABOAValue != null) ptaboaPerUnit.push(row.PTABOAValue / denom);
+    if (isProvisionalPTABOAValue(row)) ptaboaProvisionalExcluded++;
+    else if (row.PTABOAValue != null) ptaboaPerUnit.push(row.PTABOAValue / denom);
     if (row.LastSalePrice != null) salePricePerUnit.push(row.LastSalePrice / denom);
   }
 
@@ -783,6 +790,7 @@ export function computeResultSetAnalytics(rows: MergedParcelRow[], unit: Compari
     assessedValuePerUnit: summarize(avPerUnit),
     totalTaxPerUnit: summarize(taxPerUnit),
     ptaboaValuePerUnit: summarize(ptaboaPerUnit),
+    ptaboaProvisionalExcluded,
     salePricePerUnit: summarize(salePricePerUnit),
   };
 }

@@ -15,7 +15,7 @@ import {
   CoStarPropertyRow,
 } from './property-search-agent-context';
 import { ParcelAppealLayerDetail } from './property-search-appeal-layers';
-import { AppealOutcomeRow } from './property-search-outcomes';
+import { AppealOutcomeRow, OutcomeDatePrecision, formatOutcomeDate } from './property-search-outcomes';
 
 interface SqFtConfidenceBadge {
   label: string;
@@ -210,15 +210,27 @@ export class PropertyDetailPanelComponent {
 
   /** "$2,450,000 → $1,980,000 (−19.2%)" for a valuation; the kind or disposition text otherwise. */
   public outcomeChange(o: AppealOutcomeRow): string {
-    if (o.kind === 'Valuation' && o.determinedTotalAV != null) {
-      if (o.originalTotalAV == null) return `→ ${formatCurrency(o.determinedTotalAV)}`;
-      const pct = o.originalTotalAV ? ((o.determinedTotalAV - o.originalTotalAV) / o.originalTotalAV) * 100 : null;
-      const pctText = pct == null ? '' : ` (${pct > 0 ? '+' : ''}${pct.toFixed(1)}%)`;
-      return `${formatCurrency(o.originalTotalAV)} → ${formatCurrency(o.determinedTotalAV)}${pctText}`;
+    if (o.kind === 'Valuation' && o.determinedTotalAV != null && o.certainty === 'Provisional') {
+      // A recommendation, not a determination -- same "~" as the grid.
+      return `${this.valuationChange(o)} ~ (recommended)`;
     }
+    if (o.kind === 'Valuation' && o.determinedTotalAV != null) return this.valuationChange(o);
     if (o.kind === 'Withdrawal') return 'Withdrawn';
     if (o.kind === 'Exemption') return 'Exemption (not a valuation)';
     return o.dispositionText ?? o.kind ?? '—';
+  }
+
+  private valuationChange(o: AppealOutcomeRow): string {
+    if (o.determinedTotalAV == null) return '—';
+    if (o.originalTotalAV == null) return `→ ${formatCurrency(o.determinedTotalAV)}`;
+    const pct = o.originalTotalAV ? ((o.determinedTotalAV - o.originalTotalAV) / o.originalTotalAV) * 100 : null;
+    const pctText = pct == null ? '' : ` (${pct > 0 ? '+' : ''}${pct.toFixed(1)}%)`;
+    return `${formatCurrency(o.originalTotalAV)} → ${formatCurrency(o.determinedTotalAV)}${pctText}`;
+  }
+
+  /** Form 115 batch month where ratified ("Aug 2025"), else the exact day. */
+  public formatOutcomeDate(day: string, precision: OutcomeDatePrecision): string {
+    return formatOutcomeDate(day, precision);
   }
 
   public outcomeSourceLabel(o: AppealOutcomeRow): string {

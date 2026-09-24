@@ -19,6 +19,8 @@ interface MetricRow {
   label: string;
   stats: MetricStats | null;
   formatKind: MetricFormatKind;
+  /** Replaces the default "n of N" sample line when the statistic leaves rows out on purpose. */
+  sampleNote?: string;
 }
 
 /**
@@ -113,7 +115,13 @@ export class PropertySearchAnalyticsPanelComponent {
       { label: PropertySearchAnalyticsPanelComponent.SIZE_ROW_LABELS[this.SelectedUnit], stats: a.size, formatKind: 'plain' },
       { label: `Assessed Value / ${unitLabel}`, stats: a.assessedValuePerUnit, formatKind: 'currency' },
       { label: `Total Tax / ${unitLabel}`, stats: a.totalTaxPerUnit, formatKind: 'currency' },
-      { label: `PTABOA Value / ${unitLabel}`, stats: a.ptaboaValuePerUnit, formatKind: 'currency' },
+      {
+        label: `PTABOA Value / ${unitLabel}`, stats: a.ptaboaValuePerUnit, formatKind: 'currency',
+        // Provisional recommendations are not determinations -- excluded, and the exclusion is said out loud.
+        sampleNote: a.ptaboaProvisionalExcluded
+          ? `${a.ptaboaValuePerUnit?.sampleSize ?? 0} ratified; ${a.ptaboaProvisionalExcluded} provisional excluded`
+          : undefined,
+      },
       { label: `Sale Price / ${unitLabel}`, stats: a.salePricePerUnit, formatKind: 'currency' },
     ];
   }
