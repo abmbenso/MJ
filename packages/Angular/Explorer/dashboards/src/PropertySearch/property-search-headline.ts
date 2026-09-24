@@ -115,7 +115,7 @@ export interface HeadlineFields {
   HasRevision: boolean;
   TotalTax: number | null;
   TaxSource: string | null;
-  /** A later State-IBTR disposition stands over this year's County determination (the headline fell back to the ordinary ranking); LaterAppealText says which, e.g. "IBTR: Settlement - withdrawal, 2026-01-30". */
+  /** An IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined. LaterAppealText says which, e.g. "IBTR: Settlement - withdrawal, 2026-01-30". */
   HasLaterAppeal: boolean;
   LaterAppealText: string | null;
 }

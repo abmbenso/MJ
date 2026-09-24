@@ -262,6 +262,7 @@ describe('fetchCurrentOutcomes', () => {
     expect(outcomes.Fields).toEqual(expect.arrayContaining(['ParcelID', 'Level', 'Kind', 'Certainty', 'DeterminedTotalAV', 'DecidedAt', 'PTABOAAppealID', 'IsCurrent']));
     expect(appeals.EntityName).toBe('PTABOA Appeals');
     expect(appeals.ExtraFilter).toContain('AssessmentYear = 2023');
+    expect(appeals.Fields).toEqual(expect.arrayContaining(['ID', 'AppealType', 'HearingDate']));
     for (const p of [outcomes, appeals]) { expect(p.MaxRows).toBeGreaterThan(0); expect(p.ResultType).toBe('simple'); }
     expect(out.get('P1')).toMatchObject({ PTABOAValue: 2_100_000, PTABOACertainty: 'Provisional', PTABOAAppealType: '130S' });
     // Every requested parcel gets an entry on a successful load; no outcome -> nulls.
@@ -283,7 +284,7 @@ describe('fetchParcelAppealLayerDetail -- outcomes', () => {
       .mockResolvedValueOnce([ok([]), ok([]), ok([]), ok([
         { ID: 'o1', AssessmentYear: 2023, Level: 'County-PTABOA', Kind: 'Valuation', Certainty: 'Ratified', OriginalTotalAV: 10, DeterminedTotalAV: 8,
           DecidedAt: '2024-03-14', SourceDocumentID: 'DOC-1', PTABOAAppealID: 'A-1', IsCurrent: true, Agenda115Differs: false },
-      ])])
+      ]), ok([{ ID: 'A-1', HearingDate: '2024-03-14' }])])
       .mockResolvedValueOnce([ok([{ ID: 'DOC-1', SourceURL: 'https://example.test/115.pdf' }])]);
     const detail = await fetchParcelAppealLayerDetail({ RunViews } as unknown as RunView, 'P1');
     const outcomeQuery = RunViews.mock.calls[0][0][3];
@@ -293,9 +294,14 @@ describe('fetchParcelAppealLayerDetail -- outcomes', () => {
     expect(RunViews.mock.calls[1][0][0].ExtraFilter).toBe("ID IN ('DOC-1')");
     expect(detail.outcomes).toHaveLength(1);
     expect(detail.outcomes[0]).toMatchObject({ certainty: 'Ratified', originalTotalAV: 10, determinedTotalAV: 8, documentURL: 'https://example.test/115.pdf' });
+    // the parcel's PTABOA hearings are read in the same round trip; DecidedAt = the hearing day → exact day
+    const hearingQuery = RunViews.mock.calls[0][0][4];
+    expect(hearingQuery).toMatchObject({ EntityName: 'PTABOA Appeals', ExtraFilter: "ParcelID = 'P1'", MaxRows: APPEAL_LAYER_MAX_ROWS.detailPtaboaAppeals, ResultType: 'simple' });
+    expect(hearingQuery.Fields).toEqual(['ID', 'HearingDate']);
+    expect(detail.outcomes[0].decidedAtPrecision).toBe('day');
   });
   it('makes no second round trip when there is neither an IBTR decision nor an outcome document', async () => {
-    const RunViews = vi.fn().mockResolvedValueOnce([ok([]), ok([]), ok([]), ok([])]);
+    const RunViews = vi.fn().mockResolvedValueOnce([ok([]), ok([]), ok([]), ok([]), ok([])]);
     const detail = await fetchParcelAppealLayerDetail({ RunViews } as unknown as RunView, 'P1');
     expect(RunViews).toHaveBeenCalledTimes(1);
     expect(detail.outcomes).toEqual([]);

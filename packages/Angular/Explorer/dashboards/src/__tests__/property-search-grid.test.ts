@@ -117,4 +117,14 @@ describe('appeal-outcome columns', () => {
     expect(render({ value: false })).toBe('');
     expect(col.colDef.tooltipField).toBe('LaterAppealText');
   });
+  it('explains HasLaterAppeal in the ruled wording (an IBTR decision without an extracted value -- not "a county determination taken on")', () => {
+    const tip = find('HasLaterAppeal')!.colDef.headerTooltip as string;
+    expect(tip).toContain('An IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined.');
+    expect(tip).not.toMatch(/county determination was taken on/i);
+  });
+  it('says in the PTABOA Date tooltip that a month appears only when the Form 115 batch date is later than the hearing', () => {
+    const tip = find('PTABOADate')!.colDef.headerTooltip as string;
+    expect(tip).toMatch(/later of the Form 115 batch date and the hearing date/i);
+    expect(tip).toMatch(/month.*only when the Form 115 batch date is the later/i);
+  });
 });

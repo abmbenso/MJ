@@ -37,10 +37,11 @@ export type OutcomeCertainty = Exclude<OutcomeCertaintyValue, 'Disposition'>;
 /** A County outcome's kind -- the entity's value list minus 'Disposition'. */
 export type CountyOutcomeKind = Exclude<OutcomeKindValue, 'Disposition'>;
 /**
- * How exact DecidedAt is. A ratified PTABOA outcome's DecidedAt is the Form 115 BATCH month (the
- * 115 bundle's own date, first of the month) -- it can precede the hearing and is never the
- * mailing date, so it is shown as "Aug 2025". Hearing dates, card as-of dates and IBTR decision
- * dates are exact days.
+ * How exact DecidedAt is. A PTABOA outcome's DecidedAt is the LATER of the Form 115 batch date (the
+ * 115 bundle's own date, first of its month -- never the mailing date) and the hearing date. It is
+ * month-precision ("Aug 2025") only when it is later than the linked appeal's hearing, i.e. the 115
+ * batch date won; a DecidedAt equal to the hearing is that exact day. Card as-of dates and IBTR
+ * decision dates are exact days.
  */
 export type OutcomeDatePrecision = 'month' | 'day';
 
@@ -52,9 +53,9 @@ export interface OutcomeLayerFields {
    * (not a valuation) and when the parcel has no County outcome for the year.
    */
   PTABOAValue: number | null;
-  /** DecidedAt of that SAME outcome: the Form 115 batch month where ratified, else the hearing date, else the card as-of date -- never the 115's mailing date. */
+  /** DecidedAt of that SAME outcome: the later of the Form 115 batch date and the hearing date for a PTABOA row, the card's decision date for a card revision -- never the 115's mailing date. */
   PTABOADate: string | null;
-  /** 'month' when PTABOADate is a Form 115 batch month (show "Aug 2025"); 'day' otherwise; null with no County outcome. */
+  /** 'month' when PTABOADate is a Form 115 batch month later than the hearing (show "Aug 2025"); 'day' otherwise; null with no County outcome. */
   PTABOADatePrecision: OutcomeDatePrecision | null;
   /** The linked PTABOA appeal's form ("130S", "130O", "136"...); null for a card-revision outcome, which has no agenda row. */
   PTABOAAppealType: string | null;
@@ -90,10 +91,32 @@ export function formatOutcomeDate(day: string | null, precision: OutcomeDatePrec
   return precision === 'month' ? `${MONTHS[Number(m[2]) - 1]} ${m[1]}` : `${Number(m[2])}/${Number(m[3])}/${m[1]}`;
 }
 
-/** A ratified PTABOA-sourced outcome that carries its Form 115 document: DecidedAt is that 115 batch's month. */
-function datePrecision(r: Row): OutcomeDatePrecision {
-  const form115 = r['Certainty'] === 'Ratified' && r['PTABOAAppealID'] != null && r['SourceDocumentID'] != null;
-  return form115 ? 'month' : 'day';
+/** Hearing date (calendar day, or null) by lower-cased PTABOA appeal id -- only for ids the read returned. */
+type HearingById = ReadonlyMap<string, string | null>;
+
+/**
+ * 'month' only when a PTABOA row's DecidedAt is LATER than its hearing: DecidedAt is the later of the
+ * Form 115 batch date and the hearing, so a later date is the 115's batch month. A PTABOA row with no
+ * hearing date on record can only be dated by its 115 -> month. When the hearing was not read (the
+ * appeal is missing from the rows given), a ratified row citing a document is taken as a 115 batch
+ * month -- the less precise claim, never a batch month shown as an exact day.
+ */
+function datePrecision(r: Row, hearingById: HearingById): OutcomeDatePrecision {
+  const ptaboaId = idKey(r['PTABOAAppealID']);
+  const decided = calendarDay(r['DecidedAt']);
+  if (ptaboaId == null || decided == null) return 'day';
+  if (!hearingById.has(ptaboaId)) return r['Certainty'] === 'Ratified' && r['SourceDocumentID'] != null ? 'month' : 'day';
+  const hearing = hearingById.get(ptaboaId) ?? null;
+  return hearing == null || decided > hearing ? 'month' : 'day';
+}
+
+function hearingsOf(ptaboaRows: Row[]): Map<string, string | null> {
+  const out = new Map<string, string | null>();
+  for (const a of ptaboaRows) {
+    const id = idKey(a['ID']);
+    if (id) out.set(id, calendarDay(a['HearingDate']));
+  }
+  return out;
 }
 
 const str = (v: unknown): string | null => (v == null ? null : v instanceof Date ? v.toISOString().slice(0, 10) : String(v));
@@ -120,14 +143,14 @@ function asCountyKind(v: unknown): CountyOutcomeKind | null {
   return v === 'Valuation' || v === 'Exemption' || v === 'Withdrawal' ? v : null;
 }
 
-function countyFields(r: Row, appealTypeById: Map<string, string | null>): Omit<OutcomeLayerFields, 'IBTRYearValue'> {
+function countyFields(r: Row, appealTypeById: Map<string, string | null>, hearingById: HearingById): Omit<OutcomeLayerFields, 'IBTRYearValue'> {
   const kind = asCountyKind(r['Kind']);
   const ptaboaId = idKey(r['PTABOAAppealID']);
   return {
     // Only a valuation carries a value -- an exemption or withdrawal is not an assessed value.
     PTABOAValue: kind === 'Valuation' ? num(r['DeterminedTotalAV']) : null,
     PTABOADate: calendarDay(r['DecidedAt']),
-    PTABOADatePrecision: r['DecidedAt'] == null ? null : datePrecision(r),
+    PTABOADatePrecision: r['DecidedAt'] == null ? null : datePrecision(r, hearingById),
     PTABOAAppealType: ptaboaId ? (appealTypeById.get(ptaboaId) ?? null) : null,
     PTABOACertainty: asCertainty(r['Certainty']),
     PTABOAOutcomeKind: kind,
@@ -137,9 +160,10 @@ function countyFields(r: Row, appealTypeById: Map<string, string | null>): Omit<
 /**
  * @param outcomeRows current `Appeal Outcomes` rows for ONE assessment year (IsCurrent = 1; a
  *   non-current row is ignored defensively).
- * @param ptaboaRows `PTABOA Appeals` rows carrying ID + AppealType -- joined on PTABOAAppealID.
+ * @param ptaboaRows `PTABOA Appeals` rows carrying ID + AppealType + HearingDate -- joined on PTABOAAppealID.
  */
 export function reduceCurrentOutcomes(outcomeRows: Row[], ptaboaRows: Row[]): Map<string, OutcomeLayerFields> {
+  const hearingById = hearingsOf(ptaboaRows);
   const appealTypeById = new Map<string, string | null>();
   for (const a of ptaboaRows) {
     const id = idKey(a['ID']);
@@ -150,7 +174,7 @@ export function reduceCurrentOutcomes(outcomeRows: Row[], ptaboaRows: Row[]): Ma
     if (!isCurrent(r)) continue;
     const pid = r['ParcelID'] as string;
     const cur = out.get(pid) ?? { ...EMPTY_OUTCOME_LAYERS };
-    if (r['Level'] === 'County-PTABOA') Object.assign(cur, countyFields(r, appealTypeById));
+    if (r['Level'] === 'County-PTABOA') Object.assign(cur, countyFields(r, appealTypeById, hearingById));
     else if (r['Level'] === 'State-IBTR' && r['Kind'] === 'Valuation') cur.IBTRYearValue = num(r['DeterminedTotalAV']);
     out.set(pid, cur);
   }
@@ -172,7 +196,7 @@ export interface AppealOutcomeRow {
   originalTotalAV: number | null;
   determinedTotalAV: number | null;
   decidedAt: string | null;
-  /** 'month' for a Form 115 batch month (see OutcomeDatePrecision). */
+  /** 'month' for a Form 115 batch month later than the hearing (see OutcomeDatePrecision). */
   decidedAtPrecision: OutcomeDatePrecision;
   caseNumber: string | null;
   dispositionText: string | null;
@@ -190,7 +214,7 @@ function outcomeSource(r: Row): AppealOutcomeRow['source'] {
   return 'PTABOA';
 }
 
-function toOutcomeRow(r: Row, urlByDocId: ReadonlyMap<string, string | null>): AppealOutcomeRow {
+function toOutcomeRow(r: Row, urlByDocId: ReadonlyMap<string, string | null>, hearingById: HearingById): AppealOutcomeRow {
   const certainty: OutcomeCertaintyValue | null = r['Certainty'] === 'Disposition' ? 'Disposition' : asCertainty(r['Certainty']);
   const kind: OutcomeKindValue | null = r['Kind'] === 'Disposition' ? 'Disposition' : asCountyKind(r['Kind']);
   const docId = idKey(r['SourceDocumentID']);
@@ -203,7 +227,7 @@ function toOutcomeRow(r: Row, urlByDocId: ReadonlyMap<string, string | null>): A
     originalTotalAV: num(r['OriginalTotalAV']),
     determinedTotalAV: num(r['DeterminedTotalAV']),
     decidedAt: calendarDay(r['DecidedAt']),
-    decidedAtPrecision: datePrecision(r),
+    decidedAtPrecision: datePrecision(r, hearingById),
     caseNumber: str(r['CaseNumber']),
     dispositionText: str(r['DispositionText']),
     source: outcomeSource(r),
@@ -220,9 +244,11 @@ const dayValue = (d: string | null): number => (d ? new Date(d).getTime() || 0 :
  * Every outcome of ONE parcel, newest assessment year first, then newest decision (undated last),
  * the current row first on a tie. Provisional rows are included -- this is a practitioner tool.
  * @param urlByDocId SourceURL by lower-cased SourceDocumentID.
+ * @param ptaboaRows the parcel's `PTABOA Appeals` rows (ID + HearingDate), for the date precision.
  */
-export function buildAppealOutcomeRows(rows: Row[], urlByDocId: ReadonlyMap<string, string | null>): AppealOutcomeRow[] {
-  return rows.map((r) => toOutcomeRow(r, urlByDocId)).sort((a, b) =>
+export function buildAppealOutcomeRows(rows: Row[], urlByDocId: ReadonlyMap<string, string | null>, ptaboaRows: Row[] = []): AppealOutcomeRow[] {
+  const hearingById = hearingsOf(ptaboaRows);
+  return rows.map((r) => toOutcomeRow(r, urlByDocId, hearingById)).sort((a, b) =>
     (b.assessmentYear ?? 0) - (a.assessmentYear ?? 0)
     || dayValue(b.decidedAt) - dayValue(a.decidedAt)
     || Number(b.isCurrent) - Number(a.isCurrent));

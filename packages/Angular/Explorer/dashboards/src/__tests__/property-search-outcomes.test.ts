@@ -17,7 +17,8 @@ const county = (over: Record<string, unknown> = {}) => ({
   DispositionText: null, SourceDocumentID: 'D-115', PTABOAAppealID: PTABOA_ID, IBTRAppealID: null, CardValuationColumnID: null,
   IsCurrent: true, Agenda115Differs: false, ...over,
 });
-const ptaboa = [{ ID: PTABOA_ID.toLowerCase(), AppealType: '130S' }];
+/** The hearing precedes the county fixture's DecidedAt (2024-03-14): the Form 115 batch date won, so it is month-precision. */
+const ptaboa = [{ ID: PTABOA_ID.toLowerCase(), AppealType: '130S', HearingDate: '2024-02-20' }];
 
 describe('reduceCurrentOutcomes', () => {
   it('a ratified County valuation -> PTABOA Value = the determined total, certainty Ratified, date = DecidedAt, type from the linked appeal', () => {
@@ -83,7 +84,7 @@ describe('buildAppealOutcomeRows', () => {
       county({ ID: 'c' }),
       county({ ID: 'd', Level: 'State-IBTR', Kind: 'Disposition', Certainty: 'Disposition', DeterminedTotalAV: null, OriginalTotalAV: null,
         PTABOAAppealID: null, IBTRAppealID: 'I-1', DispositionText: 'Settlement - withdrawal', DecidedAt: '2025-06-30', SourceDocumentID: null }),
-    ], urls);
+    ], urls, ptaboa);
     expect(rows.map((r) => r.id)).toEqual(['d', 'c', 'b', 'a']);
     expect(rows[1]).toEqual({
       id: 'c', assessmentYear: 2023, level: 'County', kind: 'Valuation', certainty: 'Ratified', originalTotalAV: 2_450_000,
@@ -98,13 +99,24 @@ describe('buildAppealOutcomeRows', () => {
 });
 
 describe('DecidedAt precision (Form 115 batch month vs an exact date)', () => {
-  it('a ratified PTABOA outcome with a Form 115 document is month-precision -- DecidedAt is the 115 batch month, not the mailing date', () => {
+  it('month precision only when the County row\'s DecidedAt is LATER than its PTABOA hearing -- the Form 115 batch date won', () => {
     expect(reduceCurrentOutcomes([county()], ptaboa).get('P1')?.PTABOADatePrecision).toBe('month');
   });
-  it('a provisional PTABOA outcome (hearing date), a card revision (as-of date) and a 115-less row are day-precision', () => {
-    expect(reduceCurrentOutcomes([county({ Certainty: 'Provisional', SourceDocumentID: null })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+  it('a ratified row dated ON its hearing day (the hearing was the later date, or a Final Agreement without a 115) is the exact day', () => {
+    expect(reduceCurrentOutcomes([county({ DecidedAt: '2024-02-20' })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+    expect(reduceCurrentOutcomes([county({ DecidedAt: '2024-02-20', SourceDocumentID: 'D-AGENDA' })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+  });
+  it('a PTABOA row with no hearing date on record: DecidedAt can only be the Form 115 batch date → month', () => {
+    const noHearing = [{ ID: PTABOA_ID.toLowerCase(), AppealType: '130S', HearingDate: null }];
+    expect(reduceCurrentOutcomes([county()], noHearing).get('P1')?.PTABOADatePrecision).toBe('month');
+  });
+  it('a provisional PTABOA outcome (hearing date) and a card revision (as-of date) are day-precision', () => {
+    expect(reduceCurrentOutcomes([county({ Certainty: 'Provisional', SourceDocumentID: null, DecidedAt: '2024-02-20' })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
     expect(reduceCurrentOutcomes([county({ PTABOAAppealID: null, CardValuationColumnID: 'C-1' })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
-    expect(reduceCurrentOutcomes([county({ SourceDocumentID: null })], ptaboa).get('P1')?.PTABOADatePrecision).toBe('day');
+  });
+  it('the detail list applies the same rule from the PTABOA rows it is given', () => {
+    expect(buildAppealOutcomeRows([county()], new Map(), ptaboa)[0].decidedAtPrecision).toBe('month');
+    expect(buildAppealOutcomeRows([county({ DecidedAt: '2024-02-20' })], new Map(), ptaboa)[0].decidedAtPrecision).toBe('day');
   });
   it('formats a month-precision date as "Aug 2025" and a day-precision one in full', () => {
     expect(formatOutcomeDate('2025-08-01', 'month')).toBe('Aug 2025');

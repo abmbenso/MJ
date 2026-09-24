@@ -57,6 +57,8 @@ export const APPEAL_LAYER_MAX_ROWS = {
   ptaboaYearAppeals: 10000,
   /** Every outcome of one parcel, all years and levels: measured max 20 (2026-09-24). */
   detailOutcomes: 500,
+  /** Every PTABOA appeal of one parcel (ID + HearingDate, for the outcome date precision): most parcels have 0-2. */
+  detailPtaboaAppeals: 500,
 } as const;
 
 export interface AppealLayerFields {
@@ -295,7 +297,7 @@ export async function fetchAppealLayers(rv: RunView, parcelIds: string[], assess
 /**
  * The current County and State outcome of every parcel on a result page, for ONE assessment year
  * (Appeal Outcomes, IsCurrent = 1), plus that year's PTABOA appeals so the County row's Appeal
- * Type can be joined on PTABOAAppealID. One round trip; throws on a failed or truncated read so a
+ * Type and hearing date (for the PTABOA Date precision) can be joined on PTABOAAppealID. One round trip; throws on a failed or truncated read so a
  * failed load is never shown as "no appeal". Every requested parcel gets an entry on success.
  */
 export async function fetchCurrentOutcomes(rv: RunView, parcelIds: string[], assessmentYear: number): Promise<Map<string, OutcomeLayerFields>> {
@@ -307,7 +309,7 @@ export async function fetchCurrentOutcomes(rv: RunView, parcelIds: string[], ass
     { EntityName: APPEAL_OUTCOMES_ENTITY, Fields: [...CURRENT_OUTCOME_FIELDS],
       ExtraFilter: `ParcelID IN (${ids}) AND AssessmentYear = ${year} AND IsCurrent = 1`,
       MaxRows: APPEAL_LAYER_MAX_ROWS.currentOutcomes, ResultType: 'simple' },
-    { EntityName: PTABOA_APPEALS_ENTITY, Fields: ['ID', 'AppealType'],
+    { EntityName: PTABOA_APPEALS_ENTITY, Fields: ['ID', 'AppealType', 'HearingDate'],
       ExtraFilter: `ParcelID IN (${ids}) AND AssessmentYear = ${year}`,
       MaxRows: APPEAL_LAYER_MAX_ROWS.ptaboaYearAppeals, ResultType: 'simple' },
   ]);
@@ -367,7 +369,7 @@ export function buildCardNoteRows(noteRows: Row[]): CardNoteRow[] {
 /** Everything the detail panel shows for one parcel. Three round trips at most; throws on a failed query. */
 export async function fetchParcelAppealLayerDetail(rv: RunView, parcelID: string): Promise<ParcelAppealLayerDetail> {
   const pid = escapeSqlLiteral(parcelID);
-  const [colRes, noteRes, ibtrRes, outcomeRes] = await rv.RunViews<Row>([
+  const [colRes, noteRes, ibtrRes, outcomeRes, hearingRes] = await rv.RunViews<Row>([
     { EntityName: CARD_COLUMNS_ENTITY, Fields: ['CardAssessmentYear', 'AssessmentYear', 'IsCertified', 'ReasonKind', 'ReasonForm', 'ReasonForChange', 'AsOfDate', 'TotalAV'],
       ExtraFilter: `ParcelID = '${pid}' AND ReasonKind <> 'wip'`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailCardColumns, ResultType: 'simple' },
     { EntityName: CARD_NOTES_ENTITY, Fields: ['NoteKey', 'NoteKind', 'NoteForm', 'NoteDate', 'NoteCode', 'NoteText'],
@@ -377,13 +379,17 @@ export async function fetchParcelAppealLayerDetail(rv: RunView, parcelID: string
     // Every outcome, current or not -- the practitioner sees relistings and superseded agenda rows too.
     { EntityName: APPEAL_OUTCOMES_ENTITY, Fields: [...OUTCOME_HISTORY_FIELDS],
       ExtraFilter: `ParcelID = '${pid}'`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailOutcomes, ResultType: 'simple' },
+    // The parcel's hearings: a PTABOA outcome's date is a Form 115 batch month only when later than its hearing.
+    { EntityName: PTABOA_APPEALS_ENTITY, Fields: ['ID', 'HearingDate'],
+      ExtraFilter: `ParcelID = '${pid}'`, MaxRows: APPEAL_LAYER_MAX_ROWS.detailPtaboaAppeals, ResultType: 'simple' },
   ]);
   const ibtrRows = rowsOrThrow(IBTR_APPEALS_ENTITY, ibtrRes, APPEAL_LAYER_MAX_ROWS.detailIbtrAppeals);
   const outcomeRows = rowsOrThrow(APPEAL_OUTCOMES_ENTITY, outcomeRes, APPEAL_LAYER_MAX_ROWS.detailOutcomes);
+  const hearingRows = rowsOrThrow(PTABOA_APPEALS_ENTITY, hearingRes, APPEAL_LAYER_MAX_ROWS.detailPtaboaAppeals);
   const detail: ParcelAppealLayerDetail = {
     cardRevisions: buildCardRevisionRows(rowsOrThrow(CARD_COLUMNS_ENTITY, colRes, APPEAL_LAYER_MAX_ROWS.detailCardColumns)),
     cardNotes: buildCardNoteRows(rowsOrThrow(CARD_NOTES_ENTITY, noteRes, APPEAL_LAYER_MAX_ROWS.detailCardNotes)), ibtrDecisions: [], taxCourtCases: [],
-    outcomes: buildAppealOutcomeRows(outcomeRows, new Map()),
+    outcomes: buildAppealOutcomeRows(outcomeRows, new Map(), hearingRows),
   };
   const docIds = [...new Set([...ibtrRows, ...outcomeRows].map((r) => r['SourceDocumentID'] as string | null).filter((v): v is string => !!v))];
   if (!ibtrRows.length && !docIds.length) return detail;
@@ -401,7 +407,7 @@ export async function fetchParcelAppealLayerDetail(rv: RunView, parcelID: string
     return i < 0 ? [] : rowsOrThrow(entity, results[i], second[i].MaxRows);
   };
   const urlByDoc = new Map(rowsFor(SOURCE_DOCUMENTS_ENTITY).map((d) => [String(d['ID']).toLowerCase(), str(d['SourceURL'])]));
-  detail.outcomes = buildAppealOutcomeRows(outcomeRows, urlByDoc);
+  detail.outcomes = buildAppealOutcomeRows(outcomeRows, urlByDoc, hearingRows);
   if (!ibtrRows.length) return detail;
 
   const holdingsByAppeal = new Map<string, Row[]>();

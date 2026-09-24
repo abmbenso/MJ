@@ -228,7 +228,7 @@ export class PropertyDetailPanelComponent {
     return `${formatCurrency(o.originalTotalAV)} → ${formatCurrency(o.determinedTotalAV)}${pctText}`;
   }
 
-  /** Form 115 batch month where ratified ("Aug 2025"), else the exact day. */
+  /** A Form 115 batch month later than the hearing ("Aug 2025"), else the exact day. */
   public formatOutcomeDate(day: string, precision: OutcomeDatePrecision): string {
     return formatOutcomeDate(day, precision);
   }

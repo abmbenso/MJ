@@ -97,7 +97,7 @@ export interface MergedParcelRow extends AppealLayerFields, OutcomeLayerFields {
   /** The total an older-vintage official document carried when it differs from the headline (what was noticed vs. what stands) -- appeal history, not a data conflict. */
   RevisedFromTotalAV: number | null;
   HasRevision: boolean;
-  /** From the headline: a later State-IBTR disposition stands over this year's County determination. LaterAppealText says which ("IBTR: Settlement - withdrawal, 2026-01-30"). */
+  /** From the headline: an IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined. LaterAppealText says which ("IBTR: Settlement - withdrawal, 2026-01-30"). */
   HasLaterAppeal: boolean;
   LaterAppealText: string | null;
   /** The route to the county's own record card for this parcel, from buildVerifyLink(...).url -- null when none can be built (see the Verify column's "not on file" cell). */

@@ -76,7 +76,7 @@ function provisionalPTABOATooltip(params: { data?: Pick<MergedParcelRow, 'PTABOA
   return params.data && isProvisionalPTABOAValue(params.data) ? PROVISIONAL_PTABOA_TOOLTIP : undefined;
 }
 
-/** PTABOA Date at its precision: a Form 115 batch month reads "Aug 2025" (it is not the mailing date); anything else is the exact day. */
+/** PTABOA Date at its precision: a Form 115 batch month later than the hearing reads "Aug 2025" (it is not the mailing date); anything else is the exact day. */
 function formatPTABOADate(params: { value: string | null; data?: Pick<MergedParcelRow, 'PTABOADatePrecision'> }): string {
   return params.value ? formatOutcomeDate(params.value, params.data?.PTABOADatePrecision ?? 'day') : '—';
 }
@@ -489,7 +489,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       headerName: 'PTABOA Date',
       width: 130,
       valueFormatter: formatPTABOADate,
-      headerTooltip: 'When the outcome behind PTABOA Value was decided: the Form 115 batch month where ratified (shown as a month, e.g. "Aug 2025"), else the hearing date, else the record card\'s as-of date -- not the 115\'s mailing date.',
+      headerTooltip: 'When the outcome behind PTABOA Value was decided: the later of the Form 115 batch date and the hearing date (a determination never precedes its hearing), or the record card\'s decision date for a card revision -- never the 115\'s mailing date. Shown as a month (e.g. "Aug 2025") only when the Form 115 batch date is the later one, because the batch date is month-level; otherwise the exact day.',
     },
   },
   {
@@ -725,7 +725,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       width: 150,
       cellRenderer: renderLaterAppealBadge,
       tooltipField: 'LaterAppealText',
-      headerTooltip: 'The selected year\'s county determination was taken on to the Indiana Board of Tax Review and a later Board disposition (settlement, withdrawal, dismissal...) stands over it -- so the Assessed Value shown is not the county\'s appeal result. Hover a badge for the disposition and date. Sort descending to bring these to the top.',
+      headerTooltip: 'An IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined. Hover a badge for the disposition and date. Sort descending to bring these to the top.',
     },
   },
   {
