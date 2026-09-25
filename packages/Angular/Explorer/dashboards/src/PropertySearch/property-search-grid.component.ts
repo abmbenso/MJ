@@ -25,7 +25,7 @@ function formatSqFt(params: { value: number | null; data?: MergedParcelRow }): s
   if (params.value == null) return 'Unknown';
   const formatted = params.value.toLocaleString('en-US');
   const source = params.data?.SqFtSource;
-  const suffix = source === 'PropertyRecordCard' ? ' ✓' : source === 'BuildingDetail' ? ' ~' : ' ?';
+  const suffix = source === 'PropertyRecordCard' ? ' ✓' : source === 'BuildingDetail' ? ' ~' : source === 'DLGF' ? ' (DLGF)' : ' ?';
   return `${formatted}${suffix}`;
 }
 
@@ -283,7 +283,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       type: 'numericColumn',
       valueGetter: (p) => (p.data ? p.data.YearBuilt ?? p.data.CoStarYearBuilt : null),
       valueFormatter: formatYearBuiltCell,
-      headerTooltip: 'Year built. Plain year = from this parcel\'s own Tax History Report. "(CoStar)" = no county-sourced year on file, shown from CoStar property data instead.',
+      headerTooltip: 'Year built. Plain year = county-reported: this parcel\'s own Tax History Report or record card, or for a county without loaded cards the DLGF state file (the largest improvement\'s year). "(CoStar)" = no county or state year on file, shown from CoStar property data instead -- never in place of a county figure.',
     },
   },
   {
@@ -305,7 +305,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
     label: 'Building Sq Ft (County)',
     defaultVisible: true,
     category: 'Size & Units',
-    colDef: { field: 'EstimatedSqFt', headerName: 'Building Sq Ft (County)', width: 170, type: 'numericColumn', valueFormatter: formatSqFt },
+    colDef: { field: 'EstimatedSqFt', headerName: 'Building Sq Ft (County)', headerTooltip: 'Total building square feet as the county reports it. ✓ = record card, ~ = building detail, (DLGF) = the DLGF state file for a county without loaded cards (sum of the parcel\'s buildings). Never CoStar -- see RBA (CoStar).', width: 170, type: 'numericColumn', valueFormatter: formatSqFt },
   },
   {
     key: 'EstimatedSqFtExGarage',

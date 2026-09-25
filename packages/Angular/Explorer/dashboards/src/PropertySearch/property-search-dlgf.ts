@@ -1,10 +1,12 @@
 /**
  * @fileoverview The DLGF-only data path: a county with no loaded record cards, read from
  * indiana_tax.ParcelYearHeadline + indiana_tax.Parcel and mapped into the SAME MergedParcelRow the
- * card path produces (spec §6, "two data paths, one row shape"). Everything the card path
- * fills from CountyAssessorRecord -- building sqft, sqft source, sub-class DESCRIPTION,
- * neighbourhood, appeals, sale history -- is null here, and is null honestly: the statewide
- * file does not carry it. The row's DataSource says so on every row.
+ * card path produces (spec §6, "two data paths, one row shape"). Sub-class DESCRIPTION,
+ * neighbourhood, appeals and sale history are null here, and null honestly: the statewide file
+ * does not carry them. Year Built and Building Sq Ft ARE in the state file (DLGF Improvements /
+ * DLGF Buildings) and are filled after the merge by applyDlgfBuildingFacts
+ * (property-search-costar.ts), ahead of any CoStar fallback. The row's DataSource says so on
+ * every row.
  *
  * The headline row is ONE per parcel-year, already resolved by the Foundation's shared rule
  * (see property-search-headline.ts), so there is no client-side precedence pass and no fetch

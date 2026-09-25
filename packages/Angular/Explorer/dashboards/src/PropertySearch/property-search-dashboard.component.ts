@@ -59,6 +59,7 @@ import { DataSourceIndex, DATA_SOURCE_FIELDS, PARCEL_YEAR_HEADLINE_FIELDS, build
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_DEFAULT_VISIBLE_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from './property-search-grid.component';
 import { EMPTY_APPEAL_LAYERS, fetchAppealLayers, applyAppealLayers, fetchCurrentOutcomes, fetchParcelAppealLayerDetail, ParcelAppealLayerDetail } from './property-search-appeal-layers';
 import { EMPTY_OUTCOME_LAYERS, applyOutcomeLayers } from './property-search-outcomes';
+import { applyCoStarLayers, applyDlgfBuildingFacts, fetchCoStarLayers, fetchDlgfBuildingFacts } from './property-search-costar';
 
 /** Parses CountyAssessorRecord.Acreage (NVARCHAR(10), legacy ArcGIS-sourced text) into a number, or null for blank/non-numeric/non-positive values -- the analytics panel's per-acre calculations need a real number, not the raw string RunView('simple') returns. */
 function parseAcreage(raw: string | null): number | null {
@@ -585,9 +586,15 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
     const parcelIds = rows.map((r) => r.ParcelID);
     // Independent reads, so a failure of one leaves the other's columns loaded (allSettled).
-    const [layers, outcomes] = await Promise.allSettled([
+    // DLGF-only rows (no CountyAssessorRecord) take Year Built and Building Sq Ft from the DLGF
+    // state file; the card path already has them from the card. CoStar is read directly for
+    // BOTH paths (property-search-costar.ts) -- it only ever fills CoStar-labelled columns.
+    const dlgfOnlyIds = rows.filter((r) => !r.CountyAssessorRecordID).map((r) => r.ParcelID);
+    const [layers, outcomes, costar, dlgfFacts] = await Promise.allSettled([
       fetchAppealLayers(rv, parcelIds, assessmentYear, includeCard),
       fetchCurrentOutcomes(rv, parcelIds, assessmentYear),
+      fetchCoStarLayers(rv, parcelIds),
+      fetchDlgfBuildingFacts(rv, dlgfOnlyIds),
     ]);
     let out = rows;
     const failures: string[] = [];
@@ -595,6 +602,10 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     else failures.push(`Card, IBTR and Tax Court columns (${this.reasonText(layers.reason)})`);
     if (outcomes.status === 'fulfilled') out = applyOutcomeLayers(out, outcomes.value);
     else failures.push(`PTABOA and IBTR Value (this AY) columns (${this.reasonText(outcomes.reason)})`);
+    if (costar.status === 'fulfilled') out = applyCoStarLayers(out, costar.value);
+    else failures.push(`CoStar columns (${this.reasonText(costar.reason)})`);
+    if (dlgfFacts.status === 'fulfilled') out = applyDlgfBuildingFacts(out, dlgfFacts.value);
+    else failures.push(`Year Built and Building Sq Ft for DLGF rows (${this.reasonText(dlgfFacts.reason)})`);
     return {
       rows: out,
       error: failures.length ? `${failures.join('; ')} could not be loaded. Blank there means "not loaded", not "none".` : null,
