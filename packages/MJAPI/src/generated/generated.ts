@@ -19303,7 +19303,7 @@ export class indianataxParcelIndex_ {
     @MaxLength(20)
     StatutoryGroup?: string;
         
-    @Field({description: `The product switch (Parcel Assistant spec 4.1): Residential; Commercial (statutory Commercial or Industrial -- apartments included, although they carry the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A default side, not a partition: a practitioner can flip it.`}) 
+    @Field({description: `The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup (Residential; Commercial = statutory Commercial or Industrial; Other). A TaxBill row has no class, so its Segment comes from the bill's cap buckets: Commercial when the 3% bucket exceeds 1% + 2%, else Residential when 1% + 2% > 0, else Other. A default side, not a partition.`}) 
     @MaxLength(20)
     Segment: string;
         
@@ -19325,14 +19325,14 @@ export class indianataxParcelIndex_ {
     @Field(() => Float, {nullable: true, description: `Total AV in the harvest for LastSeenAssessmentYear, as initially determined. Not the headline value; ParcelYearHeadline and AppealOutcome own that.`}) 
     TotalAV?: number;
         
-    @Field(() => Float, {description: `AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.`}) 
-    AssessorAV1Pct: number;
+    @Field(() => Float, {nullable: true, description: `AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.`}) 
+    AssessorAV1Pct?: number;
         
-    @Field(() => Float, {description: `AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).`}) 
-    AssessorAV2Pct: number;
+    @Field(() => Float, {nullable: true, description: `AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).`}) 
+    AssessorAV2Pct?: number;
         
-    @Field(() => Float, {description: `AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.`}) 
-    AssessorAV3Pct: number;
+    @Field(() => Float, {nullable: true, description: `AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.`}) 
+    AssessorAV3Pct?: number;
         
     @Field(() => Int, {description: `The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.`}) 
     LastSeenAssessmentYear: number;
@@ -19353,6 +19353,10 @@ export class indianataxParcelIndex_ {
         
     @Field() 
     _mj__UpdatedAt: Date;
+        
+    @Field({description: `Where this row came from: Harvest (the DLGF/IGIO real-property harvest, class and assessor buckets known) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, class unknown, assessor buckets and TotalAV NULL, segment from the bill's cap buckets). A harvest reload that contains the parcel replaces a TaxBill row.`}) 
+    @MaxLength(20)
+    IndexSource: string;
         
     @Field({nullable: true}) 
     @MaxLength(30)
@@ -19430,13 +19434,13 @@ export class CreateindianataxParcelIndexInput {
     TotalAV: number | null;
 
     @Field(() => Float, { nullable: true })
-    AssessorAV1Pct?: number;
+    AssessorAV1Pct: number | null;
 
     @Field(() => Float, { nullable: true })
-    AssessorAV2Pct?: number;
+    AssessorAV2Pct: number | null;
 
     @Field(() => Float, { nullable: true })
-    AssessorAV3Pct?: number;
+    AssessorAV3Pct: number | null;
 
     @Field(() => Int, { nullable: true })
     LastSeenAssessmentYear?: number;
@@ -19449,6 +19453,9 @@ export class CreateindianataxParcelIndexInput {
 
     @Field({ nullable: true })
     LocalParcelKey: string | null;
+
+    @Field({ nullable: true })
+    IndexSource?: string;
 
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
@@ -19515,13 +19522,13 @@ export class UpdateindianataxParcelIndexInput {
     TotalAV?: number | null;
 
     @Field(() => Float, { nullable: true })
-    AssessorAV1Pct?: number;
+    AssessorAV1Pct?: number | null;
 
     @Field(() => Float, { nullable: true })
-    AssessorAV2Pct?: number;
+    AssessorAV2Pct?: number | null;
 
     @Field(() => Float, { nullable: true })
-    AssessorAV3Pct?: number;
+    AssessorAV3Pct?: number | null;
 
     @Field(() => Int, { nullable: true })
     LastSeenAssessmentYear?: number;
@@ -19534,6 +19541,9 @@ export class UpdateindianataxParcelIndexInput {
 
     @Field({ nullable: true })
     LocalParcelKey?: string | null;
+
+    @Field({ nullable: true })
+    IndexSource?: string;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];

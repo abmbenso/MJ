@@ -7703,7 +7703,7 @@ export const indianataxParcelIndexSchema = z.object({
         * * SQL Data Type: nvarchar(60)`),
     SitusZip: z.string().nullable().describe(`
         * * Field Name: SitusZip
-        * * Display Name: Situs ZIP
+        * * Display Name: Situs Zip
         * * SQL Data Type: nvarchar(10)`),
     AddressKey: z.string().nullable().describe(`
         * * Field Name: AddressKey
@@ -7728,7 +7728,7 @@ export const indianataxParcelIndexSchema = z.object({
     *   * Commercial
     *   * Other
     *   * Residential
-        * * Description: The product switch (Parcel Assistant spec 4.1): Residential; Commercial (statutory Commercial or Industrial -- apartments included, although they carry the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A default side, not a partition: a practitioner can flip it.`),
+        * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup (Residential; Commercial = statutory Commercial or Industrial; Other). A TaxBill row has no class, so its Segment comes from the bill's cap buckets: Commercial when the 3% bucket exceeds 1% + 2%, else Residential when 1% + 2% > 0, else Other. A default side, not a partition.`),
     TaxDistrictNumber: z.string().nullable().describe(`
         * * Field Name: TaxDistrictNumber
         * * Display Name: Tax District Number
@@ -7751,17 +7751,17 @@ export const indianataxParcelIndexSchema = z.object({
         * * Display Name: Total AV
         * * SQL Data Type: decimal(18, 2)
         * * Description: Total AV in the harvest for LastSeenAssessmentYear, as initially determined. Not the headline value; ParcelYearHeadline and AppealOutcome own that.`),
-    AssessorAV1Pct: z.number().describe(`
+    AssessorAV1Pct: z.number().nullable().describe(`
         * * Field Name: AssessorAV1Pct
         * * Display Name: Assessor AV 1%
         * * SQL Data Type: decimal(18, 2)
         * * Description: AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.`),
-    AssessorAV2Pct: z.number().describe(`
+    AssessorAV2Pct: z.number().nullable().describe(`
         * * Field Name: AssessorAV2Pct
         * * Display Name: Assessor AV 2%
         * * SQL Data Type: decimal(18, 2)
         * * Description: AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).`),
-    AssessorAV3Pct: z.number().describe(`
+    AssessorAV3Pct: z.number().nullable().describe(`
         * * Field Name: AssessorAV3Pct
         * * Display Name: Assessor AV 3%
         * * SQL Data Type: decimal(18, 2)
@@ -7773,7 +7773,7 @@ export const indianataxParcelIndexSchema = z.object({
         * * Description: The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.`),
     SourceDocumentID: z.string().describe(`
         * * Field Name: SourceDocumentID
-        * * Display Name: Source Document
+        * * Display Name: Source Document ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
     LoadedAt: z.date().describe(`
@@ -7795,6 +7795,16 @@ export const indianataxParcelIndexSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    IndexSource: z.union([z.literal('Harvest'), z.literal('TaxBill')]).describe(`
+        * * Field Name: IndexSource
+        * * Display Name: Index Source
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Harvest
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Harvest
+    *   * TaxBill
+        * * Description: Where this row came from: Harvest (the DLGF/IGIO real-property harvest, class and assessor buckets known) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, class unknown, assessor buckets and TotalAV NULL, segment from the bill's cap buckets). A harvest reload that contains the parcel replaces a TaxBill row.`),
     Parcel: z.string().nullable().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -7805,11 +7815,11 @@ export const indianataxParcelIndexSchema = z.object({
         * * SQL Data Type: nvarchar(500)`),
     __mj_Latitude: z.number().nullable().describe(`
         * * Field Name: __mj_Latitude
-        * * Display Name: Mj Latitude
+        * * Display Name: Latitude
         * * SQL Data Type: decimal(10, 6)`),
     __mj_Longitude: z.number().nullable().describe(`
         * * Field Name: __mj_Longitude
-        * * Display Name: Mj Longitude
+        * * Display Name: Longitude
         * * SQL Data Type: decimal(10, 6)`),
 });
 
@@ -31474,7 +31484,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
 
     /**
     * * Field Name: SitusZip
-    * * Display Name: Situs ZIP
+    * * Display Name: Situs Zip
     * * SQL Data Type: nvarchar(10)
     */
     get SitusZip(): string | null {
@@ -31531,7 +31541,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     *   * Commercial
     *   * Other
     *   * Residential
-    * * Description: The product switch (Parcel Assistant spec 4.1): Residential; Commercial (statutory Commercial or Industrial -- apartments included, although they carry the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A default side, not a partition: a practitioner can flip it.
+    * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup (Residential; Commercial = statutory Commercial or Industrial; Other). A TaxBill row has no class, so its Segment comes from the bill's cap buckets: Commercial when the 3% bucket exceeds 1% + 2%, else Residential when 1% + 2% > 0, else Other. A default side, not a partition.
     */
     get Segment(): 'Commercial' | 'Other' | 'Residential' {
         return this.Get('Segment');
@@ -31608,10 +31618,10 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     * * SQL Data Type: decimal(18, 2)
     * * Description: AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.
     */
-    get AssessorAV1Pct(): number {
+    get AssessorAV1Pct(): number | null {
         return this.Get('AssessorAV1Pct');
     }
-    set AssessorAV1Pct(value: number) {
+    set AssessorAV1Pct(value: number | null) {
         this.Set('AssessorAV1Pct', value);
     }
 
@@ -31621,10 +31631,10 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     * * SQL Data Type: decimal(18, 2)
     * * Description: AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).
     */
-    get AssessorAV2Pct(): number {
+    get AssessorAV2Pct(): number | null {
         return this.Get('AssessorAV2Pct');
     }
-    set AssessorAV2Pct(value: number) {
+    set AssessorAV2Pct(value: number | null) {
         this.Set('AssessorAV2Pct', value);
     }
 
@@ -31634,10 +31644,10 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     * * SQL Data Type: decimal(18, 2)
     * * Description: AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.
     */
-    get AssessorAV3Pct(): number {
+    get AssessorAV3Pct(): number | null {
         return this.Get('AssessorAV3Pct');
     }
-    set AssessorAV3Pct(value: number) {
+    set AssessorAV3Pct(value: number | null) {
         this.Set('AssessorAV3Pct', value);
     }
 
@@ -31656,7 +31666,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
 
     /**
     * * Field Name: SourceDocumentID
-    * * Display Name: Source Document
+    * * Display Name: Source Document ID
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
     */
@@ -31713,6 +31723,24 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     }
 
     /**
+    * * Field Name: IndexSource
+    * * Display Name: Index Source
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Harvest
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Harvest
+    *   * TaxBill
+    * * Description: Where this row came from: Harvest (the DLGF/IGIO real-property harvest, class and assessor buckets known) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, class unknown, assessor buckets and TotalAV NULL, segment from the bill's cap buckets). A harvest reload that contains the parcel replaces a TaxBill row.
+    */
+    get IndexSource(): 'Harvest' | 'TaxBill' {
+        return this.Get('IndexSource');
+    }
+    set IndexSource(value: 'Harvest' | 'TaxBill') {
+        this.Set('IndexSource', value);
+    }
+
+    /**
     * * Field Name: Parcel
     * * Display Name: Parcel
     * * SQL Data Type: nvarchar(30)
@@ -31732,7 +31760,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
 
     /**
     * * Field Name: __mj_Latitude
-    * * Display Name: Mj Latitude
+    * * Display Name: Latitude
     * * SQL Data Type: decimal(10, 6)
     */
     get __mj_Latitude(): number | null {
@@ -31741,7 +31769,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
 
     /**
     * * Field Name: __mj_Longitude
-    * * Display Name: Mj Longitude
+    * * Display Name: Longitude
     * * SQL Data Type: decimal(10, 6)
     */
     get __mj_Longitude(): number | null {

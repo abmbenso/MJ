@@ -20,7 +20,7 @@ export class indianataxParcelIndexFormComponent extends BaseFormComponent {
             { sectionKey: 'propertyClassification', sectionName: 'Property Classification', isExpanded: true },
             { sectionKey: 'taxpayerInformation', sectionName: 'Taxpayer Information', isExpanded: true },
             { sectionKey: 'assessmentValues', sectionName: 'Assessment Values', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'dataSource', sectionName: 'Data Source', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

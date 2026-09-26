@@ -14,14 +14,14 @@
     <mj-collapsible-panel
         SectionKey="parcelIdentification"
         SectionName="Parcel Identification"
-        Icon="fa fa-barcode"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
             FieldName="StateParcelNumber"
-            Type="textbox"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -45,7 +45,7 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="LocalParcelNumber"
-            Type="textbox"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -115,7 +115,7 @@
     <mj-collapsible-panel
         SectionKey="propertyClassification"
         SectionName="Property Classification"
-        Icon="fa fa-sitemap"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -146,7 +146,7 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="TaxDistrictNumber"
-            Type="textbox"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -154,7 +154,7 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="NeighborhoodCode"
-            Type="textbox"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -165,7 +165,7 @@
     <mj-collapsible-panel
         SectionKey="taxpayerInformation"
         SectionName="Taxpayer Information"
-        Icon="fa fa-user"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -191,7 +191,7 @@
     <mj-collapsible-panel
         SectionKey="assessmentValues"
         SectionName="Assessment Values"
-        Icon="fa fa-calculator"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -237,26 +237,18 @@
 
     </mj-collapsible-panel>
 
-    <!-- Details Section -->
+    <!-- Data Source Section -->
     <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
+        SectionKey="dataSource"
+        SectionName="Data Source"
+        Icon="fa fa-database"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Longitude"
-            Type="textbox"
+            [ShowLabel]="false"
+            FieldName="IndexSource"
+            Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -299,6 +291,22 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
