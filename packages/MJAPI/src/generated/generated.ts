@@ -19303,7 +19303,7 @@ export class indianataxParcelIndex_ {
     @MaxLength(20)
     StatutoryGroup?: string;
         
-    @Field({description: `The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup (Residential; Commercial = statutory Commercial or Industrial; Other). A TaxBill row has no class, so its Segment comes from the bill's cap buckets: Commercial when the 3% bucket exceeds 1% + 2%, else Residential when 1% + 2% > 0, else Other. A default side, not a partition.`}) 
+    @Field({description: `The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.`}) 
     @MaxLength(20)
     Segment: string;
         
@@ -19334,7 +19334,7 @@ export class indianataxParcelIndex_ {
     @Field(() => Float, {nullable: true, description: `AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.`}) 
     AssessorAV3Pct?: number;
         
-    @Field(() => Int, {description: `The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.`}) 
+    @Field(() => Int, {description: `The newest harvest assessment year that contained this parcel (Harvest rows), or the bill's pay year minus 1 (TaxBill rows -- a bill for pay year N covers assessment year N-1). A parcel missing from a newer harvest is kept with its older year, never deleted. A TaxBill row's LastSeenAssessmentYear is frozen at load time: a later gap-fill run never refreshes an existing TaxBill row (it only fills true gaps); only a harvest MERGE of the same or a later assessment year replaces the row and flips IndexSource back to 'Harvest'.`}) 
     LastSeenAssessmentYear: number;
         
     @Field() 
@@ -19354,9 +19354,16 @@ export class indianataxParcelIndex_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
-    @Field({description: `Where this row came from: Harvest (the DLGF/IGIO real-property harvest, class and assessor buckets known) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, class unknown, assessor buckets and TotalAV NULL, segment from the bill's cap buckets). A harvest reload that contains the parcel replaces a TaxBill row.`}) 
+    @Field({description: `Where this row came from: Harvest (the DLGF/IGIO real-property harvest) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, assessor buckets and TotalAV NULL; class and Segment per SegmentBasis). A harvest of the same or a later assessment year replaces a TaxBill row.`}) 
     @MaxLength(20)
     IndexSource: string;
+        
+    @Field({nullable: true, description: `Where this row's class and Segment came from: CurrentHarvest (the harvest year in LastSeenAssessmentYear); CountyCard (the linked county record card's class, year in ClassAssessmentYear); PriorHarvest (the parcel's class in an earlier harvest, year in ClassAssessmentYear -- may be stale); Unknown (no class found; Segment Other). Only TaxBill-sourced rows carry CountyCard, PriorHarvest or Unknown.`}) 
+    @MaxLength(20)
+    SegmentBasis?: string;
+        
+    @Field(() => Int, {nullable: true, description: `Assessment year of the class used for PropertyClassCode/Segment; NULL when SegmentBasis is Unknown.`}) 
+    ClassAssessmentYear?: number;
         
     @Field({nullable: true}) 
     @MaxLength(30)
@@ -19457,6 +19464,12 @@ export class CreateindianataxParcelIndexInput {
     @Field({ nullable: true })
     IndexSource?: string;
 
+    @Field({ nullable: true })
+    SegmentBasis: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ClassAssessmentYear: number | null;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -19544,6 +19557,12 @@ export class UpdateindianataxParcelIndexInput {
 
     @Field({ nullable: true })
     IndexSource?: string;
+
+    @Field({ nullable: true })
+    SegmentBasis?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    ClassAssessmentYear?: number | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];

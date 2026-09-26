@@ -7728,7 +7728,7 @@ export const indianataxParcelIndexSchema = z.object({
     *   * Commercial
     *   * Other
     *   * Residential
-        * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup (Residential; Commercial = statutory Commercial or Industrial; Other). A TaxBill row has no class, so its Segment comes from the bill's cap buckets: Commercial when the 3% bucket exceeds 1% + 2%, else Residential when 1% + 2% > 0, else Other. A default side, not a partition.`),
+        * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.`),
     TaxDistrictNumber: z.string().nullable().describe(`
         * * Field Name: TaxDistrictNumber
         * * Display Name: Tax District Number
@@ -7770,7 +7770,7 @@ export const indianataxParcelIndexSchema = z.object({
         * * Field Name: LastSeenAssessmentYear
         * * Display Name: Last Seen Assessment Year
         * * SQL Data Type: int
-        * * Description: The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.`),
+        * * Description: The newest harvest assessment year that contained this parcel (Harvest rows), or the bill's pay year minus 1 (TaxBill rows -- a bill for pay year N covers assessment year N-1). A parcel missing from a newer harvest is kept with its older year, never deleted. A TaxBill row's LastSeenAssessmentYear is frozen at load time: a later gap-fill run never refreshes an existing TaxBill row (it only fills true gaps); only a harvest MERGE of the same or a later assessment year replaces the row and flips IndexSource back to 'Harvest'.`),
     SourceDocumentID: z.string().describe(`
         * * Field Name: SourceDocumentID
         * * Display Name: Source Document ID
@@ -7804,7 +7804,23 @@ export const indianataxParcelIndexSchema = z.object({
     * * Possible Values 
     *   * Harvest
     *   * TaxBill
-        * * Description: Where this row came from: Harvest (the DLGF/IGIO real-property harvest, class and assessor buckets known) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, class unknown, assessor buckets and TotalAV NULL, segment from the bill's cap buckets). A harvest reload that contains the parcel replaces a TaxBill row.`),
+        * * Description: Where this row came from: Harvest (the DLGF/IGIO real-property harvest) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, assessor buckets and TotalAV NULL; class and Segment per SegmentBasis). A harvest of the same or a later assessment year replaces a TaxBill row.`),
+    SegmentBasis: z.union([z.literal('CountyCard'), z.literal('CurrentHarvest'), z.literal('PriorHarvest'), z.literal('Unknown')]).nullable().describe(`
+        * * Field Name: SegmentBasis
+        * * Display Name: Segment Basis
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * CountyCard
+    *   * CurrentHarvest
+    *   * PriorHarvest
+    *   * Unknown
+        * * Description: Where this row's class and Segment came from: CurrentHarvest (the harvest year in LastSeenAssessmentYear); CountyCard (the linked county record card's class, year in ClassAssessmentYear); PriorHarvest (the parcel's class in an earlier harvest, year in ClassAssessmentYear -- may be stale); Unknown (no class found; Segment Other). Only TaxBill-sourced rows carry CountyCard, PriorHarvest or Unknown.`),
+    ClassAssessmentYear: z.number().nullable().describe(`
+        * * Field Name: ClassAssessmentYear
+        * * Display Name: Class Assessment Year
+        * * SQL Data Type: int
+        * * Description: Assessment year of the class used for PropertyClassCode/Segment; NULL when SegmentBasis is Unknown.`),
     Parcel: z.string().nullable().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -31541,7 +31557,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     *   * Commercial
     *   * Other
     *   * Residential
-    * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup (Residential; Commercial = statutory Commercial or Industrial; Other). A TaxBill row has no class, so its Segment comes from the bill's cap buckets: Commercial when the 3% bucket exceeds 1% + 2%, else Residential when 1% + 2% > 0, else Other. A default side, not a partition.
+    * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.
     */
     get Segment(): 'Commercial' | 'Other' | 'Residential' {
         return this.Get('Segment');
@@ -31655,7 +31671,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     * * Field Name: LastSeenAssessmentYear
     * * Display Name: Last Seen Assessment Year
     * * SQL Data Type: int
-    * * Description: The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.
+    * * Description: The newest harvest assessment year that contained this parcel (Harvest rows), or the bill's pay year minus 1 (TaxBill rows -- a bill for pay year N covers assessment year N-1). A parcel missing from a newer harvest is kept with its older year, never deleted. A TaxBill row's LastSeenAssessmentYear is frozen at load time: a later gap-fill run never refreshes an existing TaxBill row (it only fills true gaps); only a harvest MERGE of the same or a later assessment year replaces the row and flips IndexSource back to 'Harvest'.
     */
     get LastSeenAssessmentYear(): number {
         return this.Get('LastSeenAssessmentYear');
@@ -31731,13 +31747,45 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     * * Possible Values 
     *   * Harvest
     *   * TaxBill
-    * * Description: Where this row came from: Harvest (the DLGF/IGIO real-property harvest, class and assessor buckets known) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, class unknown, assessor buckets and TotalAV NULL, segment from the bill's cap buckets). A harvest reload that contains the parcel replaces a TaxBill row.
+    * * Description: Where this row came from: Harvest (the DLGF/IGIO real-property harvest) or TaxBill (a billed parcel the harvest lacks; address from the tax-bill file, assessor buckets and TotalAV NULL; class and Segment per SegmentBasis). A harvest of the same or a later assessment year replaces a TaxBill row.
     */
     get IndexSource(): 'Harvest' | 'TaxBill' {
         return this.Get('IndexSource');
     }
     set IndexSource(value: 'Harvest' | 'TaxBill') {
         this.Set('IndexSource', value);
+    }
+
+    /**
+    * * Field Name: SegmentBasis
+    * * Display Name: Segment Basis
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * CountyCard
+    *   * CurrentHarvest
+    *   * PriorHarvest
+    *   * Unknown
+    * * Description: Where this row's class and Segment came from: CurrentHarvest (the harvest year in LastSeenAssessmentYear); CountyCard (the linked county record card's class, year in ClassAssessmentYear); PriorHarvest (the parcel's class in an earlier harvest, year in ClassAssessmentYear -- may be stale); Unknown (no class found; Segment Other). Only TaxBill-sourced rows carry CountyCard, PriorHarvest or Unknown.
+    */
+    get SegmentBasis(): 'CountyCard' | 'CurrentHarvest' | 'PriorHarvest' | 'Unknown' | null {
+        return this.Get('SegmentBasis');
+    }
+    set SegmentBasis(value: 'CountyCard' | 'CurrentHarvest' | 'PriorHarvest' | 'Unknown' | null) {
+        this.Set('SegmentBasis', value);
+    }
+
+    /**
+    * * Field Name: ClassAssessmentYear
+    * * Display Name: Class Assessment Year
+    * * SQL Data Type: int
+    * * Description: Assessment year of the class used for PropertyClassCode/Segment; NULL when SegmentBasis is Unknown.
+    */
+    get ClassAssessmentYear(): number | null {
+        return this.Get('ClassAssessmentYear');
+    }
+    set ClassAssessmentYear(value: number | null) {
+        this.Set('ClassAssessmentYear', value);
     }
 
     /**
