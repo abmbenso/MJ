@@ -79,6 +79,7 @@ import { indianataxOwnerPortfolioParcelFormComponent } from "./Entities/indianat
 import { indianataxOwnerPortfolioRunFormComponent } from "./Entities/indianataxOwnerPortfolioRun/indianataxownerportfoliorun.form.component";
 import { indianataxOwnerPortfolioFormComponent } from "./Entities/indianataxOwnerPortfolio/indianataxownerportfolio.form.component";
 import { bigboxretailParcelBurdenShiftFormComponent } from "./Entities/bigboxretailParcelBurdenShift/bigboxretailparcelburdenshift.form.component";
+import { indianataxParcelIndexFormComponent } from "./Entities/indianataxParcelIndex/indianataxparcelindex.form.component";
 import { bigboxretailParcelSettlementFormComponent } from "./Entities/bigboxretailParcelSettlement/bigboxretailparcelsettlement.form.component";
 import { bigboxretailParcelTransferFormComponent } from "./Entities/bigboxretailParcelTransfer/bigboxretailparceltransfer.form.component";
 import { indianataxParcelYearHeadlineFormComponent } from "./Entities/indianataxParcelYearHeadline/indianataxparcelyearheadline.form.component";
@@ -227,6 +228,7 @@ declarations: [
     indianataxOwnerPortfolioRunFormComponent,
     indianataxOwnerPortfolioFormComponent,
     bigboxretailParcelBurdenShiftFormComponent,
+    indianataxParcelIndexFormComponent,
     bigboxretailParcelSettlementFormComponent,
     bigboxretailParcelTransferFormComponent,
     indianataxParcelYearHeadlineFormComponent,
@@ -241,8 +243,7 @@ declarations: [
     indianataxProspectTaskFormComponent,
     indianataxProspectFormComponent,
     indianataxPTABOAAppealFormComponent,
-    indianataxResearchTaskFormComponent,
-    indianataxSaleReassessmentScenarioProbabilityFormComponent],
+    indianataxResearchTaskFormComponent],
 imports: [
     CommonModule,
     FormsModule,
@@ -259,6 +260,7 @@ export class GeneratedForms_SubModule_3 { }
 
 @NgModule({
 declarations: [
+    indianataxSaleReassessmentScenarioProbabilityFormComponent,
     indianataxSaleTransactionFormComponent,
     indianataxSourceDocumentFormComponent,
     indianataxSourceRegistryFormComponent,

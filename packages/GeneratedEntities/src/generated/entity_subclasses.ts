@@ -7661,6 +7661,161 @@ export const bigboxretailParcelBurdenShiftSchema = z.object({
 export type bigboxretailParcelBurdenShiftEntityType = z.infer<typeof bigboxretailParcelBurdenShiftSchema>;
 
 /**
+ * zod schema definition for the entity Parcel Indexes
+ */
+export const indianataxParcelIndexSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()`),
+    StateParcelNumber: z.string().describe(`
+        * * Field Name: StateParcelNumber
+        * * Display Name: State Parcel Number
+        * * SQL Data Type: nvarchar(18)
+        * * Description: The 18-digit state parcel number, digits only -- the TaxBill.StateParcelNumber join key.`),
+    StateParcelNumberFormatted: z.string().describe(`
+        * * Field Name: StateParcelNumberFormatted
+        * * Display Name: State Parcel Number Formatted
+        * * SQL Data Type: nvarchar(24)`),
+    CountyNumber: z.number().describe(`
+        * * Field Name: CountyNumber
+        * * Display Name: County Number
+        * * SQL Data Type: int`),
+    LocalParcelNumber: z.string().nullable().describe(`
+        * * Field Name: LocalParcelNumber
+        * * Display Name: Local Parcel Number
+        * * SQL Data Type: nvarchar(25)
+        * * Description: The county's own parcel number where it differs from the state number (Marion: the 7-digit number, e.g. 8002850), from the newest real-property TaxBill AuditorTaxID. NULL where the county uses the state number, and NULL when the county's value has fewer than 4 digits (not a parcel number, e.g. "PT").`),
+    ParcelID: z.string().nullable().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The C&I Parcel row for this parcel, where one exists. NULL for residential, agricultural, exempt and most other parcels.`),
+    SitusAddress: z.string().nullable().describe(`
+        * * Field Name: SitusAddress
+        * * Display Name: Situs Address
+        * * SQL Data Type: nvarchar(120)`),
+    SitusCity: z.string().nullable().describe(`
+        * * Field Name: SitusCity
+        * * Display Name: Situs City
+        * * SQL Data Type: nvarchar(60)`),
+    SitusZip: z.string().nullable().describe(`
+        * * Field Name: SitusZip
+        * * Display Name: Situs ZIP
+        * * SQL Data Type: nvarchar(10)`),
+    AddressKey: z.string().nullable().describe(`
+        * * Field Name: AddressKey
+        * * Display Name: Address Key
+        * * SQL Data Type: nvarchar(120)
+        * * Description: The situs address normalised by packages/core normalizeAddressKey (upper case, [A-Z0-9 ] only, canonical tokens such as N, ST, BLVD). The autocomplete searches it by prefix. NULL when the harvest has no address.`),
+    PropertyClassCode: z.string().nullable().describe(`
+        * * Field Name: PropertyClassCode
+        * * Display Name: Property Class Code
+        * * SQL Data Type: nvarchar(3)`),
+    StatutoryGroup: z.string().nullable().describe(`
+        * * Field Name: StatutoryGroup
+        * * Display Name: Statutory Group
+        * * SQL Data Type: nvarchar(20)
+        * * Description: DLGF statutory group read from PropertyClassMap.StatutoryGroup for the class code. NULL when the code is not in PropertyClassMap.`),
+    Segment: z.union([z.literal('Commercial'), z.literal('Other'), z.literal('Residential')]).describe(`
+        * * Field Name: Segment
+        * * Display Name: Segment
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Commercial
+    *   * Other
+    *   * Residential
+        * * Description: The product switch (Parcel Assistant spec 4.1): Residential; Commercial (statutory Commercial or Industrial -- apartments included, although they carry the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A default side, not a partition: a practitioner can flip it.`),
+    TaxDistrictNumber: z.string().nullable().describe(`
+        * * Field Name: TaxDistrictNumber
+        * * Display Name: Tax District Number
+        * * SQL Data Type: nvarchar(3)`),
+    NeighborhoodCode: z.string().nullable().describe(`
+        * * Field Name: NeighborhoodCode
+        * * Display Name: Neighborhood Code
+        * * SQL Data Type: nvarchar(20)`),
+    TaxpayerName: z.string().nullable().describe(`
+        * * Field Name: TaxpayerName
+        * * Display Name: Taxpayer Name
+        * * SQL Data Type: nvarchar(200)
+        * * Description: Taxpayer name printed on the newest real-property TaxBill (pay year in TaxpayerNamePayYear) -- the billing name, not a verified owner.`),
+    TaxpayerNamePayYear: z.number().nullable().describe(`
+        * * Field Name: TaxpayerNamePayYear
+        * * Display Name: Taxpayer Name Pay Year
+        * * SQL Data Type: int`),
+    TotalAV: z.number().nullable().describe(`
+        * * Field Name: TotalAV
+        * * Display Name: Total AV
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Total AV in the harvest for LastSeenAssessmentYear, as initially determined. Not the headline value; ParcelYearHeadline and AppealOutcome own that.`),
+    AssessorAV1Pct: z.number().describe(`
+        * * Field Name: AssessorAV1Pct
+        * * Display Name: Assessor AV 1%
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.`),
+    AssessorAV2Pct: z.number().describe(`
+        * * Field Name: AssessorAV2Pct
+        * * Display Name: Assessor AV 2%
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).`),
+    AssessorAV3Pct: z.number().describe(`
+        * * Field Name: AssessorAV3Pct
+        * * Display Name: Assessor AV 3%
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.`),
+    LastSeenAssessmentYear: z.number().describe(`
+        * * Field Name: LastSeenAssessmentYear
+        * * Display Name: Last Seen Assessment Year
+        * * SQL Data Type: int
+        * * Description: The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.`),
+    SourceDocumentID: z.string().describe(`
+        * * Field Name: SourceDocumentID
+        * * Display Name: Source Document
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)`),
+    LoadedAt: z.date().describe(`
+        * * Field Name: LoadedAt
+        * * Display Name: Loaded At
+        * * SQL Data Type: datetime2`),
+    LocalParcelKey: z.string().nullable().describe(`
+        * * Field Name: LocalParcelKey
+        * * Display Name: Local Parcel Key
+        * * SQL Data Type: nvarchar(25)
+        * * Description: LocalParcelNumber as a search key: upper case, [A-Z0-9] only (packages/core localParcelKey), searched by prefix so a county number is found however it is punctuated. NULL when LocalParcelNumber is NULL or has fewer than 4 digits.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Parcel: z.string().nullable().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel
+        * * SQL Data Type: nvarchar(30)`),
+    SourceDocument: z.string().describe(`
+        * * Field Name: SourceDocument
+        * * Display Name: Source Document
+        * * SQL Data Type: nvarchar(500)`),
+    __mj_Latitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Latitude
+        * * Display Name: Mj Latitude
+        * * SQL Data Type: decimal(10, 6)`),
+    __mj_Longitude: z.number().nullable().describe(`
+        * * Field Name: __mj_Longitude
+        * * Display Name: Mj Longitude
+        * * SQL Data Type: decimal(10, 6)`),
+});
+
+export type indianataxParcelIndexEntityType = z.infer<typeof indianataxParcelIndexSchema>;
+
+/**
  * zod schema definition for the entity Parcel Settlements
  */
 export const bigboxretailParcelSettlementSchema = z.object({
@@ -8053,7 +8208,7 @@ export const indianataxParcelYearHeadlineSchema = z.object({
         * * Display Name: Has Later Appeal
         * * SQL Data Type: bit
         * * Default Value: 0
-        * * Description: A later, higher-level appeal outcome exists for this parcel-year without an extracted value (an IBTR disposition after the county determination), so the headline fell back to the latest official document and may not be the value as finally determined.`),
+        * * Description: An IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined.`),
     LaterAppealText: z.string().nullable().describe(`
         * * Field Name: LaterAppealText
         * * Display Name: Later Appeal Text
@@ -31143,6 +31298,459 @@ export class bigboxretailParcelBurdenShiftEntity extends BaseEntity<bigboxretail
 
 
 /**
+ * Parcel Indexes - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: ParcelIndex
+ * * Base View: vwParcelIndexes
+ * * @description Every Indiana parcel of every class, one row per state parcel number: how an address or parcel number is found, and the parcel every TaxBill row (keyed by StateParcelNumber) joins to. Values here are the DLGF harvest as initially determined -- never a headline. Parcel (C&I only) keeps its meaning; ParcelID links the two.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Parcel Indexes')
+export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelIndexEntityType> {
+    /**
+    * Loads the Parcel Indexes record from the database
+    * @param ID: string - primary key value to load the Parcel Indexes record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxParcelIndexEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * Validate() method override for Parcel Indexes entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
+    * * StateParcelNumber: State parcel number must be exactly 18 characters long and contain only numeric digits with no letters, special characters, or other non-numeric values
+    * @public
+    * @method
+    * @override
+    */
+    public override Validate(): ValidationResult {
+        const result = super.Validate();
+        this.ValidateStateParcelNumberFormat(result);
+        result.Success = result.Success && (result.Errors.length === 0);
+
+        return result;
+    }
+
+    /**
+    * State parcel number must be exactly 18 characters long and contain only numeric digits with no letters, special characters, or other non-numeric values
+    * @param result - the ValidationResult object to add any errors or warnings to
+    * @public
+    * @method
+    */
+    public ValidateStateParcelNumberFormat(result: ValidationResult) {
+    	if (this.StateParcelNumber != null) {
+    		const length = this.StateParcelNumber.length;
+    		if (length !== 18) {
+    			result.Errors.push(new ValidationErrorInfo(
+    				"StateParcelNumber",
+    				"State parcel number must be exactly 18 characters long",
+    				this.StateParcelNumber,
+    				ValidationErrorType.Failure
+    			));
+    		}
+    		const hasNonNumeric = /[^0-9]/.test(this.StateParcelNumber);
+    		if (hasNonNumeric) {
+    			result.Errors.push(new ValidationErrorInfo(
+    				"StateParcelNumber",
+    				"State parcel number must contain only numeric digits",
+    				this.StateParcelNumber,
+    				ValidationErrorType.Failure
+    			));
+    		}
+    	}
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: StateParcelNumber
+    * * Display Name: State Parcel Number
+    * * SQL Data Type: nvarchar(18)
+    * * Description: The 18-digit state parcel number, digits only -- the TaxBill.StateParcelNumber join key.
+    */
+    get StateParcelNumber(): string {
+        return this.Get('StateParcelNumber');
+    }
+    set StateParcelNumber(value: string) {
+        this.Set('StateParcelNumber', value);
+    }
+
+    /**
+    * * Field Name: StateParcelNumberFormatted
+    * * Display Name: State Parcel Number Formatted
+    * * SQL Data Type: nvarchar(24)
+    */
+    get StateParcelNumberFormatted(): string {
+        return this.Get('StateParcelNumberFormatted');
+    }
+    set StateParcelNumberFormatted(value: string) {
+        this.Set('StateParcelNumberFormatted', value);
+    }
+
+    /**
+    * * Field Name: CountyNumber
+    * * Display Name: County Number
+    * * SQL Data Type: int
+    */
+    get CountyNumber(): number {
+        return this.Get('CountyNumber');
+    }
+    set CountyNumber(value: number) {
+        this.Set('CountyNumber', value);
+    }
+
+    /**
+    * * Field Name: LocalParcelNumber
+    * * Display Name: Local Parcel Number
+    * * SQL Data Type: nvarchar(25)
+    * * Description: The county's own parcel number where it differs from the state number (Marion: the 7-digit number, e.g. 8002850), from the newest real-property TaxBill AuditorTaxID. NULL where the county uses the state number, and NULL when the county's value has fewer than 4 digits (not a parcel number, e.g. "PT").
+    */
+    get LocalParcelNumber(): string | null {
+        return this.Get('LocalParcelNumber');
+    }
+    set LocalParcelNumber(value: string | null) {
+        this.Set('LocalParcelNumber', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The C&I Parcel row for this parcel, where one exists. NULL for residential, agricultural, exempt and most other parcels.
+    */
+    get ParcelID(): string | null {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string | null) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: SitusAddress
+    * * Display Name: Situs Address
+    * * SQL Data Type: nvarchar(120)
+    */
+    get SitusAddress(): string | null {
+        return this.Get('SitusAddress');
+    }
+    set SitusAddress(value: string | null) {
+        this.Set('SitusAddress', value);
+    }
+
+    /**
+    * * Field Name: SitusCity
+    * * Display Name: Situs City
+    * * SQL Data Type: nvarchar(60)
+    */
+    get SitusCity(): string | null {
+        return this.Get('SitusCity');
+    }
+    set SitusCity(value: string | null) {
+        this.Set('SitusCity', value);
+    }
+
+    /**
+    * * Field Name: SitusZip
+    * * Display Name: Situs ZIP
+    * * SQL Data Type: nvarchar(10)
+    */
+    get SitusZip(): string | null {
+        return this.Get('SitusZip');
+    }
+    set SitusZip(value: string | null) {
+        this.Set('SitusZip', value);
+    }
+
+    /**
+    * * Field Name: AddressKey
+    * * Display Name: Address Key
+    * * SQL Data Type: nvarchar(120)
+    * * Description: The situs address normalised by packages/core normalizeAddressKey (upper case, [A-Z0-9 ] only, canonical tokens such as N, ST, BLVD). The autocomplete searches it by prefix. NULL when the harvest has no address.
+    */
+    get AddressKey(): string | null {
+        return this.Get('AddressKey');
+    }
+    set AddressKey(value: string | null) {
+        this.Set('AddressKey', value);
+    }
+
+    /**
+    * * Field Name: PropertyClassCode
+    * * Display Name: Property Class Code
+    * * SQL Data Type: nvarchar(3)
+    */
+    get PropertyClassCode(): string | null {
+        return this.Get('PropertyClassCode');
+    }
+    set PropertyClassCode(value: string | null) {
+        this.Set('PropertyClassCode', value);
+    }
+
+    /**
+    * * Field Name: StatutoryGroup
+    * * Display Name: Statutory Group
+    * * SQL Data Type: nvarchar(20)
+    * * Description: DLGF statutory group read from PropertyClassMap.StatutoryGroup for the class code. NULL when the code is not in PropertyClassMap.
+    */
+    get StatutoryGroup(): string | null {
+        return this.Get('StatutoryGroup');
+    }
+    set StatutoryGroup(value: string | null) {
+        this.Set('StatutoryGroup', value);
+    }
+
+    /**
+    * * Field Name: Segment
+    * * Display Name: Segment
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Commercial
+    *   * Other
+    *   * Residential
+    * * Description: The product switch (Parcel Assistant spec 4.1): Residential; Commercial (statutory Commercial or Industrial -- apartments included, although they carry the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A default side, not a partition: a practitioner can flip it.
+    */
+    get Segment(): 'Commercial' | 'Other' | 'Residential' {
+        return this.Get('Segment');
+    }
+    set Segment(value: 'Commercial' | 'Other' | 'Residential') {
+        this.Set('Segment', value);
+    }
+
+    /**
+    * * Field Name: TaxDistrictNumber
+    * * Display Name: Tax District Number
+    * * SQL Data Type: nvarchar(3)
+    */
+    get TaxDistrictNumber(): string | null {
+        return this.Get('TaxDistrictNumber');
+    }
+    set TaxDistrictNumber(value: string | null) {
+        this.Set('TaxDistrictNumber', value);
+    }
+
+    /**
+    * * Field Name: NeighborhoodCode
+    * * Display Name: Neighborhood Code
+    * * SQL Data Type: nvarchar(20)
+    */
+    get NeighborhoodCode(): string | null {
+        return this.Get('NeighborhoodCode');
+    }
+    set NeighborhoodCode(value: string | null) {
+        this.Set('NeighborhoodCode', value);
+    }
+
+    /**
+    * * Field Name: TaxpayerName
+    * * Display Name: Taxpayer Name
+    * * SQL Data Type: nvarchar(200)
+    * * Description: Taxpayer name printed on the newest real-property TaxBill (pay year in TaxpayerNamePayYear) -- the billing name, not a verified owner.
+    */
+    get TaxpayerName(): string | null {
+        return this.Get('TaxpayerName');
+    }
+    set TaxpayerName(value: string | null) {
+        this.Set('TaxpayerName', value);
+    }
+
+    /**
+    * * Field Name: TaxpayerNamePayYear
+    * * Display Name: Taxpayer Name Pay Year
+    * * SQL Data Type: int
+    */
+    get TaxpayerNamePayYear(): number | null {
+        return this.Get('TaxpayerNamePayYear');
+    }
+    set TaxpayerNamePayYear(value: number | null) {
+        this.Set('TaxpayerNamePayYear', value);
+    }
+
+    /**
+    * * Field Name: TotalAV
+    * * Display Name: Total AV
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: Total AV in the harvest for LastSeenAssessmentYear, as initially determined. Not the headline value; ParcelYearHeadline and AppealOutcome own that.
+    */
+    get TotalAV(): number | null {
+        return this.Get('TotalAV');
+    }
+    set TotalAV(value: number | null) {
+        this.Set('TotalAV', value);
+    }
+
+    /**
+    * * Field Name: AssessorAV1Pct
+    * * Display Name: Assessor AV 1%
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.
+    */
+    get AssessorAV1Pct(): number {
+        return this.Get('AssessorAV1Pct');
+    }
+    set AssessorAV1Pct(value: number) {
+        this.Set('AssessorAV1Pct', value);
+    }
+
+    /**
+    * * Field Name: AssessorAV2Pct
+    * * Display Name: Assessor AV 2%
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).
+    */
+    get AssessorAV2Pct(): number {
+        return this.Get('AssessorAV2Pct');
+    }
+    set AssessorAV2Pct(value: number) {
+        this.Set('AssessorAV2Pct', value);
+    }
+
+    /**
+    * * Field Name: AssessorAV3Pct
+    * * Display Name: Assessor AV 3%
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.
+    */
+    get AssessorAV3Pct(): number {
+        return this.Get('AssessorAV3Pct');
+    }
+    set AssessorAV3Pct(value: number) {
+        this.Set('AssessorAV3Pct', value);
+    }
+
+    /**
+    * * Field Name: LastSeenAssessmentYear
+    * * Display Name: Last Seen Assessment Year
+    * * SQL Data Type: int
+    * * Description: The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.
+    */
+    get LastSeenAssessmentYear(): number {
+        return this.Get('LastSeenAssessmentYear');
+    }
+    set LastSeenAssessmentYear(value: number) {
+        this.Set('LastSeenAssessmentYear', value);
+    }
+
+    /**
+    * * Field Name: SourceDocumentID
+    * * Display Name: Source Document
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Source Documents (vwSourceDocuments.ID)
+    */
+    get SourceDocumentID(): string {
+        return this.Get('SourceDocumentID');
+    }
+    set SourceDocumentID(value: string) {
+        this.Set('SourceDocumentID', value);
+    }
+
+    /**
+    * * Field Name: LoadedAt
+    * * Display Name: Loaded At
+    * * SQL Data Type: datetime2
+    */
+    get LoadedAt(): Date {
+        return this.Get('LoadedAt');
+    }
+    set LoadedAt(value: Date) {
+        this.Set('LoadedAt', value);
+    }
+
+    /**
+    * * Field Name: LocalParcelKey
+    * * Display Name: Local Parcel Key
+    * * SQL Data Type: nvarchar(25)
+    * * Description: LocalParcelNumber as a search key: upper case, [A-Z0-9] only (packages/core localParcelKey), searched by prefix so a county number is found however it is punctuated. NULL when LocalParcelNumber is NULL or has fewer than 4 digits.
+    */
+    get LocalParcelKey(): string | null {
+        return this.Get('LocalParcelKey');
+    }
+    set LocalParcelKey(value: string | null) {
+        this.Set('LocalParcelKey', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string | null {
+        return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: SourceDocument
+    * * Display Name: Source Document
+    * * SQL Data Type: nvarchar(500)
+    */
+    get SourceDocument(): string {
+        return this.Get('SourceDocument');
+    }
+
+    /**
+    * * Field Name: __mj_Latitude
+    * * Display Name: Mj Latitude
+    * * SQL Data Type: decimal(10, 6)
+    */
+    get __mj_Latitude(): number | null {
+        return this.Get('__mj_Latitude');
+    }
+
+    /**
+    * * Field Name: __mj_Longitude
+    * * Display Name: Mj Longitude
+    * * SQL Data Type: decimal(10, 6)
+    */
+    get __mj_Longitude(): number | null {
+        return this.Get('__mj_Longitude');
+    }
+}
+
+
+/**
  * Parcel Settlements - strongly typed entity sub-class
  * * Schema: big_box_retail
  * * Base Table: ParcelSettlement
@@ -32113,7 +32721,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
     * * Display Name: Has Later Appeal
     * * SQL Data Type: bit
     * * Default Value: 0
-    * * Description: A later, higher-level appeal outcome exists for this parcel-year without an extracted value (an IBTR disposition after the county determination), so the headline fell back to the latest official document and may not be the value as finally determined.
+    * * Description: An IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined.
     */
     get HasLaterAppeal(): boolean {
         return this.Get('HasLaterAppeal');

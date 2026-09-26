@@ -18,7 +18,7 @@ import {
     ClientPortfolioPrepareServerOperation,
 } from '@abmbenso/mj-indiana-tax-server';
 
-// mj_generatedentities (96 classes)
+// mj_generatedentities (97 classes)
 import {
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -93,6 +93,7 @@ import {
     indianataxOwnerPortfolioRunEntity,
     indianataxPTABOAAppealEntity,
     indianataxParcelEntity,
+    indianataxParcelIndexEntity,
     indianataxParcelYearHeadlineEntity,
     indianataxPropertyClassMapEntity,
     indianataxPropertyEntity,
@@ -200,6 +201,7 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxOwnerPortfolioRunEntity,
     indianataxPTABOAAppealEntity,
     indianataxParcelEntity,
+    indianataxParcelIndexEntity,
     indianataxParcelYearHeadlineEntity,
     indianataxPropertyClassMapEntity,
     indianataxPropertyEntity,
@@ -229,7 +231,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 99;
+export const CLASS_REGISTRATIONS_COUNT = 100;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

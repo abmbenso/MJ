@@ -17,7 +17,7 @@ import { MaxLength } from 'class-validator';
 import * as mj_core_schema_server_object_types from '@memberjunction/server'
 
 
-import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealOutcomeEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxClientAppealStatusEntity, indianataxClientAppealEntity, indianataxClientAuthorizationEntity, indianataxClientContactEntity, indianataxClientImportEntity, indianataxClientPropertyEntity, indianataxClientTaskEntity, indianataxClientEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessmentCycleEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDataSourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelYearHeadlineEntity, indianataxParcelEntity, indianataxPropertyEntity, indianataxPropertyClassMapEntity, indianataxPropertyParcelEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxCourtCaseEntity, indianataxTaxCourtIBTRLinkEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
+import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealOutcomeEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxClientAppealStatusEntity, indianataxClientAppealEntity, indianataxClientAuthorizationEntity, indianataxClientContactEntity, indianataxClientImportEntity, indianataxClientPropertyEntity, indianataxClientTaskEntity, indianataxClientEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessmentCycleEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDataSourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, indianataxParcelIndexEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelYearHeadlineEntity, indianataxParcelEntity, indianataxPropertyEntity, indianataxPropertyClassMapEntity, indianataxPropertyParcelEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxCourtCaseEntity, indianataxTaxCourtIBTRLinkEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
     
 
 //****************************************************************************
@@ -19252,6 +19252,383 @@ export class bigboxretailParcelBurdenShiftResolver extends ResolverBase {
 }
 
 //****************************************************************************
+// ENTITY CLASS for Parcel Indexes
+//****************************************************************************
+@ObjectType({ description: `Every Indiana parcel of every class, one row per state parcel number: how an address or parcel number is found, and the parcel every TaxBill row (keyed by StateParcelNumber) joins to. Values here are the DLGF harvest as initially determined -- never a headline. Parcel (C&I only) keeps its meaning; ParcelID links the two.` })
+export class indianataxParcelIndex_ {
+    @Field() 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The 18-digit state parcel number, digits only -- the TaxBill.StateParcelNumber join key.`}) 
+    @MaxLength(18)
+    StateParcelNumber: string;
+        
+    @Field() 
+    @MaxLength(24)
+    StateParcelNumberFormatted: string;
+        
+    @Field(() => Int) 
+    CountyNumber: number;
+        
+    @Field({nullable: true, description: `The county's own parcel number where it differs from the state number (Marion: the 7-digit number, e.g. 8002850), from the newest real-property TaxBill AuditorTaxID. NULL where the county uses the state number, and NULL when the county's value has fewer than 4 digits (not a parcel number, e.g. "PT").`}) 
+    @MaxLength(25)
+    LocalParcelNumber?: string;
+        
+    @Field({nullable: true, description: `The C&I Parcel row for this parcel, where one exists. NULL for residential, agricultural, exempt and most other parcels.`}) 
+    @MaxLength(36)
+    ParcelID?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(120)
+    SitusAddress?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(60)
+    SitusCity?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(10)
+    SitusZip?: string;
+        
+    @Field({nullable: true, description: `The situs address normalised by packages/core normalizeAddressKey (upper case, [A-Z0-9 ] only, canonical tokens such as N, ST, BLVD). The autocomplete searches it by prefix. NULL when the harvest has no address.`}) 
+    @MaxLength(120)
+    AddressKey?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(3)
+    PropertyClassCode?: string;
+        
+    @Field({nullable: true, description: `DLGF statutory group read from PropertyClassMap.StatutoryGroup for the class code. NULL when the code is not in PropertyClassMap.`}) 
+    @MaxLength(20)
+    StatutoryGroup?: string;
+        
+    @Field({description: `The product switch (Parcel Assistant spec 4.1): Residential; Commercial (statutory Commercial or Industrial -- apartments included, although they carry the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A default side, not a partition: a practitioner can flip it.`}) 
+    @MaxLength(20)
+    Segment: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(3)
+    TaxDistrictNumber?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(20)
+    NeighborhoodCode?: string;
+        
+    @Field({nullable: true, description: `Taxpayer name printed on the newest real-property TaxBill (pay year in TaxpayerNamePayYear) -- the billing name, not a verified owner.`}) 
+    @MaxLength(200)
+    TaxpayerName?: string;
+        
+    @Field(() => Int, {nullable: true}) 
+    TaxpayerNamePayYear?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Total AV in the harvest for LastSeenAssessmentYear, as initially determined. Not the headline value; ParcelYearHeadline and AppealOutcome own that.`}) 
+    TotalAV?: number;
+        
+    @Field(() => Float, {description: `AV the assessor classifies as eligible for the 1% circuit-breaker cap (homestead land + improvements), harvest fields AV_LAND_ELIG_1PCT_CB_CAP + AV_IMPR_ELIG_1PCT_CB_CAP. The assessor's classification, not the bill: TaxBill.AVSubjectTo1Pct is what was billed, and differs systematically (a missing or lapsed homestead deduction moves AV to 2% on the bill). Tax work reads TaxBill.`}) 
+    AssessorAV1Pct: number;
+        
+    @Field(() => Float, {description: `AV subject to the 2% cap: non-homestead residential, apartments, long-term care, farmland and mobile-home land (eight harvest fields; see packages/core toParcelIndexRow).`}) 
+    AssessorAV2Pct: number;
+        
+    @Field(() => Float, {description: `AV subject to the 3% cap (all other real property), harvest fields AV_LAND_3PCT_CB_CAP + AV_IMPR_3PCT_CB_CAP.`}) 
+    AssessorAV3Pct: number;
+        
+    @Field(() => Int, {description: `The newest harvest assessment year that contained this parcel. A parcel missing from a newer harvest is kept with its older year, never deleted.`}) 
+    LastSeenAssessmentYear: number;
+        
+    @Field() 
+    @MaxLength(36)
+    SourceDocumentID: string;
+        
+    @Field() 
+    LoadedAt: Date;
+        
+    @Field({nullable: true, description: `LocalParcelNumber as a search key: upper case, [A-Z0-9] only (packages/core localParcelKey), searched by prefix so a county number is found however it is punctuated. NULL when LocalParcelNumber is NULL or has fewer than 4 digits.`}) 
+    @MaxLength(25)
+    LocalParcelKey?: string;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(30)
+    Parcel?: string;
+        
+    @Field() 
+    @MaxLength(500)
+    SourceDocument: string;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Latitude?: number;
+        
+    @Field(() => Float, {nullable: true}) 
+    _mj__Longitude?: number;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Parcel Indexes
+//****************************************************************************
+@InputType()
+export class CreateindianataxParcelIndexInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    StateParcelNumber?: string;
+
+    @Field({ nullable: true })
+    StateParcelNumberFormatted?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field({ nullable: true })
+    LocalParcelNumber: string | null;
+
+    @Field({ nullable: true })
+    ParcelID: string | null;
+
+    @Field({ nullable: true })
+    SitusAddress: string | null;
+
+    @Field({ nullable: true })
+    SitusCity: string | null;
+
+    @Field({ nullable: true })
+    SitusZip: string | null;
+
+    @Field({ nullable: true })
+    AddressKey: string | null;
+
+    @Field({ nullable: true })
+    PropertyClassCode: string | null;
+
+    @Field({ nullable: true })
+    StatutoryGroup: string | null;
+
+    @Field({ nullable: true })
+    Segment?: string;
+
+    @Field({ nullable: true })
+    TaxDistrictNumber: string | null;
+
+    @Field({ nullable: true })
+    NeighborhoodCode: string | null;
+
+    @Field({ nullable: true })
+    TaxpayerName: string | null;
+
+    @Field(() => Int, { nullable: true })
+    TaxpayerNamePayYear: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AssessorAV1Pct?: number;
+
+    @Field(() => Float, { nullable: true })
+    AssessorAV2Pct?: number;
+
+    @Field(() => Float, { nullable: true })
+    AssessorAV3Pct?: number;
+
+    @Field(() => Int, { nullable: true })
+    LastSeenAssessmentYear?: number;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    LoadedAt?: Date;
+
+    @Field({ nullable: true })
+    LocalParcelKey: string | null;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Parcel Indexes
+//****************************************************************************
+@InputType()
+export class UpdateindianataxParcelIndexInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    StateParcelNumber?: string;
+
+    @Field({ nullable: true })
+    StateParcelNumberFormatted?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field({ nullable: true })
+    LocalParcelNumber?: string | null;
+
+    @Field({ nullable: true })
+    ParcelID?: string | null;
+
+    @Field({ nullable: true })
+    SitusAddress?: string | null;
+
+    @Field({ nullable: true })
+    SitusCity?: string | null;
+
+    @Field({ nullable: true })
+    SitusZip?: string | null;
+
+    @Field({ nullable: true })
+    AddressKey?: string | null;
+
+    @Field({ nullable: true })
+    PropertyClassCode?: string | null;
+
+    @Field({ nullable: true })
+    StatutoryGroup?: string | null;
+
+    @Field({ nullable: true })
+    Segment?: string;
+
+    @Field({ nullable: true })
+    TaxDistrictNumber?: string | null;
+
+    @Field({ nullable: true })
+    NeighborhoodCode?: string | null;
+
+    @Field({ nullable: true })
+    TaxpayerName?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    TaxpayerNamePayYear?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    TotalAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AssessorAV1Pct?: number;
+
+    @Field(() => Float, { nullable: true })
+    AssessorAV2Pct?: number;
+
+    @Field(() => Float, { nullable: true })
+    AssessorAV3Pct?: number;
+
+    @Field(() => Int, { nullable: true })
+    LastSeenAssessmentYear?: number;
+
+    @Field({ nullable: true })
+    SourceDocumentID?: string;
+
+    @Field({ nullable: true })
+    LoadedAt?: Date;
+
+    @Field({ nullable: true })
+    LocalParcelKey?: string | null;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Parcel Indexes
+//****************************************************************************
+@ObjectType()
+export class RunindianataxParcelIndexViewResult {
+    @Field(() => [indianataxParcelIndex_])
+    Results: indianataxParcelIndex_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxParcelIndex_)
+export class indianataxParcelIndexResolver extends ResolverBase {
+    @Query(() => RunindianataxParcelIndexViewResult)
+    async RunindianataxParcelIndexViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxParcelIndexViewResult)
+    async RunindianataxParcelIndexViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxParcelIndexViewResult)
+    async RunindianataxParcelIndexDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Parcel Indexes';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxParcelIndex_, { nullable: true })
+    async indianataxParcelIndex(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxParcelIndex_ | null> {
+        this.CheckUserReadPermissions('Parcel Indexes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwParcelIndexes')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Indexes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Parcel Indexes', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxParcelIndex_)
+    async CreateindianataxParcelIndex(
+        @Arg('input', () => CreateindianataxParcelIndexInput) input: CreateindianataxParcelIndexInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Parcel Indexes', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxParcelIndex_)
+    async UpdateindianataxParcelIndex(
+        @Arg('input', () => UpdateindianataxParcelIndexInput) input: UpdateindianataxParcelIndexInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Parcel Indexes', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxParcelIndex_)
+    async DeleteindianataxParcelIndex(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Parcel Indexes', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
 // ENTITY CLASS for Parcel Settlements
 //****************************************************************************
 @ObjectType()
@@ -19936,7 +20313,7 @@ export class indianataxParcelYearHeadline_ {
     @Field({nullable: true, description: `Document date of the superseded older-vintage document.`}) 
     RevisedFromDocumentDate?: Date;
         
-    @Field(() => Boolean, {description: `A later, higher-level appeal outcome exists for this parcel-year without an extracted value (an IBTR disposition after the county determination), so the headline fell back to the latest official document and may not be the value as finally determined.`}) 
+    @Field(() => Boolean, {description: `An IBTR decision exists for this year without an extracted value; the assessed value shown is the latest document on record and may not be the value as finally determined.`}) 
     HasLaterAppeal: boolean;
         
     @Field({nullable: true, description: `The later outcome in words, e.g. "IBTR: Board Determination, 2025-08-14".`}) 
@@ -20417,6 +20794,9 @@ export class indianataxParcel_ {
     
     @Field(() => [indianataxAppealOutcome_])
     indianataxAppealOutcomes_ParcelIDArray: indianataxAppealOutcome_[]; // Link to indianataxAppealOutcomes
+    
+    @Field(() => [indianataxParcelIndex_])
+    indianataxParcelIndexes_ParcelIDArray: indianataxParcelIndex_[]; // Link to indianataxParcelIndexes
     
 }
 
@@ -20970,6 +21350,16 @@ export class indianataxParcelResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealOutcomes')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Outcomes', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Outcomes', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxParcelIndex_])
+    async indianataxParcelIndexes_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Parcel Indexes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwParcelIndexes')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Indexes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Parcel Indexes', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         
@@ -24627,6 +25017,9 @@ export class indianataxSourceDocument_ {
     @Field(() => [indianataxAppealOutcome_])
     indianataxAppealOutcomes_SourceDocumentIDArray: indianataxAppealOutcome_[]; // Link to indianataxAppealOutcomes
     
+    @Field(() => [indianataxParcelIndex_])
+    indianataxParcelIndexes_SourceDocumentIDArray: indianataxParcelIndex_[]; // Link to indianataxParcelIndexes
+    
 }
 
 //****************************************************************************
@@ -25227,6 +25620,16 @@ export class indianataxSourceDocumentResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealOutcomes')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Outcomes', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Outcomes', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxParcelIndex_])
+    async indianataxParcelIndexes_SourceDocumentIDArray(@Root() indianataxsourcedocument_: indianataxSourceDocument_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Parcel Indexes', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwParcelIndexes')} WHERE ${provider.QuoteIdentifier('SourceDocumentID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Parcel Indexes', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsourcedocument_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Parcel Indexes', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         
