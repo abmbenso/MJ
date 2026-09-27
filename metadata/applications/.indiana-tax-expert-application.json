@@ -122,6 +122,21 @@
           "primaryKey": {
             "ID": "10C28279-1D1F-4FCB-8036-58CD9DA616B4"
           }
+        },
+        {
+          "fields": {
+            "ApplicationID": "@parent:ID",
+            "EntityID": "@lookup:MJ: Entities.Name=Parcel Indexes",
+            "Sequence": 15,
+            "DefaultForNewUser": true
+          },
+          "primaryKey": {
+            "ID": "2B6FA7E2-8F4F-405C-BDAC-38284E840808"
+          },
+          "sync": {
+            "lastModified": "2026-09-27T06:59:05.428Z",
+            "checksum": "212bea7d313a0c5a3a3851dd0a3d1d2fcd61c2aabb3c211df8f613a2076a90bf"
+          }
         }
       ]
     },
