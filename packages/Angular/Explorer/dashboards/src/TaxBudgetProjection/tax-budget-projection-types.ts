@@ -54,32 +54,18 @@ export interface ScenarioState {
 }
 
 /**
- * Whether a figure is published fact or the model's estimate. Tracked per FIGURE, not
- * per row, because of the Indiana pay-year lag: assessment year N is billed in N+1, so
- * there is always a "bridge" year whose assessed value the Assessor has already set but
- * whose tax rate DLGF will not publish until early in year N+1. That year is neither
- * history nor pure projection -- one input is known, the other is not.
+ * The TS-1 figure shapes are owned by @abmbenso/mj-indiana-tax-core (src/ts1/bill-types.ts) since
+ * 2026-09-27, so the Parcel Assistant's server-side rundown and these dashboards share them.
+ * Imported (for the interfaces below) and re-exported (for existing importers).
  */
-export type ValueSource = 'actual' | 'projected';
+import type { BillFigure, BillLines, CapClassAV, ValueSource } from '@abmbenso/mj-indiana-tax-core';
+export type { BillFigure, BillLines, CapClassAV, ValueSource };
 
 /** An assessment already published for a year whose tax rate has not been. */
 export interface KnownAssessment {
   year: number;
   land: number;
   imp: number;
-}
-
-/** A single figure on a tax bill, with whether it is published fact or estimate. */
-export interface BillFigure {
-  value: number | null;
-  source: ValueSource;
-}
-
-/** Assessed value split across the three statutory circuit-breaker classes. */
-export interface CapClassAV {
-  av1Pct: number | null;
-  av2Pct: number | null;
-  av3Pct: number | null;
 }
 
 export interface BillInput {
@@ -95,19 +81,6 @@ export interface BillInput {
   uplift: number | null;
   otherCharges: number | null;
   source?: ValueSource;
-}
-
-/** The TS-1 Table 1 chain, one figure per line. */
-export interface BillLines {
-  grossAV: BillFigure;
-  deductions: BillFigure;
-  netAV: BillFigure;
-  rate: BillFigure;
-  grossTax: BillFigure;
-  capCeiling: BillFigure;
-  capSavings: BillFigure;
-  otherCharges: BillFigure;
-  totalDue: BillFigure;
 }
 
 export interface ProjectionRow {

@@ -28,6 +28,7 @@ import {
   BillRow,
   billAssumptionsDifferFrom,
   blendedCapRate,
+  billColumnsFromTaxBills,
   billViewParams,
   buildBillGrid,
   capSummaryRows,
@@ -632,51 +633,14 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
   // ---------------------------------------------------------------------
 
   /**
-   * Historical columns are read from the bill, not recomputed from it. The only
-   * subtraction here is the one the paper bill itself prints: DLGF publishes gross and net
-   * AV, and lines 2a and 4a are the differences between figures it already gives us.
+   * Historical columns are read from the bill by core's billColumnsFromTaxBills -- the one owner,
+   * shared with the Parcel Assistant's rundown. Land/improvement are NOT on the bill: they come from
+   * the assessment for the year the bill taxes, and absent history stays blank, never zero.
    */
   private buildActualColumns(bills: TaxBillRawRow[]): void {
-    const asc = [...bills].filter((b) => Number(b.GrossAssessedValue) > 0).sort((a, b) => Number(a.PayYear) - Number(b.PayYear));
-    this.actualColumns = asc.map((b) => {
-      const f = (v: number | null): BillFigure => ({ value: v, source: 'actual' });
-      const grossAV = num(b.GrossAssessedValue);
-      const netAV = num(b.NetAssessedValue);
-      const grossTax = num(b.GrossTaxDue);
-      const capSavings = num(b.PropertyTaxCapSavings) ?? 0;
-      const line5 = num(b.TotalPropertyTaxDue);
-      const otherCharges = num(b.TotalOtherCharges) ?? 0;
-
-      // TS-1 line 4a. The DLGF bridge is TotalPropertyTaxDue = GrossTaxDue - SUM(type-'C'
-      // credits), of which the circuit breaker is one; this residual is the rest.
-      const localCredits = grossTax != null && line5 != null ? round2(grossTax - capSavings - line5) : null;
-
-      // Land/improvement are NOT on the bill -- they come from the assessment for the year
-      // this bill taxes. Absent history means the split is unknown for that year, which the
-      // grid renders blank; it is never assumed to be zero.
-      const assessmentYear = Number(b.PayYear) - 1;
+    this.actualColumns = billColumnsFromTaxBills(bills, (assessmentYear) => {
       const hist = this.fullHistory.find((h) => h.Year === assessmentYear);
-
-      const lines: BillGridLines = {
-        land: f(hist ? hist.Land : null),
-        improvement: f(hist ? hist.Improvement : null),
-        grossAV: f(grossAV),
-        deductions: f(grossAV != null && netAV != null ? round2(grossAV - netAV) : null),
-        netAV: f(netAV),
-        rate: f(num(b.LocalTaxRate)),
-        grossTax: f(grossTax),
-        localCredits: f(localCredits),
-        // When the cap bound, the ceiling it held the taxpayer to IS the resulting line-5
-        // liability. When it did not bind, the ceiling sat somewhere above the tax and the
-        // bill does not say where -- so it is unavailable, not zero.
-        capCeiling: f(capSavings > 0 ? line5 : null),
-        capSavings: f(capSavings),
-        otherCharges: f(otherCharges),
-        // "Total due" means the same thing in both halves of the grid: line 5 plus Table 4.
-        totalDue: f(line5 == null ? null : round2(line5 + otherCharges)),
-      };
-      const payYear = Number(b.PayYear);
-      return { assessmentYear: payYear - 1, payYear, label: `${payYear - 1} pay ${payYear}`, lines, isProjected: false };
+      return hist ? { land: hist.Land, improvement: hist.Improvement } : null;
     });
   }
 
@@ -1242,17 +1206,6 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
       },
     ]);
   }
-}
-
-function num(v: number | null | undefined): number | null {
-  if (v == null) return null;
-  const n = Number(v);
-  return isFinite(n) ? n : null;
-}
-
-/** Dollars, to the cent. Deliberately not named r2 alongside r4 -- see V1's note. */
-function round2(x: number): number {
-  return Math.round(x * 100) / 100;
 }
 
 /** A growth-rate assumption (0.0389 = 3.89%) to basis-point resolution. */
