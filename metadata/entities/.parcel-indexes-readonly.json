@@ -1,0 +1,17 @@
+[
+  {
+    "fields": {
+      "Name": "Parcel Indexes",
+      "AllowCreateAPI": false,
+      "AllowUpdateAPI": false,
+      "AllowDeleteAPI": false
+    },
+    "primaryKey": {
+      "ID": "@lookup:MJ: Entities.Name=Parcel Indexes"
+    },
+    "sync": {
+      "lastModified": "2026-09-27T18:28:40.882Z",
+      "checksum": "23f5d029bf5d97693065e7fd15707f6d3a595a06ff8469a7acbc6f73597f983a"
+    }
+  }
+]
