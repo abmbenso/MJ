@@ -63,6 +63,20 @@
           "ResourceType": "Custom",
           "DriverClass": "ClientViewResource",
           "isDefault": false
+        },
+        {
+          "Label": "Parcel Index",
+          "Icon": "fa-solid fa-list",
+          "ResourceType": "Custom",
+          "DriverClass": "DataExplorerResource",
+          "isDefault": false,
+          "Configuration": {
+            "entityFilter": {
+              "entityNames": [
+                "Parcel Indexes"
+              ]
+            }
+          }
         }
       ]
     },
@@ -144,8 +158,8 @@
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
     },
     "sync": {
-      "lastModified": "2026-09-23T11:13:51.742Z",
-      "checksum": "3096e2b6174235a8d549bee9812992514247e88909a68c8f1c7d89650c1dba25"
+      "lastModified": "2026-09-27T18:28:53.102Z",
+      "checksum": "4ca30ae423421b88b9c16325a357620c24b5fbd72006a8f6bb29fb2e19392a39"
     }
   }
 ]
