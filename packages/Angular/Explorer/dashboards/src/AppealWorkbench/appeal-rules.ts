@@ -3,10 +3,14 @@
  *  - reconcile(): credible band, supports, floor, ask, recommendation
  *    (band and 5% discount from Indiana_Tax_Expert/docs/proposals/valuation-target-value.md).
  *  - burdenOnAssessor(): the IC 6-1.1-15-20 comparison (formerly 15-17.2). The prior value must
- *    be "as finally determined" (PTABOA value first). The threshold is read from the rule's one
- *    owner, @abmbenso/mj-indiana-tax-core BURDEN_SHIFT_RULE; its exceptions (new construction,
- *    use or zoning change) and the per-parcel test are core's assessBurdenShift — do not restate
- *    them here.
+ *    be "as finally determined" (PTABOA value first). The threshold and the $10,000 floor are read
+ *    from the rule's one owner, @abmbenso/mj-indiana-tax-core BURDEN_SHIFT_RULE; its exceptions (new
+ *    construction, use or zoning change) and the per-parcel test are core's assessBurdenShift — do
+ *    not restate them here. The Workbench passes finalAV(CURRENT_ASSESSMENT_YEAR) as currentAV --
+ *    the post-PTABOA value -- so it tests the FINAL value, while the Parcel Assistant tests per
+ *    ruling D1-8 (the determined value on a decided year, the value as noticed otherwise, with the
+ *    as-noticed measure alongside) from ParcelYearHeadline / bills / roll; where the two read
+ *    different values for a year the two screens can disagree, and that is a stated fact, not a bug.
  *  - estimateSavings(): the circuit breaker as a rate modifier: min(rate, cap + referendum).
  * Pure functions; no Angular, no MJ.
  */
@@ -53,8 +57,14 @@ export function reconcile(indications: Indication[], currentAV: number, policy: 
   };
 }
 
+/**
+ * null = not tested: the prior value is missing, or either value is at or below BURDEN_SHIFT_RULE.minAV, where
+ * the ratio is dominated by rounding and exemption changes (core's assessBurdenShift reports these as not tested
+ * too). null, not false: false renders on the cover as "the taxpayer carries the burden".
+ */
 export function burdenOnAssessor(currentAV: number, priorFinalAV: number | null): boolean | null {
   if (priorFinalAV == null || priorFinalAV <= 0) return null;
+  if (!(priorFinalAV > BURDEN_SHIFT_RULE.minAV) || !(currentAV > BURDEN_SHIFT_RULE.minAV)) return null;
   return currentAV > priorFinalAV * BURDEN_SHIFT_RULE.thresholdRatio;
 }
 

@@ -175,7 +175,8 @@ export interface MergedParcelRow extends AppealLayerFields, OutcomeLayerFields {
   // (indiana_tax.OwnerPortfolioParcel.AVYoYPct) -- independent of, and not
   // guaranteed to match to the decimal, any client-side trend calculation
   // elsewhere in this dashboard. Past +5% is legally significant in Indiana:
-  // IC 6-1.1-15-17.2 shifts the burden of proof to the assessor that year
+  // IC 6-1.1-15-20(b) shifts the burden of proof to the assessor that year, unless a §20(d) exception applies
+  // (threshold owned by mj-indiana-tax core BURDEN_SHIFT_RULE.thresholdRatio)
   // (see the project's "5% burden-shifting rule" memo) -- not just "a big
   // jump," a specific statutory threshold worth flagging visually.
   AVYoYPct: number | null;

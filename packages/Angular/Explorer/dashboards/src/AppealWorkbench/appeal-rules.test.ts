@@ -51,13 +51,19 @@ describe('reconcile — the mockup ladder', () => {
   });
 });
 
-describe('burdenOnAssessor — IC 6-1.1-15-17.2', () => {
+describe('burdenOnAssessor — IC 6-1.1-15-20 (formerly 15-17.2)', () => {
   it('is true above a 5% rise, false at or below, null without a prior value', () => {
     expect(burdenOnAssessor(276_000, 251_300)).toBe(true);
     expect(burdenOnAssessor(105_000, 100_000)).toBe(false);
     expect(burdenOnAssessor(105_001, 100_000)).toBe(true);
     expect(burdenOnAssessor(105_000, null)).toBeNull();
     expect(burdenOnAssessor(105_000, 0)).toBeNull();
+  });
+
+  it('is not tested (null) when either value is at or below the core floor, BURDEN_SHIFT_RULE.minAV ($10,000)', () => {
+    expect(burdenOnAssessor(20_000, 10_000)).toBeNull();
+    expect(burdenOnAssessor(10_000, 5_000)).toBeNull();
+    expect(burdenOnAssessor(20_000, 10_001)).toBe(true);
   });
 });
 

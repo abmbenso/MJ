@@ -25,7 +25,7 @@
         </tbody>
       </table>
       <p class="cv-note">
-        @if (Analysis.BurdenOnAssessor === true) { <strong>Burden on the assessor:</strong> the assessment rose more than 5% over the prior value as finally determined (IC 6-1.1-15-17.2). Confirm no new construction, use or zoning change. }
+        @if (Analysis.BurdenOnAssessor === true) { <strong>Burden on the assessor:</strong> the assessment rose more than 5% over the prior value as finally determined, which meets the IC 6-1.1-15-20(b) test. Confirm no new construction, use or zoning change not considered in the prior year's assessment (IC 6-1.1-15-20(d)). }
         @else if (Analysis.BurdenOnAssessor === false) { The assessment rose 5% or less; the taxpayer carries the burden. }
         @else { Prior value as finally determined is not on file; burden not determined. }
       </p>

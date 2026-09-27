@@ -9,6 +9,7 @@ import {
   RATIO_METRIC_DEFS,
   UNIT_OF_COMPARISON_DEFS,
 } from './property-search-agent-context';
+import { BURDEN_SHIFT_RULE } from '@abmbenso/mj-indiana-tax-core';
 import { OWNER_PROSPECTS_COVERAGE_NOTE } from './property-search-county';
 import { PROVISIONAL_PTABOA_TOOLTIP, formatOutcomeDate, isProvisionalPTABOAValue } from './property-search-outcomes';
 
@@ -127,9 +128,15 @@ const RECOMMENDATION_CELL_CLASS_RULES: NonNullable<ColDef<MergedParcelRow>['cell
   'psg-rec-no': (p) => p.value === 'No Appeal',
 };
 
-/** Flags AVYoYPct past the 5% threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor -- a specific statutory line, not just "a big jump" (see this project's "5% burden-shifting rule" memo). */
+/**
+ * The IC 6-1.1-15-20(b) threshold as a percentage, read from the rule's one owner (mj-indiana-tax core
+ * BURDEN_SHIFT_RULE.thresholdRatio; percent = (ratio - 1) x 100, rounded to strip float noise) -- never a second copy.
+ */
+const BURDEN_SHIFT_THRESHOLD_PCT = Math.round((BURDEN_SHIFT_RULE.thresholdRatio - 1) * 100 * 1e6) / 1e6;
+
+/** Flags AVYoYPct past the IC 6-1.1-15-20(b) threshold ("more than five percent") -- a specific statutory line, not just "a big jump". A lead to test, not a finding: the $10,000 floor and the §20(d) exceptions are not applied here (core's assessBurdenShift applies them per parcel). */
 const AV_YOY_CELL_CLASS_RULES: NonNullable<ColDef<MergedParcelRow>['cellClassRules']> = {
-  'psg-yoy-flag': (p) => typeof p.value === 'number' && p.value > 5,
+  'psg-yoy-flag': (p) => typeof p.value === 'number' && p.value > BURDEN_SHIFT_THRESHOLD_PCT,
 };
 
 /** One entry in the column registry -- the single source of truth for both AG Grid's ColumnDefs and the host dashboard's "Columns" visibility popover, so the two never drift out of sync. */
@@ -591,7 +598,7 @@ const PROPERTY_SEARCH_GRID_COLUMNS_BASE: PropertySearchColumnConfig[] = [
       type: 'numericColumn',
       valueFormatter: formatAVYoYPct,
       cellClassRules: AV_YOY_CELL_CLASS_RULES,
-      headerTooltip: "Year-over-year change in this parcel's assessed value. Highlighted past +5% -- the threshold where IC 6-1.1-15-17.2 shifts the burden of proof to the assessor, not just an arbitrary \"big jump.\"" + OWNER_PROSPECTS_COVERAGE_NOTE,
+      headerTooltip: `Year-over-year change in this parcel's assessed value. Highlighted past +${BURDEN_SHIFT_THRESHOLD_PCT}% -- the IC 6-1.1-15-20(b) test: an increase of more than ${BURDEN_SHIFT_THRESHOLD_PCT}% over the prior year's assessment shifts the burden of proof to the assessor unless a §20(d) exception applies (new improvements, zoning or use not considered in the prior year). A highlight is a lead to test, not a finding.` + OWNER_PROSPECTS_COVERAGE_NOTE,
     },
   },
   {

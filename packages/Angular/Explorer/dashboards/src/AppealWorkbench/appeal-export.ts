@@ -154,7 +154,7 @@ function buildCoverSection(input: AppealExportInput): SectionContent | null {
     value: usd0(analysis.EstimatedTaxSavings),
     note: analysis.SavingsRate != null ? `${pct(analysis.SavingsRate)} rate` : undefined,
   });
-  rows.push({ label: 'Burden on assessor (IC 6-1.1-15-17.2)', value: yn(analysis.BurdenOnAssessor) });
+  rows.push({ label: 'Burden on assessor (IC 6-1.1-15-20(b) test)', value: yn(analysis.BurdenOnAssessor) });
 
   const ladder = [...indications].sort((a, b) => APPROACH_ORDER.indexOf(a.Approach) - APPROACH_ORDER.indexOf(b.Approach));
   const ladderTable: ReportTable = {
