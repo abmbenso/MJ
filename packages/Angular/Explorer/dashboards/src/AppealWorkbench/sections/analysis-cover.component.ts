@@ -3,8 +3,16 @@ import { AskPolicy, Reconciliation } from '../appeal-rules';
 import { estimateSavings } from '../appeal-rules';
 import { AnalysisRow, IndicationRow, SubjectBundle } from '../analysis-store';
 import { AssessmentSummaryRow, buildAssessmentSummary } from './assessment-summary';
+import { BURDEN_SHIFT_RULE } from '@abmbenso/mj-indiana-tax-core';
 
 const APPROACH_LABEL: Record<string, string> = { Income: 'Income (market)', Sales: 'Sales comparison', AssessmentComps: 'Assessment comps', Cost: 'Cost', ActualIE: 'Actual income & expenses' };
+
+/**
+ * The IC 6-1.1-15-20(b) threshold as a percentage, read from the rule's one owner (mj-indiana-tax core
+ * BURDEN_SHIFT_RULE.thresholdRatio; percent = (ratio - 1) x 100, rounded to strip float noise) -- never a
+ * second copy, matching PropertySearch's own derivation (property-search-grid.component.ts).
+ */
+const BURDEN_SHIFT_THRESHOLD_PCT = Math.round((BURDEN_SHIFT_RULE.thresholdRatio - 1) * 100 * 1e6) / 1e6;
 
 @Component({
   standalone: false,
@@ -37,6 +45,9 @@ export class AnalysisCoverComponent {
       isAsk: this.Reconciled?.askApproach === row.Approach, isFloor: this.Reconciled?.floorApproach === row.Approach,
     }));
   }
+  /** The IC 6-1.1-15-20(b) threshold as a percentage (BURDEN_SHIFT_RULE.thresholdRatio), for the cover
+   * template's burden-on-assessor prose -- so the template never restates the number itself. */
+  public get BurdenShiftThresholdPct(): number { return BURDEN_SHIFT_THRESHOLD_PCT; }
   public get AskPctBelow(): number | null {
     const a = this.Analysis; return a?.RequestedValue != null && a.CurrentTotalAV ? 1 - a.RequestedValue / a.CurrentTotalAV : null;
   }
