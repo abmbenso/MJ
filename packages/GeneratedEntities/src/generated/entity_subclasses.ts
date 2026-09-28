@@ -7728,7 +7728,7 @@ export const indianataxParcelIndexSchema = z.object({
     *   * Commercial
     *   * Other
     *   * Residential
-        * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.`),
+        * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped or unknown). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.`),
     TaxDistrictNumber: z.string().nullable().describe(`
         * * Field Name: TaxDistrictNumber
         * * Display Name: Tax District Number
@@ -7820,7 +7820,7 @@ export const indianataxParcelIndexSchema = z.object({
         * * Field Name: ClassAssessmentYear
         * * Display Name: Class Assessment Year
         * * SQL Data Type: int
-        * * Description: Assessment year of the class used for PropertyClassCode/Segment; NULL when SegmentBasis is Unknown.`),
+        * * Description: Assessment year of the class used: the harvest year (CurrentHarvest), the newest county-card assessment year (CountyCard), or the earlier harvest year (PriorHarvest); NULL only when Unknown.`),
     Parcel: z.string().nullable().describe(`
         * * Field Name: Parcel
         * * Display Name: Parcel
@@ -8282,22 +8282,22 @@ export const indianataxParcelSchema = z.object({
         * * Field Name: ParcelNumber
         * * Display Name: Parcel Number
         * * SQL Data Type: nvarchar(30)
-        * * Description: The statewide 17-digit PARCEL_NUMBER from the DLGF/GIO Data Harvest geodatabase. Canonical identifier for the parcel.`),
+        * * Description: The 18-digit state parcel number (DLGF/GIO PARCEL_NUMBER). 775 Marion C&I rows with no known state number carry a placeholder GIS-<county number>.`),
     GISParcelNumber: z.string().nullable().describe(`
         * * Field Name: GISParcelNumber
         * * Display Name: GIS Parcel Number
         * * SQL Data Type: nvarchar(30)
-        * * Description: The county's own local parcel number (e.g. Marion County's 7-digit number). Different counties use different local schemes; this is the crosswalk between a county-sourced file and the statewide ParcelNumber.`),
+        * * Description: The county's own local parcel number (e.g. Marion's 7-digit number), from the IndianaMap/IGIO layer. NULL on ParcelIndex-roster rows: their county number is ParcelIndex.LocalParcelNumber, a different source (TaxBill.AuditorTaxID) that disagrees with this column for C&I rows in 22 counties.`),
     Address: z.string().nullable().describe(`
         * * Field Name: Address
         * * Display Name: Address
         * * SQL Data Type: nvarchar(300)
-        * * Description: Site/property address.`),
+        * * Description: Site address as street, city, zip. On ParcelIndex-roster rows built from ParcelIndex.SitusAddress/SitusCity/SitusZip (packages/core spineAddress); NULL when the index has none.`),
     OwnerName: z.string().nullable().describe(`
         * * Field Name: OwnerName
         * * Display Name: Owner Name
         * * SQL Data Type: nvarchar(300)
-        * * Description: Owner of record name, as of the characteristics source year.`),
+        * * Description: Owner of record, as of the characteristics source year. NULL on ParcelIndex-roster rows (ParcelIndex.TaxpayerName is the bill's taxpayer, not the owner of record).`),
     Acreage: z.number().nullable().describe(`
         * * Field Name: Acreage
         * * Display Name: Acreage
@@ -8312,7 +8312,7 @@ export const indianataxParcelSchema = z.object({
         * * Field Name: PropertyClassCode
         * * Display Name: Property Class Code
         * * SQL Data Type: nvarchar(10)
-        * * Description: Most recently known DLGF property class code (e.g. 300-499 for commercial/industrial). A given assessment year may record a different class code on its own Assessment row.`),
+        * * Description: Not populated: NULL on every row. A class is per year on Assessment.PropertyClassCode; the index's current class is ParcelIndex.PropertyClassCode.`),
     CharacteristicsSourceYear: z.number().nullable().describe(`
         * * Field Name: CharacteristicsSourceYear
         * * Display Name: Characteristics Source Year
@@ -8392,13 +8392,23 @@ export const indianataxParcelSchema = z.object({
         * * Field Name: SourceLoadDate
         * * Display Name: Source Load Date
         * * SQL Data Type: date
-        * * Description: The date the SOURCE (IndianaMap/IGIO Feature Service) last updated this record — distinct from GeometryRetrievedAt, which is when WE fetched it.`),
+        * * Description: The date the SOURCE (IndianaMap/IGIO Feature Service) last updated this record -- distinct from GeometryRetrievedAt, which is when WE fetched it. NULL on ParcelIndex-roster rows (not fetched).`),
     GeometrySourceRegistryID: z.string().nullable().describe(`
         * * Field Name: GeometrySourceRegistryID
         * * Display Name: Geometry Source Registry ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Source Registries (vwSourceRegistries.ID)
         * * Description: The SourceRegistry entry for the Feature Service this parcel's geometry/location/taxing-district fields came from.`),
+    Roster: z.union([z.literal('CIBook'), z.literal('ParcelIndex')]).describe(`
+        * * Field Name: Roster
+        * * Display Name: Roster
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: CIBook
+    * * Value List Type: List
+    * * Possible Values 
+    *   * CIBook
+    *   * ParcelIndex
+        * * Description: Which roster this parcel is on. CIBook: the commercial/industrial book (every row loaded before 2026-09-27, and any row a C&I intake promotes). ParcelIndex: created by mj-indiana-tax scripts/load-parcel-spine.js so a ParcelIndex parcel has a Parcel.ID; identity and address only. Readers that mean the C&I book filter Roster = 'CIBook'.`),
     GeometrySourceRegistry: z.string().nullable().describe(`
         * * Field Name: GeometrySourceRegistry
         * * Display Name: Geometry Source Registry
@@ -31354,6 +31364,30 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     }
 
     /**
+    * Parcel Indexes - AllowCreateAPI and AllowUpdateAPI are both set to 0 in the database.  Save is not allowed, so this method is generated to override the base class method and throw an error. To enable save for this entity, set AllowCreateAPI and/or AllowUpdateAPI to 1 in the database.
+    * @public
+    * @method
+    * @override
+    * @memberof indianataxParcelIndexEntity
+    * @throws {Error} - Save is not allowed for Parcel Indexes, to enable it set AllowCreateAPI and/or AllowUpdateAPI to 1 in the database.
+    */
+    public override async Save(options?: EntitySaveOptions) : Promise<boolean> {
+        throw new Error('Save is not allowed for Parcel Indexes, to enable it set AllowCreateAPI and/or AllowUpdateAPI to 1 in the database.');
+    }
+
+    /**
+    * Parcel Indexes - AllowDeleteAPI is set to 0 in the database.  Delete is not allowed, so this method is generated to override the base class method and throw an error. To enable delete for this entity, set AllowDeleteAPI to 1 in the database.
+    * @public
+    * @method
+    * @override
+    * @memberof indianataxParcelIndexEntity
+    * @throws {Error} - Delete is not allowed for Parcel Indexes, to enable it set AllowDeleteAPI to 1 in the database.
+    */
+    public override async Delete(): Promise<boolean> {
+        throw new Error('Delete is not allowed for Parcel Indexes, to enable it set AllowDeleteAPI to 1 in the database.');
+    }
+
+    /**
     * Validate() method override for Parcel Indexes entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
     * * StateParcelNumber: State parcel number must be exactly 18 characters long and contain only numeric digits with no letters, special characters, or other non-numeric values
     * @public
@@ -31557,7 +31591,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     *   * Commercial
     *   * Other
     *   * Residential
-    * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.
+    * * Description: The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped or unknown). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.
     */
     get Segment(): 'Commercial' | 'Other' | 'Residential' {
         return this.Get('Segment');
@@ -31779,7 +31813,7 @@ export class indianataxParcelIndexEntity extends BaseEntity<indianataxParcelInde
     * * Field Name: ClassAssessmentYear
     * * Display Name: Class Assessment Year
     * * SQL Data Type: int
-    * * Description: Assessment year of the class used for PropertyClassCode/Segment; NULL when SegmentBasis is Unknown.
+    * * Description: Assessment year of the class used: the harvest year (CurrentHarvest), the newest county-card assessment year (CountyCard), or the earlier harvest year (PriorHarvest); NULL only when Unknown.
     */
     get ClassAssessmentYear(): number | null {
         return this.Get('ClassAssessmentYear');
@@ -32871,7 +32905,7 @@ export class indianataxParcelYearHeadlineEntity extends BaseEntity<indianataxPar
  * * Schema: indiana_tax
  * * Base Table: Parcel
  * * Base View: vwParcels
- * * @description One row per Indiana parcel, keyed on (CountyNumber, ParcelNumber) — the statewide 17-digit parcel number. Holds relatively stable characteristics; assessed values live in Assessment, one row per year.
+ * * @description One row per Indiana parcel, keyed on (CountyNumber, ParcelNumber) -- the 18-digit state parcel number. Two rosters (see Roster): the C&I book, and since 2026-09-27 one spine row for every other ParcelIndex parcel. Assessed values live in Assessment, one row per source per year.
  * * Primary Key: ID
  * @extends {BaseEntity}
  * @class
@@ -32926,7 +32960,7 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     * * Field Name: ParcelNumber
     * * Display Name: Parcel Number
     * * SQL Data Type: nvarchar(30)
-    * * Description: The statewide 17-digit PARCEL_NUMBER from the DLGF/GIO Data Harvest geodatabase. Canonical identifier for the parcel.
+    * * Description: The 18-digit state parcel number (DLGF/GIO PARCEL_NUMBER). 775 Marion C&I rows with no known state number carry a placeholder GIS-<county number>.
     */
     get ParcelNumber(): string {
         return this.Get('ParcelNumber');
@@ -32939,7 +32973,7 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     * * Field Name: GISParcelNumber
     * * Display Name: GIS Parcel Number
     * * SQL Data Type: nvarchar(30)
-    * * Description: The county's own local parcel number (e.g. Marion County's 7-digit number). Different counties use different local schemes; this is the crosswalk between a county-sourced file and the statewide ParcelNumber.
+    * * Description: The county's own local parcel number (e.g. Marion's 7-digit number), from the IndianaMap/IGIO layer. NULL on ParcelIndex-roster rows: their county number is ParcelIndex.LocalParcelNumber, a different source (TaxBill.AuditorTaxID) that disagrees with this column for C&I rows in 22 counties.
     */
     get GISParcelNumber(): string | null {
         return this.Get('GISParcelNumber');
@@ -32952,7 +32986,7 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     * * Field Name: Address
     * * Display Name: Address
     * * SQL Data Type: nvarchar(300)
-    * * Description: Site/property address.
+    * * Description: Site address as street, city, zip. On ParcelIndex-roster rows built from ParcelIndex.SitusAddress/SitusCity/SitusZip (packages/core spineAddress); NULL when the index has none.
     */
     get Address(): string | null {
         return this.Get('Address');
@@ -32965,7 +32999,7 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     * * Field Name: OwnerName
     * * Display Name: Owner Name
     * * SQL Data Type: nvarchar(300)
-    * * Description: Owner of record name, as of the characteristics source year.
+    * * Description: Owner of record, as of the characteristics source year. NULL on ParcelIndex-roster rows (ParcelIndex.TaxpayerName is the bill's taxpayer, not the owner of record).
     */
     get OwnerName(): string | null {
         return this.Get('OwnerName');
@@ -33004,7 +33038,7 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     * * Field Name: PropertyClassCode
     * * Display Name: Property Class Code
     * * SQL Data Type: nvarchar(10)
-    * * Description: Most recently known DLGF property class code (e.g. 300-499 for commercial/industrial). A given assessment year may record a different class code on its own Assessment row.
+    * * Description: Not populated: NULL on every row. A class is per year on Assessment.PropertyClassCode; the index's current class is ParcelIndex.PropertyClassCode.
     */
     get PropertyClassCode(): string | null {
         return this.Get('PropertyClassCode');
@@ -33206,7 +33240,7 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     * * Field Name: SourceLoadDate
     * * Display Name: Source Load Date
     * * SQL Data Type: date
-    * * Description: The date the SOURCE (IndianaMap/IGIO Feature Service) last updated this record — distinct from GeometryRetrievedAt, which is when WE fetched it.
+    * * Description: The date the SOURCE (IndianaMap/IGIO Feature Service) last updated this record -- distinct from GeometryRetrievedAt, which is when WE fetched it. NULL on ParcelIndex-roster rows (not fetched).
     */
     get SourceLoadDate(): Date | null {
         return this.Get('SourceLoadDate');
@@ -33227,6 +33261,24 @@ export class indianataxParcelEntity extends BaseEntity<indianataxParcelEntityTyp
     }
     set GeometrySourceRegistryID(value: string | null) {
         this.Set('GeometrySourceRegistryID', value);
+    }
+
+    /**
+    * * Field Name: Roster
+    * * Display Name: Roster
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: CIBook
+    * * Value List Type: List
+    * * Possible Values 
+    *   * CIBook
+    *   * ParcelIndex
+    * * Description: Which roster this parcel is on. CIBook: the commercial/industrial book (every row loaded before 2026-09-27, and any row a C&I intake promotes). ParcelIndex: created by mj-indiana-tax scripts/load-parcel-spine.js so a ParcelIndex parcel has a Parcel.ID; identity and address only. Readers that mean the C&I book filter Roster = 'CIBook'.
+    */
+    get Roster(): 'CIBook' | 'ParcelIndex' {
+        return this.Get('Roster');
+    }
+    set Roster(value: 'CIBook' | 'ParcelIndex') {
+        this.Set('Roster', value);
     }
 
     /**

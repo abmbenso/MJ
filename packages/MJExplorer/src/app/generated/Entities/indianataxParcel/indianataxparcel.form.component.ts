@@ -22,7 +22,7 @@ export class indianataxParcelFormComponent extends BaseFormComponent {
             { sectionKey: 'propertyCharacteristics', sectionName: 'Property Characteristics', isExpanded: true },
             { sectionKey: 'dataProvenance', sectionName: 'Data Provenance', isExpanded: true },
             { sectionKey: 'taxDistrictInformation', sectionName: 'Tax District Information', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'dataManagement', sectionName: 'Data Management', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'pTABOAAppeals', sectionName: 'PTABOA Appeals', isExpanded: false },
             { sectionKey: 'assessments', sectionName: 'Assessments', isExpanded: false },

@@ -19303,7 +19303,7 @@ export class indianataxParcelIndex_ {
     @MaxLength(20)
     StatutoryGroup?: string;
         
-    @Field({description: `The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.`}) 
+    @Field({description: `The Segment of a Harvest row comes from PropertyClassMap.StatutoryGroup: Residential; Commercial (statutory Commercial or Industrial -- on Harvest rows apartments, class 401-419, are Commercial even though they are billed at the 2% cap); Other (agricultural, exempt, utility, mineral, unmapped or unknown). A TaxBill row's Segment comes from the same class-based rule, but the class itself follows SegmentBasis: the linked county record card's class (CountyCard), else the parcel's class in an earlier harvest year (PriorHarvest -- see ClassAssessmentYear; may be stale, not necessarily the parcel's current class), else no class at all (Unknown, Segment Other). A default side, not a partition: a practitioner can flip it.`}) 
     @MaxLength(20)
     Segment: string;
         
@@ -19362,7 +19362,7 @@ export class indianataxParcelIndex_ {
     @MaxLength(20)
     SegmentBasis?: string;
         
-    @Field(() => Int, {nullable: true, description: `Assessment year of the class used for PropertyClassCode/Segment; NULL when SegmentBasis is Unknown.`}) 
+    @Field(() => Int, {nullable: true, description: `Assessment year of the class used: the harvest year (CurrentHarvest), the newest county-card assessment year (CountyCard), or the earlier harvest year (PriorHarvest); NULL only when Unknown.`}) 
     ClassAssessmentYear?: number;
         
     @Field({nullable: true}) 
@@ -19380,197 +19380,6 @@ export class indianataxParcelIndex_ {
     _mj__Longitude?: number;
         
 }
-
-//****************************************************************************
-// INPUT TYPE for Parcel Indexes
-//****************************************************************************
-@InputType()
-export class CreateindianataxParcelIndexInput {
-    @Field({ nullable: true })
-    ID?: string;
-
-    @Field({ nullable: true })
-    StateParcelNumber?: string;
-
-    @Field({ nullable: true })
-    StateParcelNumberFormatted?: string;
-
-    @Field(() => Int, { nullable: true })
-    CountyNumber?: number;
-
-    @Field({ nullable: true })
-    LocalParcelNumber: string | null;
-
-    @Field({ nullable: true })
-    ParcelID: string | null;
-
-    @Field({ nullable: true })
-    SitusAddress: string | null;
-
-    @Field({ nullable: true })
-    SitusCity: string | null;
-
-    @Field({ nullable: true })
-    SitusZip: string | null;
-
-    @Field({ nullable: true })
-    AddressKey: string | null;
-
-    @Field({ nullable: true })
-    PropertyClassCode: string | null;
-
-    @Field({ nullable: true })
-    StatutoryGroup: string | null;
-
-    @Field({ nullable: true })
-    Segment?: string;
-
-    @Field({ nullable: true })
-    TaxDistrictNumber: string | null;
-
-    @Field({ nullable: true })
-    NeighborhoodCode: string | null;
-
-    @Field({ nullable: true })
-    TaxpayerName: string | null;
-
-    @Field(() => Int, { nullable: true })
-    TaxpayerNamePayYear: number | null;
-
-    @Field(() => Float, { nullable: true })
-    TotalAV: number | null;
-
-    @Field(() => Float, { nullable: true })
-    AssessorAV1Pct: number | null;
-
-    @Field(() => Float, { nullable: true })
-    AssessorAV2Pct: number | null;
-
-    @Field(() => Float, { nullable: true })
-    AssessorAV3Pct: number | null;
-
-    @Field(() => Int, { nullable: true })
-    LastSeenAssessmentYear?: number;
-
-    @Field({ nullable: true })
-    SourceDocumentID?: string;
-
-    @Field({ nullable: true })
-    LoadedAt?: Date;
-
-    @Field({ nullable: true })
-    LocalParcelKey: string | null;
-
-    @Field({ nullable: true })
-    IndexSource?: string;
-
-    @Field({ nullable: true })
-    SegmentBasis: string | null;
-
-    @Field(() => Int, { nullable: true })
-    ClassAssessmentYear: number | null;
-
-    @Field(() => RestoreContextInput, { nullable: true })
-    RestoreContext___?: RestoreContextInput;
-}
-    
-
-//****************************************************************************
-// INPUT TYPE for Parcel Indexes
-//****************************************************************************
-@InputType()
-export class UpdateindianataxParcelIndexInput {
-    @Field()
-    ID: string;
-
-    @Field({ nullable: true })
-    StateParcelNumber?: string;
-
-    @Field({ nullable: true })
-    StateParcelNumberFormatted?: string;
-
-    @Field(() => Int, { nullable: true })
-    CountyNumber?: number;
-
-    @Field({ nullable: true })
-    LocalParcelNumber?: string | null;
-
-    @Field({ nullable: true })
-    ParcelID?: string | null;
-
-    @Field({ nullable: true })
-    SitusAddress?: string | null;
-
-    @Field({ nullable: true })
-    SitusCity?: string | null;
-
-    @Field({ nullable: true })
-    SitusZip?: string | null;
-
-    @Field({ nullable: true })
-    AddressKey?: string | null;
-
-    @Field({ nullable: true })
-    PropertyClassCode?: string | null;
-
-    @Field({ nullable: true })
-    StatutoryGroup?: string | null;
-
-    @Field({ nullable: true })
-    Segment?: string;
-
-    @Field({ nullable: true })
-    TaxDistrictNumber?: string | null;
-
-    @Field({ nullable: true })
-    NeighborhoodCode?: string | null;
-
-    @Field({ nullable: true })
-    TaxpayerName?: string | null;
-
-    @Field(() => Int, { nullable: true })
-    TaxpayerNamePayYear?: number | null;
-
-    @Field(() => Float, { nullable: true })
-    TotalAV?: number | null;
-
-    @Field(() => Float, { nullable: true })
-    AssessorAV1Pct?: number | null;
-
-    @Field(() => Float, { nullable: true })
-    AssessorAV2Pct?: number | null;
-
-    @Field(() => Float, { nullable: true })
-    AssessorAV3Pct?: number | null;
-
-    @Field(() => Int, { nullable: true })
-    LastSeenAssessmentYear?: number;
-
-    @Field({ nullable: true })
-    SourceDocumentID?: string;
-
-    @Field({ nullable: true })
-    LoadedAt?: Date;
-
-    @Field({ nullable: true })
-    LocalParcelKey?: string | null;
-
-    @Field({ nullable: true })
-    IndexSource?: string;
-
-    @Field({ nullable: true })
-    SegmentBasis?: string | null;
-
-    @Field(() => Int, { nullable: true })
-    ClassAssessmentYear?: number | null;
-
-    @Field(() => [KeyValuePairInput], { nullable: true })
-    OldValues___?: KeyValuePairInput[];
-
-    @Field(() => RestoreContextInput, { nullable: true })
-    RestoreContext___?: RestoreContextInput;
-}
-    
 //****************************************************************************
 // RESOLVER for Parcel Indexes
 //****************************************************************************
@@ -19626,33 +19435,6 @@ export class indianataxParcelIndexResolver extends ResolverBase {
         const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.MapFieldNamesToCodeNames('Parcel Indexes', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
         return result;
-    }
-    
-    @Mutation(() => indianataxParcelIndex_)
-    async CreateindianataxParcelIndex(
-        @Arg('input', () => CreateindianataxParcelIndexInput) input: CreateindianataxParcelIndexInput,
-        @Ctx() { providers, userPayload }: AppContext,
-        @PubSub() pubSub: PubSubEngine
-    ) {
-        const provider = GetReadWriteProvider(providers);
-        return this.CreateRecord('Parcel Indexes', input, provider, userPayload, pubSub)
-    }
-        
-    @Mutation(() => indianataxParcelIndex_)
-    async UpdateindianataxParcelIndex(
-        @Arg('input', () => UpdateindianataxParcelIndexInput) input: UpdateindianataxParcelIndexInput,
-        @Ctx() { providers, userPayload }: AppContext,
-        @PubSub() pubSub: PubSubEngine
-    ) {
-        const provider = GetReadWriteProvider(providers);
-        return this.UpdateRecord('Parcel Indexes', input, provider, userPayload, pubSub);
-    }
-    
-    @Mutation(() => indianataxParcelIndex_)
-    async DeleteindianataxParcelIndex(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
-        const provider = GetReadWriteProvider(providers);
-        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
-        return this.DeleteRecord('Parcel Indexes', key, options, provider, userPayload, pubSub);
     }
     
 }
@@ -20620,7 +20402,7 @@ export class indianataxParcelYearHeadlineResolver extends ResolverBase {
 //****************************************************************************
 // ENTITY CLASS for Parcels
 //****************************************************************************
-@ObjectType({ description: `One row per Indiana parcel, keyed on (CountyNumber, ParcelNumber) — the statewide 17-digit parcel number. Holds relatively stable characteristics; assessed values live in Assessment, one row per year.` })
+@ObjectType({ description: `One row per Indiana parcel, keyed on (CountyNumber, ParcelNumber) -- the 18-digit state parcel number. Two rosters (see Roster): the C&I book, and since 2026-09-27 one spine row for every other ParcelIndex parcel. Assessed values live in Assessment, one row per source per year.` })
 export class indianataxParcel_ {
     @Field() 
     @MaxLength(36)
@@ -20629,19 +20411,19 @@ export class indianataxParcel_ {
     @Field(() => Int, {description: `Indiana county number (1-92) per the DLGF/GIO statewide numbering.`}) 
     CountyNumber: number;
         
-    @Field({description: `The statewide 17-digit PARCEL_NUMBER from the DLGF/GIO Data Harvest geodatabase. Canonical identifier for the parcel.`}) 
+    @Field({description: `The 18-digit state parcel number (DLGF/GIO PARCEL_NUMBER). 775 Marion C&I rows with no known state number carry a placeholder GIS-<county number>.`}) 
     @MaxLength(30)
     ParcelNumber: string;
         
-    @Field({nullable: true, description: `The county's own local parcel number (e.g. Marion County's 7-digit number). Different counties use different local schemes; this is the crosswalk between a county-sourced file and the statewide ParcelNumber.`}) 
+    @Field({nullable: true, description: `The county's own local parcel number (e.g. Marion's 7-digit number), from the IndianaMap/IGIO layer. NULL on ParcelIndex-roster rows: their county number is ParcelIndex.LocalParcelNumber, a different source (TaxBill.AuditorTaxID) that disagrees with this column for C&I rows in 22 counties.`}) 
     @MaxLength(30)
     GISParcelNumber?: string;
         
-    @Field({nullable: true, description: `Site/property address.`}) 
+    @Field({nullable: true, description: `Site address as street, city, zip. On ParcelIndex-roster rows built from ParcelIndex.SitusAddress/SitusCity/SitusZip (packages/core spineAddress); NULL when the index has none.`}) 
     @MaxLength(300)
     Address?: string;
         
-    @Field({nullable: true, description: `Owner of record name, as of the characteristics source year.`}) 
+    @Field({nullable: true, description: `Owner of record, as of the characteristics source year. NULL on ParcelIndex-roster rows (ParcelIndex.TaxpayerName is the bill's taxpayer, not the owner of record).`}) 
     @MaxLength(300)
     OwnerName?: string;
         
@@ -20652,7 +20434,7 @@ export class indianataxParcel_ {
     @MaxLength(50)
     Zoning?: string;
         
-    @Field({nullable: true, description: `Most recently known DLGF property class code (e.g. 300-499 for commercial/industrial). A given assessment year may record a different class code on its own Assessment row.`}) 
+    @Field({nullable: true, description: `Not populated: NULL on every row. A class is per year on Assessment.PropertyClassCode; the index's current class is ParcelIndex.PropertyClassCode.`}) 
     @MaxLength(10)
     PropertyClassCode?: string;
         
@@ -20708,12 +20490,16 @@ export class indianataxParcel_ {
     @Field(() => Float, {nullable: true, description: `Parcel boundary area in decimal degrees squared (source: SHAPE__Area, confirmed unit esriDecimalDegrees) — NOT a real-world area (not square feet/meters/acres). Only useful as a cheap relative sanity-check against Acreage; a proper acreage figure would need a geodesic area calculation this field does not provide.`}) 
     ShapeAreaDecimalDegrees?: number;
         
-    @Field({nullable: true, description: `The date the SOURCE (IndianaMap/IGIO Feature Service) last updated this record — distinct from GeometryRetrievedAt, which is when WE fetched it.`}) 
+    @Field({nullable: true, description: `The date the SOURCE (IndianaMap/IGIO Feature Service) last updated this record -- distinct from GeometryRetrievedAt, which is when WE fetched it. NULL on ParcelIndex-roster rows (not fetched).`}) 
     SourceLoadDate?: Date;
         
     @Field({nullable: true, description: `The SourceRegistry entry for the Feature Service this parcel's geometry/location/taxing-district fields came from.`}) 
     @MaxLength(36)
     GeometrySourceRegistryID?: string;
+        
+    @Field({description: `Which roster this parcel is on. CIBook: the commercial/industrial book (every row loaded before 2026-09-27, and any row a C&I intake promotes). ParcelIndex: created by mj-indiana-tax scripts/load-parcel-spine.js so a ParcelIndex parcel has a Parcel.ID; identity and address only. Readers that mean the C&I book filter Roster = 'CIBook'.`}) 
+    @MaxLength(20)
+    Roster: string;
         
     @Field({nullable: true}) 
     @MaxLength(200)
@@ -20906,6 +20692,9 @@ export class CreateindianataxParcelInput {
     @Field({ nullable: true })
     GeometrySourceRegistryID: string | null;
 
+    @Field({ nullable: true })
+    Roster?: string;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -20987,6 +20776,9 @@ export class UpdateindianataxParcelInput {
 
     @Field({ nullable: true })
     GeometrySourceRegistryID?: string | null;
+
+    @Field({ nullable: true })
+    Roster?: string;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];

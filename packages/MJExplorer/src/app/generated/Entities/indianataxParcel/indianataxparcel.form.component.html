@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="parcelIdentification"
         SectionName="Parcel Identification"
-        Icon="fa fa-barcode"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -98,7 +98,7 @@
     <mj-collapsible-panel
         SectionKey="ownershipInformation"
         SectionName="Ownership Information"
-        Icon="fa fa-user-tie"
+        Icon="fa fa-truck"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -116,7 +116,7 @@
     <mj-collapsible-panel
         SectionKey="propertyCharacteristics"
         SectionName="Property Characteristics"
-        Icon="fa fa-home"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -150,7 +150,7 @@
     <mj-collapsible-panel
         SectionKey="dataProvenance"
         SectionName="Data Provenance"
-        Icon="fa fa-history"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -192,7 +192,7 @@
     <mj-collapsible-panel
         SectionKey="taxDistrictInformation"
         SectionName="Tax District Information"
-        Icon="fa fa-file-alt"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -246,26 +246,18 @@
 
     </mj-collapsible-panel>
 
-    <!-- Details Section -->
+    <!-- Data Management Section -->
     <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
+        SectionKey="dataManagement"
+        SectionName="Data Management"
+        Icon="fa fa-database"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
-            [EditMode]="EditMode"
-            [FormContext]="formContext"
-        ></mj-form-field>
-        <mj-form-field 
-            [Record]="record"
-            [ShowLabel]="true"
-            FieldName="__mj_Longitude"
-            Type="textbox"
+            [ShowLabel]="false"
+            FieldName="Roster"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -303,6 +295,22 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
             LinkType="Record"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
         ></mj-form-field>
 
     </mj-collapsible-panel>
