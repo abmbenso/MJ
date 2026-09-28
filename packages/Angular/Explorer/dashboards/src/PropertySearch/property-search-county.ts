@@ -151,6 +151,14 @@ export const CI_CLASS_CODE_FILTER = "PropertyClassCode >= '300' AND PropertyClas
 export const CI_ROSTER_PARCEL_FILTER =
   `ID IN (SELECT ParcelID FROM indiana_tax.vwAssessments WHERE Source = '${DLGF_SOURCE}' AND ${CI_CLASS_CODE_FILTER})`;
 
+/**
+ * Parcels-side filter for "the C&I book as loaded": since the parcel spine (2026-09-27) indiana_tax.Parcel also
+ * holds one row per ParcelIndex parcel (Roster 'ParcelIndex', ~3.4M, mostly residential). A Parcels query that
+ * searches by owner, address or number must carry this, or residential rows crowd the C&I ones out of a capped
+ * result. Value list owned by CK_Parcel_Roster (mj-indiana-tax migration V202609271400).
+ */
+export const CI_BOOK_PARCEL_CLAUSE = "Roster = 'CIBook'";
+
 export interface VerifyLinkTarget {
   countyNumber: number;
   slug: string;

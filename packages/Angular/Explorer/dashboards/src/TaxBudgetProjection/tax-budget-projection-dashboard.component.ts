@@ -18,6 +18,7 @@ import {
 } from './tax-budget-projection-types';
 import { VerificationLink, buildVerificationLinks } from './marion-verification';
 import { trendStats, projectScenario, narrativeLines, selectBaseYearRow, residualProbability } from './tax-budget-projection-engine';
+import { CI_BOOK_PARCEL_CLAUSE } from '../PropertySearch/property-search-county';
 
 const COUNTY_NUMBER = 49; // Marion
 const AV_RELATIONSHIP_BAND = 0.1;
@@ -233,7 +234,7 @@ export class TaxBudgetProjectionDashboardComponent extends BaseDashboard impleme
     const result = await rv.RunView<ParcelSearchResult>({
       EntityName: 'Parcels',
       Fields: ['ID', 'GISParcelNumber', 'Address'],
-      ExtraFilter: `CountyNumber = ${COUNTY_NUMBER} AND (Address LIKE '%${esc}%' OR GISParcelNumber = '${esc}' OR ParcelNumber = '${esc}')`,
+      ExtraFilter: `CountyNumber = ${COUNTY_NUMBER} AND ${CI_BOOK_PARCEL_CLAUSE} AND (Address LIKE '%${esc}%' OR GISParcelNumber = '${esc}' OR ParcelNumber = '${esc}')`,
       OrderBy: 'Address ASC',
       MaxRows: 15,
       ResultType: 'simple',

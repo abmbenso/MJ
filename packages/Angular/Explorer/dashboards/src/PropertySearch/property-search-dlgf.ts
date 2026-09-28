@@ -16,7 +16,7 @@
  */
 import { RunView } from '@memberjunction/core';
 import { MergedParcelRow, classifySearchTerm, escapeSqlLiteral, SearchTermKind } from './property-search-agent-context';
-import { buildVerifyLink, CI_CLASS_CODE_FILTER } from './property-search-county';
+import { buildVerifyLink, CI_BOOK_PARCEL_CLAUSE, CI_CLASS_CODE_FILTER } from './property-search-county';
 import { EMPTY_APPEAL_LAYERS } from './property-search-appeal-layers';
 import { EMPTY_OUTCOME_LAYERS } from './property-search-outcomes';
 import { DataSourceIndex, PARCEL_YEAR_HEADLINE_FIELDS, buildHeadlineFields, indexHeadlinesByParcel } from './property-search-headline';
@@ -72,8 +72,8 @@ export function buildDlgfHeadlineFilter(
 /** Owner/address free-text search resolves against Parcels first, then narrows the headline query. */
 export function buildDlgfParcelSearchFilter(countyNumber: number, term: string, kind: SearchTermKind): string | null {
   const esc = escapeSqlLiteral(term);
-  if (kind === 'parcelOrGisNumber') return `CountyNumber = ${countyNumber} AND (ParcelNumber = '${esc}' OR GISParcelNumber = '${esc}')`;
-  if (kind === 'freeText') return `CountyNumber = ${countyNumber} AND (OwnerName LIKE '%${esc}%' OR Address LIKE '%${esc}%')`;
+  if (kind === 'parcelOrGisNumber') return `CountyNumber = ${countyNumber} AND ${CI_BOOK_PARCEL_CLAUSE} AND (ParcelNumber = '${esc}' OR GISParcelNumber = '${esc}')`;
+  if (kind === 'freeText') return `CountyNumber = ${countyNumber} AND ${CI_BOOK_PARCEL_CLAUSE} AND (OwnerName LIKE '%${esc}%' OR Address LIKE '%${esc}%')`;
   return null; // subClassCode is handled on the headline query's own class subquery
 }
 

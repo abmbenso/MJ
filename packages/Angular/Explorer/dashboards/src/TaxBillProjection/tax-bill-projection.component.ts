@@ -36,6 +36,7 @@ import {
   parseBillViewParams,
   scaledCapAV,
 } from './tax-bill-view-model';
+import { CI_BOOK_PARCEL_CLAUSE } from '../PropertySearch/property-search-county';
 
 const COUNTY_NUMBER = 49; // Marion
 const YEARS_FORWARD = 5;
@@ -399,7 +400,7 @@ export class TaxBillProjectionComponent extends BaseDashboard implements AfterVi
     const result = await rv.RunView<ParcelSearchResult>({
       EntityName: 'Parcels',
       Fields: ['ID', 'GISParcelNumber', 'Address'],
-      ExtraFilter: `CountyNumber = ${COUNTY_NUMBER} AND (Address LIKE '%${esc}%' OR GISParcelNumber = '${esc}' OR ParcelNumber = '${esc}')`,
+      ExtraFilter: `CountyNumber = ${COUNTY_NUMBER} AND ${CI_BOOK_PARCEL_CLAUSE} AND (Address LIKE '%${esc}%' OR GISParcelNumber = '${esc}' OR ParcelNumber = '${esc}')`,
       OrderBy: 'Address ASC',
       MaxRows: 15,
       ResultType: 'simple',

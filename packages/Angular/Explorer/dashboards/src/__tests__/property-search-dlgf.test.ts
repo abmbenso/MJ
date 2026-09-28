@@ -83,13 +83,15 @@ describe('buildDlgfHeadlineFilter', () => {
 });
 
 describe('buildDlgfParcelSearchFilter', () => {
-  it('freeText searches both OwnerName and Address', () => {
+  it('freeText searches both OwnerName and Address, C&I book only', () => {
     const f = buildDlgfParcelSearchFilter(45, "O'Neil", 'freeText');
-    expect(f).toBe("CountyNumber = 45 AND (OwnerName LIKE '%O''Neil%' OR Address LIKE '%O''Neil%')");
+    expect(f).toBe("CountyNumber = 45 AND Roster = 'CIBook' AND (OwnerName LIKE '%O''Neil%' OR Address LIKE '%O''Neil%')");
   });
 
-  it('parcel numbers match either parcel field', () => {
-    expect(buildDlgfParcelSearchFilter(45, '450706207002000023', 'parcelOrGisNumber')).toContain("ParcelNumber = '450706207002000023' OR GISParcelNumber = '450706207002000023'");
+  it('parcel numbers match either parcel field, C&I book only', () => {
+    const f = buildDlgfParcelSearchFilter(45, '450706207002000023', 'parcelOrGisNumber');
+    expect(f).toContain("Roster = 'CIBook'");
+    expect(f).toContain("ParcelNumber = '450706207002000023' OR GISParcelNumber = '450706207002000023'");
   });
 
   it('subClassCode returns null -- handled on the headline side', () => {

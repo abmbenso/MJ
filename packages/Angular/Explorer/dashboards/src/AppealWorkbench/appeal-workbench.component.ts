@@ -22,6 +22,7 @@ import {
   loadSubject, listAnalyses, loadAnalysis, finalAV, subjectFacts, marketFacts, sqlLiteral,
   CURRENT_ASSESSMENT_YEAR, MARION_COUNTY_NUMBER,
 } from './analysis-store';
+import { CI_BOOK_PARCEL_CLAUSE } from '../PropertySearch/property-search-county';
 
 /** The batch script's own field mapping, matching AnalysisSalesComponent's private toCompInput exactly -- the Sales tab and the shell's Recompute must price every comp identically. */
 function toSalesCompInput(c: ValuationCompRow): SalesCompInput {
@@ -179,7 +180,7 @@ export class AppealWorkbenchComponent extends BaseDashboard implements AfterView
     try {
       const hits = await this.reader.run<ParcelHit>({
         entity: ENTITIES.parcels, fields: ['ID', 'GISParcelNumber', 'Address'],
-        filter: `CountyNumber = ${MARION_COUNTY_NUMBER} AND (Address LIKE '%${esc}%' OR GISParcelNumber = '${esc}' OR ParcelNumber = '${esc}')`,
+        filter: `CountyNumber = ${MARION_COUNTY_NUMBER} AND ${CI_BOOK_PARCEL_CLAUSE} AND (Address LIKE '%${esc}%' OR GISParcelNumber = '${esc}' OR ParcelNumber = '${esc}')`,
         orderBy: 'Address ASC', maxRows: 15,
       });
       if (seq !== this.searchSeq) return;
