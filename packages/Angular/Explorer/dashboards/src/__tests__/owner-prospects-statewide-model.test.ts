@@ -29,6 +29,13 @@ import {
   MARION_PARCELS_MARKER,
   MARION_PARCELS_TOOLTIP,
   buildOwnerProspectsAgentContext,
+  effectiveTierBasis,
+  appealRecsCell,
+  hasMarionParcels,
+  pairYearsTooltip,
+  pairsLabel,
+  PARCEL_ROW_CAP,
+  PARCEL_CAP_NOTE,
 } from '../OwnerProspects/owner-prospects.model';
 
 /**
@@ -146,11 +153,80 @@ describe('tierLabel / runTierBasis', () => {
 
 describe('repCell', () => {
   it('shows the stored RepStatus verbatim outside Marion', () => {
-    expect(repCell('No rep data for this county')).toEqual({ text: 'No rep data for this county', open: false });
-    expect(repCell('Represented by RYAN LLC')).toEqual({ text: 'Represented by RYAN LLC', open: false });
+    expect(repCell('No rep data for this county', 'AV')).toEqual({ text: 'No rep data for this county', open: false });
+    expect(repCell('Represented by RYAN LLC', 'AV')).toEqual({ text: 'Represented by RYAN LLC', open: false });
+  });
+  it('a Statewide row\'s "No rep on record" is verbatim, never "— open" (fix round 2, item 3)', () => {
+    expect(repCell('No rep on record', 'AV')).toEqual({ text: 'No rep on record', open: false });
   });
   it('keeps the Marion "— open" rendering for "No rep on record"', () => {
-    expect(repCell('No rep on record')).toEqual({ text: '— open', open: true });
+    expect(repCell('No rep on record', 'Savings')).toEqual({ text: '— open', open: true });
+  });
+});
+
+describe('effectiveTierBasis (fix round 2, item 2)', () => {
+  it('uses the stored basis, else the scope default (the Marion persist never wrote TierBasis)', () => {
+    expect(effectiveTierBasis('AV', 'Marion')).toBe('AV');
+    expect(effectiveTierBasis(null, 'Marion')).toBe('Savings');
+    expect(effectiveTierBasis(undefined, 'Statewide')).toBe('AV');
+  });
+  it('a Marion row with null TierBasis renders savings exactly as today', () => {
+    expect(savingsCell(null, effectiveTierBasis(null, 'Marion'))).toEqual({ text: '—', tooltip: null, marionOnly: false });
+    expect(savingsCell(51_000, effectiveTierBasis(null, 'Marion'))).toEqual({ text: '$51,000', tooltip: null, marionOnly: false });
+    expect(repCell('No rep on record', effectiveTierBasis(null, 'Marion'))).toEqual({ text: '— open', open: true });
+    expect(tierLabel(effectiveTierBasis(null, 'Marion'))).toBe('Savings tier');
+  });
+});
+
+describe('appealRecsCell (fix round 2, item 6)', () => {
+  it('Marion basis: the number, or a dash', () => {
+    expect(appealRecsCell(3, 'Savings', false)).toEqual({ text: '3', tooltip: null, marionOnly: false });
+    expect(appealRecsCell(null, 'Savings', false)).toEqual({ text: '—', tooltip: null, marionOnly: false });
+  });
+  it('AV basis without Marion parcels: blank with the no-analysis tooltip', () => {
+    expect(appealRecsCell(null, 'AV', false)).toEqual({ text: '', tooltip: NO_ANALYSIS_TOOLTIP, marionOnly: false });
+  });
+  it('AV basis with Marion parcels: the marker when non-zero, a plain 0 otherwise', () => {
+    expect(appealRecsCell(5, 'AV', true)).toEqual({ text: '5', tooltip: null, marionOnly: true });
+    expect(appealRecsCell(0, 'AV', true)).toEqual({ text: '0', tooltip: null, marionOnly: false });
+  });
+  it('hasMarionParcels reads the ByCountyJSON key 49', () => {
+    expect(hasMarionParcels(walmart)).toBe(true);
+    expect(hasMarionParcels(lakeOnly)).toBe(false);
+  });
+});
+
+describe('assessment years on Statewide figures (fix round 2, item 5)', () => {
+  it('names the pair when a county has one', () => {
+    expect(pairsLabel({ '2024→2025': 1219 })).toBe('assessment years 2024→2025');
+    expect(pairsLabel({ '2025 only': 1219 })).toBe('assessment years 2025 only');
+  });
+  it('says mixed pairs when several, with the modal pair', () => {
+    expect(pairsLabel({ '2024→2025': 14918, '2025 only': 82, '2023→2024': 1 })).toBe(
+      'mixed pairs — mostly 2024→2025 (14,918 of 15,001 parcels)',
+    );
+    expect(pairsLabel({ '2024→2025': 10, '2025→2026': 5 }, true)).toBe('mixed assessment pairs — mostly 2024→2025 (10 of 15 parcels)');
+    expect(pairsLabel({})).toBeNull();
+  });
+  it('countyBanner carries the pair label for a county and for All', () => {
+    const json = JSON.stringify({
+      '45': { parcels: 15001, avCurrent: 1, yoyParcels: 1, avPrior: 1, avCurrentYoY: 1, placeholderParcels: 0, pairs: { '2024→2025': 15001 } },
+      '49': { parcels: 17, avCurrent: 1, yoyParcels: 1, avPrior: 1, avCurrentYoY: 1, placeholderParcels: 0, pairs: { '2025→2026': 17 } },
+    });
+    expect(countyBanner(json, 45)!.pairsLabel).toBe('assessment years 2024→2025');
+    expect(countyBanner(json, null)!.pairsLabel).toBe('mixed assessment pairs — mostly 2024→2025 (15,001 of 15,018 parcels)');
+  });
+  it('the AV cells carry the owner\'s PairYears', () => {
+    expect(pairYearsTooltip('2025→2026')).toBe('assessment years 2025→2026');
+    expect(pairYearsTooltip('mixed')).toBe('mixed assessment years across this owner\'s parcels — see the parcel list');
+    expect(pairYearsTooltip(null)).toBe('assessment years not recorded');
+  });
+});
+
+describe('parcel cap (fix round 2, item 4)', () => {
+  it('is 5,000 with the exact note', () => {
+    expect(PARCEL_ROW_CAP).toBe(5000);
+    expect(PARCEL_CAP_NOTE).toBe('showing the first 5,000 parcels');
   });
 });
 
@@ -299,5 +375,8 @@ describe('agent context — scope, county, tier basis', () => {
     expect(ctx['Scope']).toBe('Statewide');
     expect(ctx['County']).toBe('Lake');
     expect(ctx['TierBasis']).toBe('AV');
+    expect(ctx['OpportunityBasis']).toBe('Marion parcels only');
+    expect(ctx['PrimeCount']).toBeNull(); // Prime/Strong are savings tiers — absent on the AV basis
+    expect(ctx['StrongCount']).toBeNull();
   });
 });

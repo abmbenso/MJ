@@ -262,6 +262,12 @@
   font-weight: 500;
 }
 
+:host .ci-banner__years {
+  margin-top: 0.125rem;
+  font-size: 0.75rem;
+  color: var(--mj-text-muted);
+}
+
 :host .owner-slice {
   display: block;
   font-size: 0.75rem;

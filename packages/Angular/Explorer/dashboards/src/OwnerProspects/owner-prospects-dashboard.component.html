@@ -109,6 +109,10 @@
       </section>
     }
 
+    @if (SearchError) {
+      <mj-alert Variant="error" [Message]="SearchError" data-testid="search-error"></mj-alert>
+    }
+
     @if (IsStatewide && RowCapHit) {
       <mj-alert Variant="info" [Message]="RowCapMessage" data-testid="row-cap-banner"></mj-alert>
     }
@@ -116,6 +120,9 @@
     @if (IsStatewide && CountyBanner; as cb) {
       <section class="ci-banner" data-testid="county-banner">
         <div class="ci-banner__head">{{ CountyBannerTitle }} — commercial &amp; industrial assessed value, latest assessment pair</div>
+        @if (cb.pairsLabel) {
+          <div class="ci-banner__years" data-testid="county-banner-years">{{ cb.pairsLabel }}</div>
+        }
         <div class="ci-banner__row">
           @if (cb.yoyPct != null) {
             <div class="ci-banner__cell">
@@ -159,7 +166,7 @@
         </div>
         <div class="stat-card">
           <div class="stat-card__n">{{ SummaryTotalAV }}</div>
-          <div class="stat-card__l">total assessed value</div>
+          <div class="stat-card__l" data-testid="statewide-total-av-label">{{ TotalAVLabel }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-card__n">{{ TierCounts['A'] ?? 0 }} / {{ TierCounts['B'] ?? 0 }}</div>
@@ -261,8 +268,8 @@
                   }
                   <td class="num">{{ row.parcelCount | number }}</td>
                   @if (IsStatewide) {
-                    <td class="num">{{ money(row.avPrior ?? null) }}</td>
-                    <td class="num">{{ money(row.avCurrent ?? null) }}</td>
+                    <td class="num" data-testid="av-prior" [title]="pairYears(row)">{{ money(row.avPrior ?? null) }}</td>
+                    <td class="num" data-testid="av-current" [title]="pairYears(row)">{{ money(row.avCurrent ?? null) }}</td>
                   } @else {
                     <td class="num">{{ money(row.totalAV2025) }}</td>
                     <td class="num">{{ money(row.totalAV2026) }}</td>
@@ -279,7 +286,14 @@
                     }
                   </td>
                   <td class="num">{{ row.totalUnits != null ? (row.totalUnits | number) : '—' }}</td>
-                  <td class="num">{{ row.nAppealRec != null ? (row.nAppealRec | number) : '—' }}</td>
+                  @if (appealRecs(row); as ar) {
+                    <td class="num" data-testid="appeal-recs" [attr.title]="ar.tooltip">
+                      {{ ar.text }}
+                      @if (ar.marionOnly) {
+                        <span class="pill pill--muted" [title]="MarionParcelsTooltip">{{ MarionParcelsMarker }}</span>
+                      }
+                    </td>
+                  }
                   @if (savings(row, row.estSavingsAtAsk); as sv) {
                     <td class="num" data-testid="opp-ask" [attr.title]="sv.tooltip">
                       {{ sv.text }}
@@ -304,7 +318,7 @@
                     }
                   </td>
                   <td data-testid="rep-cell">
-                    @if (repCell(row.repStatus); as rc) {
+                    @if (rep(row); as rc) {
                       @if (rc.open) {
                         <span class="rep-open">{{ rc.text }}</span>
                       } @else {
@@ -321,6 +335,7 @@
                         [Parcels]="row.parcels"
                         [Statewide]="IsStatewide"
                         [ParcelsLoading]="LoadingParcelsFor === row.id"
+                        [ParcelsCapped]="ParcelsCappedFor(row)"
                         [CountySlugs]="CountySlugs"
                         [CountyNames]="CountyNames"
                         (FlagRequested)="onFlagOwner($event)"

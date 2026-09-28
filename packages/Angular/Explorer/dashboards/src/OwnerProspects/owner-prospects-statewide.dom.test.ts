@@ -29,9 +29,12 @@ const STATEWIDE_RUN: Raw = {
   ID: 'S1', Scope: 'Statewide', IsLatest: 1, RunDate: '2026-09-28T21:29:44Z', MethodologyVersion: 'statewide-v1',
   CountyCount: 3,
   ByCountyJSON: JSON.stringify({
-    '2': { parcels: 5, avCurrent: 43_143_000, yoyParcels: 0, avPrior: 0, avCurrentYoY: 0, placeholderParcels: 5 },
-    '45': { parcels: 15001, avCurrent: 10_521_026_180, yoyParcels: 14851, avPrior: 9_563_918_300, avCurrentYoY: 10_408_930_080, placeholderParcels: 1 },
-    '49': { parcels: 17, avCurrent: 102_416_600, yoyParcels: 17, avPrior: 82_776_800, avCurrentYoY: 102_416_600, placeholderParcels: 0 },
+    '2': { parcels: 5, avCurrent: 43_143_000, yoyParcels: 0, avPrior: 0, avCurrentYoY: 0, placeholderParcels: 5, pairs: { '2025 only': 5 } },
+    '45': {
+      parcels: 15001, avCurrent: 10_521_026_180, yoyParcels: 14851, avPrior: 9_563_918_300, avCurrentYoY: 10_408_930_080, placeholderParcels: 1,
+      pairs: { '2024→2025': 14918, '2025 only': 82, '2023→2024': 1 },
+    },
+    '49': { parcels: 17, avCurrent: 102_416_600, yoyParcels: 17, avPrior: 82_776_800, avCurrentYoY: 102_416_600, placeholderParcels: 0, pairs: { '2025→2026': 17 } },
   }),
 };
 const MARION_RUN: Raw = { ID: 'M1', Scope: 'Marion', IsLatest: 1, RunDate: '2026-09-24T10:36:38Z', MethodologyVersion: 'sales-p25', CountyTotalAV2025: 1, CountyTotalAV2026: 2, CountyYoYPct: 15.2 };
@@ -43,6 +46,7 @@ const statewideOwner = (over: Raw): Raw => ({
 const WALMART = statewideOwner({
   ID: 'w', Label: 'Walmart Inc.', GroupKeyType: 'CO', PrimaryCountyNumber: 49, CountyCount: 2, AVPrior: 119_809_900, AVCurrent: 138_333_200,
   TotalAV: 138_333_200, AVYoYPct: 7.2, EstSavingsAtAsk: 162_164.47, RepStatus: 'Represented by INTEGRITY TAX CONSULTING',
+  PairYears: 'mixed', NAppealRec: 5,
   ByCountyJSON: '{"45":{"parcels":4,"avCurrent":35916600,"avPrior":37033100},"49":{"parcels":17,"avCurrent":102416600,"avPrior":82776800}}',
 });
 const LAKE_ONLY = statewideOwner({
@@ -71,6 +75,31 @@ interface FakeState {
   calls: RunViewParams[];
   /** Overrides the statewide portfolio rows (the cap test). */
   statewideOwners?: Raw[];
+  /** Overrides the Marion run's owner rows. */
+  marionOwners?: Raw[];
+  /** Parcel rows per owner id; 'fail' makes that owner's parcel read fail. Default: none. */
+  parcelsFor?: (ownerId: string) => Raw[] | 'fail';
+  /** Makes the server search (a `Label LIKE` owners read) fail. */
+  failSearch?: boolean;
+  /** Entity saves, by entity name: the fields each saved object carried. */
+  saved: Map<string, Raw[]>;
+  notes: string[];
+}
+
+/** A fake entity: plain assignable fields; Save records them (Prospects get an ID). */
+function fakeEntity(entityName: string, state: FakeState): Raw {
+  const obj: Raw = {
+    LatestResult: null,
+    NewRecord: (): void => undefined,
+    Save: async (): Promise<boolean> => {
+      if (entityName === 'Prospects') obj['ID'] = 'prospect-1';
+      const rows = state.saved.get(entityName) ?? [];
+      rows.push({ ...obj });
+      state.saved.set(entityName, rows);
+      return true;
+    },
+  };
+  return obj;
 }
 
 function fakeProvider(state: FakeState): IMetadataProvider {
@@ -91,16 +120,31 @@ function fakeProvider(state: FakeState): IMetadataProvider {
         ];
       case 'Owner Portfolios':
         // The fake ignores the SQL county clause on purpose: the component's own filterByCounty must hold the line.
-        if ((p.ExtraFilter ?? '').includes("'M1'")) return [MARION_OWNER];
+        if ((p.ExtraFilter ?? '').includes("'M1'")) return state.marionOwners ?? [MARION_OWNER];
         return labelSearch(p.ExtraFilter ?? '', state.statewideOwners ?? [WALMART, LAKE_ONLY, ALLEN_ONLY]).slice(0, p.MaxRows ?? undefined);
+      case 'Owner Portfolio Parcels': {
+        const id = /OwnerPortfolioID = '([^']*)'/.exec(p.ExtraFilter ?? '')?.[1] ?? '';
+        const rows = state.parcelsFor?.(id) ?? [];
+        return rows === 'fail' ? [] : rows.slice(0, p.MaxRows ?? undefined);
+      }
       default:
         return [];
     }
   };
+  const fails = (p: RunViewParams): boolean =>
+    (p.EntityName === 'Owner Portfolio Parcels' && state.parcelsFor?.(/OwnerPortfolioID = '([^']*)'/.exec(p.ExtraFilter ?? '')?.[1] ?? '') === 'fail') ||
+    (p.EntityName === 'Owner Portfolios' && !!state.failSearch && (p.ExtraFilter ?? '').includes('Label LIKE'));
   const fake = {
     CurrentUser: { ID: 'u1', Name: 'Test User', Email: 'test@example.com' },
     async RunView<T>(p: RunViewParams): Promise<RunViewResult<T>> {
+      if (fails(p)) {
+        state.calls.push(p);
+        return { Success: false, Results: [], ErrorMessage: 'simulated failure' } as unknown as RunViewResult<T>;
+      }
       return ok<T>(answer(p));
+    },
+    async GetEntityObject<T>(entityName: string): Promise<T> {
+      return fakeEntity(entityName, state) as unknown as T;
     },
     async RunViews<T>(ps: RunViewParams[]): Promise<RunViewResult<T>[]> {
       return ps.map((p) => ok<T>(answer(p)));
@@ -117,7 +161,7 @@ interface Harness {
 }
 
 function mount(queryParams: Record<string, string>, runs: Raw[] = [STATEWIDE_RUN, MARION_RUN]): Harness {
-  const state: FakeState = { runs, calls: [] };
+  const state: FakeState = { runs, calls: [], saved: new Map(), notes: [] };
   const pushed: Record<string, string | null>[] = [];
   TestBed.configureTestingModule({
     declarations: [OwnerProspectsDashboardComponent],
@@ -134,7 +178,7 @@ function mount(queryParams: Record<string, string>, runs: Raw[] = [STATEWIDE_RUN
           UpdateTabQueryParams: (_t: string, p: Record<string, string | null>): void => void pushed.push(p),
         },
       },
-      { provide: MJNotificationService, useValue: { CreateSimpleNotification: (): void => {} } },
+      { provide: MJNotificationService, useValue: { CreateSimpleNotification: (m: string): void => void state.notes.push(m) } },
     ],
     schemas: [NO_ERRORS_SCHEMA],
   });
@@ -356,6 +400,154 @@ describe('Owner Prospects statewide scope (DOM)', () => {
   });
 });
 
+/** 6,000 Lake owners, `Owner 0` … `Owner 5999`, largest first — trips the 5,000 cap. */
+const capPage = (): Raw[] =>
+  Array.from({ length: 6000 }, (_, i) =>
+    statewideOwner({ ID: `o${i}`, Label: `Owner ${i}`, PrimaryCountyNumber: 45, AVCurrent: 6000 - i, ParcelCount: 2, ByCountyJSON: '{"45":{"parcels":2,"avCurrent":1,"avPrior":null}}' }),
+  );
+const parcelRows = (ownerId: string, n = 2): Raw[] =>
+  Array.from({ length: n }, (_, i) => ({ ID: `${ownerId}-p${i}`, OwnerPortfolioID: ownerId, ParcelID: `${ownerId}-pid${i}`, CountyNumber: 45, AVCurrent: 1000 - i }));
+const parcelCalls = (s: FakeState): RunViewParams[] => s.calls.filter((c) => c.EntityName === 'Owner Portfolio Parcels');
+
+describe('Owner Prospects statewide — review fixes (fix round 2)', () => {
+  it('1: parcels fetched for an owner are reused when a server search re-creates that owner\'s row', async () => {
+    const h = mount({ scope: 'Statewide', county: '45' });
+    h.state.statewideOwners = capPage();
+    h.state.parcelsFor = (id) => parcelRows(id);
+    h.fixture.detectChanges();
+    await settle(h);
+    const pageRow = h.component.AllOwners.find((o) => o.id === 'o0') as OwnerRow;
+    h.component.toggleOwner(pageRow);
+    await vi.waitFor(() => expect(pageRow.parcels).toHaveLength(2));
+    h.component.toggleOwner(pageRow); // close
+
+    h.component.onSearchChange('Owner 0');
+    await vi.waitFor(() => expect(h.component.SearchOwners).not.toBeNull());
+    const searchRow = h.component.SearchOwners!.find((o) => o.id === 'o0') as OwnerRow;
+    expect(searchRow).not.toBe(pageRow); // a new row object …
+    expect(searchRow.parcels).toEqual([]); // … that arrives without parcels
+    h.component.toggleOwner(searchRow);
+    await vi.waitFor(() => expect(searchRow.parcels).toHaveLength(2)); // … and gets them from the cache
+    expect(parcelCalls(h.state)).toHaveLength(1); // no second fetch
+  });
+
+  it('1: flagging a never-opened server-search row attaches its parcels', async () => {
+    const h = mount({ scope: 'Statewide', county: '45' });
+    h.state.statewideOwners = capPage();
+    h.state.parcelsFor = (id) => parcelRows(id, 3);
+    h.fixture.detectChanges();
+    await settle(h);
+    h.component.onSearchChange('Owner 5999');
+    await vi.waitFor(() => expect(h.component.SearchOwners).toHaveLength(1));
+    await h.component.onFlagOwner(h.component.SearchOwners![0]);
+    expect(h.state.saved.get('Prospects')).toHaveLength(1);
+    expect(h.state.saved.get('Prospect Parcels')?.map((r) => r['ParcelID'])).toEqual(['o5999-pid0', 'o5999-pid1', 'o5999-pid2']);
+    expect(h.state.saved.get('Prospect Snapshots')).toHaveLength(1);
+  });
+
+  it('1: a flag whose parcel read fails is aborted with a notice — nothing is persisted', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.parcelsFor = (id) => (id === 'a' ? 'fail' : parcelRows(id));
+    h.fixture.detectChanges();
+    await settle(h);
+    const allen = h.component.AllOwners.find((o) => o.id === 'a') as OwnerRow;
+    await h.component.onFlagOwner(allen);
+    expect(h.state.saved.size).toBe(0);
+    expect(allen.prospectId).toBeNull();
+    expect(h.state.notes.some((n) => n.startsWith('Flag aborted'))).toBe(true);
+  });
+
+  it('2: a Marion row with null TierBasis renders exactly as today', async () => {
+    const h = mount({});
+    h.state.marionOwners = [
+      { ...MARION_OWNER, TierBasis: null },
+      { ...MARION_OWNER, ID: 'm2', Label: 'NO ANALYSIS LLC', TierBasis: null, EstSavingsAtAsk: null, RepStatus: 'Represented by RYAN LLC' },
+    ];
+    h.fixture.detectChanges();
+    await settle(h);
+    expect(query(h.fixture, '[data-testid="tier-header"]')?.textContent?.trim()).toBe('Savings tier');
+    const opp = queryAll(h.fixture, '[data-testid="opp-ask"]').map((c) => c.textContent?.trim());
+    expect(opp.sort()).toEqual(['$51,000', '—']);
+    expect(queryAll(h.fixture, '[data-testid="marion-parcels-marker"]')).toHaveLength(0);
+    expect(queryAll(h.fixture, '[data-testid="rep-cell"]').map((c) => c.textContent?.trim())).toContain('— open');
+  });
+
+  it('3: a Statewide row\'s "No rep on record" renders verbatim; Marion\'s still reads "— open"', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = [statewideOwner({ ID: 'x', Label: 'Marion Only LLC', RepStatus: 'No rep on record', PrimaryCountyNumber: 49, AVCurrent: 5 })];
+    h.fixture.detectChanges();
+    await settle(h);
+    expect(query(h.fixture, '[data-testid="rep-cell"]')?.textContent?.trim()).toBe('No rep on record');
+    h.component.onScopeChange('Marion');
+    await settle(h);
+    expect(query(h.fixture, '[data-testid="rep-cell"]')?.textContent?.trim()).toBe('— open');
+  });
+
+  it('4: more than 5,000 parcels trips the note on the panel input and in the flagged thesis', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.parcelsFor = (id) => parcelRows(id, 5001);
+    h.fixture.detectChanges();
+    await settle(h);
+    const w = h.component.AllOwners.find((o) => o.id === 'w') as OwnerRow;
+    const call = await (async () => {
+      await h.component.onFlagOwner(w);
+      return parcelCalls(h.state)[0];
+    })();
+    expect(call.MaxRows).toBe(5001);
+    expect(w.parcels).toHaveLength(5000);
+    expect(h.component.ParcelsCappedFor(w)).toBe(true);
+    expect(String(h.state.saved.get('Prospects')?.[0]['Thesis'])).toContain('showing the first 5,000 parcels');
+  });
+
+  it('5: the county banner names its assessment years — one pair, or mixed pairs; All says mixed assessment pairs', async () => {
+    const h = mount({ scope: 'Statewide', county: '49' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const years = (): string | undefined => query(h.fixture, '[data-testid="county-banner-years"]')?.textContent?.trim();
+    expect(years()).toBe('assessment years 2025→2026');
+    h.component.onCountyChange(45);
+    await settle(h);
+    expect(years()).toBe('mixed pairs — mostly 2024→2025 (14,918 of 15,001 parcels)');
+    h.component.onCountyChange(null);
+    await settle(h);
+    expect(years()).toBe('mixed assessment pairs — mostly 2024→2025 (14,918 of 15,023 parcels)');
+    const w = queryAll(h.fixture, '[data-testid="av-current"]').find((c) => c.textContent?.includes('138,333,200'));
+    expect(w?.getAttribute('title')).toBe("mixed assessment years across this owner's parcels — see the parcel list");
+  });
+
+  it('6: Appeal recs on Statewide rows — the Marion-parcels marker when non-zero, blank with the tooltip without Marion parcels', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const cells = queryAll(h.fixture, '[data-testid="appeal-recs"]');
+    const walmart = cells.find((c) => (c.textContent ?? '').includes('5'));
+    expect(walmart?.textContent).toContain('Marion parcels');
+    const blanks = cells.filter((c) => c !== walmart);
+    expect(blanks).toHaveLength(2);
+    for (const c of blanks) {
+      expect(c.textContent?.trim()).toBe('');
+      expect(c.getAttribute('title')).toBe(NO_ANALYSIS_TOOLTIP);
+    }
+  });
+
+  it('8: a failed server search drops the old rows and shows an error line; the stat card says top 5,000 loaded', async () => {
+    const h = mount({ scope: 'Statewide', county: '45' });
+    h.state.statewideOwners = capPage();
+    h.fixture.detectChanges();
+    await settle(h);
+    expect(query(h.fixture, '[data-testid="statewide-total-av-label"]')?.textContent?.trim()).toBe('total assessed value (top 5,000 loaded)');
+    h.component.onSearchChange('Owner 5999');
+    await vi.waitFor(() => expect(h.component.SearchOwners).toHaveLength(1));
+    h.state.failSearch = true;
+    h.component.onSearchChange('Owner 5998');
+    await vi.waitFor(() => expect(h.component.SearchError).toBe('Owner search failed: simulated failure'));
+    expect(h.component.SearchOwners).toBeNull();
+    expect(h.component.VisibleRows.some((r) => r.id === 'o5999')).toBe(false);
+    h.fixture.detectChanges();
+    expect(query(h.fixture, '[data-testid="search-error"]')).not.toBeNull();
+  });
+});
+
 @Component({ standalone: true, selector: 'button[mjButton]', template: '<ng-content></ng-content>' })
 class StubButton {
   @Input() variant = '';
@@ -406,5 +598,15 @@ describe('OwnerDetailPanelComponent — statewide parcels (DOM)', () => {
     expect(rows[1].querySelector('a')).toBeNull();
     expect(rows[1].textContent).toContain('no card link');
     expect(query(f, '[data-testid="county-split"]')?.textContent).toContain('Lake 1 ($35.9M) · Adams 1 ($7.6M)');
+    expect(query(f, '[data-testid="parcels-capped"]')).toBeNull();
+  });
+
+  it('shows "showing the first 5,000 parcels" when the owner\'s parcels were capped', () => {
+    const f = renderComponentFixture(OwnerDetailPanelComponent, {
+      imports: [CommonModule, StubButton],
+      declarations: [OwnerDetailPanelComponent],
+      inputs: { Owner: owner, Parcels: parcels, Statewide: true, ParcelsCapped: true, CountySlugs: {}, CountyNames: {} },
+    });
+    expect(query(f, '[data-testid="parcels-capped"]')?.textContent?.trim()).toBe('showing the first 5,000 parcels');
   });
 });

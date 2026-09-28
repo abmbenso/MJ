@@ -216,7 +216,7 @@ describe('buildOwnerProspectsAgentContext', () => {
     'FreshOpportunityAtAsk', 'PrimeCount', 'StrongCount', 'TierFilter', 'RepFilter', 'TypeFilter',
     'MinOppPerYear', 'SearchQuery', 'SortKey', 'SortDir', 'SelectedOwnerLabel', 'SelectedOwnerIsFlagged', 'CountyYoYPct',
     // Statewide scope (2026-09-28): which run, which county, what the tier ranks on.
-    'Scope', 'County', 'TierBasis',
+    'Scope', 'County', 'TierBasis', 'OpportunityBasis',
   ] as const;
 
   it('emits every documented named field plus the bounded label list', () => {

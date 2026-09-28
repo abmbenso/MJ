@@ -54,6 +54,9 @@
     @if (ParcelsLoading) {
       <p class="detail__more" data-testid="parcels-loading">Loading parcels…</p>
     }
+    @if (ParcelsCapped) {
+      <p class="detail__more" data-testid="parcels-capped">{{ ParcelCapNote }}</p>
+    }
     <div class="pt-wrap">
       <table class="pt">
         <thead>

@@ -9,6 +9,7 @@ import {
   parcelVerifyLink,
   MARION_RUN_COUNTY_NUMBER,
   NO_ANALYSIS_TOOLTIP,
+  PARCEL_CAP_NOTE,
 } from './owner-prospects.model';
 import { CountyVerifyLink } from '../PropertySearch/property-search-county';
 
@@ -46,6 +47,9 @@ export class OwnerDetailPanelComponent {
   @Input() Statewide = false;
   /** Statewide: the owner's parcels are being fetched. */
   @Input() ParcelsLoading = false;
+  /** Statewide: the owner has more parcels than the 5,000 loaded. */
+  @Input() ParcelsCapped = false;
+  public readonly ParcelCapNote = PARCEL_CAP_NOTE;
   /** County number → `County.Slug` (the verify-link builder's vendor key). */
   @Input() CountySlugs: Record<number, string> = {};
   /** County number → county name (the county split line and the parcel County column). */

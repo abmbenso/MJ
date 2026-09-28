@@ -47,6 +47,9 @@ export const NO_ANALYSIS_TOOLTIP = 'no valuation analysis for this county yet';
 /** Marker after a Statewide savings figure: it comes from the owner's Marion parcels only. */
 export const MARION_PARCELS_MARKER = 'Marion parcels';
 export const MARION_PARCELS_TOOLTIP = "from valuation analyses on this owner's Marion parcels only";
+/** Parcels per opened Statewide owner: at most this many (the query asks for one more as a tripwire). */
+export const PARCEL_ROW_CAP = 5000;
+export const PARCEL_CAP_NOTE = 'showing the first 5,000 parcels';
 /** Past the row cap, a search term this long re-queries the server by owner label. */
 export const SERVER_SEARCH_MIN_CHARS = 3;
 /** The Marion run's "no rep" status (a fact); outside Marion the builder writes "No rep data for this county" (an absence of data). */
@@ -456,8 +459,9 @@ export function buildOwnerProspectsAgentContext(state: OwnerProspectsAgentContex
     VisibleOwnerCount: state.visibleRows.length,
     TotalOpportunityAtAsk: state.summary?.oppAsk ?? null,
     FreshOpportunityAtAsk: state.summary?.freshOpp ?? null,
-    PrimeCount: state.summary?.prime ?? null,
-    StrongCount: state.summary?.strong ?? null,
+    // Prime/Strong are savings tiers: absent (null, not 0) on the AV basis.
+    PrimeCount: state.tierBasis === 'AV' ? null : (state.summary?.prime ?? null),
+    StrongCount: state.tierBasis === 'AV' ? null : (state.summary?.strong ?? null),
     TierFilter: state.filters.tier,
     RepFilter: state.filters.rep,
     TypeFilter: state.filters.typeGroup,
@@ -471,6 +475,8 @@ export function buildOwnerProspectsAgentContext(state: OwnerProspectsAgentContex
     Scope: state.scope ?? 'Marion',
     County: state.county ?? null,
     TierBasis: state.tierBasis ?? null,
+    // What the opportunity figures cover: on the AV basis only the owner's Marion parcels were analysed.
+    OpportunityBasis: state.tierBasis === 'AV' ? 'Marion parcels only' : 'Marion valuation analysis',
     TopVisibleOwnerLabels: labels,
   };
   if (state.visibleRows.length > TOP_VISIBLE_OWNER_LABELS_CAP) {
@@ -802,9 +808,68 @@ export function tierOptionsFor(basis: TierBasis | null): { key: OwnerProspectsFi
   return [{ key: 'all', label: 'All' }, ...keys.map((k) => ({ key: k, label: k }))];
 }
 
-/** The rep cell: the stored `RepStatus` verbatim, except the Marion "No rep on record" fact, which reads "— open". */
-export function repCell(repStatus: string): { text: string; open: boolean } {
-  return repStatus === NO_REP_ON_RECORD ? { text: '— open', open: true } : { text: repStatus, open: false };
+/**
+ * The rep cell: the stored `RepStatus` verbatim. Only on the Marion basis does "No rep on record"
+ * read "— open" (an open prospect in the county whose agendas were read); on a Statewide row the
+ * same words are shown as stored.
+ */
+export function repCell(repStatus: string, basis: TierBasis): { text: string; open: boolean } {
+  return basis === 'Savings' && repStatus === NO_REP_ON_RECORD ? { text: '— open', open: true } : { text: repStatus, open: false };
+}
+
+/** A row's tier basis: the stored `TierBasis`, else the scope's (the Marion persist wrote none before 2026-09-28). */
+export function effectiveTierBasis(basis: TierBasis | null | undefined, scope: OwnerProspectsScope): TierBasis {
+  return basis ?? (scope === 'Marion' ? 'Savings' : 'AV');
+}
+
+/** True when the owner holds parcels in Marion (the only county with valuation analyses and PTABOA reps). */
+export function hasMarionParcels(row: Pick<OwnerRow, 'byCounty'>): boolean {
+  return !!row.byCounty && Object.prototype.hasOwnProperty.call(row.byCounty, String(MARION_RUN_COUNTY_NUMBER));
+}
+
+/**
+ * The "Appeal recs" cell. Marion basis: as always. AV basis: blank with the no-analysis tooltip when the
+ * owner has no Marion parcels; otherwise the count, flagged `marionOnly` when non-zero.
+ */
+export function appealRecsCell(
+  n: number | null,
+  basis: TierBasis,
+  marionParcels: boolean,
+): { text: string; tooltip: string | null; marionOnly: boolean } {
+  const text = n == null ? '—' : n.toLocaleString('en-US');
+  if (basis === 'Savings') return { text, tooltip: null, marionOnly: false };
+  if (!marionParcels) return { text: '', tooltip: NO_ANALYSIS_TOOLTIP, marionOnly: false };
+  return { text, tooltip: null, marionOnly: n != null && n > 0 };
+}
+
+/** Tooltip for a Statewide owner's AV prior/current cells: the assessment years they come from. */
+export function pairYearsTooltip(pairYears: string | null | undefined): string {
+  if (!pairYears) return 'assessment years not recorded';
+  if (pairYears === 'mixed') return "mixed assessment years across this owner's parcels — see the parcel list";
+  return `assessment years ${pairYears}`;
+}
+
+/**
+ * The years line for a county banner from `ByCountyJSON[c].pairs` (`{ "2024→2025": n, "2025 only": m }`):
+ * the one pair, or "mixed pairs" with the modal pair and its share. `allCounties` words it for the All banner.
+ */
+export function pairsLabel(pairs: Record<string, number>, allCounties = false): string | null {
+  const entries = Object.entries(pairs).filter(([, n]) => n > 0);
+  if (!entries.length) return null;
+  if (entries.length === 1) return `assessment years ${entries[0][0]}`;
+  const [modal, n] = entries.reduce((a, b) => (b[1] > a[1] ? b : a));
+  const total = entries.reduce((sum, [, v]) => sum + v, 0);
+  const lead = allCounties ? 'mixed assessment pairs' : 'mixed pairs';
+  return `${lead} — mostly ${modal} (${n.toLocaleString('en-US')} of ${total.toLocaleString('en-US')} parcels)`;
+}
+
+/** Sum the `pairs` maps of several county slices. */
+function mergePairs(slices: readonly Record<string, unknown>[]): Record<string, number> {
+  const out: Record<string, number> = {};
+  for (const s of slices) {
+    for (const [k, v] of Object.entries(parseJsonObject(s['pairs']))) out[k] = (out[k] ?? 0) + (toNum(v) ?? 0);
+  }
+  return out;
 }
 
 /**
@@ -840,6 +905,8 @@ export interface CountyBannerModel {
   /** Paired YoY %, one decimal — only when both paired sums exist. */
   yoyPct: number | null;
   placeholderParcels: number;
+  /** The assessment years behind these figures ({@link pairsLabel}); null when the run carries no pairs. */
+  pairsLabel: string | null;
 }
 
 /** County numbers with parcels in a run's `ByCountyJSON`, ascending. */
@@ -870,6 +937,7 @@ export function countyBanner(byCountyJSON: unknown, countyNumber: number | null)
     yoyParcels: sum('yoyParcels'),
     yoyPct: both ? Math.round((curPaired / prior - 1) * 1000) / 10 : null,
     placeholderParcels: sum('placeholderParcels'),
+    pairsLabel: pairsLabel(mergePairs(slices), countyNumber == null),
   };
 }
 
