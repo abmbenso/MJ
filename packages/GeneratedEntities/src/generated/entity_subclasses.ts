@@ -7048,11 +7048,11 @@ export const indianataxOwnerPortfolioParcelSchema = z.object({
         * * Display Name: Parcel ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
-    GISParcelNumber: z.string().describe(`
+    GISParcelNumber: z.string().nullable().describe(`
         * * Field Name: GISParcelNumber
         * * Display Name: GIS Parcel Number
-        * * SQL Data Type: nvarchar(20)
-        * * Description: parcel.parcel -- the 7-digit Marion County GIS parcel number, the always-present link key to the PRC and tax history even when ParcelID is null.`),
+        * * SQL Data Type: nvarchar(40)
+        * * Description: The county GIS parcel number; NULL where the county file carries none (12,283 C&I parcels in 45 counties, 2026-09-28). Link on ParcelID, never on this column.`),
     Address: z.string().nullable().describe(`
         * * Field Name: Address
         * * Display Name: Address
@@ -29907,13 +29907,13 @@ export class indianataxOwnerPortfolioParcelEntity extends BaseEntity<indianataxO
     /**
     * * Field Name: GISParcelNumber
     * * Display Name: GIS Parcel Number
-    * * SQL Data Type: nvarchar(20)
-    * * Description: parcel.parcel -- the 7-digit Marion County GIS parcel number, the always-present link key to the PRC and tax history even when ParcelID is null.
+    * * SQL Data Type: nvarchar(40)
+    * * Description: The county GIS parcel number; NULL where the county file carries none (12,283 C&I parcels in 45 counties, 2026-09-28). Link on ParcelID, never on this column.
     */
-    get GISParcelNumber(): string {
+    get GISParcelNumber(): string | null {
         return this.Get('GISParcelNumber');
     }
-    set GISParcelNumber(value: string) {
+    set GISParcelNumber(value: string | null) {
         this.Set('GISParcelNumber', value);
     }
 

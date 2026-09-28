@@ -17804,9 +17804,9 @@ export class indianataxOwnerPortfolioParcel_ {
     @MaxLength(36)
     ParcelID?: string;
         
-    @Field({description: `parcel.parcel -- the 7-digit Marion County GIS parcel number, the always-present link key to the PRC and tax history even when ParcelID is null.`}) 
-    @MaxLength(20)
-    GISParcelNumber: string;
+    @Field({nullable: true, description: `The county GIS parcel number; NULL where the county file carries none (12,283 C&I parcels in 45 counties, 2026-09-28). Link on ParcelID, never on this column.`}) 
+    @MaxLength(40)
+    GISParcelNumber?: string;
         
     @Field({nullable: true, description: `The parcel's situs (site) address as shown in the dashboard parcel list.`}) 
     @MaxLength(300)
@@ -17936,7 +17936,7 @@ export class CreateindianataxOwnerPortfolioParcelInput {
     ParcelID: string | null;
 
     @Field({ nullable: true })
-    GISParcelNumber?: string;
+    GISParcelNumber: string | null;
 
     @Field({ nullable: true })
     Address: string | null;
@@ -18042,7 +18042,7 @@ export class UpdateindianataxOwnerPortfolioParcelInput {
     ParcelID?: string | null;
 
     @Field({ nullable: true })
-    GISParcelNumber?: string;
+    GISParcelNumber?: string | null;
 
     @Field({ nullable: true })
     Address?: string | null;
