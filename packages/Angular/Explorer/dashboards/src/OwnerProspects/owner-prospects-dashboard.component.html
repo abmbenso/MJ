@@ -281,10 +281,20 @@
                   <td class="num">{{ row.totalUnits != null ? (row.totalUnits | number) : '—' }}</td>
                   <td class="num">{{ row.nAppealRec != null ? (row.nAppealRec | number) : '—' }}</td>
                   @if (savings(row, row.estSavingsAtAsk); as sv) {
-                    <td class="num" data-testid="opp-ask" [attr.title]="sv.tooltip">{{ sv.text }}</td>
+                    <td class="num" data-testid="opp-ask" [attr.title]="sv.tooltip">
+                      {{ sv.text }}
+                      @if (sv.marionOnly) {
+                        <span class="pill pill--muted" data-testid="marion-parcels-marker" [title]="MarionParcelsTooltip">{{ MarionParcelsMarker }}</span>
+                      }
+                    </td>
                   }
                   @if (savings(row, row.estSavingsAtFloor); as sv) {
-                    <td class="num" data-testid="opp-floor" [attr.title]="sv.tooltip">{{ sv.text }}</td>
+                    <td class="num" data-testid="opp-floor" [attr.title]="sv.tooltip">
+                      {{ sv.text }}
+                      @if (sv.marionOnly) {
+                        <span class="pill pill--muted" [title]="MarionParcelsTooltip">{{ MarionParcelsMarker }}</span>
+                      }
+                    </td>
                   }
                   <td class="num">{{ money(row.historicalReductionWon) }}</td>
                   <td>

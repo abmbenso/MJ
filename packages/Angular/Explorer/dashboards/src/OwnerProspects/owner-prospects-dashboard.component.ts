@@ -46,6 +46,10 @@ import {
   countyBanner,
   countyNumbersInRun,
   isBelowYoYFloor,
+  statewideSearchFilter,
+  shouldServerSearch,
+  MARION_PARCELS_MARKER,
+  MARION_PARCELS_TOOLTIP,
 } from './owner-prospects.model';
 import { AgentToolResult, validateEnumParam, validateStringParam, validateNonNegativeNumberParam } from '../shared/agent-tool-validation';
 
@@ -159,6 +163,19 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   public CountyBanner: CountyBannerModel | null = null;
   /** Statewide: the portfolio query returned more than {@link STATEWIDE_ROW_CAP} rows; only the top ones by AV are shown. */
   public RowCapHit = false;
+  /**
+   * Statewide, past the cap: the owners a server-side `Label LIKE` search returned for the
+   * active term (3+ characters). While set, the table filters these instead of the capped page;
+   * null = the loaded page. Summary cards keep describing the loaded page.
+   */
+  public SearchOwners: OwnerRow[] | null = null;
+  /** The server search itself matched more than the cap. */
+  public SearchCapHit = false;
+  public IsSearching = false;
+  public readonly MarionParcelsMarker = MARION_PARCELS_MARKER;
+  public readonly MarionParcelsTooltip = MARION_PARCELS_TOOLTIP;
+  /** Only the newest server search may publish. */
+  private searchSeq = 0;
   /** Statewide: tier → company-owner count over the loaded rows. */
   public TierCounts: Record<string, number | undefined> = {};
   /** Statewide: id of the owner whose parcels are loading on expand. */
@@ -254,8 +271,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   public readonly repCell = repCell;
   public readonly isBelowYoYFloor = isBelowYoYFloor;
 
-  /** A savings cell (blank with the "no valuation analysis" tooltip unless the row's tier rests on savings). */
-  public savings(row: OwnerRow, value: number | null): { text: string; tooltip: string | null } {
+  /** A savings cell: Marion as always; Statewide shows an existing figure with the Marion-parcels marker, a null blank with the tooltip. */
+  public savings(row: OwnerRow, value: number | null): { text: string; tooltip: string | null; marionOnly: boolean } {
     return savingsCell(value, row.tierBasis ?? null);
   }
 
@@ -359,8 +376,63 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     return this.filters.query;
   }
   public onSearchChange(term: string): void {
+    this.applySearchTerm(term);
+  }
+
+  /** Set the search term (UI + agent tool): client filter always; past the cap, a server search too. */
+  private applySearchTerm(term: string): void {
     this.filters = { ...this.filters, query: term };
     this.afterFilterChange();
+    void this.syncServerSearch();
+  }
+
+  /**
+   * Past the Statewide cap, a 3+ character term re-queries the run (same county clause) by
+   * `Label LIKE`, so owners beyond the top 5,000 are reachable; a shorter or cleared term
+   * returns the loaded page.
+   */
+  private async syncServerSearch(): Promise<void> {
+    const seq = ++this.searchSeq;
+    const term = this.filters.query;
+    if (!this.IsStatewide || !this.latestRunId || !shouldServerSearch(this.RowCapHit, term)) {
+      if (this.SearchOwners) {
+        this.SearchOwners = null;
+        this.SearchCapHit = false;
+        this.recomputeVisibleRows();
+        this.publishAgentContext();
+      }
+      return;
+    }
+    this.IsSearching = true;
+    this.cdr.markForCheck();
+    try {
+      const res = await RunView.FromMetadataProvider(this.ProviderToUse).RunView<Record<string, unknown>>({
+        EntityName: OWNER_PORTFOLIO_ENTITY,
+        Fields: [...OWNER_FIELDS, ...STATEWIDE_OWNER_FIELDS],
+        ExtraFilter: statewideSearchFilter(this.latestRunId, this.CountyNumber, term),
+        OrderBy: 'AVCurrent DESC',
+        MaxRows: STATEWIDE_ROW_CAP + 1,
+        ResultType: 'simple',
+      });
+      if (seq !== this.searchSeq) return;
+      if (!res.Success) {
+        this.notify(`Owner search failed: ${res.ErrorMessage ?? 'unknown error'}`, 'error');
+        return;
+      }
+      const raw = res.Results ?? [];
+      this.SearchCapHit = raw.length > STATEWIDE_ROW_CAP;
+      const rows = filterByCounty(raw.slice(0, STATEWIDE_ROW_CAP).map(mapOwnerPortfolioRow), this.CountyNumber);
+      await this.matchExistingProspects(rows);
+      if (seq !== this.searchSeq) return;
+      this.SearchOwners = rows.filter((o) => o.kind === 'Company');
+      this.recomputeVisibleRows();
+      this.publishAgentContext();
+    } finally {
+      if (seq === this.searchSeq) {
+        this.IsSearching = false;
+        this.cdr.markForCheck();
+      }
+    }
   }
 
   public get TierFilter(): string {
@@ -740,9 +812,12 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
    */
   public get RowCapMessage(): string {
     const cap = STATEWIDE_ROW_CAP.toLocaleString('en-US');
+    if (this.SearchOwners && this.SearchCapHit) {
+      return `this search matches more than ${cap} owners — showing the top ${cap} by AV; refine the search`;
+    }
     return this.CountyNumber == null
-      ? `showing the top ${cap} by AV; filter by county to see all`
-      : `showing the top ${cap} by AV in ${this.CountyName}; this county's smallest owners are not loaded`;
+      ? `showing the top ${cap} by AV; filter by county to see all; search by owner name reaches the rest`
+      : `showing the top ${cap} by AV in ${this.CountyName}; search by owner name reaches the rest`;
   }
 
   /** Statewide: tooltip on the AV-prior column header. */
@@ -802,6 +877,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     this.IsLoading = true;
     this.LoadError = null;
     this.RowCapHit = false;
+    this.SearchOwners = null; // a reload returns to the page; the search re-runs below if still due
+    this.SearchCapHit = false;
+    this.searchSeq++; // any in-flight server search is stale now
     this.cdr.markForCheck();
     try {
       const rv = RunView.FromMetadataProvider(this.ProviderToUse);
@@ -870,6 +948,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       await this.matchExistingProspects(); // Task 8
       if (seq !== this.loadSeq) return;
       this.recomputeVisibleRows(); // Task 6
+      if (this.IsStatewide) void this.syncServerSearch(); // a still-active term past the cap re-queries
     } finally {
       if (seq === this.loadSeq) {
         this.IsLoading = false;
@@ -1006,7 +1085,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
    * pill and the detail panel's "View prospect" affordance light up for owners
    * that are already flagged.
    */
-  private async matchExistingProspects(): Promise<void> {
+  private async matchExistingProspects(rows: readonly OwnerRow[] = this.AllOwners): Promise<void> {
     const res = await RunView.FromMetadataProvider(this.ProviderToUse).RunView<{ ID: string; OwnerKey: string }>({
       EntityName: 'Prospects',
       Fields: ['ID', 'OwnerKey'],
@@ -1017,7 +1096,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       return;
     }
     const byKey = new Map<string, string>(res.Results.map((r): [string, string] => [r.OwnerKey, r.ID]));
-    for (const row of this.AllOwners) {
+    for (const row of rows) {
       row.prospectId = byKey.get(row.ownerKey) ?? null;
     }
   }
@@ -1029,7 +1108,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   private recomputeVisibleRows(): void {
     // Statewide: the opportunity filter would act on savings the table blanks, so it is off there.
     const f = this.IsStatewide ? { ...this.filters, minOppPerYear: 0 } : this.filters;
-    this.VisibleRows = buildVisibleRows(this.CompanyOwners, f, this.sortKey, this.sortDir);
+    this.VisibleRows = buildVisibleRows(this.SearchOwners ?? this.CompanyOwners, f, this.sortKey, this.sortDir);
     this.cdr.markForCheck();
   }
 
@@ -1045,7 +1124,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
    * meaningful state change (load, filter, sort, row expand, flag success).
    */
   private publishAgentContext(): void {
-    const selected = this.SelectedOwnerId ? (this.AllOwners.find((o) => o.id === this.SelectedOwnerId) ?? null) : null;
+    const selected = this.SelectedOwnerId ? (this.ownerPool().find((o) => o.id === this.SelectedOwnerId) ?? null) : null;
     this.navigationService.SetAgentContext(
       this,
       buildOwnerProspectsAgentContext({
@@ -1069,17 +1148,24 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   /** id → exact-label → partial-contains (case-insensitive) lookup over {@link CompanyOwners}; null on a miss. */
+  /** Owners the user can currently reach: the server-search rows (when active) then the loaded page. */
+  private ownerPool(companyOnly = false): OwnerRow[] {
+    const page = companyOnly ? this.CompanyOwners : this.AllOwners;
+    return this.SearchOwners ? [...this.SearchOwners, ...page] : page;
+  }
+
   private resolveOwner(ref: string): OwnerRow | null {
     const needle = (ref ?? '').trim();
     if (!needle) {
       return null;
     }
-    const byId = this.CompanyOwners.find((o) => o.id === needle);
+    const pool = this.ownerPool(true);
+    const byId = pool.find((o) => o.id === needle);
     if (byId) {
       return byId;
     }
     const lower = needle.toLowerCase();
-    return this.CompanyOwners.find((o) => o.label.toLowerCase() === lower) ?? this.CompanyOwners.find((o) => o.label.toLowerCase().includes(lower)) ?? null;
+    return pool.find((o) => o.label.toLowerCase() === lower) ?? pool.find((o) => o.label.toLowerCase().includes(lower)) ?? null;
   }
 
   /** Tolerant "no such owner" result listing up to 15 candidate labels (never throws). */
@@ -1184,8 +1270,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
         Handler: async (params) => {
           const v = validateStringParam(params['query'], 'query');
           if (!v.ok) return v.result;
-          this.filters = { ...this.filters, query: v.value };
-          this.afterFilterChange();
+          this.applySearchTerm(v.value);
           return { Success: true };
         },
       },

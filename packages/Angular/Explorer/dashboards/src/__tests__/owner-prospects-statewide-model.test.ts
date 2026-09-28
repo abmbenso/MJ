@@ -22,6 +22,12 @@ import {
   sanitizeFilters,
   tierOptionsFor,
   statewidePortfolioFilter,
+  statewideSearchFilter,
+  likeContainsLiteral,
+  shouldServerSearch,
+  SERVER_SEARCH_MIN_CHARS,
+  MARION_PARCELS_MARKER,
+  MARION_PARCELS_TOOLTIP,
   buildOwnerProspectsAgentContext,
 } from '../OwnerProspects/owner-prospects.model';
 
@@ -99,6 +105,24 @@ describe('statewidePortfolioFilter', () => {
   });
 });
 
+describe('server search past the cap (fix round 1)', () => {
+  it('escapes LIKE wildcards with brackets and doubles quotes via escapeSqlLiteral', () => {
+    expect(likeContainsLiteral("O'Brien 100% [x]_y")).toBe("O''Brien 100[%] [[]x][_]y");
+  });
+  it('adds the Label LIKE clause to the county clause', () => {
+    expect(statewideSearchFilter('RUN', 45, "O'Brien 50%")).toBe(
+      `RunID = 'RUN' AND (PrimaryCountyNumber = 45 OR ByCountyJSON LIKE '%"45":%') AND Label LIKE '%O''Brien 50[%]%'`,
+    );
+    expect(statewideSearchFilter('RUN', null, '  acme  ')).toBe("RunID = 'RUN' AND Label LIKE '%acme%'");
+  });
+  it('searches the server only when the cap tripped and the term has 3+ characters', () => {
+    expect(SERVER_SEARCH_MIN_CHARS).toBe(3);
+    expect(shouldServerSearch(true, 'ab')).toBe(false);
+    expect(shouldServerSearch(true, ' abc ')).toBe(true);
+    expect(shouldServerSearch(false, 'abcdef')).toBe(false);
+  });
+});
+
 describe('tierLabel / runTierBasis', () => {
   it('labels from TierBasis, never from scope', () => {
     expect(tierLabel('Savings')).toBe('Savings tier');
@@ -131,17 +155,21 @@ describe('repCell', () => {
 });
 
 describe('savingsCell', () => {
-  it('is blank with the exact tooltip when the tier basis is AV', () => {
-    expect(savingsCell(null, 'AV')).toEqual({ text: '', tooltip: NO_ANALYSIS_TOOLTIP });
-    expect(savingsCell(162_164, 'AV')).toEqual({ text: '', tooltip: NO_ANALYSIS_TOOLTIP });
+  it('is blank with the exact tooltip when an AV-basis row has no savings', () => {
+    expect(savingsCell(null, 'AV')).toEqual({ text: '', tooltip: NO_ANALYSIS_TOOLTIP, marionOnly: false });
     expect(NO_ANALYSIS_TOOLTIP).toBe('no valuation analysis for this county yet');
   });
-  it('is blank with the tooltip when no basis is recorded', () => {
-    expect(savingsCell(null, null)).toEqual({ text: '', tooltip: NO_ANALYSIS_TOOLTIP });
+  it('shows savings that exist on an AV-basis row, flagged as Marion-parcels-only', () => {
+    expect(savingsCell(162_164.47, 'AV')).toEqual({ text: '$162,164', tooltip: null, marionOnly: true });
+    expect(MARION_PARCELS_MARKER).toBe('Marion parcels');
+    expect(MARION_PARCELS_TOOLTIP).toBe("from valuation analyses on this owner's Marion parcels only");
+  });
+  it('is blank with the tooltip when no basis is recorded and no savings exist', () => {
+    expect(savingsCell(null, null)).toEqual({ text: '', tooltip: NO_ANALYSIS_TOOLTIP, marionOnly: false });
   });
   it('keeps the Marion money / dash rendering for the Savings basis', () => {
-    expect(savingsCell(51_000, 'Savings')).toEqual({ text: '$51,000', tooltip: null });
-    expect(savingsCell(null, 'Savings')).toEqual({ text: '—', tooltip: null });
+    expect(savingsCell(51_000, 'Savings')).toEqual({ text: '$51,000', tooltip: null, marionOnly: false });
+    expect(savingsCell(null, 'Savings')).toEqual({ text: '—', tooltip: null, marionOnly: false });
   });
 });
 

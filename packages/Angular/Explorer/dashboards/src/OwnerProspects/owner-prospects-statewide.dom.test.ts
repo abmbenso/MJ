@@ -58,6 +58,14 @@ const MARION_OWNER: Raw = {
   ParcelCount: 1, TotalAV2025: 4_000_000, TotalAV2026: 4_200_000, AVYoYPct: 5, EstSavingsAtAsk: 51_000, EstSavingsAtFloor: 33_000,
 };
 
+/** Mimics the server's `Label LIKE '%term%'` (unescaping the quote-doubling and [x] brackets). */
+function labelSearch(filter: string, rows: Raw[]): Raw[] {
+  const m = /Label LIKE '%(.*)%'$/.exec(filter);
+  if (!m) return rows;
+  const term = m[1].replace(/''/g, "'").replace(/\[(.)\]/g, '$1').toLowerCase();
+  return rows.filter((r) => String(r['Label']).toLowerCase().includes(term));
+}
+
 interface FakeState {
   runs: Raw[];
   calls: RunViewParams[];
@@ -84,7 +92,7 @@ function fakeProvider(state: FakeState): IMetadataProvider {
       case 'Owner Portfolios':
         // The fake ignores the SQL county clause on purpose: the component's own filterByCounty must hold the line.
         if ((p.ExtraFilter ?? '').includes("'M1'")) return [MARION_OWNER];
-        return (state.statewideOwners ?? [WALMART, LAKE_ONLY, ALLEN_ONLY]).slice(0, p.MaxRows ?? undefined);
+        return labelSearch(p.ExtraFilter ?? '', state.statewideOwners ?? [WALMART, LAKE_ONLY, ALLEN_ONLY]).slice(0, p.MaxRows ?? undefined);
       default:
         return [];
     }
@@ -235,9 +243,14 @@ describe('Owner Prospects statewide scope (DOM)', () => {
     expect(query(h.fixture, '[data-testid="tier-header"]')?.textContent?.trim()).toBe('AV tier');
     const opp = queryAll(h.fixture, '[data-testid="opp-ask"]');
     expect(opp).toHaveLength(3);
-    for (const cell of opp) {
-      expect(cell.textContent?.trim()).toBe('');
-      expect(cell.getAttribute('title')).toBe(NO_ANALYSIS_TOOLTIP);
+    const withSavings = opp.filter((c) => (c.textContent ?? '').includes('$162,164'));
+    expect(withSavings).toHaveLength(1); // Walmart's savings exist, so they show …
+    const marker = withSavings[0].querySelector('[data-testid="marion-parcels-marker"]');
+    expect(marker?.textContent?.trim()).toBe('Marion parcels'); // … flagged as Marion-parcels-only
+    expect(marker?.getAttribute('title')).toBe("from valuation analyses on this owner's Marion parcels only");
+    for (const cell of opp.filter((c) => c !== withSavings[0])) {
+      expect(cell.textContent?.trim()).toBe(''); // null savings stay blank …
+      expect(cell.getAttribute('title')).toBe(NO_ANALYSIS_TOOLTIP); // … with the exact tooltip
     }
     const reps = queryAll(h.fixture, '[data-testid="rep-cell"]').map((c) => c.textContent?.trim());
     expect(reps).toContain('No rep data for this county');
@@ -271,11 +284,54 @@ describe('Owner Prospects statewide scope (DOM)', () => {
     await settle(h);
     expect(h.component.RowCapHit).toBe(true);
     expect(h.component.AllOwners).toHaveLength(5000);
-    expect(h.component.RowCapMessage).toBe('showing the top 5,000 by AV; filter by county to see all');
+    expect(h.component.RowCapMessage).toBe('showing the top 5,000 by AV; filter by county to see all; search by owner name reaches the rest');
     expect(query(h.fixture, '[data-testid="row-cap-banner"]')).not.toBeNull();
     h.component.onCountyChange(45);
     await settle(h);
-    expect(h.component.RowCapMessage).toBe("showing the top 5,000 by AV in Lake; this county's smallest owners are not loaded");
+    expect(h.component.RowCapMessage).toBe('showing the top 5,000 by AV in Lake; search by owner name reaches the rest');
+  });
+
+  it('past the cap, a 3+ character search re-queries the server and reaches owners beyond the top 5,000; a short or cleared term returns the page', async () => {
+    const h = mount({ scope: 'Statewide', county: '45' });
+    h.state.statewideOwners = Array.from({ length: 6000 }, (_, i) =>
+      statewideOwner({ ID: `o${i}`, Label: `Owner ${i}`, PrimaryCountyNumber: 45, AVCurrent: 6000 - i, ByCountyJSON: '{"45":{"parcels":1,"avCurrent":1,"avPrior":null}}' }),
+    );
+    h.fixture.detectChanges();
+    await settle(h);
+    expect(h.component.RowCapHit).toBe(true);
+    expect(h.component.AllOwners.some((o) => o.id === 'o5999')).toBe(false); // beyond the loaded page
+
+    h.component.onSearchChange('Owner 5999');
+    await vi.waitFor(() => expect(h.component.SearchOwners).not.toBeNull());
+    const search = ownerCalls(h.state).at(-1)!;
+    expect(search.ExtraFilter).toBe(`RunID = 'S1' AND (PrimaryCountyNumber = 45 OR ByCountyJSON LIKE '%"45":%') AND Label LIKE '%Owner 5999%'`);
+    expect(search.MaxRows).toBe(5001);
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['o5999']);
+
+    h.component.onSearchChange('ZZZ'); // a miss is an empty table, not the page
+    await vi.waitFor(() => expect(h.component.SearchOwners).toEqual([]));
+    expect(h.component.VisibleRows).toEqual([]);
+
+    h.component.onSearchChange('Ow'); // under 3 characters: back to the loaded page, client filter
+    await vi.waitFor(() => expect(h.component.SearchOwners).toBeNull());
+    expect(h.component.VisibleRows).toHaveLength(5000);
+    const calls = ownerCalls(h.state).length;
+    h.component.onSearchChange('');
+    await settle(h);
+    expect(ownerCalls(h.state)).toHaveLength(calls); // no server call below the threshold
+    expect(h.component.VisibleRows).toHaveLength(5000);
+  });
+
+  it('below the cap, search stays client-side (no server query)', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const calls = ownerCalls(h.state).length;
+    h.component.onSearchChange('walmart');
+    await settle(h);
+    expect(ownerCalls(h.state)).toHaveLength(calls);
+    expect(h.component.SearchOwners).toBeNull();
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w']);
   });
 
   it('two latest runs of one scope is an error banner, never a silent pick', async () => {

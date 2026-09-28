@@ -14,6 +14,7 @@
  */
 
 import { buildVerifyLink, CountyVerifyLink } from '../PropertySearch/property-search-county';
+import { escapeSqlLiteral } from '../PropertySearch/property-search-agent-context';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Entity names — the exact strings CodeGen registered in Task 1
@@ -43,6 +44,11 @@ export const STATEWIDE_ROW_CAP = 5000;
 export const YOY_PRIOR_FLOOR = 100_000;
 /** Tooltip on a blank savings cell — exact wording from the controller ruling. */
 export const NO_ANALYSIS_TOOLTIP = 'no valuation analysis for this county yet';
+/** Marker after a Statewide savings figure: it comes from the owner's Marion parcels only. */
+export const MARION_PARCELS_MARKER = 'Marion parcels';
+export const MARION_PARCELS_TOOLTIP = "from valuation analyses on this owner's Marion parcels only";
+/** Past the row cap, a search term this long re-queries the server by owner label. */
+export const SERVER_SEARCH_MIN_CHARS = 3;
 /** The Marion run's "no rep" status (a fact); outside Marion the builder writes "No rep data for this county" (an absence of data). */
 export const NO_REP_ON_RECORD = 'No rep on record';
 
@@ -745,10 +751,30 @@ export function filterByCounty(rows: readonly OwnerRow[], countyNumber: number |
  * never match `"145":` or a value.
  */
 export function statewidePortfolioFilter(runId: string, countyNumber: number | null): string {
-  const run = `RunID = '${runId.replace(/'/g, "''")}'`;
+  const run = `RunID = '${escapeSqlLiteral(runId)}'`;
   if (countyNumber == null) return run;
   const n = Math.trunc(countyNumber);
   return `${run} AND (PrimaryCountyNumber = ${n} OR ByCountyJSON LIKE '%"${n}":%')`;
+}
+
+/**
+ * A search term as the body of a `LIKE '%…%'` literal: `[`, `%`, `_` bracket-escaped (T-SQL),
+ * then quotes doubled by Property Search's `escapeSqlLiteral`. RunView sends ExtraFilter as a
+ * GraphQL *variable* (GraphQLDataProvider `RunViewQuery($input)`), so no GraphQL string layer
+ * applies on this path.
+ */
+export function likeContainsLiteral(term: string): string {
+  return escapeSqlLiteral(term.replace(/[[%_]/g, (c) => `[${c}]`));
+}
+
+/** {@link statewidePortfolioFilter} plus `Label LIKE '%term%'` — the server search past the row cap. */
+export function statewideSearchFilter(runId: string, countyNumber: number | null, term: string): string {
+  return `${statewidePortfolioFilter(runId, countyNumber)} AND Label LIKE '%${likeContainsLiteral(term.trim())}%'`;
+}
+
+/** Server search applies only when the loaded page was capped and the term is long enough. */
+export function shouldServerSearch(capHit: boolean, term: string): boolean {
+  return capHit && term.trim().length >= SERVER_SEARCH_MIN_CHARS;
 }
 
 /** Tier column header — from the stored `TierBasis`, never from the scope. */
@@ -782,13 +808,17 @@ export function repCell(repStatus: string): { text: string; open: boolean } {
 }
 
 /**
- * A savings cell. Blank with {@link NO_ANALYSIS_TOOLTIP} unless the row's tier
- * rests on the valuation-analysis savings (the Marion run) — an AV-tier row's
- * savings figure covers only its Marion parcels, so it is not shown as the owner's.
+ * A savings cell. The Marion run (Savings basis) renders as always. On any other basis a
+ * savings figure that exists is shown, flagged `marionOnly` (it covers only the owner's
+ * Marion parcels); a null is blank with {@link NO_ANALYSIS_TOOLTIP}.
  */
-export function savingsCell(value: number | null, basis: TierBasis | null | undefined): { text: string; tooltip: string | null } {
-  if (basis !== 'Savings') return { text: '', tooltip: NO_ANALYSIS_TOOLTIP };
-  return { text: formatMoneyOrDash(value), tooltip: null };
+export function savingsCell(
+  value: number | null,
+  basis: TierBasis | null | undefined,
+): { text: string; tooltip: string | null; marionOnly: boolean } {
+  if (basis === 'Savings') return { text: formatMoneyOrDash(value), tooltip: null, marionOnly: false };
+  if (value == null) return { text: '', tooltip: NO_ANALYSIS_TOOLTIP, marionOnly: false };
+  return { text: formatMoneyOrDash(value), tooltip: null, marionOnly: true };
 }
 
 /** True when a row carries a prior-year AV below {@link YOY_PRIOR_FLOOR} and a YoY % (the `prior < $100k` pill). */
