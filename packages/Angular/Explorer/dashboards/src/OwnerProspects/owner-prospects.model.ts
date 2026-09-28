@@ -13,6 +13,8 @@
  * `buildOwnerProspectsAgentContext` here on top of these interfaces.
  */
 
+import { buildVerifyLink, CountyVerifyLink } from '../PropertySearch/property-search-county';
+
 // ─────────────────────────────────────────────────────────────────────────────
 // Entity names — the exact strings CodeGen registered in Task 1
 // (packages/GeneratedEntities/src/generated/entity_subclasses.ts,
@@ -22,6 +24,27 @@
 export const OWNER_PORTFOLIO_RUN_ENTITY = 'Owner Portfolio Runs';
 export const OWNER_PORTFOLIO_ENTITY = 'Owner Portfolios';
 export const OWNER_PORTFOLIO_PARCEL_ENTITY = 'Owner Portfolio Parcels';
+export const COUNTY_ENTITY = 'Counties';
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Scope (owner-prospects-statewide, Task 5). A run is either the Marion run
+// (fixed 2025→2026 pair, valuation-analysis savings tier) or the Statewide run
+// (latest headline pair per parcel, AV tier). `IsLatest` is per scope.
+// ─────────────────────────────────────────────────────────────────────────────
+
+export type OwnerProspectsScope = 'Marion' | 'Statewide';
+export type TierBasis = 'Savings' | 'AV';
+
+/** The Marion run's county; its parcel rows carry no `CountyNumber`, so verify links fall back to it. */
+export const MARION_RUN_COUNTY_NUMBER = 49;
+/** Statewide portfolios load at most this many rows per query (top by `AVCurrent`); the query asks for one more as a tripwire. */
+export const STATEWIDE_ROW_CAP = 5000;
+/** The YoY column ranks only owners whose prior-year AV is at least this; smaller priors (new construction) sort last. */
+export const YOY_PRIOR_FLOOR = 100_000;
+/** Tooltip on a blank savings cell — exact wording from the controller ruling. */
+export const NO_ANALYSIS_TOOLTIP = 'no valuation analysis for this county yet';
+/** The Marion run's "no rep" status (a fact); outside Marion the builder writes "No rep data for this county" (an absence of data). */
+export const NO_REP_ON_RECORD = 'No rep on record';
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Row / view-model types
@@ -51,6 +74,27 @@ export interface OwnerParcelRow {
   appealed: boolean;
   existingRep: string | null;
   lastAppealYear: number | null;
+  // ── Statewide columns (absent / null on the Marion run) ──
+  /** `indiana_tax.Parcel.ID` — the reliable link key statewide (GIS numbers repeat across counties). */
+  parcelId?: string | null;
+  /** The 18-digit state parcel number (`Parcel` view column) — what non-Marion verify links key on. */
+  parcelNumber?: string | null;
+  countyNumber?: number | null;
+  priorYear?: number | null;
+  currentYear?: number | null;
+  avPrior?: number | null;
+  avCurrent?: number | null;
+  /** AVCurrent comes from the DLGF roll only (no county document for that year). */
+  isPlaceholder?: boolean;
+  sqftSource?: string | null;
+  appealLevel?: string | null;
+}
+
+/** One owner's slice of one county (`OwnerPortfolio.ByCountyJSON` value). */
+export interface OwnerCountySlice {
+  parcels: number;
+  avCurrent: number;
+  avPrior: number | null;
 }
 
 /** The flattened per-owner view-model consumed by the banner, table, and detail panel. */
@@ -90,6 +134,17 @@ export interface OwnerRow {
   parcels: OwnerParcelRow[];
   /** Set by the Prospect-match query (Task 8) — null until an existing `indiana_tax.Prospect` row is found. */
   prospectId: string | null;
+  // ── Statewide columns (absent / null on the Marion run) ──
+  primaryCountyNumber?: number | null;
+  countyCount?: number | null;
+  /** County number (as a string key, the builder's JSON shape) → this owner's slice of that county. */
+  byCounty?: Record<string, OwnerCountySlice>;
+  /** Σ AVPrior over the parcels that have a prior year — the YoY base, not the whole portfolio. */
+  avPrior?: number | null;
+  avCurrent?: number | null;
+  pairYears?: string | null;
+  tierBasis?: TierBasis | null;
+  groupKeyType?: string | null;
 }
 
 /** County-wide C&I 2025→2026 assessed-value rollup for the banner. */
@@ -122,7 +177,8 @@ export interface BannerModel {
 
 /** The dashboard's filter state. */
 export interface OwnerProspectsFilters {
-  tier: 'all' | 'Prime' | 'Strong' | 'Moderate';
+  /** Savings tiers (Marion run) or AV tiers A–D (Statewide run). */
+  tier: 'all' | 'Prime' | 'Strong' | 'Moderate' | 'A' | 'B' | 'C' | 'D';
   rep: '' | 'none' | 'has';
   hasAppealHistory: boolean;
   typeGroup: string;
@@ -146,13 +202,15 @@ export const DEFAULT_OWNER_PROSPECTS_FILTERS: OwnerProspectsFilters = {
  * when out of range — a bogus `tier`/`rep` would otherwise render an empty table
  * with no UI to recover short of Reset.
  */
+const KNOWN_TIERS: ReadonlySet<string> = new Set(['Prime', 'Strong', 'Moderate', 'A', 'B', 'C', 'D']);
+
 export function sanitizeFilters(raw: unknown): OwnerProspectsFilters {
   const r = (raw && typeof raw === 'object' ? raw : {}) as Record<string, unknown>;
   const tier = r['tier'];
   const rep = r['rep'];
   const minOpp = Number(r['minOppPerYear']);
   return {
-    tier: tier === 'Prime' || tier === 'Strong' || tier === 'Moderate' ? tier : 'all',
+    tier: typeof tier === 'string' && KNOWN_TIERS.has(tier) ? (tier as OwnerProspectsFilters['tier']) : 'all',
     rep: rep === 'none' || rep === 'has' ? rep : '',
     hasAppealHistory: r['hasAppealHistory'] === true,
     typeGroup: typeof r['typeGroup'] === 'string' ? r['typeGroup'] : '',
@@ -186,7 +244,10 @@ export type OwnerSortKey =
   | 'estSavingsAtFloor'
   | 'historicalReductionWon'
   | 'appealYears'
-  | 'repStatus';
+  | 'repStatus'
+  | 'avPrior'
+  | 'avCurrent'
+  | 'countyCount';
 
 /**
  * Every valid {@link OwnerSortKey}, as a runtime set — used to reject a stale or
@@ -208,6 +269,9 @@ export const KNOWN_SORT_KEYS: ReadonlySet<OwnerSortKey> = new Set<OwnerSortKey>(
   'historicalReductionWon',
   'appealYears',
   'repStatus',
+  'avPrior',
+  'avCurrent',
+  'countyCount',
 ]);
 
 const STRING_SORT_KEYS: ReadonlySet<OwnerSortKey> = new Set<OwnerSortKey>(['label', 'tier', 'appealYears', 'repStatus']);
@@ -279,6 +343,12 @@ export function sortOwnerRows(rows: OwnerRow[], key: OwnerSortKey, dir: 1 | -1):
       if (a == null && b == null) return x.i - y.i;
       if (a == null) return 1; // nulls last, both directions
       if (b == null) return -1;
+      if (key === 'avYoYPct') {
+        // The YoY floor: a percentage on a tiny prior (new construction) is honest but never tops the list.
+        const fa = isBelowYoYFloor(x.r);
+        const fb = isBelowYoYFloor(y.r);
+        if (fa !== fb) return fa ? 1 : -1;
+      }
       if (isString) return dir * String(a).localeCompare(String(b)) || x.i - y.i;
       return dir * ((a as number) - (b as number)) || x.i - y.i;
     })
@@ -352,6 +422,12 @@ export interface OwnerProspectsAgentContextState {
   selectedOwnerLabel: string | null;
   selectedOwnerIsFlagged: boolean;
   countyYoYPct: number | null;
+  /** Which run is on screen; absent = Marion (the default scope). */
+  scope?: OwnerProspectsScope;
+  /** The selected county's name in Statewide scope; null = all counties. */
+  county?: string | null;
+  /** What the tier column ranks on for the loaded run ('Savings' | 'AV'); null when unknown. */
+  tierBasis?: TierBasis | null;
 }
 
 /** Upper bound on the streamed `TopVisibleOwnerLabels` list; `TopVisibleOwnerLabelsCount` carries the true total past this. */
@@ -386,6 +462,9 @@ export function buildOwnerProspectsAgentContext(state: OwnerProspectsAgentContex
     SelectedOwnerLabel: state.selectedOwnerLabel,
     SelectedOwnerIsFlagged: state.selectedOwnerIsFlagged,
     CountyYoYPct: state.countyYoYPct,
+    Scope: state.scope ?? 'Marion',
+    County: state.county ?? null,
+    TierBasis: state.tierBasis ?? null,
     TopVisibleOwnerLabels: labels,
   };
   if (state.visibleRows.length > TOP_VISIBLE_OWNER_LABELS_CAP) {
@@ -458,6 +537,21 @@ function parseOwnerByType(v: unknown): Record<string, { n: number; av: number }>
   return out;
 }
 
+/** `OwnerPortfolio.ByCountyJSON` → `{ [countyNumber]: { parcels, avCurrent, avPrior } }`. */
+function parseOwnerByCounty(v: unknown): Record<string, OwnerCountySlice> {
+  const out: Record<string, OwnerCountySlice> = {};
+  for (const [k, raw] of Object.entries(parseJsonObject(v))) {
+    const b = isRecord(raw) ? raw : {};
+    out[k] = { parcels: toNum(b['parcels']) ?? 0, avCurrent: toNum(b['avCurrent']) ?? 0, avPrior: toNum(b['avPrior']) };
+  }
+  return out;
+}
+
+function toTierBasis(v: unknown): TierBasis | null {
+  const s = toStr(v);
+  return s === 'Savings' || s === 'AV' ? s : null;
+}
+
 /** One representative name out of a string / `{ rep|name|representative }` element. */
 function repNameOf(el: unknown): string {
   if (typeof el === 'string') return el;
@@ -522,6 +616,7 @@ export function mapCountyRollup(raw: RawRow): CountyRollup {
 export function mapOwnerParcelRow(raw: RawRow): OwnerParcelRow {
   return {
     id: String(raw['ID'] ?? ''),
+    // Nullable since mj-indiana-tax migration V202609281100 (some counties' files carry no GIS number).
     gisParcelNumber: String(raw['GISParcelNumber'] ?? ''),
     address: toStr(raw['Address']),
     typeGroup: toStr(raw['TypeGroup']),
@@ -540,6 +635,16 @@ export function mapOwnerParcelRow(raw: RawRow): OwnerParcelRow {
     appealed: toBool(raw['Appealed']),
     existingRep: toStr(raw['ExistingRep']),
     lastAppealYear: toNum(raw['LastAppealYear']),
+    parcelId: toStr(raw['ParcelID']),
+    parcelNumber: toStr(raw['Parcel']),
+    countyNumber: toNum(raw['CountyNumber']),
+    priorYear: toNum(raw['PriorYear']),
+    currentYear: toNum(raw['CurrentYear']),
+    avPrior: toNum(raw['AVPrior']),
+    avCurrent: toNum(raw['AVCurrent']),
+    isPlaceholder: toBool(raw['IsPlaceholder']),
+    sqftSource: toStr(raw['SqFtSource']),
+    appealLevel: toStr(raw['AppealLevel']),
   };
 }
 
@@ -581,5 +686,186 @@ export function mapOwnerPortfolioRow(raw: RawRow): OwnerRow {
     dominantType: dominantType(byType),
     parcels: [],
     prospectId: null,
+    primaryCountyNumber: toNum(raw['PrimaryCountyNumber']),
+    countyCount: toNum(raw['CountyCount']),
+    byCounty: parseOwnerByCounty(raw['ByCountyJSON']),
+    avPrior: toNum(raw['AVPrior']),
+    avCurrent: toNum(raw['AVCurrent']),
+    pairYears: toStr(raw['PairYears']),
+    tierBasis: toTierBasis(raw['TierBasis']),
+    groupKeyType: toStr(raw['GroupKeyType']),
   };
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Statewide scope (owner-prospects-statewide, Task 5) — run pick, county
+// filter, honest empties, YoY floor, per-county banner, verify links.
+// ─────────────────────────────────────────────────────────────────────────────
+
+/**
+ * The one latest run of `scope` out of the `IsLatest = 1 AND Scope = …` query
+ * (which asks for 2 rows as a tripwire). Two latest runs of one scope is an
+ * error, never a silent pick.
+ */
+export function latestRunFor(runs: readonly RawRow[], scope: OwnerProspectsScope): { run: RawRow | null; error: string | null } {
+  const hits = runs.filter((r) => toStr(r['Scope']) === scope && toBool(r['IsLatest']));
+  if (hits.length === 1) return { run: hits[0], error: null };
+  if (hits.length === 0) {
+    return { run: null, error: `No ${scope} owner-portfolio run has been published yet.` };
+  }
+  return {
+    run: null,
+    error: `${hits.length} latest ${scope} runs are marked IsLatest — refusing to pick one. Clear IsLatest on the older run(s) in indiana_tax.OwnerPortfolioRun.`,
+  };
+}
+
+/**
+ * Owners under one county: every owner holding parcels there (a multi-county
+ * owner appears under each of its counties, via its `ByCountyJSON` keys, else
+ * its primary county). `null` = All: every owner exactly once.
+ */
+export function filterByCounty(rows: readonly OwnerRow[], countyNumber: number | null): OwnerRow[] {
+  const seen = new Set<string>();
+  const out: OwnerRow[] = [];
+  for (const r of rows) {
+    if (seen.has(r.id)) continue;
+    if (countyNumber != null) {
+      const inSlices = r.byCounty ? Object.prototype.hasOwnProperty.call(r.byCounty, String(countyNumber)) : false;
+      if (!inSlices && r.primaryCountyNumber !== countyNumber) continue;
+    }
+    seen.add(r.id);
+    out.push(r);
+  }
+  return out;
+}
+
+/**
+ * The Statewide portfolio query's `ExtraFilter`. The builder writes
+ * `ByCountyJSON` keys as quoted county numbers (`{"45":{…}}`), so `"45":` can
+ * never match `"145":` or a value.
+ */
+export function statewidePortfolioFilter(runId: string, countyNumber: number | null): string {
+  const run = `RunID = '${runId.replace(/'/g, "''")}'`;
+  if (countyNumber == null) return run;
+  const n = Math.trunc(countyNumber);
+  return `${run} AND (PrimaryCountyNumber = ${n} OR ByCountyJSON LIKE '%"${n}":%')`;
+}
+
+/** Tier column header — from the stored `TierBasis`, never from the scope. */
+export function tierLabel(basis: TierBasis | null | undefined): string {
+  if (basis === 'Savings') return 'Savings tier';
+  if (basis === 'AV') return 'AV tier';
+  return 'Tier';
+}
+
+/** The `TierBasis` every loaded row shares; null when none is recorded or rows disagree. */
+export function runTierBasis(rows: readonly Pick<OwnerRow, 'tierBasis'>[]): TierBasis | null {
+  let basis: TierBasis | null = null;
+  for (const r of rows) {
+    const b = r.tierBasis ?? null;
+    if (b == null) return null;
+    if (basis == null) basis = b;
+    else if (basis !== b) return null;
+  }
+  return basis;
+}
+
+/** Tier toggle options for a basis: the savings tiers (Marion) or the AV bands A–D (Statewide). */
+export function tierOptionsFor(basis: TierBasis | null): { key: OwnerProspectsFilters['tier']; label: string }[] {
+  const keys: OwnerProspectsFilters['tier'][] = basis === 'AV' ? ['A', 'B', 'C', 'D'] : ['Prime', 'Strong', 'Moderate'];
+  return [{ key: 'all', label: 'All' }, ...keys.map((k) => ({ key: k, label: k }))];
+}
+
+/** The rep cell: the stored `RepStatus` verbatim, except the Marion "No rep on record" fact, which reads "— open". */
+export function repCell(repStatus: string): { text: string; open: boolean } {
+  return repStatus === NO_REP_ON_RECORD ? { text: '— open', open: true } : { text: repStatus, open: false };
+}
+
+/**
+ * A savings cell. Blank with {@link NO_ANALYSIS_TOOLTIP} unless the row's tier
+ * rests on the valuation-analysis savings (the Marion run) — an AV-tier row's
+ * savings figure covers only its Marion parcels, so it is not shown as the owner's.
+ */
+export function savingsCell(value: number | null, basis: TierBasis | null | undefined): { text: string; tooltip: string | null } {
+  if (basis !== 'Savings') return { text: '', tooltip: NO_ANALYSIS_TOOLTIP };
+  return { text: formatMoneyOrDash(value), tooltip: null };
+}
+
+/** True when a row carries a prior-year AV below {@link YOY_PRIOR_FLOOR} and a YoY % (the `prior < $100k` pill). */
+export function isBelowYoYFloor(row: Pick<OwnerRow, 'avPrior' | 'avYoYPct'>): boolean {
+  return row.avPrior != null && row.avYoYPct != null && row.avPrior < YOY_PRIOR_FLOOR;
+}
+
+/** The per-county (or all-county) banner view-model from the run's `ByCountyJSON`. */
+export interface CountyBannerModel {
+  countyCount: number;
+  parcels: number;
+  /** Σ AVCurrent over every parcel with an AV. */
+  avCurrent: number;
+  /** Σ AVPrior over the paired parcels; null when none are paired. */
+  avPrior: number | null;
+  /** Σ AVCurrent over the same paired parcels; null when none are paired. */
+  avCurrentPaired: number | null;
+  yoyParcels: number;
+  /** Paired YoY %, one decimal — only when both paired sums exist. */
+  yoyPct: number | null;
+  placeholderParcels: number;
+}
+
+/** County numbers with parcels in a run's `ByCountyJSON`, ascending. */
+export function countyNumbersInRun(byCountyJSON: unknown): number[] {
+  return Object.entries(parseJsonObject(byCountyJSON))
+    .filter(([, v]) => isRecord(v) && (toNum(v['parcels']) ?? 0) > 0)
+    .map(([k]) => Number(k))
+    .filter((n) => Number.isFinite(n))
+    .sort((a, b) => a - b);
+}
+
+/** One county's rollup (or every county's, summed, when `countyNumber` is null); null when absent. */
+export function countyBanner(byCountyJSON: unknown, countyNumber: number | null): CountyBannerModel | null {
+  const all = parseJsonObject(byCountyJSON);
+  const picked = countyNumber == null ? Object.values(all) : [all[String(countyNumber)]];
+  const slices = picked.filter(isRecord).filter((v) => (toNum(v['parcels']) ?? 0) > 0);
+  if (!slices.length) return null;
+  const sum = (k: string): number => slices.reduce((s, v) => s + (toNum(v[k]) ?? 0), 0);
+  const prior = sum('avPrior');
+  const curPaired = sum('avCurrentYoY');
+  const both = prior > 0 && curPaired > 0;
+  return {
+    countyCount: slices.length,
+    parcels: sum('parcels'),
+    avCurrent: sum('avCurrent'),
+    avPrior: both ? prior : null,
+    avCurrentPaired: both ? curPaired : null,
+    yoyParcels: sum('yoyParcels'),
+    yoyPct: both ? Math.round((curPaired / prior - 1) * 1000) / 10 : null,
+    placeholderParcels: sum('placeholderParcels'),
+  };
+}
+
+/** `2024→2025`, `2025 only`, or `''` when the parcel carries no years (the Marion run). */
+export function parcelYears(p: Pick<OwnerParcelRow, 'priorYear' | 'currentYear'>): string {
+  if (p.currentYear == null) return '';
+  return p.priorYear == null ? `${p.currentYear} only` : `${p.priorYear}→${p.currentYear}`;
+}
+
+/**
+ * The county-document link for one parcel, through Property Search's
+ * {@link buildVerifyLink} (any county, never a Marion-only URL). A parcel with no
+ * `CountyNumber` (the Marion run) uses `fallbackCounty`.
+ */
+export function parcelVerifyLink(
+  p: Pick<OwnerParcelRow, 'countyNumber' | 'parcelNumber' | 'gisParcelNumber' | 'currentYear'>,
+  slugByCounty: Readonly<Record<number, string>>,
+  fallbackCounty: number | null,
+): CountyVerifyLink {
+  const county = p.countyNumber ?? fallbackCounty;
+  if (county == null) return { label: 'Property Record Card', url: null, note: 'not on file — verify at the county' };
+  return buildVerifyLink({
+    countyNumber: county,
+    slug: slugByCounty[county] ?? '',
+    parcelNumber: p.parcelNumber ?? null,
+    gisParcelNumber: p.gisParcelNumber || null,
+    assessmentYear: p.currentYear ?? null,
+  });
 }

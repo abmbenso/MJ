@@ -253,6 +253,29 @@
   color: var(--mj-status-success-text);
 }
 
+/* Statewide: neutral, lower-case annotations (the text is the ruling's wording, shown verbatim). */
+:host .pill--muted {
+  background: var(--mj-bg-surface-sunken);
+  color: var(--mj-text-secondary);
+  text-transform: none;
+  letter-spacing: 0;
+  font-weight: 500;
+}
+
+:host .owner-slice {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--mj-text-muted);
+}
+
+/* ── Statewide scope + county filter (toolbar) ────────────────────────────── */
+/* mj-dropdown's host fills its container; in the toolbar row it is a fixed-width control. */
+:host .county-filter {
+  display: block;
+  flex: 0 0 16rem;
+  width: 16rem;
+}
+
 :host .yoy--up {
   color: var(--mj-status-warning);
   font-weight: 600;

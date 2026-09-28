@@ -2,9 +2,9 @@
   <mj-page-header
     Title="Owner Prospects"
     Icon="fa-solid fa-bullseye"
-    Subtitle="Marion County parcels rolled up to the operating company — triaged by dollars at stake">
+    [Subtitle]="Subtitle">
     <div meta>
-      @if (Summary) {
+      @if (Summary && !IsStatewide) {
         <mj-stat-badge [Count]="SummaryOppAsk" Label="opportunity / yr at ask" Icon="fa-solid fa-sack-dollar" />
       }
     </div>
@@ -12,6 +12,27 @@
       <mj-refresh-button [Loading]="IsLoading" (Clicked)="loadData()"></mj-refresh-button>
     </div>
     <div toolbar>
+      <mj-view-toggle
+        class="scope-toggle"
+        [Options]="ScopeOptions"
+        [ActiveKey]="Scope"
+        (KeyChange)="onScopeChange($event)">
+      </mj-view-toggle>
+
+      @if (IsStatewide) {
+        <mj-dropdown
+          class="county-filter"
+          [Data]="CountyOptions"
+          TextField="Label"
+          ValueField="CountyNumber"
+          [ValuePrimitive]="true"
+          [Filterable]="true"
+          [DefaultItem]="{ Label: 'All counties', CountyNumber: null }"
+          [ngModel]="CountyNumber"
+          (ValueChange)="onCountyChange($event)">
+        </mj-dropdown>
+      }
+
       <mj-page-search
         Placeholder="Search by owner or representative…"
         [Value]="SearchTerm"
@@ -27,14 +48,16 @@
           [Values]="FilterValues"
           (ValuesChange)="onFilterValuesChange($event)"
           (Reset)="resetFilters()">
-          <mj-filter-field Label="Minimum opportunity / yr (at ask)" Icon="fa-solid fa-sack-dollar">
-            <mj-numeric-input
-              [Min]="0"
-              Placeholder="Any"
-              [ngModel]="MinOppPerYear"
-              (ngModelChange)="onMinOppChange($event)">
-            </mj-numeric-input>
-          </mj-filter-field>
+          @if (!IsStatewide) {
+            <mj-filter-field Label="Minimum opportunity / yr (at ask)" Icon="fa-solid fa-sack-dollar">
+              <mj-numeric-input
+                [Min]="0"
+                Placeholder="Any"
+                [ngModel]="MinOppPerYear"
+                (ngModelChange)="onMinOppChange($event)">
+              </mj-numeric-input>
+            </mj-filter-field>
+          }
           <mj-filter-field Label="Appeal history" Icon="fa-solid fa-gavel">
             <label class="op-check">
               <input
@@ -86,7 +109,70 @@
       </section>
     }
 
-    @if (Summary) {
+    @if (IsStatewide && RowCapHit) {
+      <mj-alert Variant="info" [Message]="RowCapMessage" data-testid="row-cap-banner"></mj-alert>
+    }
+
+    @if (IsStatewide && CountyBanner; as cb) {
+      <section class="ci-banner" data-testid="county-banner">
+        <div class="ci-banner__head">{{ CountyBannerTitle }} — commercial &amp; industrial assessed value, latest assessment pair</div>
+        <div class="ci-banner__row">
+          @if (cb.yoyPct != null) {
+            <div class="ci-banner__cell">
+              <span class="ci-banner__yr">prior (paired)</span>
+              <span class="ci-banner__av">{{ money(cb.avPrior) }}</span>
+            </div>
+            <div class="ci-banner__arrow" aria-hidden="true">&rarr;</div>
+            <div class="ci-banner__cell">
+              <span class="ci-banner__yr">current (paired)</span>
+              <span class="ci-banner__av">{{ money(cb.avCurrentPaired) }}</span>
+            </div>
+            <div class="ci-banner__pct">
+              <span class="ci-banner__pct-val">{{ yoy(cb.yoyPct) }}</span>
+              <span class="ci-banner__pct-sub">{{ cb.yoyParcels | number }} of {{ cb.parcels | number }} parcels have a prior year</span>
+            </div>
+          } @else {
+            <div class="ci-banner__cell">
+              <span class="ci-banner__yr">current</span>
+              <span class="ci-banner__av">{{ money(cb.avCurrent) }}</span>
+            </div>
+            <div class="ci-banner__pct">
+              <span class="ci-banner__pct-sub">no prior-year pair on file — no YoY for {{ cb.parcels | number }} parcels</span>
+            </div>
+          }
+        </div>
+        <div class="ci-banner__break">
+          <span class="ci-banner__chip"><b>{{ cb.parcels | number }}</b> parcels</span>
+          <span class="ci-banner__chip"><b>{{ money(cb.avCurrent) }}</b> Σ AV current (all parcels)</span>
+          @if (cb.placeholderParcels > 0) {
+            <span class="ci-banner__chip" title="AV from the DLGF roll only — no county document for that year"><b>{{ cb.placeholderParcels | number }}</b> placeholder</span>
+          }
+        </div>
+      </section>
+    }
+
+    @if (Summary && IsStatewide) {
+      <div class="stat-cards">
+        <div class="stat-card">
+          <div class="stat-card__n">{{ Summary.companyOwners | number }}</div>
+          <div class="stat-card__l">company owners ({{ Summary.parcels | number }} parcels)</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__n">{{ SummaryTotalAV }}</div>
+          <div class="stat-card__l">total assessed value</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-card__n">{{ TierCounts['A'] ?? 0 }} / {{ TierCounts['B'] ?? 0 }}</div>
+          <div class="stat-card__l">A / B AV-tier owners</div>
+        </div>
+        <div class="stat-card" title="no valuation analysis for this county yet">
+          <div class="stat-card__n">&nbsp;</div>
+          <div class="stat-card__l">opportunity / yr — no valuation analysis outside Marion yet</div>
+        </div>
+      </div>
+    }
+
+    @if (Summary && !IsStatewide) {
       <div class="stat-cards">
         <div class="stat-card">
           <div class="stat-card__n">{{ Summary.companyOwners | number }}</div>
@@ -126,15 +212,23 @@
               <tr>
                 <th class="num">#</th>
                 <th (click)="onSortColumn('label')" [attr.data-sort]="isSorted('label')">Owner</th>
-                <th (click)="onSortColumn('tier')" [attr.data-sort]="isSorted('tier')">Tier</th>
+                <th (click)="onSortColumn('tier')" [attr.data-sort]="isSorted('tier')" data-testid="tier-header">{{ TierHeader }}</th>
+                @if (IsStatewide) {
+                  <th class="num" (click)="onSortColumn('countyCount')" [attr.data-sort]="isSorted('countyCount')">Counties</th>
+                }
                 <th class="num" (click)="onSortColumn('parcelCount')" [attr.data-sort]="isSorted('parcelCount')">Parcels</th>
-                <th class="num" (click)="onSortColumn('totalAV2025')" [attr.data-sort]="isSorted('totalAV2025')">AV 2025</th>
-                <th class="num" (click)="onSortColumn('totalAV2026')" [attr.data-sort]="isSorted('totalAV2026')">AV 2026</th>
+                @if (IsStatewide) {
+                  <th class="num" (click)="onSortColumn('avPrior')" [attr.data-sort]="isSorted('avPrior')" [title]="AVPriorTooltip">AV prior (paired)</th>
+                  <th class="num" (click)="onSortColumn('avCurrent')" [attr.data-sort]="isSorted('avCurrent')">AV current</th>
+                } @else {
+                  <th class="num" (click)="onSortColumn('totalAV2025')" [attr.data-sort]="isSorted('totalAV2025')">AV 2025</th>
+                  <th class="num" (click)="onSortColumn('totalAV2026')" [attr.data-sort]="isSorted('totalAV2026')">AV 2026</th>
+                }
                 <th class="num" (click)="onSortColumn('avYoYPct')" [attr.data-sort]="isSorted('avYoYPct')">YoY</th>
                 <th class="num" (click)="onSortColumn('totalUnits')" [attr.data-sort]="isSorted('totalUnits')">Units</th>
                 <th class="num" (click)="onSortColumn('nAppealRec')" [attr.data-sort]="isSorted('nAppealRec')">Appeal recs</th>
-                <th class="num" (click)="onSortColumn('estSavingsAtAsk')" [attr.data-sort]="isSorted('estSavingsAtAsk')">Opp / yr (ask)</th>
-                <th class="num" (click)="onSortColumn('estSavingsAtFloor')" [attr.data-sort]="isSorted('estSavingsAtFloor')">Opp / yr (floor)</th>
+                <th class="num" (click)="!IsStatewide && onSortColumn('estSavingsAtAsk')" [attr.data-sort]="isSorted('estSavingsAtAsk')">Opp / yr (ask)</th>
+                <th class="num" (click)="!IsStatewide && onSortColumn('estSavingsAtFloor')" [attr.data-sort]="isSorted('estSavingsAtFloor')">Opp / yr (floor)</th>
                 <th class="num" (click)="onSortColumn('historicalReductionWon')" [attr.data-sort]="isSorted('historicalReductionWon')">Hist. reduction</th>
                 <th (click)="onSortColumn('appealYears')" [attr.data-sort]="isSorted('appealYears')">Appeals filed</th>
                 <th (click)="onSortColumn('repStatus')" [attr.data-sort]="isSorted('repStatus')">Tax rep</th>
@@ -154,11 +248,25 @@
                     } @else if (row.isFreshProspect) {
                       <span class="pill pill--cold">cold</span>
                     }
+                    @if (IsStatewide && row.groupKeyType === 'NAME') {
+                      <span class="pill pill--muted" title="Grouped by owner name only — the same company under another LLC name may be a separate row">name only</span>
+                    }
+                    @if (countySlice(row); as slice) {
+                      <span class="owner-slice">{{ slice }}</span>
+                    }
                   </td>
                   <td>{{ row.tier ?? '—' }}</td>
+                  @if (IsStatewide) {
+                    <td class="num">{{ row.countyCount != null ? (row.countyCount | number) : '—' }}</td>
+                  }
                   <td class="num">{{ row.parcelCount | number }}</td>
-                  <td class="num">{{ money(row.totalAV2025) }}</td>
-                  <td class="num">{{ money(row.totalAV2026) }}</td>
+                  @if (IsStatewide) {
+                    <td class="num">{{ money(row.avPrior ?? null) }}</td>
+                    <td class="num">{{ money(row.avCurrent ?? null) }}</td>
+                  } @else {
+                    <td class="num">{{ money(row.totalAV2025) }}</td>
+                    <td class="num">{{ money(row.totalAV2026) }}</td>
+                  }
                   <td class="num">
                     <span
                       class="yoy"
@@ -166,11 +274,18 @@
                       [class.yoy--down]="row.avYoYPct != null && row.avYoYPct < 0">
                       {{ yoy(row.avYoYPct) }}
                     </span>
+                    @if (isBelowYoYFloor(row)) {
+                      <span class="pill pill--muted" data-testid="yoy-floor-pill" title="Prior-year AV under $100,000 — the % is shown but not ranked">prior &lt; $100k</span>
+                    }
                   </td>
                   <td class="num">{{ row.totalUnits != null ? (row.totalUnits | number) : '—' }}</td>
                   <td class="num">{{ row.nAppealRec != null ? (row.nAppealRec | number) : '—' }}</td>
-                  <td class="num">{{ money(row.estSavingsAtAsk) }}</td>
-                  <td class="num">{{ money(row.estSavingsAtFloor) }}</td>
+                  @if (savings(row, row.estSavingsAtAsk); as sv) {
+                    <td class="num" data-testid="opp-ask" [attr.title]="sv.tooltip">{{ sv.text }}</td>
+                  }
+                  @if (savings(row, row.estSavingsAtFloor); as sv) {
+                    <td class="num" data-testid="opp-floor" [attr.title]="sv.tooltip">{{ sv.text }}</td>
+                  }
                   <td class="num">{{ money(row.historicalReductionWon) }}</td>
                   <td>
                     {{ (row.appealedParcels ?? 0) | number }}
@@ -178,19 +293,26 @@
                       <span class="muted">· {{ row.appealYears }}</span>
                     }
                   </td>
-                  <td>
-                    @if (row.repStatus === 'No rep on record') {
-                      <span class="rep-open">— open</span>
-                    } @else {
-                      {{ row.repStatus }}
+                  <td data-testid="rep-cell">
+                    @if (repCell(row.repStatus); as rc) {
+                      @if (rc.open) {
+                        <span class="rep-open">{{ rc.text }}</span>
+                      } @else {
+                        {{ rc.text }}
+                      }
                     }
                   </td>
                 </tr>
                 @if (SelectedOwnerId === row.id) {
                   <tr class="detail-row">
-                    <td [attr.colspan]="14">
+                    <td [attr.colspan]="ColumnCount">
                       <mj-owner-detail-panel
                         [Owner]="row"
+                        [Parcels]="row.parcels"
+                        [Statewide]="IsStatewide"
+                        [ParcelsLoading]="LoadingParcelsFor === row.id"
+                        [CountySlugs]="CountySlugs"
+                        [CountyNames]="CountyNames"
                         (FlagRequested)="onFlagOwner($event)"
                         (ViewProspectRequested)="onViewProspect($event)">
                       </mj-owner-detail-panel>
@@ -200,7 +322,7 @@
               }
               @if (OverflowRowCount > 0) {
                 <tr class="overflow-row">
-                  <td colspan="14">{{ OverflowRowCount | number }} more — narrow the filters</td>
+                  <td [attr.colspan]="ColumnCount">{{ OverflowRowCount | number }} more — narrow the filters</td>
                 </tr>
               }
             </tbody>

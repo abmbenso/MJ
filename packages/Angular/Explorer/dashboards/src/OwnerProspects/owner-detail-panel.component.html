@@ -32,56 +32,132 @@
       <dt>Rep status</dt>
       <dd>{{ Owner.repStatus }}</dd>
     </div>
+    @if (Statewide) {
+      <div class="dgrid__pair">
+        <dt>Assessment pair</dt>
+        <dd>{{ Owner.pairYears ?? '—' }}</dd>
+      </div>
+      <div class="dgrid__pair">
+        <dt>Grouped by</dt>
+        <dd>{{ Owner.groupKeyType === 'CO' ? 'CoStar true owner' : Owner.groupKeyType === 'NAME' ? 'owner name only' : (Owner.groupKeyType ?? '—') }}</dd>
+      </div>
+    }
   </dl>
+
+  @if (Statewide) {
+    <p class="detail__portfolio detail__split" data-testid="county-split">Counties ({{ Owner.countyCount ?? 0 }}): {{ CountySplit || '—' }}</p>
+  }
 
   <p class="detail__portfolio">Portfolio: {{ ByTypeSummary || '—' }}</p>
 
-  <div class="pt-wrap">
-    <table class="pt">
-      <thead>
-        <tr>
-          <th>Parcel</th>
-          <th>Type</th>
-          <th class="num">AV 2025</th>
-          <th class="num">AV 2026</th>
-          <th class="num">YoY</th>
-          <th class="num">Units</th>
-          <th class="num">Ask</th>
-          <th class="num">Save/yr</th>
-          <th>Rec</th>
-          <th>Conf</th>
-          <th>Appealed</th>
-          <th>Rep</th>
-        </tr>
-      </thead>
-      <tbody>
-        @for (p of TopParcels; track p.id) {
+  @if (Statewide) {
+    @if (ParcelsLoading) {
+      <p class="detail__more" data-testid="parcels-loading">Loading parcels…</p>
+    }
+    <div class="pt-wrap">
+      <table class="pt">
+        <thead>
           <tr>
-            <td class="pt__parcel">
-              <span class="pt__addr">{{ p.address ?? p.gisParcelNumber }}</span>
-              @if (p.gisParcelNumber) {
-                <span class="pt__links">
-                  <a [href]="prcUrl(p.gisParcelNumber)" target="_blank" rel="noopener">PRC&#8599;</a>
-                  <a [href]="taxHistoryUrl(p.gisParcelNumber)" target="_blank" rel="noopener">TH&#8599;</a>
-                </span>
-              }
-            </td>
-            <td>{{ p.typeGroup ?? '—' }}</td>
-            <td class="num">{{ p.av2025 != null ? (p.av2025 | number) : '—' }}</td>
-            <td class="num">{{ p.av2026 != null ? (p.av2026 | number) : '—' }}</td>
-            <td class="num">{{ yoy(p.avYoYPct) }}</td>
-            <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
-            <td class="num">{{ p.ask != null ? (p.ask | number) : '—' }}</td>
-            <td class="num">{{ money(p.estSavingsAtAsk) }}</td>
-            <td>{{ p.rec ?? '—' }}</td>
-            <td>{{ p.conf ?? '—' }}</td>
-            <td>{{ p.appealed ? '✓' + (p.lastAppealYear ? ' ' + p.lastAppealYear : '') : '' }}</td>
-            <td>{{ p.existingRep ?? '—' }}</td>
+            <th>Parcel</th>
+            <th>County</th>
+            <th>Type</th>
+            <th>Years</th>
+            <th class="num">AV prior</th>
+            <th class="num">AV current</th>
+            <th class="num">YoY</th>
+            <th class="num">SqFt</th>
+            <th class="num">Units</th>
+            <th class="num">Save/yr</th>
+            <th>Appealed</th>
+            <th>Rep</th>
           </tr>
-        }
-      </tbody>
-    </table>
-  </div>
+        </thead>
+        <tbody>
+          @for (p of TopParcels; track p.id) {
+            <tr>
+              <td class="pt__parcel">
+                <span class="pt__addr">{{ p.address ?? p.parcelNumber ?? p.gisParcelNumber }}</span>
+                @if (verifyLink(p); as link) {
+                  <span class="pt__links">
+                    @if (link.url) {
+                      <a [href]="link.url" target="_blank" rel="noopener" [title]="link.note">{{ link.label }}&#8599;</a>
+                    } @else {
+                      <span class="pt__nolink" [title]="link.note">no card link</span>
+                    }
+                  </span>
+                }
+              </td>
+              <td>{{ countyName(p.countyNumber) }}</td>
+              <td>{{ p.typeGroup ?? '—' }}</td>
+              <td>
+                {{ parcelYears(p) || '—' }}
+                @if (p.isPlaceholder) {
+                  <span class="pt__pill" data-testid="placeholder-pill" title="DLGF roll figure only — no county document for this year">placeholder</span>
+                }
+              </td>
+              <td class="num">{{ p.avPrior != null ? (p.avPrior | number) : '—' }}</td>
+              <td class="num">{{ p.avCurrent != null ? (p.avCurrent | number) : '—' }}</td>
+              <td class="num">{{ yoy(p.avYoYPct) }}</td>
+              <td class="num" [attr.title]="p.sqftSource">{{ p.sqft != null ? (p.sqft | number) : '—' }}</td>
+              <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
+              <td class="num" [attr.title]="p.estSavingsAtAsk == null ? NoAnalysisTooltip : null">{{ p.estSavingsAtAsk != null ? money(p.estSavingsAtAsk) : '' }}</td>
+              <td>{{ p.appealed ? '✓ ' + (p.appealLevel ?? '') + (p.lastAppealYear ? ' ' + p.lastAppealYear : '') : '' }}</td>
+              <td>{{ p.existingRep ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  } @else {
+    <div class="pt-wrap">
+      <table class="pt">
+        <thead>
+          <tr>
+            <th>Parcel</th>
+            <th>Type</th>
+            <th class="num">AV 2025</th>
+            <th class="num">AV 2026</th>
+            <th class="num">YoY</th>
+            <th class="num">Units</th>
+            <th class="num">Ask</th>
+            <th class="num">Save/yr</th>
+            <th>Rec</th>
+            <th>Conf</th>
+            <th>Appealed</th>
+            <th>Rep</th>
+          </tr>
+        </thead>
+        <tbody>
+          @for (p of TopParcels; track p.id) {
+            <tr>
+              <td class="pt__parcel">
+                <span class="pt__addr">{{ p.address ?? p.gisParcelNumber }}</span>
+                @if (p.gisParcelNumber) {
+                  <span class="pt__links">
+                    @if (verifyLink(p).url; as prc) {
+                      <a [href]="prc" target="_blank" rel="noopener">PRC&#8599;</a>
+                    }
+                    <a [href]="taxHistoryUrl(p.gisParcelNumber)" target="_blank" rel="noopener">TH&#8599;</a>
+                  </span>
+                }
+              </td>
+              <td>{{ p.typeGroup ?? '—' }}</td>
+              <td class="num">{{ p.av2025 != null ? (p.av2025 | number) : '—' }}</td>
+              <td class="num">{{ p.av2026 != null ? (p.av2026 | number) : '—' }}</td>
+              <td class="num">{{ yoy(p.avYoYPct) }}</td>
+              <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
+              <td class="num">{{ p.ask != null ? (p.ask | number) : '—' }}</td>
+              <td class="num">{{ money(p.estSavingsAtAsk) }}</td>
+              <td>{{ p.rec ?? '—' }}</td>
+              <td>{{ p.conf ?? '—' }}</td>
+              <td>{{ p.appealed ? '✓' + (p.lastAppealYear ? ' ' + p.lastAppealYear : '') : '' }}</td>
+              <td>{{ p.existingRep ?? '—' }}</td>
+            </tr>
+          }
+        </tbody>
+      </table>
+    </div>
+  }
 
   @if (RemainingParcelCount > 0) {
     <p class="detail__more">{{ RemainingParcelCount }} more parcels</p>
