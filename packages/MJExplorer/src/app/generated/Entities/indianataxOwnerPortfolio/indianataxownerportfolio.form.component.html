@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="ownerIdentification"
         SectionName="Owner Identification"
-        Icon="fa fa-user-tie"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -80,7 +80,7 @@
     <mj-collapsible-panel
         SectionKey="portfolioComposition"
         SectionName="Portfolio Composition"
-        Icon="fa fa-th"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -130,7 +130,7 @@
     <mj-collapsible-panel
         SectionKey="assessedValueAnalysis"
         SectionName="Assessed Value Analysis"
-        Icon="fa fa-chart-line"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -189,6 +189,30 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AVPrior"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AVCurrent"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="PairYears"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -196,7 +220,7 @@
     <mj-collapsible-panel
         SectionKey="valuationAnalysisOpportunity"
         SectionName="Valuation Analysis Opportunity"
-        Icon="fa fa-search-dollar"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -246,7 +270,7 @@
     <mj-collapsible-panel
         SectionKey="appealHistory"
         SectionName="Appeal History"
-        Icon="fa fa-history"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -288,7 +312,7 @@
     <mj-collapsible-panel
         SectionKey="taxRepresentation"
         SectionName="Tax Representation"
-        Icon="fa fa-briefcase"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -326,26 +350,52 @@
 
     </mj-collapsible-panel>
 
-    <!-- Details Section -->
+    <!-- Geographic Distribution Section -->
     <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
+        SectionKey="geographicDistribution"
+        SectionName="Geographic Distribution"
+        Icon="fa fa-map-marker-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
+            FieldName="PrimaryCountyNumber"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="__mj_Longitude"
-            Type="textbox"
+            FieldName="CountyCount"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ByCountyJSON"
+            Type="code"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Prospect Qualification Section -->
+    <mj-collapsible-panel
+        SectionKey="prospectQualification"
+        SectionName="Prospect Qualification"
+        Icon="fa fa-star"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="false"
+            FieldName="TierBasis"
+            Type="select"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -380,6 +430,22 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
