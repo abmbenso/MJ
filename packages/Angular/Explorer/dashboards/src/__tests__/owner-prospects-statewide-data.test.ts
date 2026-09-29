@@ -57,6 +57,18 @@ describe('OwnerProspectsDataAccess — query builders', () => {
     expect(owners.ExtraFilter).toBe("RunID = 'M1'");
     expect(owners.MaxRows).toBe(20000);
     expect(parcels.ExtraFilter).toBe("OwnerPortfolioID IN (SELECT ID FROM indiana_tax.OwnerPortfolio WHERE RunID = 'M1')");
+    expect(parcels.Fields).toContain('ParcelID'); // the live year read joins on it
+  });
+  it('ParcelYearsQuery: the opened owner\'s parcels, the two display years, narrow Fields, 10,001-row tripwire', () => {
+    const q = OwnerProspectsDataAccess.ParcelYearsQuery("w'1", [2025, 2026]);
+    expect(q.EntityName).toBe('Parcel Year Headlines');
+    expect(q.Fields).toEqual(['ParcelID', 'AssessmentYear', 'HeadlineTotalAV', 'IsPlaceholder', 'HeadlineDataSource']);
+    expect(q.ExtraFilter).toBe(
+      "ParcelID IN (SELECT ParcelID FROM indiana_tax.OwnerPortfolioParcel WHERE OwnerPortfolioID = 'w''1') "
+      + 'AND AssessmentYear IN (2025, 2026) AND HeadlineTotalAV IS NOT NULL',
+    );
+    expect(q.MaxRows).toBe(10001);
+    expect(q.ResultType).toBe('simple');
   });
 });
 
@@ -84,6 +96,29 @@ describe('OwnerProspectsDataAccess — loads', () => {
     expect(capped.ok && capped.parcels.length).toBe(5000);
     const failed = await new OwnerProspectsDataAccess(fakeRunView('fail').rv).LoadParcels('w');
     expect(failed).toEqual({ ok: false, error: 'boom' });
+  });
+  it('LoadParcelYears: maps parcel-year figures; past 10,000 rows or on a failed read it is an error, never partial figures', async () => {
+    const one = await new OwnerProspectsDataAccess(
+      fakeRunView([{ ParcelID: 'A', AssessmentYear: 2026, HeadlineTotalAV: 5, IsPlaceholder: 1, HeadlineDataSource: 'DLGF assessment roll' }]).rv,
+    ).LoadParcelYears('w', [2025, 2026]);
+    expect(one).toEqual({ ok: true, years: { A: { '2026': { av: 5, roll: true, source: 'DLGF assessment roll' } } } });
+    const many = Array.from({ length: 10001 }, (_, i) => ({ ParcelID: `p${i}`, AssessmentYear: 2025, HeadlineTotalAV: 1 }));
+    const capped = await new OwnerProspectsDataAccess(fakeRunView(many).rv).LoadParcelYears('w', [2025, 2026]);
+    expect(capped.ok).toBe(false);
+    const failed = await new OwnerProspectsDataAccess(fakeRunView('fail').rv).LoadParcelYears('w', [2025, 2026]);
+    expect(failed).toEqual({ ok: false, error: 'boom' });
+  });
+  it('LoadCountyLookup: each county option carries its chip for the display years', async () => {
+    const json = JSON.stringify({
+      '45': { parcels: 3, years: { '2025': { av: 1, parcels: 3, roll: 0 }, '2026': { av: 1, parcels: 3, roll: 0 } } },
+      '1': { parcels: 2, years: { '2025': { av: 1, parcels: 2, roll: 2 } } },
+      years: [2025, 2026],
+    });
+    const rv = fakeRunView([{ CountyNumber: 45, Name: 'Lake', Slug: 'lake' }, { CountyNumber: 1, Name: 'Adams', Slug: 'adams' }]).rv;
+    const lookup = await new OwnerProspectsDataAccess(rv).LoadCountyLookup(json, [2025, 2026]);
+    expect(lookup.Options.map((o) => [o.Name, o.Chip])).toEqual([['Adams', '2026 TBA'], ['Lake', 'cards']]);
+    const noYears = await new OwnerProspectsDataAccess(rv).LoadCountyLookup(json, null);
+    expect(noYears.Options.every((o) => o.Chip === null)).toBe(true);
   });
   it('SearchOwners: a failed read is an error', async () => {
     const res = await new OwnerProspectsDataAccess(fakeRunView('fail').rv).SearchOwners('RUN', null, 'acme');

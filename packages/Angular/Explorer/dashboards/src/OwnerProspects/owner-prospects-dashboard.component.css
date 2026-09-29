@@ -262,10 +262,66 @@
   font-weight: 500;
 }
 
-:host .ci-banner__years {
-  margin-top: 0.125rem;
+:host .ci-banner__sub {
   font-size: 0.75rem;
   color: var(--mj-text-muted);
+}
+
+/* ── Fixed assessment years (Statewide) ───────────────────────────────────── */
+/* County status chip: cards / roll only / <year> TBA — in the dropdown items and the county banner. No :host prefix:
+   the dropdown popup is portaled outside this host (the _ngcontent attribute still scopes these rules). */
+.year-chip {
+  white-space: nowrap;
+  display: inline-block;
+  margin-left: 0.5rem;
+  padding: 0.0625rem 0.4375rem;
+  border-radius: var(--mj-radius-full);
+  background: var(--mj-bg-surface-sunken);
+  color: var(--mj-text-secondary);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  vertical-align: middle;
+}
+
+.year-chip--tba {
+  background: var(--mj-status-warning-bg);
+  color: var(--mj-status-warning-text);
+}
+
+.county-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.5rem;
+  width: 100%;
+}
+
+:host .complete-toggle {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.8125rem;
+  color: var(--mj-text-primary);
+  white-space: nowrap;
+}
+
+:host .complete-toggle__note {
+  font-size: 0.75rem;
+  color: var(--mj-text-muted);
+}
+
+/* A gap on the record (`TBA` / `—`) reads quieter than a figure. */
+:host .owners-table tbody td.gap {
+  color: var(--mj-text-muted);
+  font-weight: 600;
+}
+
+:host .owners-table tbody td.status-cell {
+  font-size: 0.75rem;
+  color: var(--mj-text-secondary);
+  white-space: nowrap;
 }
 
 :host .owner-slice {
@@ -313,4 +369,13 @@
   margin: 1rem 0 0;
   font-size: 0.75rem;
   color: var(--mj-text-muted);
+}
+
+/* Excel export in progress: the mj-loading line above the table. */
+:host .export-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  color: var(--mj-text-secondary);
 }

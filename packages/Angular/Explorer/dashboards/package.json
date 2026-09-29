@@ -103,6 +103,7 @@
     "@codemirror/merge": "^6.11.2",
     "@codemirror/state": "^6.5.4",
     "@codemirror/view": "^6.39.12",
+    "@abmbenso/mj-indiana-tax-core": "file:../../../../../mj-indiana-tax/packages/core",
     "@memberjunction/actions-base": "5.51.2",
     "@memberjunction/ai-core-plus": "5.51.2",
     "@memberjunction/ai-engine-base": "5.51.2",

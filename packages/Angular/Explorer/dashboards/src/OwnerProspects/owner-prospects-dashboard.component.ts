@@ -1,11 +1,12 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit, inject } from '@angular/core';
 import { BaseDashboard, BaseResourceComponent } from '@memberjunction/ng-shared';
 import { RegisterClass } from '@memberjunction/global';
 import { ResourceData, UserInfoEngine } from '@memberjunction/core-entities';
 import { CompositeKey, RunView, UserInfo } from '@memberjunction/core';
 import { MJNotificationService } from '@memberjunction/ng-notifications';
 import { indianataxProspectEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity } from 'mj_generatedentities';
-import { FilterFieldConfig } from '@memberjunction/ng-ui-components';
+import { FilterFieldConfig, MJConfirmService } from '@memberjunction/ng-ui-components';
+import { ExportEngine, SheetDefinition } from '@memberjunction/export-engine';
 import { ownerKeyFromRow } from './owner-key';
 import {
   OwnerRow,
@@ -27,7 +28,6 @@ import {
   mapCountyRollup,
   OwnerProspectsScope,
   TierBasis,
-  CountyBannerModel,
   STATEWIDE_ROW_CAP,
   PARCEL_CAP_NOTE,
   tierLabel,
@@ -38,18 +38,54 @@ import {
   appealRecsCell,
   hasMarionParcels,
   effectiveTierBasis,
-  pairYearsTooltip,
-  avPriorTooltip,
   repIsMarionOnly,
   statewideThesis,
   MARION_REP_TOOLTIP,
-  countyBanner,
-  isBelowYoYFloor,
   shouldServerSearch,
+  DisplayYears,
+  YearCellValue,
+  CountyYearBanner,
+  ParcelYearsMap,
+  displayYears,
+  annotateOwnerYears,
+  statusCell,
+  TBA_MARK,
+  NO_FIGURE_MARK,
+  YOY_MATERIAL_PRIOR,
+  remapStatewideSortKey,
+  filterOwnerRows,
+  yearTooltip,
+  countyYearBanner,
   MARION_PARCELS_MARKER,
   MARION_PARCELS_TOOLTIP,
+  exportRows,
+  exportParcelRows,
+  snapshotTotalAV,
+  liveYearTotal,
+  storedYear2Total,
+  storedYear1Total,
+  runLiveSourceNote,
+  runVsLiveNote,
 } from './owner-prospects.model';
-import { OwnerProspectsDataAccess, CountyFilterOption, OwnersResult } from './owner-prospects-statewide-data';
+import {
+  OwnerProspectsDataAccess,
+  CountyFilterOption,
+  OwnersResult,
+  EXPORT_CONFIRM_ABOVE,
+  EXPORT_ROW_CAP,
+} from './owner-prospects-statewide-data';
+import {
+  OwnerExportBasis,
+  buildOwnerWorkbook,
+  buildParcelWorkbook,
+  ownerExportFileName,
+  parcelExportFileName,
+  ownerSortLabel,
+  tableFilterWords,
+  readFilterWords,
+  exportConfirmText,
+} from './owner-prospects-export';
+import { ParcelExportRequest } from './owner-detail-panel.component';
 import { AgentToolResult, validateEnumParam, validateStringParam, validateNonNegativeNumberParam } from '../shared/agent-tool-validation';
 
 /**
@@ -130,8 +166,17 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   public CountyOptions: CountyFilterOption[] = [];
   /** The loaded run's shared `TierBasis` — drives the tier header, tier options and the savings cells. */
   public RunTierBasis: TierBasis | null = null;
-  /** Statewide: the selected county's (or every county's) rollup from the run's `ByCountyJSON`. */
-  public CountyBanner: CountyBannerModel | null = null;
+  /** Statewide: the selected county's (or every county's) display-year banner from the run's `ByCountyJSON`. */
+  public CountyBanner: CountyYearBanner | null = null;
+  /**
+   * The run's two display years (older first) — data from the run (`ByCountyJSON.years`; the Marion run's
+   * AV2025/AV2026 columns), never literals. Null when the run carries none.
+   */
+  public DisplayYears: DisplayYears | null = null;
+  /** Owners in the filtered set that the Complete YoY only filter is hiding (Statewide). */
+  public IncompleteHiddenCount = 0;
+  /** Id of the owner whose display-year figures are loading on expand. */
+  public LoadingYearsFor: string | null = null;
   /** Statewide: the portfolio query returned more than {@link STATEWIDE_ROW_CAP} rows; only the top ones by AV are shown. */
   public RowCapHit = false;
   /**
@@ -155,6 +200,12 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   public TierCounts: Record<string, number | undefined> = {};
   /** Statewide: id of the owner whose parcels are loading on expand. */
   public LoadingParcelsFor: string | null = null;
+  /** An Excel export is being collected / written. */
+  public IsExporting = false;
+  /** What the running export is doing ("Reading owners… 10,000 of 38,412"). */
+  public ExportProgress = '';
+
+  private confirm = inject(MJConfirmService);
 
   private filters: OwnerProspectsFilters = { ...DEFAULT_OWNER_PROSPECTS_FILTERS };
   private sortKey: OwnerSortKey = 'estSavingsAtAsk';
@@ -175,6 +226,15 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
    * row object is opened or flagged. `capHit` = more than the 5,000 loaded.
    */
   private parcelCache = new Map<string, { parcels: OwnerParcelRow[]; capHit: boolean }>();
+  /** Display-year figures per opened owner (read live from `Parcel Year Headlines`), keyed by owner id; per load. */
+  private parcelYearsCache = new Map<string, ParcelYearsMap>();
+  /** A failed year read per owner id (the panel says so; never a gap marker). */
+  private parcelYearsErrors = new Map<string, string>();
+  /**
+   * Statewide "Complete YoY only" (`?complete=1|0`): the user's explicit choice, or null = the default
+   * (on when the table is sorted by YoY, off otherwise).
+   */
+  private completeOverride: boolean | null = null;
   /** Only the newest load may publish (a scope/county switch mid-load supersedes the older one). */
   private loadSeq = 0;
   /** True once OnQueryParamsChanged has applied URL state (so initDashboard doesn't overwrite it with an unmerged config). */
@@ -249,10 +309,101 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** Table column count (drives the detail / overflow rows' colspan). */
   public get ColumnCount(): number {
-    return this.IsStatewide ? 15 : 14;
+    return this.IsStatewide ? 17 : 14;
   }
 
-  public readonly isBelowYoYFloor = isBelowYoYFloor;
+  /** `AV 2025` / `AV 2026` / `YoY 2025→2026` headers from the run's display years (`—` when the run has none). */
+  public get YearHeaders(): { y1: string; y2: string; yoy: string; yoyDollars: string } {
+    const y = this.DisplayYears;
+    return y
+      ? { y1: `AV ${y[0]}`, y2: `AV ${y[1]}`, yoy: `YoY ${y[0]}→${y[1]}`, yoyDollars: `YoY $ ${y[0]}→${y[1]}` }
+      : { y1: 'AV —', y2: 'AV —', yoy: 'YoY', yoyDollars: 'YoY $' };
+  }
+
+  /** An owner's cell for display year 0 (older) or 1 (newest): its Σ AV, or `—` / `TBA`. */
+  public yearValue(row: OwnerRow, which: 0 | 1): YearCellValue {
+    // Reads the fields annotateOwnerYears stamped on load — no per-render recomputation of the county slices.
+    const v = which === 0 ? row.avYear1 : row.avYear2;
+    return v ?? (which === 1 ? TBA_MARK : NO_FIGURE_MARK);
+  }
+
+  /** Gap markers for the templates (compared against, never retyped). */
+  public readonly TbaMark = TBA_MARK;
+  public readonly NoFigureMark = NO_FIGURE_MARK;
+
+  /** Cell text: money for a figure, the gap marker verbatim. */
+  public yearText(v: YearCellValue): string {
+    return typeof v === 'number' ? formatMoneyOrDash(v) : v;
+  }
+
+  /** "n of m parcels have a <year> figure; k are the DLGF roll". */
+  public yearTitle(row: OwnerRow, which: 0 | 1): string | null {
+    const y = this.DisplayYears;
+    return y ? yearTooltip(row, y[which], y) : null;
+  }
+
+  /** The owner's YoY over its parcels with both display years; null = `—`. */
+  public yoyValue(row: OwnerRow): number | null {
+    return row.yoyPair ?? null;
+  }
+
+  /** Signed dollars for the YoY $ cell: `+$1,234` / `-$567` / `$0` / `—`. */
+  public yoyDollars(n: number | null): string {
+    if (n == null) return NO_FIGURE_MARK;
+    const abs = `$${Math.round(Math.abs(n)).toLocaleString('en-US')}`;
+    return n > 0 ? `+${abs}` : n < 0 ? `-${abs}` : abs;
+  }
+
+  /** The Assessment status column. */
+  public status(row: OwnerRow): string {
+    return this.DisplayYears ? statusCell(row, this.DisplayYears) : 'no assessment years on this run';
+  }
+
+  /** The YoY cell tooltip: what the percentage covers. */
+  public yoyTitle(row: OwnerRow): string | null {
+    const y = this.DisplayYears;
+    const n = row.completeness;
+    if (!y) return null;
+    const share = n == null ? 'no parcel has both years' : `covers ${Math.round(n * 100)}% of the ${y[1]} AV`;
+    const base = row.avPriorBoth;
+    const small = base != null && base < YOY_MATERIAL_PRIOR ? ` — small base: paired prior ${formatMoneyOrDash(base)}` : '';
+    return `over parcels with both ${y[0]} and ${y[1]} figures (DLGF roll figures included) — ${share}${small}`;
+  }
+
+  /** A dropdown item (the template context is untyped) as its label + chip — the "All counties" default has no chip. */
+  public countyOption(item: unknown): { Label: string; Chip: string | null } {
+    const found = this.CountyOptions.find((o) => o === item);
+    return found ? { Label: found.Label, Chip: found.Chip } : { Label: 'All counties', Chip: null };
+  }
+
+  // ───── Complete YoY only (`?complete=`) ─────
+
+  /** The effective filter: the user's choice, else on for the YoY sort. Statewide only. */
+  public get CompleteOnly(): boolean {
+    return this.IsStatewide && (this.completeOverride ?? this.sortKey === 'yoyPair');
+  }
+
+  /** The toolbar's words for the filter state — which, and why. */
+  public get CompleteOnlyNote(): string {
+    const on = this.CompleteOnly ? 'on' : 'off';
+    const why = this.completeOverride != null ? '' : this.sortKey === 'yoyPair' ? ' (default for the YoY sort)' : ' (default; on for the YoY sort)';
+    const n = this.IncompleteHiddenCount;
+    const hidden = this.CompleteOnly && n > 0 ? ` · ${n.toLocaleString('en-US')} owner${n === 1 ? '' : 's'} without a complete YoY hidden` : '';
+    return `${on}${why}${hidden}`;
+  }
+
+  public onCompleteOnlyChange(value: boolean): void {
+    const defaultValue = this.sortKey === 'yoyPair';
+    this.completeOverride = value === defaultValue ? null : value;
+    this.pushScopeParams();
+    this.recomputeVisibleRows();
+    this.publishAgentContext();
+  }
+
+  /** `?complete=1|0` → the explicit choice; absent / anything else → the default. */
+  private static completeFromParam(v: string | undefined): boolean | null {
+    return v === '1' ? true : v === '0' ? false : null;
+  }
 
   /** A row's effective tier basis (stored, else the scope's — the Marion persist wrote none before 2026-09-28). */
   private basisOf(row: OwnerRow): TierBasis {
@@ -279,30 +430,53 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     return repIsMarionOnly(row, this.basisOf(row));
   }
 
-  /** Tooltip on a Statewide row's AV current cell — the years it comes from. */
-  public pairYears(row: OwnerRow): string {
-    return pairYearsTooltip(row.pairYears);
-  }
-
-  /** Tooltip on a Statewide row's AV prior cell — the paired base, its n of m, and the years. */
-  public avPriorTitle(row: OwnerRow): string {
-    return avPriorTooltip(row);
-  }
-
   /** True when the opened owner has more parcels than the 5,000 loaded. */
   public ParcelsCappedFor(row: OwnerRow): boolean {
     return this.parcelCache.get(row.id)?.capHit ?? false;
   }
 
-  /** The Statewide "total assessed value" card label (qualified when only the top 5,000 are loaded). */
   /** Statewide "company owners" card label, qualified like the Total AV card when the row cap is hit (M5). */
   public get CompanyOwnersLabel(): string {
     const top = this.RowCapHit ? `, top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded` : '';
     return `company owners (${(this.Summary?.parcels ?? 0).toLocaleString('en-US')} parcels${top})`;
   }
 
+  /** The Statewide card sums each parcel's newest figure — mixed years — and says so (final-review I3). */
   public get TotalAVLabel(): string {
-    return this.RowCapHit ? `total assessed value (top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded)` : 'total assessed value';
+    return this.RowCapHit
+      ? `total assessed value (newest figure per parcel; top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded)`
+      : 'total assessed value (newest figure per parcel)';
+  }
+
+  /** Statewide: the toolbar's sort indicator for the default sort, which has no column header (final-review I3). */
+  public get SortNote(): string | null {
+    return this.IsStatewide && this.sortKey === 'avCurrent' ? 'sorted by newest AV' : null;
+  }
+
+  /** The empty-table message: names Complete YoY only when it is what hides every owner (M4). */
+  public get EmptyMessage(): string {
+    const n = this.IncompleteHiddenCount;
+    return this.CompleteOnly && n > 0
+      ? `Complete YoY only is hiding ${n.toLocaleString('en-US')} owner${n === 1 ? '' : 's'} without a complete YoY — switch it off, or adjust the search, tier, or filters above.`
+      : 'Adjust the search, tier, or filters above.';
+  }
+
+  /** The live-read note for the detail panel (both scopes; final-review I1). */
+  public get RunLiveNote(): string {
+    return runLiveSourceNote(this.Scope, this.CountyRollup?.runDate ?? null);
+  }
+
+  /**
+   * The stale-run alert for an opened owner (final-review I1): Σ today's headlines per display year over the owner's
+   * parcels vs the row's stored totals (Marion `TotalAV2025/2026`, Statewide the run's year sums) — the newest year as
+   * ruled, plus the older year (West Ohio II is stale on 2025 only). Null until the live figures are in, or when both agree within $1.
+   */
+  public RunLiveDiffFor(row: OwnerRow): string | null {
+    const map = this.parcelYearsCache.get(row.id);
+    const years = this.DisplayYears;
+    if (!map || !years) return null;
+    const older = { year: years[0], stored: storedYear1Total(row, this.Scope), live: liveYearTotal(map, years[0]) };
+    return runVsLiveNote(storedYear2Total(row, this.Scope), liveYearTotal(map, years[1]), this.Scope, older, years[1]);
   }
 
   private get data(): OwnerProspectsDataAccess {
@@ -335,13 +509,19 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     void this.loadData();
   }
 
-  /** Apply `?scope=` / `?county=` — the other half of every {@link pushScopeParams}. */
+  /** Apply `?scope=` / `?county=` / `?complete=` — the other half of every {@link pushScopeParams}. */
   protected override OnQueryParamsChanged(params: Record<string, string>, _source: 'popstate' | 'deeplink'): void {
     const changed = this.applyScopeParams(params);
+    const complete = OwnerProspectsDashboardComponent.completeFromParam(params['complete']);
+    const completeChanged = complete !== this.completeOverride;
+    this.completeOverride = complete;
     this.paramsDelivered = true;
     // Before initDashboard, BaseDashboard.ngOnInit's own loadData() picks the state up.
     if (changed && this.initialized) {
       void this.loadData();
+    } else if (completeChanged && this.initialized) {
+      this.recomputeVisibleRows();
+      this.publishAgentContext();
     }
   }
 
@@ -368,9 +548,11 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   private pushScopeParams(): void {
+    const complete = this.IsStatewide && this.completeOverride != null ? (this.completeOverride ? '1' : '0') : null;
     this.UpdateQueryParams({
       scope: this.IsStatewide ? 'Statewide' : null,
       county: this.IsStatewide && this.CountyNumber != null ? String(this.CountyNumber) : null,
+      complete,
     });
   }
 
@@ -448,6 +630,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       if (seq !== this.searchSeq) return;
       this.SearchError = null;
       this.SearchCapHit = res.capHit;
+      annotateOwnerYears(res.rows, this.DisplayYears);
       this.SearchOwners = res.rows.filter((o) => o.kind === 'Company');
       this.recomputeVisibleRows();
       this.publishAgentContext();
@@ -558,8 +741,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const rows = this.VisibleRows;
     if (this.IsStatewide) {
       // No valuation analysis outside Marion: the statewide line sums AV, never the (blank) savings.
+      // Each parcel's newest figure on record — mixed years — labelled as such (final-review I3); company owners only (M5).
       const av = rows.reduce((s, o) => s + (o.avCurrent ?? o.totalAV ?? 0), 0);
-      return `${rows.length.toLocaleString('en-US')} owners · Σ AV current ${formatMoneyShort(av)}`;
+      return `${rows.length.toLocaleString('en-US')} company owners · Σ AV (newest figure per parcel, mixed years) ${formatMoneyShort(av)}`;
     }
     const ask = rows.reduce((s, o) => s + (o.estSavingsAtAsk ?? 0), 0);
     const floor = rows.reduce((s, o) => s + (o.estSavingsAtFloor ?? 0), 0);
@@ -598,11 +782,47 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   public toggleOwner(row: OwnerRow): void {
     this.SelectedOwnerId = this.SelectedOwnerId === row.id ? null : row.id;
-    if (this.SelectedOwnerId && this.IsStatewide) {
-      void this.ensureParcels(row);
+    if (this.SelectedOwnerId) {
+      this.openOwnerData(row);
     }
     this.publishAgentContext();
     this.cdr.markForCheck();
+  }
+
+  /** On open: the owner's parcels (Statewide loads them per owner) and its display-year figures (both scopes). */
+  private openOwnerData(row: OwnerRow): void {
+    if (this.IsStatewide) void this.ensureParcels(row);
+    void this.ensureParcelYears(row);
+  }
+
+  /** The opened owner's display-year figures (null = not loaded yet, or the read failed). */
+  public ParcelYearsFor(row: OwnerRow): ParcelYearsMap | null {
+    return this.parcelYearsCache.get(row.id) ?? null;
+  }
+
+  /** Why the opened owner's year figures are missing (a failed read), else null. */
+  public ParcelYearsErrorFor(row: OwnerRow): string | null {
+    return this.parcelYearsErrors.get(row.id) ?? null;
+  }
+
+  /**
+   * Read the opened owner's display-year figures live from `Parcel Year Headlines` (once per owner per load).
+   * A failed read is kept as an error — the panel then claims no gap, never a false `TBA`.
+   */
+  private async ensureParcelYears(row: OwnerRow): Promise<void> {
+    const years = this.DisplayYears;
+    if (!years || this.parcelYearsCache.has(row.id)) return;
+    this.LoadingYearsFor = row.id;
+    this.parcelYearsErrors.delete(row.id);
+    this.cdr.markForCheck();
+    try {
+      const res = await this.data.LoadParcelYears(row.id, years);
+      if (res.ok) this.parcelYearsCache.set(row.id, res.years);
+      else this.parcelYearsErrors.set(row.id, `Year figures for “${row.label}” could not be read: ${res.error}`);
+    } finally {
+      if (this.LoadingYearsFor === row.id) this.LoadingYearsFor = null;
+      this.cdr.markForCheck();
+    }
   }
 
   /**
@@ -686,6 +906,151 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     this.navigationService.OpenEntityRecord('Prospects', new CompositeKey([{ FieldName: 'ID', Value: row.prospectId }]));
   }
 
+  // ───── Excel export (owner-prospects-years-export plan, Task 3) ─────
+
+  /** The toolbar's Export owners: every owner matching the table's scope / county / search / filters, sorted as the table is. */
+  public async onExportOwners(): Promise<void> {
+    const years = this.DisplayYears;
+    if (!years || this.IsExporting || !this.latestRunId) return;
+    this.beginExport('Counting owners…');
+    try {
+      const collected = this.IsStatewide
+        ? await this.collectStatewideOwners()
+        : { rows: this.VisibleRows, capped: false, read: this.AllOwners.length };
+      if (!collected) return;
+      this.ExportProgress = `Writing ${collected.rows.length.toLocaleString('en-US')} owners…`;
+      this.cdr.markForCheck();
+      const basis = this.ownerExportBasis(years, collected.capped, collected.read);
+      const sheets = buildOwnerWorkbook(exportRows(collected.rows, years, this.Scope), basis, this.nameByCounty);
+      const slug = this.CountyNumber != null ? (this.slugByCounty[this.CountyNumber] ?? this.CountyName) : null;
+      await this.writeWorkbook(sheets, ownerExportFileName(this.Scope, slug, basis.runDate), 'Owner Prospects — owners');
+    } catch (e) {
+      this.notify(`Export failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+    } finally {
+      this.endExport();
+    }
+  }
+
+  /**
+   * Statewide: read every owner the page's own ExtraFilter matches (the server search's when the table shows one),
+   * paged to exhaustion (capped), after a confirm above {@link EXPORT_CONFIRM_ABOVE}; then the table's own company
+   * subset, filters and sort. Null = cancelled or failed (already said).
+   */
+  private async collectStatewideOwners(): Promise<{ rows: OwnerRow[]; capped: boolean; read: number } | null> {
+    const filter = OwnerProspectsDataAccess.ExportFilter(this.latestRunId ?? '', this.CountyNumber, this.SearchOwners ? this.filters.query : null);
+    const data = this.data;
+    const count = await data.CountOwners(filter);
+    if (!count.ok) {
+      this.notify(`Export failed: ${count.error}`, 'error');
+      return null;
+    }
+    if (count.count > EXPORT_CONFIRM_ABOVE && !(await this.confirmLargeExport(count.count))) return null;
+    const total = Math.min(count.count, EXPORT_ROW_CAP).toLocaleString('en-US');
+    const res = await data.LoadAllOwners(filter, this.CountyNumber, (n) => {
+      this.ExportProgress = `Reading owners… ${n.toLocaleString('en-US')} of ${total}`;
+      this.cdr.markForCheck();
+    });
+    if (!res.ok) {
+      this.notify(`Export failed: ${res.error}`, 'error');
+      return null;
+    }
+    annotateOwnerYears(res.rows, this.DisplayYears);
+    const f = { ...this.filters, minOppPerYear: 0 };
+    const rows = buildVisibleRows(res.rows.filter((o) => o.kind === 'Company'), f, this.sortKey, this.sortDir, this.CompleteOnly);
+    return { rows, capped: res.capHit, read: res.rows.length };
+  }
+
+  /** Ask before a large read: the pre-filter count (a read-cost warning) and exactly the filters applied after it. */
+  private confirmLargeExport(count: number): Promise<boolean> {
+    const read = readFilterWords(this.CountyName, this.SearchOwners ? this.filters.query : null);
+    const text = exportConfirmText(count, read, this.tableFilters(), EXPORT_ROW_CAP);
+    return this.confirm.Confirm({ title: 'Export owners', ...text, cancelText: 'Cancel' });
+  }
+
+  /** What the owner export was taken from — the Basis sheet. */
+  private ownerExportBasis(years: DisplayYears, capped: boolean, rowsRead: number): OwnerExportBasis {
+    const cr = this.CountyRollup;
+    const basis = this.RunTierBasis ?? effectiveTierBasis(null, this.Scope);
+    const cap = EXPORT_ROW_CAP.toLocaleString('en-US');
+    return {
+      runId: this.latestRunId ?? '', runDate: cr?.runDate ? new Date(cr.runDate) : null, methodologyVersion: cr?.methodologyVersion ?? null,
+      scope: this.Scope, county: this.CountyName, searchTerm: this.filters.query, completeOnly: this.CompleteOnly,
+      filters: this.tableFilters(), rowsRead, sort: ownerSortLabel(this.sortKey, this.sortDir, years, basis),
+      years, tierBasis: basis, generatedAt: new Date(), capped, runLiveNote: this.RunLiveNote,
+      capNote: capped ? `more than ${cap} owner rows matched; only the first ${cap} (by ID) were read` : null,
+    };
+  }
+
+  /** Every table filter in force, in words (the Basis sheet and the confirm list exactly these). */
+  private tableFilters(): string[] {
+    const f = this.filters;
+    return tableFilterWords({
+      scope: this.Scope, completeOnly: this.CompleteOnly, searchTerm: f.query, tier: f.tier, tierHeader: this.TierHeader,
+      rep: f.rep, hasAppealHistory: f.hasAppealHistory, typeGroup: f.typeGroup, minOppPerYear: f.minOppPerYear,
+      serverSearch: !!this.SearchOwners,
+    });
+  }
+
+  /** The owner summary's Export parcels: the loaded parcel rows, as sorted in the panel. */
+  public async onExportParcels(req: ParcelExportRequest): Promise<void> {
+    const years = this.DisplayYears;
+    if (!years || this.IsExporting) return;
+    this.beginExport(`Writing ${req.Rows.length.toLocaleString('en-US')} parcels…`);
+    try {
+      const cr = this.CountyRollup;
+      const runDate = cr?.runDate ? new Date(cr.runDate) : null;
+      const sheets = buildParcelWorkbook(exportParcelRows(req.Rows, years), {
+        runId: this.latestRunId ?? '', runDate, methodologyVersion: cr?.methodologyVersion ?? null, scope: this.Scope,
+        owner: req.Owner.label, ownerKey: req.Owner.ownerKey, ownerParcelCount: req.Owner.parcelCount,
+        capNote: this.ParcelsCappedFor(req.Owner) ? PARCEL_CAP_NOTE : null, sort: req.Sort, years, generatedAt: new Date(),
+        runLiveNote: this.RunLiveNote, runLiveDiff: this.RunLiveDiffFor(req.Owner),
+      });
+      await this.writeWorkbook(sheets, parcelExportFileName(req.Owner.label, runDate), `Owner parcels — ${req.Owner.label}`);
+    } catch (e) {
+      this.notify(`Export failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+    } finally {
+      this.endExport();
+    }
+  }
+
+  private beginExport(progress: string): void {
+    this.IsExporting = true;
+    this.ExportProgress = progress;
+    this.cdr.markForCheck();
+  }
+
+  private endExport(): void {
+    this.IsExporting = false;
+    this.ExportProgress = '';
+    this.cdr.markForCheck();
+  }
+
+  /** Build the workbook through the export engine and hand the bytes to the browser (the TaxBillProjection pattern). */
+  private async writeWorkbook(sheets: SheetDefinition[], fileName: string, title: string): Promise<void> {
+    const result = await ExportEngine.toExcelMultiSheet(sheets, {
+      fileName: fileName.replace(/\.xlsx$/, ''),
+      metadata: { title, author: 'Indiana Property Tax Expert' },
+    });
+    if (!result.success || !result.data) {
+      this.notify(`Export failed: ${result.error ?? 'no data was produced'}`, 'error');
+      return;
+    }
+    // ExportEngine returns the bytes; handing them to the browser is ours to do.
+    this.downloadFile(result.data, fileName, result.mimeType);
+    this.notify(`Downloaded ${fileName}`, 'success');
+  }
+
+  private downloadFile(bytes: Uint8Array, fileName: string, mimeType?: string): void {
+    const blob = new Blob([bytes as BlobPart], { type: mimeType || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    // Revoking immediately can cancel the download in some browsers; one tick is enough.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
+  }
+
   // ───── Flag-as-prospect internals (mirror flag-prospect.js) ─────
 
   /** `Prospect.RelationshipType` from the owner's rep status string. */
@@ -718,7 +1083,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const yoySign = yoyPct >= 0 ? '+' : '';
     if (this.basisOf(row) === 'AV') {
       // Statewide: every Marion-only figure carries its scope on the record (final-review I5/I3).
-      return statewideThesis(row, this.ParcelsCappedFor(row) ? PARCEL_CAP_NOTE : null);
+      return statewideThesis(row, this.ParcelsCappedFor(row) ? PARCEL_CAP_NOTE : null, this.DisplayYears);
     }
     const opp = Math.round(row.estSavingsAtAsk ?? 0).toLocaleString('en-US');
     return (
@@ -809,7 +1174,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     snap.ProspectID = prospect.ID;
     snap.PortfolioRunTag = 'dashboard-flag';
     snap.ParcelCount = row.parcelCount;
-    snap.TotalAV = row.totalAV2026 ?? row.totalAV ?? null;
+    // Statewide: the owner's newest-figure total over every parcel, never the partial 2026 sum (final-review C1).
+    snap.TotalAV = snapshotTotalAV(row, this.Scope);
     snap.OpportunityAtAsk = row.estSavingsAtAsk ?? null;
     snap.OpportunityAtFloor = row.estSavingsAtFloor ?? null;
     snap.RepdParcelCount = repd;
@@ -855,10 +1221,6 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       : `showing the top ${cap} by AV in ${this.CountyName}; search by owner name reaches the rest`;
   }
 
-  /** Statewide: tooltip on the AV-prior column header. */
-  public readonly AVPriorTooltip =
-    'Prior-year AV over paired, non-placeholder parcels only (both years a county figure) — exactly the YoY base, not the whole portfolio.';
-
   /** Persist the filter state and rebuild the visible rows. */
   private afterFilterChange(): void {
     UserInfoEngine.Instance.SetSettingDebounced(OwnerProspectsDashboardComponent.FILTERS_KEY, JSON.stringify(this.filters));
@@ -871,7 +1233,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     this.restoreFilterAndSortPrefs();
     // Statewide Task 5: `?scope=` / `?county=` from the tab config — unless OnQueryParamsChanged already applied them.
     if (!this.paramsDelivered) {
-      this.applyScopeParams(this.GetQueryParams());
+      const params = this.GetQueryParams();
+      this.applyScopeParams(params);
+      this.completeOverride = OwnerProspectsDashboardComponent.completeFromParam(params['complete']);
     }
     this.initialized = true;
   }
@@ -887,7 +1251,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       }
     }
     this.sortByScope.Marion = this.readSortPref(OwnerProspectsDashboardComponent.SORT_KEY) ?? this.sortByScope.Marion;
-    this.sortByScope.Statewide = this.readSortPref(OwnerProspectsDashboardComponent.SORT_KEY_STATEWIDE) ?? this.sortByScope.Statewide;
+    const statewide = this.readSortPref(OwnerProspectsDashboardComponent.SORT_KEY_STATEWIDE);
+    // The fixed-years table removed "AV prior (paired)" and the newest-pair YoY: a saved sort on either restores as YoY.
+    this.sortByScope.Statewide = statewide ? { key: remapStatewideSortKey(statewide.key), dir: statewide.dir } : this.sortByScope.Statewide;
     this.sortKey = this.sortByScope[this.Scope].key;
     this.sortDir = this.sortByScope[this.Scope].dir;
   }
@@ -938,6 +1304,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** Start a load: newest-wins sequence, reset per-load state, cancel any in-flight search. */
   private beginLoad(): number {
     const seq = ++this.loadSeq;
+    this.parcelYearsCache.clear();
+    this.parcelYearsErrors.clear();
     this.IsLoading = true;
     this.LoadError = null;
     this.RowCapHit = false;
@@ -959,6 +1327,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** Adopt the picked run. */
   private applyRun(runRow: Record<string, unknown>): void {
     this.latestRunId = String(runRow['ID']);
+    this.DisplayYears = displayYears(runRow);
     this.CountyRollup = mapCountyRollup(runRow);
     this.runByCountyJSON = typeof runRow['ByCountyJSON'] === 'string' ? runRow['ByCountyJSON'] : null;
   }
@@ -966,7 +1335,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** Statewide: the county lookup (once per run), then the owners page; the parcel cache is per page. */
   private async loadStatewidePage(data: OwnerProspectsDataAccess): Promise<OwnersResult> {
     if (this.countyOptionsRunId !== this.latestRunId) {
-      const lookup = await data.LoadCountyLookup(this.runByCountyJSON);
+      const lookup = await data.LoadCountyLookup(this.runByCountyJSON, this.DisplayYears);
       this.CountyOptions = lookup.Options;
       this.slugByCounty = lookup.Slugs;
       this.nameByCounty = lookup.Names;
@@ -978,6 +1347,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** Adopt a loaded owner set: company subset, summary, tier basis/options/counts, county banner. */
   private applyOwners(owners: OwnerRow[]): void {
+    annotateOwnerYears(owners, this.DisplayYears);
     this.AllOwners = owners;
     this.CompanyOwners = owners.filter((o) => o.kind === 'Company');
     this.Summary = computeOwnerProspectsSummary(this.CompanyOwners);
@@ -987,7 +1357,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       this.filters = { ...this.filters, tier: 'all' };
     }
     this.TierCounts = this.countTiers(this.CompanyOwners);
-    this.CountyBanner = this.IsStatewide ? countyBanner(this.runByCountyJSON, this.CountyNumber) : null;
+    this.CountyBanner = this.IsStatewide && this.DisplayYears ? countyYearBanner(this.runByCountyJSON, this.CountyNumber, this.DisplayYears) : null;
   }
 
   /** Drop the loaded run (scope switch to a scope with no/ambiguous run) and show why. */
@@ -996,6 +1366,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     this.latestRunId = null;
     this.CountyRollup = null;
     this.CountyBanner = null;
+    this.DisplayYears = null;
     this.AllOwners = [];
     this.CompanyOwners = [];
     this.VisibleRows = [];
@@ -1030,7 +1401,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   private recomputeVisibleRows(): void {
     // Statewide: the opportunity filter would act on savings the table blanks, so it is off there.
     const f = this.IsStatewide ? { ...this.filters, minOppPerYear: 0 } : this.filters;
-    this.VisibleRows = buildVisibleRows(this.SearchOwners ?? this.CompanyOwners, f, this.sortKey, this.sortDir);
+    const pool = this.SearchOwners ?? this.CompanyOwners;
+    this.VisibleRows = buildVisibleRows(pool, f, this.sortKey, this.sortDir, this.CompleteOnly);
+    this.IncompleteHiddenCount = this.CompleteOnly ? filterOwnerRows(pool, f).length - this.VisibleRows.length : 0;
     this.cdr.markForCheck();
   }
 
@@ -1064,6 +1437,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
         scope: this.Scope,
         county: this.CountyName,
         tierBasis: this.RunTierBasis ?? effectiveTierBasis(null, this.Scope),
+        displayYears: this.DisplayYears,
+        completeOnly: this.IsStatewide ? this.CompleteOnly : null,
       }),
     );
     this.navigationService.SetAgentClientTools(this, this.buildAgentTools());
@@ -1101,6 +1476,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** FilterOwnerProspects handler body — validates each provided key, merges into {@link filters}, re-filters. */
   private applyAgentFilters(params: Record<string, unknown>): AgentToolResult {
+    const complete = this.checkAgentCompleteOnly(params['completeOnly']);
+    if (complete) return complete;
     const next: OwnerProspectsFilters = { ...this.filters };
     if (params['tier'] !== undefined) {
       const v = validateEnumParam(params['tier'], ['all', 'Prime', 'Strong', 'Moderate', 'A', 'B', 'C', 'D'] as const, 'tier');
@@ -1129,8 +1506,23 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       next.hasAppealHistory = params['hasAppealHistory'];
     }
     this.filters = next;
+    if (typeof params['completeOnly'] === 'boolean') this.onCompleteOnlyChange(params['completeOnly']);
     this.afterFilterChange();
     return { Success: true };
+  }
+
+  /**
+   * `completeOnly` is a Statewide filter: a non-boolean is invalid; in the Marion scope it is refused and NOT stored
+   * (nothing in the call is applied), so the agent never believes a filter is active that the screen does not show.
+   */
+  private checkAgentCompleteOnly(v: unknown): AgentToolResult | null {
+    if (v === undefined) return null;
+    if (typeof v !== 'boolean') return { Success: false, ErrorMessage: 'completeOnly must be a boolean.' };
+    if (this.IsStatewide) return null;
+    return {
+      Success: false,
+      ErrorMessage: 'completeOnly (Complete YoY only) applies to the Statewide scope only — it was not stored and no filter was changed. Switch to Statewide first, or omit completeOnly.',
+    };
   }
 
   /** SortOwnerProspects handler body — validates key + direction, sets sort, persists, re-filters, re-publishes. */
@@ -1143,7 +1535,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     if (dir !== 'asc' && dir !== 'desc') {
       return { Success: false, ErrorMessage: `Invalid direction "${String(dir)}". Expected 'asc' or 'desc'.` };
     }
-    this.sortKey = key as OwnerSortKey;
+    // Statewide: a column the fixed-years table removed sorts as the fixed-pair YoY, as a saved preference does (M7).
+    this.sortKey = this.IsStatewide ? remapStatewideSortKey(key as OwnerSortKey) : (key as OwnerSortKey);
     this.sortDir = dir === 'asc' ? 1 : -1;
     this.persistSort();
     this.recomputeVisibleRows();
@@ -1172,7 +1565,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       {
         Name: 'FilterOwnerProspects',
         Description:
-          "Filter the owners table. tier: 'all' | 'Prime' | 'Strong' | 'Moderate' (Marion scope, savings tiers) | 'A' | 'B' | 'C' | 'D' (Statewide scope, AV tiers). rep: '' (any) | 'none' (no rep on record) | 'has' (represented). typeGroup: a dominant-property-type label (empty string clears). minOppPerYear: minimum modeled opportunity/yr at ask. hasAppealHistory: true keeps only owners with a prior appeal. Omitted keys are left unchanged.",
+          "Filter the owners table. tier: 'all' | 'Prime' | 'Strong' | 'Moderate' (Marion scope, savings tiers) | 'A' | 'B' | 'C' | 'D' (Statewide scope, AV tiers). rep: '' (any) | 'none' (no rep on record) | 'has' (represented). typeGroup: a dominant-property-type label (empty string clears). minOppPerYear: minimum modeled opportunity/yr at ask. hasAppealHistory: true keeps only owners with a prior appeal. completeOnly (Statewide): true keeps only owners whose YoY covers at least 90% of their newest display-year AV (default: on when sorted by YoY). Omitted keys are left unchanged.",
         ParameterSchema: {
           type: 'object',
           properties: {
@@ -1181,6 +1574,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
             typeGroup: { type: 'string' },
             minOppPerYear: { type: 'number' },
             hasAppealHistory: { type: 'boolean' },
+            completeOnly: { type: 'boolean' },
           },
         },
         Handler: async (params) => this.applyAgentFilters(params),
@@ -1216,8 +1610,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
           const row = this.resolveOwner(ref);
           if (!row) return this.ownerNotFound(ref);
           this.SelectedOwnerId = row.id;
-          // Statewide parcels load on open (final-review M6): the same path a click takes.
-          void this.ensureParcels(row);
+          // Parcels (Statewide) and the year figures load on open (final-review M6): the same path a click takes.
+          this.openOwnerData(row);
           this.publishAgentContext();
           this.cdr.markForCheck();
           return { Success: true };
