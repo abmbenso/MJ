@@ -436,7 +436,7 @@ describe('final-review fix round: paired base, bare-year PairYears, prior placeh
     expect(statewideThesis(walmart, null)).toBe(
       '21 parcels in 2 counties, $138,333,200 AV (+7.2% YoY on paired parcels). AV tier A. '
       + 'Opportunity = Marion parcels only: ~$162,164/yr at ask (EstimatedOpportunityAtAsk covers those parcels, not the portfolio). '
-      + 'Rep status (Marion parcels only): Represented by INTEGRITY TAX CONSULTING. 1 attached parcel carry a DLGF-placeholder AV (no county document).',
+      + 'Rep status (Marion parcels only): Represented by INTEGRITY TAX CONSULTING. 1 attached parcel carries a DLGF-placeholder AV (no county document).',
     );
     const lake = owner({ parcelCount: 1, countyCount: 1, totalAV: 5, avYoYPct: null, tier: 'D', estSavingsAtAsk: null,
       repStatus: 'No rep data for this county', byCounty: slices({ '45': [1, 0] }), parcels: [] });

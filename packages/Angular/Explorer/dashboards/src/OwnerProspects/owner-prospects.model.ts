@@ -1048,7 +1048,7 @@ export function statewideThesis(row: OwnerRow, parcelCapNote: string | null): st
       + ' (EstimatedOpportunityAtAsk covers those parcels, not the portfolio).';
   const rep = repIsMarionOnly(row, 'AV') ? `Rep status (Marion parcels only): ${row.repStatus}.` : `Rep status: ${row.repStatus}.`;
   const ph = row.parcels.filter((p) => p.isPlaceholder).length;
-  const phNote = ph ? ` ${ph} attached parcel${ph === 1 ? '' : 's'} carry a DLGF-placeholder AV (no county document).` : '';
+  const phNote = ph ? ` ${ph} attached parcel${ph === 1 ? ' carries' : 's carry'} a DLGF-placeholder AV (no county document).` : '';
   const capped = parcelCapNote ? ` Parcels attached: ${parcelCapNote} of ${row.parcelCount}.` : '';
   return `${row.parcelCount} parcels in ${counties} ${counties === 1 ? 'county' : 'counties'}, $${av} AV (${yoy}). `
     + `AV tier ${row.tier ?? '—'}.${opp} ${rep}${phNote}${capped}`;
