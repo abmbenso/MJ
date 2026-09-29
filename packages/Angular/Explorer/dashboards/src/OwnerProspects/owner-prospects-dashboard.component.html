@@ -35,7 +35,7 @@
             <span class="county-item">
               <span>{{ option.Label }}</span>
               @if (option.Chip) {
-                <span class="year-chip" [class.year-chip--tba]="option.Chip.endsWith('TBA')" data-testid="county-chip">{{ option.Chip }}</span>
+                <span class="year-chip" [class.year-chip--tba]="option.Chip.endsWith(TbaMark)" data-testid="county-chip">{{ option.Chip }}</span>
               }
             </span>
           </ng-template>
@@ -141,13 +141,13 @@
         <div class="ci-banner__head">
           {{ CountyBannerTitle }} — commercial &amp; industrial assessed value, {{ DisplayYears[0] }} and {{ DisplayYears[1] }}
           @if (CountyBanner.chip) {
-            <span class="year-chip" [class.year-chip--tba]="CountyBanner.chip.endsWith('TBA')" data-testid="county-banner-chip">{{ CountyBanner.chip }}</span>
+            <span class="year-chip" [class.year-chip--tba]="CountyBanner.chip.endsWith(TbaMark)" data-testid="county-banner-chip">{{ CountyBanner.chip }}</span>
           }
         </div>
         <div class="ci-banner__row">
           <div class="ci-banner__cell">
             <span class="ci-banner__yr">Σ {{ DisplayYears[0] }}</span>
-            <span class="ci-banner__av" data-testid="county-banner-y1">{{ CountyBanner.y1 ? money(CountyBanner.y1.av) : '—' }}</span>
+            <span class="ci-banner__av" data-testid="county-banner-y1">{{ CountyBanner.y1 ? money(CountyBanner.y1.av) : NoFigureMark }}</span>
             @if (CountyBanner.y1; as f) {
               <span class="ci-banner__sub">{{ f.parcels | number }} parcels · roll {{ f.roll | number }}</span>
             }
@@ -155,7 +155,7 @@
           <div class="ci-banner__arrow" aria-hidden="true">&rarr;</div>
           <div class="ci-banner__cell">
             <span class="ci-banner__yr">Σ {{ DisplayYears[1] }}</span>
-            <span class="ci-banner__av" data-testid="county-banner-y2">{{ CountyBanner.y2 ? money(CountyBanner.y2.av) : 'TBA' }}</span>
+            <span class="ci-banner__av" data-testid="county-banner-y2">{{ CountyBanner.y2 ? money(CountyBanner.y2.av) : TbaMark }}</span>
             @if (CountyBanner.y2; as f) {
               <span class="ci-banner__sub">{{ f.parcels | number }} parcels · roll {{ f.roll | number }}</span>
             } @else {
@@ -290,8 +290,8 @@
                     @let y1 = yearValue(row, 0);
                     @let y2 = yearValue(row, 1);
                     @let pct = yoyValue(row);
-                    <td class="num" data-testid="av-year1" [class.gap]="y1 === '—'" [attr.title]="yearTitle(row, 0)">{{ yearText(y1) }}</td>
-                    <td class="num" data-testid="av-year2" [class.gap]="y2 === 'TBA'" [attr.title]="yearTitle(row, 1)">{{ yearText(y2) }}</td>
+                    <td class="num" data-testid="av-year1" [class.gap]="y1 === NoFigureMark" [attr.title]="yearTitle(row, 0)">{{ yearText(y1) }}</td>
+                    <td class="num" data-testid="av-year2" [class.gap]="y2 === TbaMark" [attr.title]="yearTitle(row, 1)">{{ yearText(y2) }}</td>
                     <td class="num" data-testid="yoy-pair" [attr.title]="yoyTitle(row)">
                       <span class="yoy" [class.yoy--up]="pct != null && pct > 0" [class.yoy--down]="pct != null && pct < 0">{{ yoy(pct) }}</span>
                     </td>

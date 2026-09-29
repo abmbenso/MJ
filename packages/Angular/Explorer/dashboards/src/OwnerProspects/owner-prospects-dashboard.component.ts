@@ -47,9 +47,12 @@ import {
   ParcelYearsMap,
   displayYears,
   annotateOwnerYears,
-  yearCell,
-  yoyCell,
   statusCell,
+  TBA_MARK,
+  NO_FIGURE_MARK,
+  YOY_MATERIAL_PRIOR,
+  remapStatewideSortKey,
+  filterOwnerRows,
   yearTooltip,
   countyYearBanner,
   MARION_PARCELS_MARKER,
@@ -284,9 +287,14 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** An owner's cell for display year 0 (older) or 1 (newest): its Σ AV, or `—` / `TBA`. */
   public yearValue(row: OwnerRow, which: 0 | 1): YearCellValue {
-    const y = this.DisplayYears;
-    return y ? yearCell(row, y[which], y) : '—';
+    // Reads the fields annotateOwnerYears stamped on load — no per-render recomputation of the county slices.
+    const v = which === 0 ? row.avYear1 : row.avYear2;
+    return v ?? (which === 1 ? TBA_MARK : NO_FIGURE_MARK);
   }
+
+  /** Gap markers for the templates (compared against, never retyped). */
+  public readonly TbaMark = TBA_MARK;
+  public readonly NoFigureMark = NO_FIGURE_MARK;
 
   /** Cell text: money for a figure, the gap marker verbatim. */
   public yearText(v: YearCellValue): string {
@@ -301,10 +309,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** The owner's YoY over its parcels with both display years; null = `—`. */
   public yoyValue(row: OwnerRow): number | null {
-    const y = this.DisplayYears;
-    if (!y) return null;
-    const v = yoyCell(row, y);
-    return typeof v === 'number' ? v : null;
+    return row.yoyPair ?? null;
   }
 
   /** The Assessment status column. */
@@ -318,7 +323,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const n = row.completeness;
     if (!y) return null;
     const share = n == null ? 'no parcel has both years' : `covers ${Math.round(n * 100)}% of the ${y[1]} AV`;
-    return `over parcels with both ${y[0]} and ${y[1]} figures (DLGF roll figures included) — ${share}`;
+    const base = row.avPriorBoth;
+    const small = base != null && base < YOY_MATERIAL_PRIOR ? ` — small base: paired prior ${formatMoneyOrDash(base)}` : '';
+    return `over parcels with both ${y[0]} and ${y[1]} figures (DLGF roll figures included) — ${share}${small}`;
   }
 
   /** A dropdown item (the template context is untyped) as its label + chip — the "All counties" default has no chip. */
@@ -855,7 +862,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const yoySign = yoyPct >= 0 ? '+' : '';
     if (this.basisOf(row) === 'AV') {
       // Statewide: every Marion-only figure carries its scope on the record (final-review I5/I3).
-      return statewideThesis(row, this.ParcelsCappedFor(row) ? PARCEL_CAP_NOTE : null);
+      return statewideThesis(row, this.ParcelsCappedFor(row) ? PARCEL_CAP_NOTE : null, this.DisplayYears);
     }
     const opp = Math.round(row.estSavingsAtAsk ?? 0).toLocaleString('en-US');
     return (
@@ -1022,7 +1029,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       }
     }
     this.sortByScope.Marion = this.readSortPref(OwnerProspectsDashboardComponent.SORT_KEY) ?? this.sortByScope.Marion;
-    this.sortByScope.Statewide = this.readSortPref(OwnerProspectsDashboardComponent.SORT_KEY_STATEWIDE) ?? this.sortByScope.Statewide;
+    const statewide = this.readSortPref(OwnerProspectsDashboardComponent.SORT_KEY_STATEWIDE);
+    // The fixed-years table removed "AV prior (paired)" and the newest-pair YoY: a saved sort on either restores as YoY.
+    this.sortByScope.Statewide = statewide ? { key: remapStatewideSortKey(statewide.key), dir: statewide.dir } : this.sortByScope.Statewide;
     this.sortKey = this.sortByScope[this.Scope].key;
     this.sortDir = this.sortByScope[this.Scope].dir;
   }
@@ -1172,7 +1181,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const f = this.IsStatewide ? { ...this.filters, minOppPerYear: 0 } : this.filters;
     const pool = this.SearchOwners ?? this.CompanyOwners;
     this.VisibleRows = buildVisibleRows(pool, f, this.sortKey, this.sortDir, this.CompleteOnly);
-    this.IncompleteHiddenCount = this.CompleteOnly ? buildVisibleRows(pool, f, this.sortKey, this.sortDir).length - this.VisibleRows.length : 0;
+    this.IncompleteHiddenCount = this.CompleteOnly ? filterOwnerRows(pool, f).length - this.VisibleRows.length : 0;
     this.cdr.markForCheck();
   }
 
@@ -1245,6 +1254,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** FilterOwnerProspects handler body — validates each provided key, merges into {@link filters}, re-filters. */
   private applyAgentFilters(params: Record<string, unknown>): AgentToolResult {
+    const complete = this.checkAgentCompleteOnly(params['completeOnly']);
+    if (complete) return complete;
     const next: OwnerProspectsFilters = { ...this.filters };
     if (params['tier'] !== undefined) {
       const v = validateEnumParam(params['tier'], ['all', 'Prime', 'Strong', 'Moderate', 'A', 'B', 'C', 'D'] as const, 'tier');
@@ -1272,15 +1283,24 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       }
       next.hasAppealHistory = params['hasAppealHistory'];
     }
-    if (params['completeOnly'] !== undefined && typeof params['completeOnly'] !== 'boolean') {
-      return { Success: false, ErrorMessage: 'completeOnly must be a boolean.' };
-    }
     this.filters = next;
-    if (typeof params['completeOnly'] === 'boolean') {
-      this.onCompleteOnlyChange(params['completeOnly']);
-    }
+    if (typeof params['completeOnly'] === 'boolean') this.onCompleteOnlyChange(params['completeOnly']);
     this.afterFilterChange();
     return { Success: true };
+  }
+
+  /**
+   * `completeOnly` is a Statewide filter: a non-boolean is invalid; in the Marion scope it is refused and NOT stored
+   * (nothing in the call is applied), so the agent never believes a filter is active that the screen does not show.
+   */
+  private checkAgentCompleteOnly(v: unknown): AgentToolResult | null {
+    if (v === undefined) return null;
+    if (typeof v !== 'boolean') return { Success: false, ErrorMessage: 'completeOnly must be a boolean.' };
+    if (this.IsStatewide) return null;
+    return {
+      Success: false,
+      ErrorMessage: 'completeOnly (Complete YoY only) applies to the Statewide scope only — it was not stored and no filter was changed. Switch to Statewide first, or omit completeOnly.',
+    };
   }
 
   /** SortOwnerProspects handler body — validates key + direction, sets sort, persists, re-filters, re-publishes. */

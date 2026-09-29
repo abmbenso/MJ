@@ -106,13 +106,13 @@
               <td>{{ p.typeGroup ?? '—' }}</td>
               @let v1 = yearCell(r, 0);
               @let v2 = yearCell(r, 1);
-              <td class="num" data-testid="pt-year1" [class.pt__gap]="v1 === '—'" [attr.title]="yearTitle(r, 0)">
+              <td class="num" data-testid="pt-year1" [class.pt__gap]="v1 === NoFigureMark" [attr.title]="yearTitle(r, 0)">
                 {{ yearText(v1) }}
                 @if (r.y1?.roll) {
                   <span class="pt__pill" data-testid="roll-pill">roll</span>
                 }
               </td>
-              <td class="num" data-testid="pt-year2" [class.pt__gap]="v2 === 'TBA'" [attr.title]="yearTitle(r, 1)">
+              <td class="num" data-testid="pt-year2" [class.pt__gap]="v2 === TbaMark" [attr.title]="yearTitle(r, 1)">
                 {{ yearText(v2) }}
                 @if (r.y2?.roll) {
                   <span class="pt__pill" data-testid="roll-pill">roll</span>
@@ -166,13 +166,13 @@
               <td>{{ p.typeGroup ?? '—' }}</td>
               @let v1 = yearCell(r, 0);
               @let v2 = yearCell(r, 1);
-              <td class="num" data-testid="pt-year1" [class.pt__gap]="v1 === '—'" [attr.title]="yearTitle(r, 0)">
+              <td class="num" data-testid="pt-year1" [class.pt__gap]="v1 === NoFigureMark" [attr.title]="yearTitle(r, 0)">
                 {{ yearText(v1) }}
                 @if (r.y1?.roll) {
                   <span class="pt__pill" data-testid="roll-pill">roll</span>
                 }
               </td>
-              <td class="num" data-testid="pt-year2" [class.pt__gap]="v2 === 'TBA'" [attr.title]="yearTitle(r, 1)">
+              <td class="num" data-testid="pt-year2" [class.pt__gap]="v2 === TbaMark" [attr.title]="yearTitle(r, 1)">
                 {{ yearText(v2) }}
                 @if (r.y2?.roll) {
                   <span class="pt__pill" data-testid="roll-pill">roll</span>

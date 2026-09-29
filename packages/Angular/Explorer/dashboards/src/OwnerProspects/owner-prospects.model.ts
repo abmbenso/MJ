@@ -205,6 +205,8 @@ export interface OwnerRow {
   yoyPair?: number | null;
   /** Share of the newest display-year AV in parcels with both years (see {@link ownerYearSummary}); null = no pair. */
   completeness?: number | null;
+  /** Σ prior-year AV of the YoY base (the pair's avPriorBoth); drives the ranking's materiality floor. */
+  avPriorBoth?: number | null;
 }
 
 /** County-wide C&I 2025→2026 assessed-value rollup for the banner. */
@@ -414,10 +416,10 @@ export function sortOwnerRows(rows: OwnerRow[], key: OwnerSortKey, dir: 1 | -1):
       if (a == null) return 1; // nulls last, both directions
       if (b == null) return -1;
       if (key === 'yoyPair') {
-        // Completeness-first: owners whose YoY covers their portfolio rank ahead of the rest, both directions.
-        const ca = isCompleteRow(x.r);
-        const cb = isCompleteRow(y.r);
-        if (ca !== cb) return ca ? -1 : 1;
+        // Three tiers, both directions: complete with a material base, complete on a small base, incomplete.
+        const ta = yoyRankTier(x.r);
+        const tb = yoyRankTier(y.r);
+        if (ta !== tb) return ta - tb;
       }
       if (isString) return dir * String(a).localeCompare(String(b)) || x.i - y.i;
       return dir * ((a as number) - (b as number)) || x.i - y.i;
@@ -1021,21 +1023,30 @@ export function parcelVerifyLink(
  * record (final-review I5/I3): the opportunity (`EstimatedOpportunityAtAsk` keeps the Marion-parcels figure) and a
  * Marion-only rep status; a DLGF-placeholder AV among the attached parcels is noted (no snapshot note column).
  */
-export function statewideThesis(row: OwnerRow, parcelCapNote: string | null): string {
-  const av = Math.round(row.totalAV2026 ?? row.totalAV ?? 0).toLocaleString('en-US');
+export function statewideThesis(row: OwnerRow, parcelCapNote: string | null, years: DisplayYears | null = null): string {
   const counties = row.countyCount ?? 1;
-  const pct = row.avYoYPct ?? 0;
-  const yoy = row.avYoYPct == null ? 'no prior-year pair' : `${pct >= 0 ? '+' : ''}${pct}% YoY on paired parcels`;
   const opp = row.estSavingsAtAsk == null
     ? ' Opportunity: none claimed — no valuation analysis on this owner\'s parcels.'
     : ` Opportunity = Marion parcels only: ~$${Math.round(row.estSavingsAtAsk).toLocaleString('en-US')}/yr at ask`
       + ' (EstimatedOpportunityAtAsk covers those parcels, not the portfolio).';
   const rep = repIsMarionOnly(row, 'AV') ? `Rep status (Marion parcels only): ${row.repStatus}.` : `Rep status: ${row.repStatus}.`;
-  const ph = row.parcels.filter((p) => p.isPlaceholder).length;
-  const phNote = ph ? ` ${ph} attached parcel${ph === 1 ? ' carries' : 's carry'} a DLGF-placeholder AV (no county document).` : '';
   const capped = parcelCapNote ? ` Parcels attached: ${parcelCapNote} of ${row.parcelCount}.` : '';
-  return `${row.parcelCount} parcels in ${counties} ${counties === 1 ? 'county' : 'counties'}, $${av} AV (${yoy}). `
-    + `AV tier ${row.tier ?? '—'}.${opp} ${rep}${phNote}${capped}`;
+  return `${row.parcelCount} parcels in ${counties} ${counties === 1 ? 'county' : 'counties'}. ${thesisYears(row, years)} `
+    + `AV tier ${row.tier ?? '—'}.${opp} ${rep}${capped}`;
+}
+
+/** The thesis' AV sentence, with its years: "AV 2026 $X (n of m parcels); AV 2025 $Y. k parcels TBA for 2026. YoY …". */
+function thesisYears(row: OwnerRow, years: DisplayYears | null): string {
+  if (!years) return 'AV by assessment year: not on this run.';
+  const [y1, y2] = years;
+  const s = ownerYearSummary(row, years);
+  const dollars = (n: number | null): string => (n == null ? NO_FIGURE_MARK : `$${Math.round(n).toLocaleString('en-US')}`);
+  const n2 = s.years[String(y2)]?.parcels ?? 0;
+  const av2 = s.avYear2 == null ? `AV ${y2} ${TBA_MARK} (${count(row.parcelCount)})` : `AV ${y2} ${dollars(s.avYear2)} (${n2.toLocaleString('en-US')} of ${row.parcelCount.toLocaleString('en-US')} parcels)`;
+  const tba = row.parcelCount - n2;
+  const tbaNote = s.hasYearData && tba > 0 && s.avYear2 != null ? ` ${count(tba)} ${TBA_MARK} for ${y2}.` : '';
+  const yoy = s.yoyPct == null ? ` No ${y1}→${y2} YoY.` : ` YoY ${s.yoyPct > 0 ? '+' : ''}${s.yoyPct}% over parcels with both years.`;
+  return `${av2}; AV ${y1} ${dollars(s.avYear1)}.${tbaNote}${yoy}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1230,6 +1241,27 @@ export function isCompleteRow(row: Pick<OwnerRow, 'completeness'>): boolean {
   return row.completeness != null && row.completeness >= COMPLETE_YOY_THRESHOLD;
 }
 
+/**
+ * The YoY ranking's materiality floor (ruling, 2026-09-28 fix round 1): a complete owner whose paired prior-year AV
+ * is below this ranks after the complete owners above it — its % is shown, never hidden, but a percentage on a tiny
+ * base (a land line turned into a building) does not head the list.
+ */
+export const YOY_MATERIAL_PRIOR = 100_000;
+
+/** 0 = complete with a material base, 1 = complete on a small base, 2 = incomplete. */
+export function yoyRankTier(row: Pick<OwnerRow, 'completeness' | 'avPriorBoth'>): 0 | 1 | 2 {
+  if (!isCompleteRow(row)) return 2;
+  return (row.avPriorBoth ?? 0) >= YOY_MATERIAL_PRIOR ? 0 : 1;
+}
+
+/**
+ * A saved Statewide sort on a column the fixed-years table removed (`avPrior` "AV prior (paired)", `avYoYPct` the
+ * per-parcel-newest YoY) restores as the fixed-pair YoY; every other key is kept.
+ */
+export function remapStatewideSortKey(key: OwnerSortKey): OwnerSortKey {
+  return key === 'avPrior' || key === 'avYoYPct' ? 'yoyPair' : key;
+}
+
 /** Stamp the sortable display-year fields on each row (mutates: the rows are the component's view models). */
 export function annotateOwnerYears(rows: OwnerRow[], years: DisplayYears | null): void {
   for (const r of rows) {
@@ -1238,6 +1270,7 @@ export function annotateOwnerYears(rows: OwnerRow[], years: DisplayYears | null)
     r.avYear2 = s?.avYear2 ?? null;
     r.yoyPair = s?.yoyPct ?? null;
     r.completeness = s?.completeness ?? null;
+    r.avPriorBoth = s?.pair && s.pair.parcelsBoth > 0 ? s.pair.avPriorBoth : null;
   }
 }
 
@@ -1374,7 +1407,8 @@ export function buildParcelViewRows(
     const read = Object.keys(figs).map(Number);
     const newest = Math.max(p.currentYear ?? -Infinity, ...read);
     return {
-      parcel: p, loaded: map != null && years != null, y1, y2, yoyPct: parcelYoY(y1, y2),
+      // A parcel with no ParcelID cannot be matched to a figure: not loaded, so no TBA / — is ever claimed for it.
+      parcel: p, loaded: map != null && years != null && !!p.parcelId, y1, y2, yoyPct: parcelYoY(y1, y2),
       newestYear: Number.isFinite(newest) ? newest : null,
       countyName: p.countyNumber != null ? (countyNames[p.countyNumber] ?? `County ${p.countyNumber}`) : null,
     };

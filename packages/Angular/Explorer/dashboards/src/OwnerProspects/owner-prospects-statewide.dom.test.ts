@@ -328,7 +328,7 @@ describe('Owner Prospects statewide scope (DOM)', () => {
     // YoY sort (the default statewide sort is AV): Complete YoY only turns on by default — the 2026-TBA Allen owner drops out.
     h.component.onSortColumn('yoyPair'); // a fresh numeric column starts descending
     expect(h.component.CompleteOnly).toBe(true);
-    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['l', 'w']);
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w', 'l']); // fix round 1: Lake's $5,700 base ranks after Walmart
   });
 
   it('Marion stays as it was: Savings tier header, money in the savings cells, "— open" rep cell', async () => {
@@ -870,19 +870,19 @@ describe('Owner Prospects — fixed assessment years (years-export plan, Task 2)
     h.component.onSortColumn('yoyPair');
     h.fixture.detectChanges();
     expect(h.component.CompleteOnly).toBe(true);
-    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['l', 'w']); // Review Focus 2: the 2026-TBA owner is excluded
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w', 'l']); // Review Focus 2: the 2026-TBA owner is excluded
     expect(t(query(h.fixture, '[data-testid="complete-note"]'))).toBe('on (default for the YoY sort) · 1 owner without a complete YoY hidden');
 
     h.component.onCompleteOnlyChange(false); // the user turns it off: included, ranked after the complete owners
     h.fixture.detectChanges();
-    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['l', 'w', 'a']);
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w', 'l', 'a']);
     expect(h.pushed.at(-1)).toEqual({ scope: 'Statewide', county: null, complete: '0' });
     expect(t(query(h.fixture, '[data-testid="complete-note"]'))).toBe('off');
 
     const deliver = (h.component as unknown as { OnQueryParamsChanged(p: Record<string, string>, s: 'popstate'): void }).OnQueryParamsChanged.bind(h.component);
     deliver({ scope: 'Statewide', complete: '1' }, 'popstate');
     expect(h.component.CompleteOnly).toBe(true);
-    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['l', 'w']);
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w', 'l']);
     deliver({ scope: 'Statewide' }, 'popstate'); // no param → the default for the YoY sort (on)
     expect(h.component.CompleteOnly).toBe(true);
     h.component.onSortColumn('avCurrent');
@@ -966,5 +966,60 @@ describe('Owner Prospects — fixed assessment years (years-export plan, Task 2)
     const read = h.state.calls.find((c) => c.EntityName === 'Parcel Year Headlines');
     expect(read?.ExtraFilter).toContain("OwnerPortfolioID = 'm'");
     expect(read?.ExtraFilter).toContain('AssessmentYear IN (2025, 2026)');
+  });
+});
+
+describe('Owner Prospects — years fix round 1', () => {
+  it('a saved Statewide sort on a removed column (avPrior / avYoYPct) restores as the fixed-pair YoY', async () => {
+    vi.spyOn(UserInfoEngine.Instance, 'GetSetting').mockImplementation((k: string) =>
+      k === 'mj.ownerProspects.sort.statewide.v1' ? JSON.stringify({ key: 'avPrior', dir: -1 }) : undefined);
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    expect(h.component.CompleteOnly).toBe(true); // the YoY sort is active, so its default applies
+    expect(query(h.fixture, '[data-testid="yoy-header"]')?.getAttribute('data-sort')).toBe('desc');
+  });
+
+  it('the YoY ranking puts a complete owner on a small base after the material ones; its tooltip names the base', async () => {
+    const BIG = statewideOwner({
+      ID: 'b', Label: 'Big Base LLC', PrimaryCountyNumber: 45, CountyCount: 1, AVCurrent: 1_100_000, TotalAV: 1_100_000,
+      ByCountyJSON: JSON.stringify({ '45': { parcels: 1, avCurrent: 1_100_000, years: { '2025': fig(1_000_000, 1), '2026': fig(1_100_000, 1) }, pair: pair(1, 1_000_000, 1_100_000) } }),
+    });
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = [WALMART, LAKE_ONLY, ALLEN_ONLY, BIG];
+    h.fixture.detectChanges();
+    await settle(h);
+    h.component.onSortColumn('yoyPair');
+    h.fixture.detectChanges();
+    // Lake Only (+47,787.7% on a $5,700 base) no longer heads the list.
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w', 'b', 'l']);
+    const lake = queryAll(h.fixture, 'tbody tr').find((tr) => tr.textContent?.includes('Lake Only'));
+    expect(lake?.querySelector('[data-testid="yoy-pair"]')?.textContent?.trim()).toBe('+47787.7%'); // the % still shows
+    expect(lake?.querySelector('[data-testid="yoy-pair"]')?.getAttribute('title')).toContain('small base: paired prior $5,700');
+    const walmart = queryAll(h.fixture, 'tbody tr').find((tr) => tr.textContent?.includes('Walmart'));
+    expect(walmart?.querySelector('[data-testid="yoy-pair"]')?.getAttribute('title')).not.toContain('small base');
+    expect(h.component.IncompleteHiddenCount).toBe(1);
+  });
+
+  it('FilterOwnerProspects with completeOnly in the Marion scope says Statewide only and stores nothing', async () => {
+    const h = mount({});
+    h.fixture.detectChanges();
+    await settle(h);
+    type Tool = { Name: string; Handler: (p: Record<string, unknown>) => Promise<{ Success: boolean; ErrorMessage?: string }> };
+    const tools = (h.component as unknown as { buildAgentTools(): Tool[] }).buildAgentTools();
+    const filter = tools.find((t) => t.Name === 'FilterOwnerProspects') as Tool;
+    const before = h.pushed.length;
+    const res = await filter.Handler({ completeOnly: true, tier: 'Prime' });
+    expect(res.Success).toBe(false);
+    expect(res.ErrorMessage).toContain('Statewide scope only');
+    expect(res.ErrorMessage).toContain('not stored');
+    expect(h.component.TierFilter).toBe('all'); // nothing in the call was applied
+    expect(h.pushed.length).toBe(before);
+    h.component.onScopeChange('Statewide');
+    await settle(h);
+    expect(h.component.CompleteOnly).toBe(false); // the refused choice did not carry over
+    const ok = await filter.Handler({ completeOnly: true });
+    expect(ok.Success).toBe(true);
+    expect(h.component.CompleteOnly).toBe(true);
   });
 });

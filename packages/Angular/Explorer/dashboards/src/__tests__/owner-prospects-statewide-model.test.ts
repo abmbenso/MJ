@@ -55,6 +55,9 @@ import {
   sortParcels,
   exportRows,
   exportParcelRows,
+  YOY_MATERIAL_PRIOR,
+  yoyRankTier,
+  remapStatewideSortKey,
 } from '../OwnerProspects/owner-prospects.model';
 
 /**
@@ -351,16 +354,16 @@ describe('final-review fix round: rep scope, thesis', () => {
     expect(repIsMarionOnly(owner({ repStatus: 'No rep data for this county', byCounty: slices({ '45': [1, 1] }) }), 'AV')).toBe(false);
   });
 
-  it('statewideThesis scopes the opportunity and a Marion-only rep; notes placeholder parcels; no figure without analysis', () => {
+  it('statewideThesis scopes the opportunity and a Marion-only rep; no figure without analysis', () => {
     const walmart = owner({
       label: 'Walmart Inc.', parcelCount: 21, countyCount: 2, totalAV: 138_333_200, avYoYPct: 7.2, tier: 'A',
       estSavingsAtAsk: 162_164.47, repStatus: 'Represented by INTEGRITY TAX CONSULTING', byCounty: slices({ '45': [4, 4], '49': [17, 17] }),
       parcels: [{ isPlaceholder: true } as OwnerParcelRow, { isPlaceholder: false } as OwnerParcelRow],
     });
     expect(statewideThesis(walmart, null)).toBe(
-      '21 parcels in 2 counties, $138,333,200 AV (+7.2% YoY on paired parcels). AV tier A. '
+      '21 parcels in 2 counties. AV by assessment year: not on this run. AV tier A. '
       + 'Opportunity = Marion parcels only: ~$162,164/yr at ask (EstimatedOpportunityAtAsk covers those parcels, not the portfolio). '
-      + 'Rep status (Marion parcels only): Represented by INTEGRITY TAX CONSULTING. 1 attached parcel carries a DLGF-placeholder AV (no county document).',
+      + 'Rep status (Marion parcels only): Represented by INTEGRITY TAX CONSULTING.',
     );
     const lake = owner({ parcelCount: 1, countyCount: 1, totalAV: 5, avYoYPct: null, tier: 'D', estSavingsAtAsk: null,
       repStatus: 'No rep data for this county', byCounty: slices({ '45': [1, 0] }), parcels: [] });
@@ -632,5 +635,44 @@ describe('export rows for Task 3 — numbers as numbers, gaps as null, a status 
     const map = mapParcelYearHeadlines([{ ParcelID: 'B', AssessmentYear: 2026, HeadlineTotalAV: 500_000, IsPlaceholder: 1, HeadlineDataSource: 'DLGF assessment roll' }]);
     const rows = exportParcelRows(buildParcelViewRows([P({ id: 'b', parcelId: 'B', parcelNumber: '45-1', address: '2 B St', countyNumber: 45 })], map, Y, { 45: 'Lake' }), Y);
     expect(rows[0]).toMatchObject({ parcel: '45-1', address: '2 B St', county: 'Lake', avYear1: null, avYear2: 500_000, rollYear1: false, rollYear2: true, yoyPct: null, status: '2025 — · 2026 roll' });
+  });
+});
+
+describe('fix round 1 — materiality floor, saved-sort remap, unmatched parcels, thesis years', () => {
+  it('the YoY ranking: complete with a material base, then complete on a small base, then incomplete — both directions, blanks last', () => {
+    const material = owner({ id: 'mat', yoyPair: 8, completeness: 0.95, avPriorBoth: 5_000_000 });
+    const small = owner({ id: 'small', yoyPair: 26_365.2, completeness: 0.99, avPriorBoth: 9_200 });
+    const incomplete = owner({ id: 'inc', yoyPair: 40, completeness: 0.5, avPriorBoth: 1_000_000 });
+    const blank = owner({ id: 'blank', yoyPair: null, completeness: null, avPriorBoth: null });
+    const f = DEFAULT_OWNER_PROSPECTS_FILTERS;
+    expect(YOY_MATERIAL_PRIOR).toBe(100_000);
+    expect(buildVisibleRows([blank, incomplete, small, material], f, 'yoyPair', -1).map((o) => o.id)).toEqual(['mat', 'small', 'inc', 'blank']);
+    expect(buildVisibleRows([blank, incomplete, small, material], f, 'yoyPair', 1).map((o) => o.id)).toEqual(['mat', 'small', 'inc', 'blank']);
+    // The Complete-only filter is unchanged: both complete tiers stay.
+    expect(buildVisibleRows([blank, incomplete, small, material], f, 'yoyPair', -1, true).map((o) => o.id)).toEqual(['mat', 'small']);
+    expect([material, small, incomplete].map(yoyRankTier)).toEqual([0, 1, 2]);
+  });
+  it('annotateOwnerYears stamps the pair\'s prior base (null without a pair)', () => {
+    const rows = [{ ...abc }, { ...only2025 }];
+    annotateOwnerYears(rows, Y);
+    expect(rows.map((r) => r.avPriorBoth)).toEqual([1_000_000, null]);
+  });
+  it('saved Statewide sorts on the removed columns restore as the fixed-pair YoY', () => {
+    expect(remapStatewideSortKey('avPrior')).toBe('yoyPair');
+    expect(remapStatewideSortKey('avYoYPct')).toBe('yoyPair');
+    expect(remapStatewideSortKey('avCurrent')).toBe('avCurrent');
+  });
+  it('a parcel with no ParcelID is not loaded — never a false TBA / —', () => {
+    const map = mapParcelYearHeadlines([{ ParcelID: 'A', AssessmentYear: 2025, HeadlineTotalAV: 1 }]);
+    const [withId, noId] = buildParcelViewRows([P({ id: 'a', parcelId: 'A' }), P({ id: 'x', parcelId: null })], map, Y);
+    expect(withId.loaded).toBe(true);
+    expect(noId.loaded).toBe(false);
+    expect(parcelStatus(noId, Y)).toBe('year figures not loaded');
+  });
+  it('statewideThesis states AV with its years, the TBA count and the pair YoY — no year-less total, no placeholder wording', () => {
+    const t = statewideThesis({ ...abc, countyCount: 1, tier: 'A', repStatus: 'No rep data for this county' }, null, Y);
+    expect(t).toContain('3 parcels in 1 county. AV 2026 $1,600,000 (2 of 3 parcels); AV 2025 $1,200,000. 1 parcel TBA for 2026. YoY +10% over parcels with both years.');
+    expect(t).not.toContain('placeholder');
+    expect(statewideThesis({ ...only2025, countyCount: 1 }, null, Y)).toContain('AV 2026 TBA (12 parcels); AV 2025 $9,000,000. No 2025→2026 YoY.');
   });
 });

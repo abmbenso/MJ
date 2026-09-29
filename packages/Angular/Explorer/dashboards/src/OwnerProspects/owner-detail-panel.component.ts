@@ -23,6 +23,8 @@ import {
   parcelYearCell,
   parcelSortStartsAscending,
   sortParcels,
+  TBA_MARK,
+  NO_FIGURE_MARK,
 } from './owner-prospects.model';
 import { CountyVerifyLink } from '../PropertySearch/property-search-county';
 
@@ -94,6 +96,9 @@ export class OwnerDetailPanelComponent {
   /** Marion County tax-history report URL for a GIS parcel number (template ref to the model fn). */
   public readonly taxHistoryUrl = taxHistoryUrl;
   public readonly NoAnalysisTooltip = NO_ANALYSIS_TOOLTIP;
+  /** Gap markers for the templates (compared against, never retyped). */
+  public readonly TbaMark = TBA_MARK;
+  public readonly NoFigureMark = NO_FIGURE_MARK;
   public readonly MarionParcelsMarker = MARION_PARCELS_MARKER;
   public readonly MarionRepTooltip = MARION_REP_TOOLTIP;
 
