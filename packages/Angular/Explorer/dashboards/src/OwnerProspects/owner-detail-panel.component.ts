@@ -10,6 +10,14 @@ import {
   MARION_RUN_COUNTY_NUMBER,
   NO_ANALYSIS_TOOLTIP,
   PARCEL_CAP_NOTE,
+  isPriorPlaceholder,
+  isPriorZero,
+  PRIOR_ZERO_TOOLTIP,
+  pairYearsTooltip,
+  repIsMarionOnly,
+  MARION_PARCELS_MARKER,
+  MARION_REP_TOOLTIP,
+  PRIOR_PLACEHOLDER_TOOLTIP,
 } from './owner-prospects.model';
 import { CountyVerifyLink } from '../PropertySearch/property-search-county';
 
@@ -65,6 +73,23 @@ export class OwnerDetailPanelComponent {
   /** `2024→2025` / `2025 only` (template ref to the model fn). */
   public readonly parcelYears = parcelYears;
   public readonly NoAnalysisTooltip = NO_ANALYSIS_TOOLTIP;
+  /** A parcel whose prior-year AV is a DLGF placeholder (the "prior placeholder" pill; final-review C1). */
+  public readonly isPriorPlaceholder = isPriorPlaceholder;
+  public readonly PriorPlaceholderTooltip = PRIOR_PLACEHOLDER_TOOLTIP;
+  public readonly isPriorZero = isPriorZero;
+  public readonly PriorZeroTooltip = PRIOR_ZERO_TOOLTIP;
+  public readonly MarionParcelsMarker = MARION_PARCELS_MARKER;
+  public readonly MarionRepTooltip = MARION_REP_TOOLTIP;
+
+  /** The assessment-pair tooltip (a bare year = current year only). */
+  public get PairYearsTitle(): string {
+    return pairYearsTooltip(this.Owner.pairYears);
+  }
+
+  /** True when the rep status covers only the owner's Marion parcels (Statewide rows spanning Marion and more). */
+  public get RepMarionOnly(): boolean {
+    return repIsMarionOnly(this.Owner, this.Owner.tierBasis ?? (this.Statewide ? 'AV' : 'Savings'));
+  }
   /** `$1.2M` / `$12,345` / `—` (template ref to the model `formatMoneyShort`). */
   public readonly money = formatMoneyShort;
   /** `$12,345` / `$0` / `—` (template ref to the model `formatMoneyOrDash`). */

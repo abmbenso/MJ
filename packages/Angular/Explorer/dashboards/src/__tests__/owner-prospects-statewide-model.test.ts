@@ -33,6 +33,12 @@ import {
   appealRecsCell,
   hasMarionParcels,
   pairYearsTooltip,
+  pairedParcelCount,
+  avPriorTooltip,
+  isPriorPlaceholder,
+  isPriorZero,
+  repIsMarionOnly,
+  statewideThesis,
   pairsLabel,
   PARCEL_ROW_CAP,
   PARCEL_CAP_NOTE,
@@ -219,7 +225,8 @@ describe('assessment years on Statewide figures (fix round 2, item 5)', () => {
   it('the AV cells carry the owner\'s PairYears', () => {
     expect(pairYearsTooltip('2025→2026')).toBe('assessment years 2025→2026');
     expect(pairYearsTooltip('mixed')).toBe('mixed assessment years across this owner\'s parcels — see the parcel list');
-    expect(pairYearsTooltip(null)).toBe('assessment years not recorded');
+    expect(pairYearsTooltip(null)).toBe('no assessment year on record');
+    expect(pairYearsTooltip('2026')).toBe('2026: current year only — no prior-year figure on the record');
   });
 });
 
@@ -321,7 +328,7 @@ describe('statewide row parsing', () => {
     expect(r.tierBasis).toBe('AV');
     expect(r.pairYears).toBe('mixed');
     expect(r.groupKeyType).toBe('CO');
-    expect(r.byCounty).toEqual({ '45': { parcels: 4, avCurrent: 35_916_600, avPrior: 37_033_100 } });
+    expect(r.byCounty).toEqual({ '45': { parcels: 4, avCurrent: 35_916_600, avPrior: 37_033_100, pairedParcels: null } }); // pairedParcels: not on runs before the fix round
   });
   it('maps the statewide parcel columns, GISParcelNumber nullable', () => {
     const p = mapOwnerParcelRow({
@@ -378,5 +385,62 @@ describe('agent context — scope, county, tier basis', () => {
     expect(ctx['OpportunityBasis']).toBe('Marion parcels only');
     expect(ctx['PrimeCount']).toBeNull(); // Prime/Strong are savings tiers — absent on the AV basis
     expect(ctx['StrongCount']).toBeNull();
+  });
+});
+
+describe('final-review fix round: paired base, bare-year PairYears, prior placeholder, rep scope, thesis', () => {
+  const slices = (o: Record<string, [number, number | null | undefined]>) =>
+    Object.fromEntries(Object.entries(o).map(([c, [parcels, paired]]) => [c, { parcels, avCurrent: 1, avPrior: null, pairedParcels: paired }]));
+
+  it('pairedParcelCount sums ByCountyJSON pairedParcels; null when a slice lacks it (a run before the fix)', () => {
+    expect(pairedParcelCount(owner({ byCounty: slices({ '45': [4, 3], '49': [17, 17] }) }))).toBe(20);
+    expect(pairedParcelCount(owner({ byCounty: slices({ '45': [4, 3], '49': [17, undefined] }) }))).toBeNull();
+    expect(pairedParcelCount(owner({ byCounty: {} }))).toBeNull();
+  });
+
+  it('avPriorTooltip states "paired, non-placeholder parcels only (n of m)" and the years', () => {
+    const row = owner({ parcelCount: 21, pairYears: 'mixed', byCounty: slices({ '45': [4, 3], '49': [17, 17] }) });
+    expect(avPriorTooltip(row)).toBe("paired, non-placeholder parcels only (20 of 21) — mixed assessment years across this owner's parcels — see the parcel list");
+    expect(avPriorTooltip(owner({ parcelCount: 2, pairYears: '2025', byCounty: {} })))
+      .toBe('paired, non-placeholder parcels only — 2025: current year only — no prior-year figure on the record');
+  });
+
+  it('isPriorPlaceholder: prior present, YoY null, current a county figure; not an overflowed YoY, not a placeholder current', () => {
+    const p = (over: Partial<OwnerParcelRow>) => ({ avPrior: 900_000, avCurrent: 950_000, avYoYPct: null, isPlaceholder: false, ...over });
+    expect(isPriorPlaceholder(p({}))).toBe(true);
+    expect(isPriorPlaceholder(p({ avYoYPct: 5.6 }))).toBe(false);
+    expect(isPriorPlaceholder(p({ isPlaceholder: true }))).toBe(false);
+    expect(isPriorPlaceholder(p({ avPrior: null }))).toBe(false);
+    expect(isPriorPlaceholder(p({ avPrior: 700, avCurrent: 2_522_200 }))).toBe(false); // +360,214 %: overflow, not placeholder
+    expect(isPriorPlaceholder(p({ isPlaceholder: undefined }))).toBe(false); // the Marion run's rows carry no flag
+    expect(isPriorPlaceholder(p({ avPrior: 0 }))).toBe(false); // $0: county or placeholder, the row cannot say
+    expect(isPriorZero(p({ avPrior: 0 }))).toBe(true);
+    expect(isPriorZero(p({}))).toBe(false);
+    expect(isPriorZero(p({ avPrior: 0, isPlaceholder: true }))).toBe(false);
+  });
+
+  it('repIsMarionOnly: Walmart-shaped (Marion + 58 other counties) on the AV basis; never on Marion, a Marion-only or a no-Marion owner', () => {
+    const walmart = owner({ repStatus: 'Represented by INTEGRITY TAX CONSULTING', byCounty: slices({ '45': [4, 4], '49': [17, 17], '2': [3, 0] }) });
+    expect(repIsMarionOnly(walmart, 'AV')).toBe(true);
+    expect(repIsMarionOnly(walmart, 'Savings')).toBe(false);
+    expect(repIsMarionOnly(owner({ repStatus: 'No rep on record', byCounty: slices({ '49': [2, 2] }) }), 'AV')).toBe(false);
+    expect(repIsMarionOnly(owner({ repStatus: 'No rep data for this county', byCounty: slices({ '45': [1, 1] }) }), 'AV')).toBe(false);
+  });
+
+  it('statewideThesis scopes the opportunity and a Marion-only rep; notes placeholder parcels; no figure without analysis', () => {
+    const walmart = owner({
+      label: 'Walmart Inc.', parcelCount: 21, countyCount: 2, totalAV: 138_333_200, avYoYPct: 7.2, tier: 'A',
+      estSavingsAtAsk: 162_164.47, repStatus: 'Represented by INTEGRITY TAX CONSULTING', byCounty: slices({ '45': [4, 4], '49': [17, 17] }),
+      parcels: [{ isPlaceholder: true } as OwnerParcelRow, { isPlaceholder: false } as OwnerParcelRow],
+    });
+    expect(statewideThesis(walmart, null)).toBe(
+      '21 parcels in 2 counties, $138,333,200 AV (+7.2% YoY on paired parcels). AV tier A. '
+      + 'Opportunity = Marion parcels only: ~$162,164/yr at ask (EstimatedOpportunityAtAsk covers those parcels, not the portfolio). '
+      + 'Rep status (Marion parcels only): Represented by INTEGRITY TAX CONSULTING. 1 attached parcel carry a DLGF-placeholder AV (no county document).',
+    );
+    const lake = owner({ parcelCount: 1, countyCount: 1, totalAV: 5, avYoYPct: null, tier: 'D', estSavingsAtAsk: null,
+      repStatus: 'No rep data for this county', byCounty: slices({ '45': [1, 0] }), parcels: [] });
+    expect(statewideThesis(lake, PARCEL_CAP_NOTE)).toContain("Opportunity: none claimed — no valuation analysis on this owner's parcels. Rep status: No rep data for this county.");
+    expect(statewideThesis(lake, PARCEL_CAP_NOTE)).toContain('Parcels attached: showing the first 5,000 parcels of 1.');
   });
 });

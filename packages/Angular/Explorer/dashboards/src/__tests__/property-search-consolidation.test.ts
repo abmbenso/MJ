@@ -3,7 +3,10 @@ import { PROPERTY_SEARCH_RESULT_CAP, PROPERTY_SEARCH_BOUNDARY_RENDER_CAP } from 
 import { PROPERTY_SEARCH_GRID_COLUMNS, PROPERTY_SEARCH_COLUMN_CATEGORIES } from '../PropertySearch/property-search-grid.component';
 import { buildDlgfMergedRows } from '../PropertySearch/property-search-dlgf';
 import { applyAppealLayers, EMPTY_APPEAL_LAYERS } from '../PropertySearch/property-search-appeal-layers';
-import { ownerProspectsCoversCounty, OWNER_PROSPECTS_COVERAGE_NOTE, MARION_COUNTY_NUMBER } from '../PropertySearch/property-search-county';
+import {
+  ownerProspectsCoversCounty, OWNER_PROSPECTS_COVERAGE_NOTE, MARION_COUNTY_NUMBER,
+  MARION_OWNER_RUN_FILTER, MARION_OWNER_RUN_MAX_ROWS, pickMarionOwnerRun,
+} from '../PropertySearch/property-search-county';
 import { indexDataSources } from '../PropertySearch/property-search-headline';
 
 /**
@@ -101,5 +104,23 @@ describe('the DLGF row shape carries the merged fields', () => {
     expect(out.OwnerEntity).toBe('Acme Holdings LLC');
     expect(out.Recommendation).toBe('Appeal');
     for (const key of Object.keys(EMPTY_APPEAL_LAYERS)) expect(key in out, key).toBe(true);
+  });
+});
+
+describe('owner-run lookup is Marion-scoped with a 2-row tripwire (final-review I2)', () => {
+  it('names the Marion scope and asks for two rows', () => {
+    expect(MARION_OWNER_RUN_FILTER).toBe("IsLatest = 1 AND Scope = 'Marion'");
+    expect(MARION_OWNER_RUN_MAX_ROWS).toBe(2);
+  });
+  it('one latest Marion run is picked', () => {
+    expect(pickMarionOwnerRun([{ ID: 'M1' }])).toEqual({ id: 'M1', error: null });
+  });
+  it('no run: no ID, no error (the owner columns are simply blank)', () => {
+    expect(pickMarionOwnerRun([])).toEqual({ id: null, error: null });
+  });
+  it('two latest Marion runs: an error, never a silent pick', () => {
+    const out = pickMarionOwnerRun([{ ID: 'M1' }, { ID: 'M2' }]);
+    expect(out.id).toBeNull();
+    expect(out.error).toMatch(/2 latest Marion owner-portfolio runs/);
   });
 });

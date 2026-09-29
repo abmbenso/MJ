@@ -30,6 +30,24 @@ export function ownerProspectsCoversCounty(countyNumber: number): boolean {
   return OWNER_PROSPECTS_COUNTIES.has(countyNumber);
 }
 
+/**
+ * The owner-run lookup behind the Property Search owner columns (final-review I2, 2026-09-28). `IsLatest` is per
+ * scope since mj-indiana-tax migration V202609281000 (a Statewide run is latest beside the Marion one), so the query
+ * names the Marion scope and asks for 2 rows as a tripwire: two latest Marion runs is an error, never a silent pick.
+ */
+export const MARION_OWNER_RUN_FILTER = "IsLatest = 1 AND Scope = 'Marion'";
+export const MARION_OWNER_RUN_MAX_ROWS = 2;
+
+/** The one latest Marion run's ID from that query's rows; an error (and no ID) when there are two. */
+export function pickMarionOwnerRun(rows: readonly { ID: string }[]): { id: string | null; error: string | null } {
+  if (rows.length === 1) return { id: rows[0].ID, error: null };
+  if (rows.length === 0) return { id: null, error: null }; // never run: the owner columns are simply blank
+  return {
+    id: null,
+    error: `${rows.length} latest Marion owner-portfolio runs are marked IsLatest — refusing to pick one; the owner columns are blank. Clear IsLatest on the older run in indiana_tax.OwnerPortfolioRun.`,
+  };
+}
+
 /** Appended to every Owner Prospects column tooltip so the coverage limit travels with the column. */
 export const OWNER_PROSPECTS_COVERAGE_NOTE =
   ' Owner Prospects covers Marion County only today: in any other county this column is blank because the rollup has not been run there, not because the engine looked and found nothing.';

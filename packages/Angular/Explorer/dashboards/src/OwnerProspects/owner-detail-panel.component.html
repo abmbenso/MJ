@@ -30,12 +30,17 @@
     </div>
     <div class="dgrid__pair">
       <dt>Rep status</dt>
-      <dd>{{ Owner.repStatus }}</dd>
+      <dd>
+        {{ Owner.repStatus }}
+        @if (RepMarionOnly) {
+          <span class="pt__pill" data-testid="detail-rep-marion-marker" [title]="MarionRepTooltip">{{ MarionParcelsMarker }}</span>
+        }
+      </dd>
     </div>
     @if (Statewide) {
       <div class="dgrid__pair">
         <dt>Assessment pair</dt>
-        <dd>{{ Owner.pairYears ?? '—' }}</dd>
+        <dd [title]="PairYearsTitle">{{ Owner.pairYears ?? '—' }}</dd>
       </div>
       <div class="dgrid__pair">
         <dt>Grouped by</dt>
@@ -98,7 +103,14 @@
                   <span class="pt__pill" data-testid="placeholder-pill" title="DLGF roll figure only — no county document for this year">placeholder</span>
                 }
               </td>
-              <td class="num">{{ p.avPrior != null ? (p.avPrior | number) : '—' }}</td>
+              <td class="num">
+                {{ p.avPrior != null ? (p.avPrior | number) : '—' }}
+                @if (isPriorPlaceholder(p)) {
+                  <span class="pt__pill" data-testid="prior-placeholder-pill" [title]="PriorPlaceholderTooltip">prior placeholder</span>
+                } @else if (isPriorZero(p)) {
+                  <span class="pt__pill" data-testid="prior-zero-pill" [title]="PriorZeroTooltip">prior $0</span>
+                }
+              </td>
               <td class="num">{{ p.avCurrent != null ? (p.avCurrent | number) : '—' }}</td>
               <td class="num">{{ yoy(p.avYoYPct) }}</td>
               <td class="num" [attr.title]="p.sqftSource">{{ p.sqft != null ? (p.sqft | number) : '—' }}</td>

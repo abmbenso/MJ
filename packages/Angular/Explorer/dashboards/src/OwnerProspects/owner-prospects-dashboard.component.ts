@@ -39,6 +39,10 @@ import {
   hasMarionParcels,
   effectiveTierBasis,
   pairYearsTooltip,
+  avPriorTooltip,
+  repIsMarionOnly,
+  statewideThesis,
+  MARION_REP_TOOLTIP,
   countyBanner,
   isBelowYoYFloor,
   shouldServerSearch,
@@ -144,6 +148,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   public readonly ParcelCapNote = PARCEL_CAP_NOTE;
   public readonly MarionParcelsMarker = MARION_PARCELS_MARKER;
   public readonly MarionParcelsTooltip = MARION_PARCELS_TOOLTIP;
+  public readonly MarionRepTooltip = MARION_REP_TOOLTIP;
   /** Only the newest server search may publish. */
   private searchSeq = 0;
   /** Statewide: tier → company-owner count over the loaded rows. */
@@ -190,6 +195,11 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     Strong: 'High',
     Moderate: 'Medium',
     Watch: 'Low',
+    // Statewide AV tiers (final-review M7): A/B → High, C → Medium, D → Low.
+    A: 'High',
+    B: 'High',
+    C: 'Medium',
+    D: 'Low',
   };
 
   constructor(
@@ -264,9 +274,19 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     return repCell(row.repStatus, this.basisOf(row));
   }
 
-  /** Tooltip on a Statewide row's AV prior/current cells — the years they come from. */
+  /** True when a Statewide row's rep status covers only its Marion parcels (the Marion-parcels marker). */
+  public repMarionOnly(row: OwnerRow): boolean {
+    return repIsMarionOnly(row, this.basisOf(row));
+  }
+
+  /** Tooltip on a Statewide row's AV current cell — the years it comes from. */
   public pairYears(row: OwnerRow): string {
     return pairYearsTooltip(row.pairYears);
+  }
+
+  /** Tooltip on a Statewide row's AV prior cell — the paired base, its n of m, and the years. */
+  public avPriorTitle(row: OwnerRow): string {
+    return avPriorTooltip(row);
   }
 
   /** True when the opened owner has more parcels than the 5,000 loaded. */
@@ -275,6 +295,12 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   }
 
   /** The Statewide "total assessed value" card label (qualified when only the top 5,000 are loaded). */
+  /** Statewide "company owners" card label, qualified like the Total AV card when the row cap is hit (M5). */
+  public get CompanyOwnersLabel(): string {
+    const top = this.RowCapHit ? `, top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded` : '';
+    return `company owners (${(this.Summary?.parcels ?? 0).toLocaleString('en-US')} parcels${top})`;
+  }
+
   public get TotalAVLabel(): string {
     return this.RowCapHit ? `total assessed value (top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded)` : 'total assessed value';
   }
@@ -691,14 +717,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const yoyPct = row.avYoYPct ?? 0;
     const yoySign = yoyPct >= 0 ? '+' : '';
     if (this.basisOf(row) === 'AV') {
-      // Statewide: no valuation analysis outside Marion, so no opportunity figure is claimed.
-      const counties = row.countyCount ?? 1;
-      const yoy = row.avYoYPct == null ? 'no prior-year pair' : `${yoySign}${yoyPct}% YoY on paired parcels`;
-      const capped = this.ParcelsCappedFor(row) ? ` Parcels attached: ${PARCEL_CAP_NOTE} of ${row.parcelCount}.` : '';
-      return (
-        `${row.parcelCount} parcels in ${counties} ${counties === 1 ? 'county' : 'counties'}, $${av} AV (${yoy}). ` +
-        `AV tier ${row.tier ?? '—'}. Rep status: ${row.repStatus}.${capped}`
-      );
+      // Statewide: every Marion-only figure carries its scope on the record (final-review I5/I3).
+      return statewideThesis(row, this.ParcelsCappedFor(row) ? PARCEL_CAP_NOTE : null);
     }
     const opp = Math.round(row.estSavingsAtAsk ?? 0).toLocaleString('en-US');
     return (
@@ -837,7 +857,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** Statewide: tooltip on the AV-prior column header. */
   public readonly AVPriorTooltip =
-    'Sum of the prior-year AV over the parcels that have a prior year — the YoY base, not the whole portfolio.';
+    'Prior-year AV over paired, non-placeholder parcels only (both years a county figure) — exactly the YoY base, not the whole portfolio.';
 
   /** Persist the filter state and rebuild the visible rows. */
   private afterFilterChange(): void {
@@ -1196,6 +1216,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
           const row = this.resolveOwner(ref);
           if (!row) return this.ownerNotFound(ref);
           this.SelectedOwnerId = row.id;
+          // Statewide parcels load on open (final-review M6): the same path a click takes.
+          void this.ensureParcels(row);
           this.publishAgentContext();
           this.cdr.markForCheck();
           return { Success: true };

@@ -162,7 +162,7 @@
       <div class="stat-cards">
         <div class="stat-card">
           <div class="stat-card__n">{{ Summary.companyOwners | number }}</div>
-          <div class="stat-card__l">company owners ({{ Summary.parcels | number }} parcels)</div>
+          <div class="stat-card__l" data-testid="statewide-company-owners-label">{{ CompanyOwnersLabel }}</div>
         </div>
         <div class="stat-card">
           <div class="stat-card__n">{{ SummaryTotalAV }}</div>
@@ -268,7 +268,7 @@
                   }
                   <td class="num">{{ row.parcelCount | number }}</td>
                   @if (IsStatewide) {
-                    <td class="num" data-testid="av-prior" [title]="pairYears(row)">{{ money(row.avPrior ?? null) }}</td>
+                    <td class="num" data-testid="av-prior" [title]="avPriorTitle(row)">{{ money(row.avPrior ?? null) }}</td>
                     <td class="num" data-testid="av-current" [title]="pairYears(row)">{{ money(row.avCurrent ?? null) }}</td>
                   } @else {
                     <td class="num">{{ money(row.totalAV2025) }}</td>
@@ -324,6 +324,9 @@
                       } @else {
                         {{ rc.text }}
                       }
+                    }
+                    @if (repMarionOnly(row)) {
+                      <span class="pill pill--muted" data-testid="rep-marion-marker" [title]="MarionRepTooltip">{{ MarionParcelsMarker }}</span>
                     }
                   </td>
                 </tr>

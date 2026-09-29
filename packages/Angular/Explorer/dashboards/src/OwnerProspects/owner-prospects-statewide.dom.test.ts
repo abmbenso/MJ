@@ -81,6 +81,8 @@ interface FakeState {
   parcelsFor?: (ownerId: string) => Raw[] | 'fail';
   /** Makes the server search (a `Label LIKE` owners read) fail. */
   failSearch?: boolean;
+  /** Existing `indiana_tax.Prospect` rows (ID, OwnerKey). Default: none. */
+  prospects?: Raw[];
   /** Entity saves, by entity name: the fields each saved object carried. */
   saved: Map<string, Raw[]>;
   notes: string[];
@@ -122,6 +124,8 @@ function fakeProvider(state: FakeState): IMetadataProvider {
         // The fake ignores the SQL county clause on purpose: the component's own filterByCounty must hold the line.
         if ((p.ExtraFilter ?? '').includes("'M1'")) return state.marionOwners ?? [MARION_OWNER];
         return labelSearch(p.ExtraFilter ?? '', state.statewideOwners ?? [WALMART, LAKE_ONLY, ALLEN_ONLY]).slice(0, p.MaxRows ?? undefined);
+      case 'Prospects':
+        return state.prospects ?? [];
       case 'Owner Portfolio Parcels': {
         const id = /OwnerPortfolioID = '([^']*)'/.exec(p.ExtraFilter ?? '')?.[1] ?? '';
         const rows = state.parcelsFor?.(id) ?? [];
@@ -298,7 +302,8 @@ describe('Owner Prospects statewide scope (DOM)', () => {
     }
     const reps = queryAll(h.fixture, '[data-testid="rep-cell"]').map((c) => c.textContent?.trim());
     expect(reps).toContain('No rep data for this county');
-    expect(reps).toContain('Represented by INTEGRITY TAX CONSULTING');
+    // Walmart (Marion + Lake) also carries the Marion-parcels rep marker since the final-review fix round (I3).
+    expect(reps.some((r) => r?.startsWith('Represented by INTEGRITY TAX CONSULTING'))).toBe(true);
     expect(h.component.FilterCountLabel).toBe('3 owners · Σ AV current $142.0M'); // AV, never the blank savings
     const pills = queryAll(h.fixture, '[data-testid="yoy-floor-pill"]');
     expect(pills).toHaveLength(1);
@@ -548,6 +553,71 @@ describe('Owner Prospects statewide — review fixes (fix round 2)', () => {
   });
 });
 
+describe('Owner Prospects statewide — final-review fix round', () => {
+  // Stored OwnerKey is the Prospect key in both scopes since the v2 statewide run (I1).
+  const LILLY = statewideOwner({
+    ID: 'e', Label: 'Eli Lilly & Co.', OwnerKey: 'eli lilly', GroupKeyType: 'CO', CoStarTrueOwner: 'Eli Lilly & Co.',
+    PrimaryCountyNumber: 49, CountyCount: 2, ParcelCount: 68, PairYears: '2025→2026', AVPrior: 700_000_000,
+    AVCurrent: 798_586_994, TotalAV: 798_586_994, RepStatus: 'No rep on record',
+    ByCountyJSON: '{"49":{"parcels":66,"avCurrent":790000000,"avPrior":700000000,"pairedParcels":60},"29":{"parcels":2,"avCurrent":8586994,"avPrior":null,"pairedParcels":0}}',
+  });
+
+  it('I1: a Statewide row whose OwnerKey is an existing Prospect key shows as flagged', async () => {
+    const h = mount({ scope: 'Statewide', county: '49' });
+    h.state.statewideOwners = [LILLY, WALMART];
+    h.state.prospects = [{ ID: 'P-lilly', OwnerKey: 'eli lilly' }];
+    h.fixture.detectChanges();
+    await settle(h);
+    const lilly = h.component.AllOwners.find((o) => o.id === 'e') as OwnerRow;
+    expect(lilly.prospectId).toBe('P-lilly');
+    const row = queryAll(h.fixture, 'tbody tr').find((tr) => tr.textContent?.includes('Eli Lilly'));
+    expect(row?.querySelector('.pill--flagged')?.textContent?.trim()).toBe('flagged');
+    const walmartRow = queryAll(h.fixture, 'tbody tr').find((tr) => tr.textContent?.includes('Walmart'));
+    expect(walmartRow?.querySelector('.pill--flagged')).toBeNull();
+  });
+
+  it('I3: a Walmart-shaped row (Marion + Lake) carries the Marion-parcels marker on its rep cell; a Lake-only row does not', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const cells = queryAll(h.fixture, '[data-testid="rep-cell"]');
+    const walmart = cells.find((c) => c.textContent?.includes('INTEGRITY TAX CONSULTING'));
+    const marker = walmart?.querySelector('[data-testid="rep-marion-marker"]');
+    expect(marker?.textContent?.trim()).toBe('Marion parcels');
+    expect(marker?.getAttribute('title')).toContain('Marion PTABOA agendas');
+    expect(queryAll(h.fixture, '[data-testid="rep-marion-marker"]')).toHaveLength(1);
+  });
+
+  it('C1/I4: the AV prior cell states the paired n of m; a bare-year PairYears reads "current year only"', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = [
+      LILLY,
+      statewideOwner({ ID: 's', Label: 'Single Year LLC', PrimaryCountyNumber: 2, CountyCount: 1, AVCurrent: 900_000, TotalAV: 900_000,
+        AVPrior: null, PairYears: '2026', ByCountyJSON: '{"2":{"parcels":1,"avCurrent":900000,"avPrior":null,"pairedParcels":0}}' }),
+    ];
+    h.fixture.detectChanges();
+    await settle(h);
+    const priors = queryAll(h.fixture, '[data-testid="av-prior"]').map((c) => c.getAttribute('title'));
+    expect(priors).toContain('paired, non-placeholder parcels only (60 of 68) — assessment years 2025→2026');
+    const current = queryAll(h.fixture, '[data-testid="av-current"]').map((c) => c.getAttribute('title'));
+    expect(current).toContain('2026: current year only — no prior-year figure on the record');
+  });
+
+  it('I5: flagging a Statewide owner keeps the Marion-parcels figure and scopes it in the Thesis', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.parcelsFor = (id) => parcelRows(id);
+    h.fixture.detectChanges();
+    await settle(h);
+    const w = h.component.AllOwners.find((o) => o.id === 'w') as OwnerRow;
+    await h.component.onFlagOwner(w);
+    const saved = h.state.saved.get('Prospects')?.[0] ?? {};
+    expect(saved['EstimatedOpportunityAtAsk']).toBe(162_164.47);
+    expect(String(saved['Thesis'])).toContain('Opportunity = Marion parcels only: ~$162,164/yr at ask');
+    expect(String(saved['Thesis'])).toContain('Rep status (Marion parcels only): Represented by INTEGRITY TAX CONSULTING.');
+    expect(saved['Priority']).toBe('High'); // M7: AV tier A
+  });
+});
+
 @Component({ standalone: true, selector: 'button[mjButton]', template: '<ng-content></ng-content>' })
 class StubButton {
   @Input() variant = '';
@@ -599,6 +669,45 @@ describe('OwnerDetailPanelComponent — statewide parcels (DOM)', () => {
     expect(rows[1].textContent).toContain('no card link');
     expect(query(f, '[data-testid="county-split"]')?.textContent).toContain('Lake 1 ($35.9M) · Adams 1 ($7.6M)');
     expect(query(f, '[data-testid="parcels-capped"]')).toBeNull();
+  });
+
+  it('C1: a DLGF-placeholder prior carries the "prior placeholder" pill; a paired or overflowed prior does not', () => {
+    const base = parcels[0];
+    const rows = [
+      { ...base, id: 'q1', address: 'Q1 placeholder prior', avPrior: 900_000, avCurrent: 950_000, avYoYPct: null, isPlaceholder: false },
+      { ...base, id: 'q2', address: 'Q2 overflow', avPrior: 700, avCurrent: 2_522_200, avYoYPct: null, isPlaceholder: false },
+      { ...base, id: 'q3', address: 'Q3 paired' },
+      { ...base, id: 'q4', address: 'Q4 zero prior', avPrior: 0, avCurrent: 50_000, avYoYPct: null, isPlaceholder: false },
+    ];
+    const f = renderComponentFixture(OwnerDetailPanelComponent, {
+      imports: [CommonModule, StubButton],
+      declarations: [OwnerDetailPanelComponent],
+      inputs: { Owner: owner, Parcels: rows, Statewide: true, CountySlugs: {}, CountyNames: {} },
+    });
+    const tr = (a: string): Element | undefined => queryAll(f, 'table.pt tbody tr').find((r) => r.textContent?.includes(a));
+    const pill = tr('Q1 placeholder prior')?.querySelector('[data-testid="prior-placeholder-pill"]');
+    expect(pill?.textContent?.trim()).toBe('prior placeholder');
+    expect(pill?.getAttribute('title')).toContain('DLGF roll figure only');
+    expect(tr('Q2 overflow')?.querySelector('[data-testid="prior-placeholder-pill"]')).toBeNull();
+    expect(tr('Q3 paired')?.querySelector('[data-testid="prior-placeholder-pill"]')).toBeNull();
+    expect(tr('Q4 zero prior')?.querySelector('[data-testid="prior-placeholder-pill"]')).toBeNull();
+    expect(tr('Q4 zero prior')?.querySelector('[data-testid="prior-zero-pill"]')?.textContent?.trim()).toBe('prior $0');
+  });
+
+  it('I3: the detail "Rep status" line carries the Marion-parcels marker for a Marion + other-county owner', () => {
+    const f = renderComponentFixture(OwnerDetailPanelComponent, {
+      imports: [CommonModule, StubButton],
+      declarations: [OwnerDetailPanelComponent],
+      inputs: {
+        Owner: { ...owner, repStatus: 'Represented by INTEGRITY TAX CONSULTING', byCounty: { ...owner.byCounty, '49': { parcels: 1, avCurrent: 1, avPrior: null } } },
+        Parcels: parcels, Statewide: true, CountySlugs: {}, CountyNames: {},
+      },
+    });
+    expect(query(f, '[data-testid="detail-rep-marion-marker"]')?.textContent?.trim()).toBe('Marion parcels');
+  });
+
+  it('I3: no Marion parcel, no rep marker in the detail panel', () => {
+    expect(query(render(), '[data-testid="detail-rep-marion-marker"]')).toBeNull();
   });
 
   it('shows "showing the first 5,000 parcels" when the owner\'s parcels were capped', () => {

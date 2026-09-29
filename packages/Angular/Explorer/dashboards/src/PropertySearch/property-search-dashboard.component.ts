@@ -53,6 +53,9 @@ import {
   buildVerifyLink,
   CI_ROSTER_PARCEL_FILTER,
   ownerProspectsCoversCounty,
+  MARION_OWNER_RUN_FILTER,
+  MARION_OWNER_RUN_MAX_ROWS,
+  pickMarionOwnerRun,
 } from './property-search-county';
 import { fetchDlgfParcelRows, buildClassCodeSubClassOptions } from './property-search-dlgf';
 import { DataSourceIndex, DATA_SOURCE_FIELDS, PARCEL_YEAR_HEADLINE_FIELDS, buildHeadlineFields, indexDataSources, indexHeadlinesByParcel } from './property-search-headline';
@@ -169,6 +172,8 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
   public IsTruncated = false;
   /** Set when the card / IBTR / Tax Court layer queries or the appeal-outcome read failed -- those columns are then blank because the load failed, not because nothing exists, and the banner says so (spec §12). */
   public AppealLayerError: string | null = null;
+  /** Two latest Marion owner-portfolio runs: the owner columns stay blank and this says why (final-review I2). */
+  public OwnerPortfolioRunError: string | null = null;
   /** Bumped by whatever STARTS a search (runSearch, loadData, reloadForCounty) before its own first await, and passed down into runSearchInternal -- lets a search tell, after any await, whether it is still the newest one in flight. Guards against a slower earlier search's results landing after a faster later search's and overwriting them (mj-page-search fires per keystroke, unthrottled, and runSearch() is never awaited by its callers). reloadForCounty claims it BEFORE its metadata loads specifically so that changing the county invalidates an in-flight search immediately (I-4), not two awaits later. Mirrors loadParcelDetail's own `SelectedParcel?.ParcelID !== parcelID` staleness guard. */
   private searchGeneration = 0;
   public ActiveRenderMode: PropertySearchRenderMode = 'point';
@@ -1032,16 +1037,18 @@ export class PropertySearchDashboardComponent extends BaseDashboard implements A
     if (this.ownerPortfolioRunLoadAttempted) return;
     this.ownerPortfolioRunLoadAttempted = true;
     const rv = RunView.FromMetadataProvider(this.ProviderToUse);
+    // Marion scope + a 2-row tripwire (final-review I2): a Statewide run is also IsLatest = 1.
     const result = await rv.RunView<{ ID: string }>({
       EntityName: 'Owner Portfolio Runs',
       Fields: ['ID'],
-      ExtraFilter: 'IsLatest = 1',
-      MaxRows: 1,
+      ExtraFilter: MARION_OWNER_RUN_FILTER,
+      MaxRows: MARION_OWNER_RUN_MAX_ROWS,
       ResultType: 'simple',
     });
-    if (result.Success && result.Results?.length) {
-      this.latestOwnerPortfolioRunID = result.Results[0].ID;
-    }
+    if (!result.Success) return;
+    const picked = pickMarionOwnerRun(result.Results ?? []);
+    this.latestOwnerPortfolioRunID = picked.id;
+    this.OwnerPortfolioRunError = picked.error;
   }
 
   private async loadSubClassOptionsIfNeeded(): Promise<void> {

@@ -228,7 +228,13 @@ export class OwnerProspectsDataAccess {
       lookup.Slugs[r.CountyNumber] = r.Slug;
       lookup.Names[r.CountyNumber] = r.Name;
     }
-    const parcelsBy = JSON.parse(byCountyJSON ?? '{}') as Record<string, { parcels?: number }>;
+    // countyNumbersInRun already parsed it tolerantly (non-empty here); never throw out of loadData (M14).
+    let parcelsBy: Record<string, { parcels?: number }> = {};
+    try {
+      parcelsBy = JSON.parse(byCountyJSON ?? '{}') as Record<string, { parcels?: number }>;
+    } catch {
+      parcelsBy = {};
+    }
     lookup.Options = numbers
       .map((n) => {
         const name = lookup.Names[n] ?? `County ${n}`;
