@@ -17804,9 +17804,9 @@ export class indianataxOwnerPortfolioParcel_ {
     @MaxLength(36)
     ParcelID?: string;
         
-    @Field({description: `parcel.parcel -- the 7-digit Marion County GIS parcel number, the always-present link key to the PRC and tax history even when ParcelID is null.`}) 
-    @MaxLength(20)
-    GISParcelNumber: string;
+    @Field({nullable: true, description: `The county GIS parcel number; NULL where the county file carries none (12,283 C&I parcels in 45 counties, 2026-09-28). Link on ParcelID, never on this column.`}) 
+    @MaxLength(40)
+    GISParcelNumber?: string;
         
     @Field({nullable: true, description: `The parcel's situs (site) address as shown in the dashboard parcel list.`}) 
     @MaxLength(300)
@@ -17879,6 +17879,32 @@ export class indianataxOwnerPortfolioParcel_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field(() => Int, {nullable: true, description: `The parcel's county.`}) 
+    CountyNumber?: number;
+        
+    @Field(() => Int, {nullable: true, description: `The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`}) 
+    PriorYear?: number;
+        
+    @Field(() => Int, {nullable: true, description: `The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`}) 
+    CurrentYear?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`}) 
+    AVPrior?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`}) 
+    AVCurrent?: number;
+        
+    @Field(() => Boolean, {description: `AVCurrent comes from the DLGF roll only (no county document for that year).`}) 
+    IsPlaceholder: boolean;
+        
+    @Field({nullable: true, description: `Where SqFt came from: PropertyRecordCard, BuildingDetail, DLGF, or null.`}) 
+    @MaxLength(30)
+    SqFtSource?: string;
+        
+    @Field({nullable: true, description: `Highest appeal level with an outcome on record for this parcel: County-PTABOA or State-IBTR.`}) 
+    @MaxLength(20)
+    AppealLevel?: string;
+        
     @Field() 
     @MaxLength(300)
     OwnerPortfolio: string;
@@ -17910,7 +17936,7 @@ export class CreateindianataxOwnerPortfolioParcelInput {
     ParcelID: string | null;
 
     @Field({ nullable: true })
-    GISParcelNumber?: string;
+    GISParcelNumber: string | null;
 
     @Field({ nullable: true })
     Address: string | null;
@@ -17972,6 +17998,30 @@ export class CreateindianataxOwnerPortfolioParcelInput {
     @Field(() => Int, { nullable: true })
     LastAppealYear: number | null;
 
+    @Field(() => Int, { nullable: true })
+    CountyNumber: number | null;
+
+    @Field(() => Int, { nullable: true })
+    PriorYear: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CurrentYear: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVPrior: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVCurrent: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsPlaceholder?: boolean;
+
+    @Field({ nullable: true })
+    SqFtSource: string | null;
+
+    @Field({ nullable: true })
+    AppealLevel: string | null;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -17992,7 +18042,7 @@ export class UpdateindianataxOwnerPortfolioParcelInput {
     ParcelID?: string | null;
 
     @Field({ nullable: true })
-    GISParcelNumber?: string;
+    GISParcelNumber?: string | null;
 
     @Field({ nullable: true })
     Address?: string | null;
@@ -18053,6 +18103,30 @@ export class UpdateindianataxOwnerPortfolioParcelInput {
 
     @Field(() => Int, { nullable: true })
     LastAppealYear?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    PriorYear?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CurrentYear?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVPrior?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVCurrent?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsPlaceholder?: boolean;
+
+    @Field({ nullable: true })
+    SqFtSource?: string | null;
+
+    @Field({ nullable: true })
+    AppealLevel?: string | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -18205,6 +18279,16 @@ export class indianataxOwnerPortfolioRun_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({description: `Marion = the original Marion-only run (savings-tiered, mailing-address clustering); Statewide = every loaded county (AV-tiered; clustering only where a mailing address exists). IsLatest is per scope.`}) 
+    @MaxLength(20)
+    Scope: string;
+        
+    @Field(() => Int, {nullable: true, description: `How many counties the run's parcels span.`}) 
+    CountyCount?: number;
+        
+    @Field({nullable: true, description: `Per county: parcels, AVPrior, AVCurrent, YoY dollars/percent, placeholder share, the pair years.`}) 
+    ByCountyJSON?: string;
+        
     @Field(() => [indianataxOwnerPortfolio_])
     indianataxOwnerPortfolios_RunIDArray: indianataxOwnerPortfolio_[]; // Link to indianataxOwnerPortfolios
     
@@ -18260,6 +18344,15 @@ export class CreateindianataxOwnerPortfolioRunInput {
     @Field({ nullable: true })
     CountyByTypeJSON: string | null;
 
+    @Field({ nullable: true })
+    Scope?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyCount: number | null;
+
+    @Field({ nullable: true })
+    ByCountyJSON: string | null;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -18314,6 +18407,15 @@ export class UpdateindianataxOwnerPortfolioRunInput {
 
     @Field({ nullable: true })
     CountyByTypeJSON?: string | null;
+
+    @Field({ nullable: true })
+    Scope?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyCount?: number | null;
+
+    @Field({ nullable: true })
+    ByCountyJSON?: string | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -18543,6 +18645,29 @@ export class indianataxOwnerPortfolio_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field(() => Int, {nullable: true, description: `The county holding the most of this owner's AVCurrent.`}) 
+    PrimaryCountyNumber?: number;
+        
+    @Field(() => Int, {nullable: true, description: `How many counties this owner's parcels span.`}) 
+    CountyCount?: number;
+        
+    @Field({nullable: true, description: `This owner's parcels and AV split by county.`}) 
+    ByCountyJSON?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Sum over parcels of the parcel pair (see OwnerPortfolioParcel); the statewide equivalent of TotalAV2025/TotalAV2026.`}) 
+    AVPrior?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum over parcels of the parcel pair (see OwnerPortfolioParcel); the statewide equivalent of TotalAV2025/TotalAV2026.`}) 
+    AVCurrent?: number;
+        
+    @Field({nullable: true, description: `The modal parcel pair, e.g. "2025→2026"; a portfolio mixing pairs says so on the screen.`}) 
+    @MaxLength(20)
+    PairYears?: string;
+        
+    @Field({nullable: true, description: `What Tier ranks on: Savings (Marion run) or AV (statewide run).`}) 
+    @MaxLength(20)
+    TierBasis?: string;
+        
     @Field() 
     @MaxLength(60)
     Run: string;
@@ -18665,6 +18790,27 @@ export class CreateindianataxOwnerPortfolioInput {
     @Field({ nullable: true })
     ByTypeJSON: string | null;
 
+    @Field(() => Int, { nullable: true })
+    PrimaryCountyNumber: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CountyCount: number | null;
+
+    @Field({ nullable: true })
+    ByCountyJSON: string | null;
+
+    @Field(() => Float, { nullable: true })
+    AVPrior: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVCurrent: number | null;
+
+    @Field({ nullable: true })
+    PairYears: string | null;
+
+    @Field({ nullable: true })
+    TierBasis: string | null;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -18776,6 +18922,27 @@ export class UpdateindianataxOwnerPortfolioInput {
 
     @Field({ nullable: true })
     ByTypeJSON?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    PrimaryCountyNumber?: number | null;
+
+    @Field(() => Int, { nullable: true })
+    CountyCount?: number | null;
+
+    @Field({ nullable: true })
+    ByCountyJSON?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    AVPrior?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AVCurrent?: number | null;
+
+    @Field({ nullable: true })
+    PairYears?: string | null;
+
+    @Field({ nullable: true })
+    TierBasis?: string | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];

@@ -110,6 +110,25 @@
   text-decoration: underline;
 }
 
+/* Statewide: a county with no verify route says so rather than showing a dead link. */
+:host .pt__nolink {
+  margin-left: 0.375rem;
+  font-size: 0.6875rem;
+  color: var(--mj-text-muted);
+}
+
+/* Statewide: DLGF-only (placeholder) AV marker, next to the assessment years. */
+:host .pt__pill {
+  display: inline-block;
+  margin-left: 0.375rem;
+  padding: 0 0.3125rem;
+  border-radius: var(--mj-radius-full);
+  font-size: 0.625rem;
+  font-weight: 600;
+  background: var(--mj-status-warning-bg);
+  color: var(--mj-status-warning-text);
+}
+
 /* ── "N more parcels" note ────────────────────────────────────────────────── */
 :host .detail__more {
   margin: 0.5rem 0 0;
@@ -123,4 +142,9 @@
   display: flex;
   gap: 0.5rem;
   margin-top: 0.875rem;
+}
+
+/* Statewide county split: can list 59 counties — it must wrap (the owners table sets nowrap). */
+:host .detail__split {
+  white-space: normal;
 }

@@ -19,6 +19,7 @@ export class indianataxOwnerPortfolioRunFormComponent extends BaseFormComponent 
             { sectionKey: 'runIdentification', sectionName: 'Run Identification', isExpanded: true },
             { sectionKey: 'countyAssessmentRollup', sectionName: 'County Assessment Rollup', isExpanded: true },
             { sectionKey: 'countyParcelDistribution', sectionName: 'County Parcel Distribution', isExpanded: true },
+            { sectionKey: 'multiCountyScope', sectionName: 'Multi-County Scope', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'ownerPortfolios', sectionName: 'Owner Portfolios', isExpanded: false }
         ]);

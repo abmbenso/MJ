@@ -5,7 +5,7 @@ import {
   MJButtonDirective, MJPageHeaderComponent, MJPageLayoutComponent, MJPageBodyComponent,
   MJPageSearchComponent, MJFilterPopoverComponent, MJFilterPanelComponent, MJFilterFieldComponent,
   MJNumericInputComponent, MJViewToggleComponent, MJStatBadgeComponent, MJRefreshButtonComponent,
-  MJEmptyStateComponent, MJAlertComponent,
+  MJEmptyStateComponent, MJAlertComponent, MJDropdownComponent,
 } from '@memberjunction/ng-ui-components';
 import { SharedGenericModule } from '@memberjunction/ng-shared-generic';
 import { OwnerProspectsDashboardComponent } from './OwnerProspects/owner-prospects-dashboard.component';
@@ -23,7 +23,7 @@ import { OwnerDetailPanelComponent } from './OwnerProspects/owner-detail-panel.c
     CommonModule, FormsModule, MJButtonDirective, MJPageHeaderComponent, MJPageLayoutComponent,
     MJPageBodyComponent, MJPageSearchComponent, MJFilterPopoverComponent, MJFilterPanelComponent,
     MJFilterFieldComponent, MJNumericInputComponent, MJViewToggleComponent, MJStatBadgeComponent,
-    MJRefreshButtonComponent, MJEmptyStateComponent, MJAlertComponent, SharedGenericModule,
+    MJRefreshButtonComponent, MJEmptyStateComponent, MJAlertComponent, MJDropdownComponent, SharedGenericModule,
   ],
   exports: [OwnerProspectsDashboardComponent, OwnerDetailPanelComponent],
 })

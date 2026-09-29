@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="runIdentification"
         SectionName="Run Identification"
-        Icon="fa fa-tag"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -41,6 +41,14 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="Scope"
+            Type="select"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -48,7 +56,7 @@
     <mj-collapsible-panel
         SectionKey="countyAssessmentRollup"
         SectionName="County Assessment Rollup"
-        Icon="fa fa-calculator"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -106,7 +114,7 @@
     <mj-collapsible-panel
         SectionKey="countyParcelDistribution"
         SectionName="County Parcel Distribution"
-        Icon="fa fa-chart-bar"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -146,6 +154,32 @@
             [ShowLabel]="true"
             FieldName="CountyParcelsDown"
             Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Multi-County Scope Section -->
+    <mj-collapsible-panel
+        SectionKey="multiCountyScope"
+        SectionName="Multi-County Scope"
+        Icon="fa fa-map"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="CountyCount"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="ByCountyJSON"
+            Type="code"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>

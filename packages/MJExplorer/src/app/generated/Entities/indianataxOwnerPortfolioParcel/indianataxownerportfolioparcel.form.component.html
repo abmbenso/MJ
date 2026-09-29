@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="parcelIdentification"
         SectionName="Parcel Identification"
-        Icon="fa fa-id-card"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -85,6 +85,22 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="CountyNumber"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="SqFtSource"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -92,7 +108,7 @@
     <mj-collapsible-panel
         SectionKey="assessedValues"
         SectionName="Assessed Values"
-        Icon="fa fa-dollar-sign"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -127,6 +143,22 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AVPrior"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AVCurrent"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
@@ -134,7 +166,7 @@
     <mj-collapsible-panel
         SectionKey="valuationAnalysis"
         SectionName="Valuation Analysis"
-        Icon="fa fa-chart-line"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -184,7 +216,7 @@
     <mj-collapsible-panel
         SectionKey="appealRecommendation"
         SectionName="Appeal Recommendation"
-        Icon="fa fa-gavel"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -226,7 +258,7 @@
     <mj-collapsible-panel
         SectionKey="appealHistory"
         SectionName="Appeal History"
-        Icon="fa fa-history"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -253,29 +285,45 @@
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="AppealLevel"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
 
     </mj-collapsible-panel>
 
-    <!-- Details Section -->
+    <!-- Assessment Timeline Section -->
     <mj-collapsible-panel
-        SectionKey="details"
-        SectionName="Details"
-        Icon="fa fa-align-left"
+        SectionKey="assessmentTimeline"
+        SectionName="Assessment Timeline"
+        Icon="fa fa-calendar-alt"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="__mj_Latitude"
-            Type="textbox"
+            FieldName="PriorYear"
+            Type="number"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
         <mj-form-field 
             [Record]="record"
             [ShowLabel]="true"
-            FieldName="__mj_Longitude"
-            Type="textbox"
+            FieldName="CurrentYear"
+            Type="number"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="IsPlaceholder"
+            Type="checkbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -301,6 +349,22 @@
             [Record]="record"
             [ShowLabel]="true"
             FieldName="__mj_UpdatedAt"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Latitude"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="__mj_Longitude"
             Type="textbox"
             [EditMode]="EditMode"
             [FormContext]="formContext"

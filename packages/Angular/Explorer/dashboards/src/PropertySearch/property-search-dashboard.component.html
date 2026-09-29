@@ -146,6 +146,11 @@
             </mj-alert>
           }
 
+          @if (OwnerPortfolioRunError) {
+            <mj-alert Variant="error" Icon="fa-solid fa-circle-exclamation" [Message]="OwnerPortfolioRunError">
+            </mj-alert>
+          }
+
           @if (AppealLayerError) {
             <mj-alert Variant="error" Icon="fa-solid fa-circle-exclamation" [Message]="AppealLayerError">
             </mj-alert>

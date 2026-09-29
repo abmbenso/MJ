@@ -21,7 +21,7 @@ export class indianataxOwnerPortfolioParcelFormComponent extends BaseFormCompone
             { sectionKey: 'valuationAnalysis', sectionName: 'Valuation Analysis', isExpanded: true },
             { sectionKey: 'appealRecommendation', sectionName: 'Appeal Recommendation', isExpanded: true },
             { sectionKey: 'appealHistory', sectionName: 'Appeal History', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'assessmentTimeline', sectionName: 'Assessment Timeline', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false }
         ]);
     }

@@ -7048,11 +7048,11 @@ export const indianataxOwnerPortfolioParcelSchema = z.object({
         * * Display Name: Parcel ID
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Parcels (vwParcels.ID)`),
-    GISParcelNumber: z.string().describe(`
+    GISParcelNumber: z.string().nullable().describe(`
         * * Field Name: GISParcelNumber
         * * Display Name: GIS Parcel Number
-        * * SQL Data Type: nvarchar(20)
-        * * Description: parcel.parcel -- the 7-digit Marion County GIS parcel number, the always-present link key to the PRC and tax history even when ParcelID is null.`),
+        * * SQL Data Type: nvarchar(40)
+        * * Description: The county GIS parcel number; NULL where the county file carries none (12,283 C&I parcels in 45 counties, 2026-09-28). Link on ParcelID, never on this column.`),
     Address: z.string().nullable().describe(`
         * * Field Name: Address
         * * Display Name: Address
@@ -7164,6 +7164,47 @@ export const indianataxOwnerPortfolioParcelSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    CountyNumber: z.number().nullable().describe(`
+        * * Field Name: CountyNumber
+        * * Display Name: County
+        * * SQL Data Type: smallint
+        * * Description: The parcel's county.`),
+    PriorYear: z.number().nullable().describe(`
+        * * Field Name: PriorYear
+        * * Display Name: Prior Year
+        * * SQL Data Type: smallint
+        * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`),
+    CurrentYear: z.number().nullable().describe(`
+        * * Field Name: CurrentYear
+        * * Display Name: Current Year
+        * * SQL Data Type: smallint
+        * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`),
+    AVPrior: z.number().nullable().describe(`
+        * * Field Name: AVPrior
+        * * Display Name: Prior Year Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`),
+    AVCurrent: z.number().nullable().describe(`
+        * * Field Name: AVCurrent
+        * * Display Name: Current Assessment Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).`),
+    IsPlaceholder: z.boolean().describe(`
+        * * Field Name: IsPlaceholder
+        * * Display Name: Is Placeholder AV
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: AVCurrent comes from the DLGF roll only (no county document for that year).`),
+    SqFtSource: z.string().nullable().describe(`
+        * * Field Name: SqFtSource
+        * * Display Name: Square Footage Source
+        * * SQL Data Type: nvarchar(30)
+        * * Description: Where SqFt came from: PropertyRecordCard, BuildingDetail, DLGF, or null.`),
+    AppealLevel: z.string().nullable().describe(`
+        * * Field Name: AppealLevel
+        * * Display Name: Appeal Level
+        * * SQL Data Type: nvarchar(20)
+        * * Description: Highest appeal level with an outcome on record for this parcel: County-PTABOA or State-IBTR.`),
     OwnerPortfolio: z.string().describe(`
         * * Field Name: OwnerPortfolio
         * * Display Name: Owner Portfolio
@@ -7274,6 +7315,26 @@ export const indianataxOwnerPortfolioRunSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    Scope: z.union([z.literal('Marion'), z.literal('Statewide')]).describe(`
+        * * Field Name: Scope
+        * * Display Name: Scope
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: Marion
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Marion
+    *   * Statewide
+        * * Description: Marion = the original Marion-only run (savings-tiered, mailing-address clustering); Statewide = every loaded county (AV-tiered; clustering only where a mailing address exists). IsLatest is per scope.`),
+    CountyCount: z.number().nullable().describe(`
+        * * Field Name: CountyCount
+        * * Display Name: County Count
+        * * SQL Data Type: int
+        * * Description: How many counties the run's parcels span.`),
+    ByCountyJSON: z.string().nullable().describe(`
+        * * Field Name: ByCountyJSON
+        * * Display Name: By County Details
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: Per county: parcels, AVPrior, AVCurrent, YoY dollars/percent, placeholder share, the pair years.`),
 });
 
 export type indianataxOwnerPortfolioRunEntityType = z.infer<typeof indianataxOwnerPortfolioRunSchema>;
@@ -7469,6 +7530,45 @@ export const indianataxOwnerPortfolioSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    PrimaryCountyNumber: z.number().nullable().describe(`
+        * * Field Name: PrimaryCountyNumber
+        * * Display Name: Primary County Number
+        * * SQL Data Type: smallint
+        * * Description: The county holding the most of this owner's AVCurrent.`),
+    CountyCount: z.number().nullable().describe(`
+        * * Field Name: CountyCount
+        * * Display Name: County Count
+        * * SQL Data Type: int
+        * * Description: How many counties this owner's parcels span.`),
+    ByCountyJSON: z.string().nullable().describe(`
+        * * Field Name: ByCountyJSON
+        * * Display Name: Breakdown by County
+        * * SQL Data Type: nvarchar(MAX)
+        * * Description: This owner's parcels and AV split by county.`),
+    AVPrior: z.number().nullable().describe(`
+        * * Field Name: AVPrior
+        * * Display Name: Prior Year Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Sum over parcels of the parcel pair (see OwnerPortfolioParcel); the statewide equivalent of TotalAV2025/TotalAV2026.`),
+    AVCurrent: z.number().nullable().describe(`
+        * * Field Name: AVCurrent
+        * * Display Name: Current Year Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Sum over parcels of the parcel pair (see OwnerPortfolioParcel); the statewide equivalent of TotalAV2025/TotalAV2026.`),
+    PairYears: z.string().nullable().describe(`
+        * * Field Name: PairYears
+        * * Display Name: Assessment Year Pair
+        * * SQL Data Type: nvarchar(20)
+        * * Description: The modal parcel pair, e.g. "2025→2026"; a portfolio mixing pairs says so on the screen.`),
+    TierBasis: z.union([z.literal('AV'), z.literal('Savings')]).nullable().describe(`
+        * * Field Name: TierBasis
+        * * Display Name: Tier Basis
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * AV
+    *   * Savings
+        * * Description: What Tier ranks on: Savings (Marion run) or AV (statewide run).`),
     Run: z.string().describe(`
         * * Field Name: Run
         * * Display Name: Run
@@ -29807,13 +29907,13 @@ export class indianataxOwnerPortfolioParcelEntity extends BaseEntity<indianataxO
     /**
     * * Field Name: GISParcelNumber
     * * Display Name: GIS Parcel Number
-    * * SQL Data Type: nvarchar(20)
-    * * Description: parcel.parcel -- the 7-digit Marion County GIS parcel number, the always-present link key to the PRC and tax history even when ParcelID is null.
+    * * SQL Data Type: nvarchar(40)
+    * * Description: The county GIS parcel number; NULL where the county file carries none (12,283 C&I parcels in 45 counties, 2026-09-28). Link on ParcelID, never on this column.
     */
-    get GISParcelNumber(): string {
+    get GISParcelNumber(): string | null {
         return this.Get('GISParcelNumber');
     }
-    set GISParcelNumber(value: string) {
+    set GISParcelNumber(value: string | null) {
         this.Set('GISParcelNumber', value);
     }
 
@@ -30099,6 +30199,111 @@ export class indianataxOwnerPortfolioParcelEntity extends BaseEntity<indianataxO
     }
 
     /**
+    * * Field Name: CountyNumber
+    * * Display Name: County
+    * * SQL Data Type: smallint
+    * * Description: The parcel's county.
+    */
+    get CountyNumber(): number | null {
+        return this.Get('CountyNumber');
+    }
+    set CountyNumber(value: number | null) {
+        this.Set('CountyNumber', value);
+    }
+
+    /**
+    * * Field Name: PriorYear
+    * * Display Name: Prior Year
+    * * SQL Data Type: smallint
+    * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).
+    */
+    get PriorYear(): number | null {
+        return this.Get('PriorYear');
+    }
+    set PriorYear(value: number | null) {
+        this.Set('PriorYear', value);
+    }
+
+    /**
+    * * Field Name: CurrentYear
+    * * Display Name: Current Year
+    * * SQL Data Type: smallint
+    * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).
+    */
+    get CurrentYear(): number | null {
+        return this.Get('CurrentYear');
+    }
+    set CurrentYear(value: number | null) {
+        this.Set('CurrentYear', value);
+    }
+
+    /**
+    * * Field Name: AVPrior
+    * * Display Name: Prior Year Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).
+    */
+    get AVPrior(): number | null {
+        return this.Get('AVPrior');
+    }
+    set AVPrior(value: number | null) {
+        this.Set('AVPrior', value);
+    }
+
+    /**
+    * * Field Name: AVCurrent
+    * * Display Name: Current Assessment Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The two most recent assessment years with a headline; AVCurrent is the newest non-placeholder headline (or the newest placeholder, flagged).
+    */
+    get AVCurrent(): number | null {
+        return this.Get('AVCurrent');
+    }
+    set AVCurrent(value: number | null) {
+        this.Set('AVCurrent', value);
+    }
+
+    /**
+    * * Field Name: IsPlaceholder
+    * * Display Name: Is Placeholder AV
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: AVCurrent comes from the DLGF roll only (no county document for that year).
+    */
+    get IsPlaceholder(): boolean {
+        return this.Get('IsPlaceholder');
+    }
+    set IsPlaceholder(value: boolean) {
+        this.Set('IsPlaceholder', value);
+    }
+
+    /**
+    * * Field Name: SqFtSource
+    * * Display Name: Square Footage Source
+    * * SQL Data Type: nvarchar(30)
+    * * Description: Where SqFt came from: PropertyRecordCard, BuildingDetail, DLGF, or null.
+    */
+    get SqFtSource(): string | null {
+        return this.Get('SqFtSource');
+    }
+    set SqFtSource(value: string | null) {
+        this.Set('SqFtSource', value);
+    }
+
+    /**
+    * * Field Name: AppealLevel
+    * * Display Name: Appeal Level
+    * * SQL Data Type: nvarchar(20)
+    * * Description: Highest appeal level with an outcome on record for this parcel: County-PTABOA or State-IBTR.
+    */
+    get AppealLevel(): string | null {
+        return this.Get('AppealLevel');
+    }
+    set AppealLevel(value: string | null) {
+        this.Set('AppealLevel', value);
+    }
+
+    /**
     * * Field Name: OwnerPortfolio
     * * Display Name: Owner Portfolio
     * * SQL Data Type: nvarchar(300)
@@ -30380,6 +30585,50 @@ export class indianataxOwnerPortfolioRunEntity extends BaseEntity<indianataxOwne
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Scope
+    * * Display Name: Scope
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: Marion
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Marion
+    *   * Statewide
+    * * Description: Marion = the original Marion-only run (savings-tiered, mailing-address clustering); Statewide = every loaded county (AV-tiered; clustering only where a mailing address exists). IsLatest is per scope.
+    */
+    get Scope(): 'Marion' | 'Statewide' {
+        return this.Get('Scope');
+    }
+    set Scope(value: 'Marion' | 'Statewide') {
+        this.Set('Scope', value);
+    }
+
+    /**
+    * * Field Name: CountyCount
+    * * Display Name: County Count
+    * * SQL Data Type: int
+    * * Description: How many counties the run's parcels span.
+    */
+    get CountyCount(): number | null {
+        return this.Get('CountyCount');
+    }
+    set CountyCount(value: number | null) {
+        this.Set('CountyCount', value);
+    }
+
+    /**
+    * * Field Name: ByCountyJSON
+    * * Display Name: By County Details
+    * * SQL Data Type: nvarchar(MAX)
+    * * Description: Per county: parcels, AVPrior, AVCurrent, YoY dollars/percent, placeholder share, the pair years.
+    */
+    get ByCountyJSON(): string | null {
+        return this.Get('ByCountyJSON');
+    }
+    set ByCountyJSON(value: string | null) {
+        this.Set('ByCountyJSON', value);
     }
 }
 
@@ -30881,6 +31130,101 @@ export class indianataxOwnerPortfolioEntity extends BaseEntity<indianataxOwnerPo
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: PrimaryCountyNumber
+    * * Display Name: Primary County Number
+    * * SQL Data Type: smallint
+    * * Description: The county holding the most of this owner's AVCurrent.
+    */
+    get PrimaryCountyNumber(): number | null {
+        return this.Get('PrimaryCountyNumber');
+    }
+    set PrimaryCountyNumber(value: number | null) {
+        this.Set('PrimaryCountyNumber', value);
+    }
+
+    /**
+    * * Field Name: CountyCount
+    * * Display Name: County Count
+    * * SQL Data Type: int
+    * * Description: How many counties this owner's parcels span.
+    */
+    get CountyCount(): number | null {
+        return this.Get('CountyCount');
+    }
+    set CountyCount(value: number | null) {
+        this.Set('CountyCount', value);
+    }
+
+    /**
+    * * Field Name: ByCountyJSON
+    * * Display Name: Breakdown by County
+    * * SQL Data Type: nvarchar(MAX)
+    * * Description: This owner's parcels and AV split by county.
+    */
+    get ByCountyJSON(): string | null {
+        return this.Get('ByCountyJSON');
+    }
+    set ByCountyJSON(value: string | null) {
+        this.Set('ByCountyJSON', value);
+    }
+
+    /**
+    * * Field Name: AVPrior
+    * * Display Name: Prior Year Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: Sum over parcels of the parcel pair (see OwnerPortfolioParcel); the statewide equivalent of TotalAV2025/TotalAV2026.
+    */
+    get AVPrior(): number | null {
+        return this.Get('AVPrior');
+    }
+    set AVPrior(value: number | null) {
+        this.Set('AVPrior', value);
+    }
+
+    /**
+    * * Field Name: AVCurrent
+    * * Display Name: Current Year Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: Sum over parcels of the parcel pair (see OwnerPortfolioParcel); the statewide equivalent of TotalAV2025/TotalAV2026.
+    */
+    get AVCurrent(): number | null {
+        return this.Get('AVCurrent');
+    }
+    set AVCurrent(value: number | null) {
+        this.Set('AVCurrent', value);
+    }
+
+    /**
+    * * Field Name: PairYears
+    * * Display Name: Assessment Year Pair
+    * * SQL Data Type: nvarchar(20)
+    * * Description: The modal parcel pair, e.g. "2025→2026"; a portfolio mixing pairs says so on the screen.
+    */
+    get PairYears(): string | null {
+        return this.Get('PairYears');
+    }
+    set PairYears(value: string | null) {
+        this.Set('PairYears', value);
+    }
+
+    /**
+    * * Field Name: TierBasis
+    * * Display Name: Tier Basis
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * AV
+    *   * Savings
+    * * Description: What Tier ranks on: Savings (Marion run) or AV (statewide run).
+    */
+    get TierBasis(): 'AV' | 'Savings' | null {
+        return this.Get('TierBasis');
+    }
+    set TierBasis(value: 'AV' | 'Savings' | null) {
+        this.Set('TierBasis', value);
     }
 
     /**

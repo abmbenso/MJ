@@ -22,7 +22,8 @@ export class indianataxOwnerPortfolioFormComponent extends BaseFormComponent {
             { sectionKey: 'valuationAnalysisOpportunity', sectionName: 'Valuation Analysis Opportunity', isExpanded: true },
             { sectionKey: 'appealHistory', sectionName: 'Appeal History', isExpanded: true },
             { sectionKey: 'taxRepresentation', sectionName: 'Tax Representation', isExpanded: true },
-            { sectionKey: 'details', sectionName: 'Details', isExpanded: true },
+            { sectionKey: 'geographicDistribution', sectionName: 'Geographic Distribution', isExpanded: true },
+            { sectionKey: 'prospectQualification', sectionName: 'Prospect Qualification', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'ownerPortfolioParcels', sectionName: 'Owner Portfolio Parcels', isExpanded: false }
         ]);
