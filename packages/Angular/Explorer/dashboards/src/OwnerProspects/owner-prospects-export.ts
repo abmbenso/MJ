@@ -56,8 +56,10 @@ export interface OwnerExportBasis {
   county: string | null;
   searchTerm: string;
   completeOnly: boolean;
-  /** Other active table filters in words (tier, rep, appeal history, type); empty = none. */
-  otherFilters: string[];
+  /** Every table filter applied after the read, in words ({@link tableFilterWords}). */
+  filters: string[];
+  /** Rows the server read for the run + county/search clause (before the table's filters). */
+  rowsRead: number;
   /** "YoY 2025→2026, descending". */
   sort: string;
   years: DisplayYears;
@@ -247,17 +249,73 @@ function runLines(b: { runId: string; runDate: Date | null; methodologyVersion: 
   ];
 }
 
+/** Said on the Basis sheet whenever a county is chosen: the figures are the owner's, not the county's. */
+export const COUNTY_SCOPE_NOTE =
+  "Figures and completeness are owner-wide (all counties), not this county's; the county filter selects owners with a parcel here.";
+/** Said on the Marion Basis sheet: the Marion run writes no county count. */
+export const MARION_COUNTIES_NOTE = 'n/a on the Marion run';
+
+/** The table state whose filters are applied after the read. */
+export interface TableFilterState {
+  scope: OwnerProspectsScope;
+  completeOnly: boolean;
+  searchTerm: string;
+  tier: string;
+  tierHeader: string;
+  rep: '' | 'none' | 'has';
+  hasAppealHistory: boolean;
+  typeGroup: string;
+  minOppPerYear: number;
+}
+
+/** Every filter the table applies, in words — exactly those in force ("company owners only" always). */
+export function tableFilterWords(f: TableFilterState): string[] {
+  const out: string[] = ['company owners only'];
+  if (f.scope === 'Statewide' && f.completeOnly) out.push('Complete YoY only');
+  if (f.searchTerm.trim()) out.push(`search “${f.searchTerm.trim()}” (owner or rep)`);
+  if (f.tier !== 'all') out.push(`${f.tierHeader}: ${f.tier}`);
+  if (f.rep === 'none') out.push('no rep on record');
+  if (f.rep === 'has') out.push('represented');
+  if (f.hasAppealHistory) out.push('has an appealed parcel');
+  if (f.typeGroup) out.push(`dominant type: ${f.typeGroup}`);
+  if (f.scope === 'Marion' && f.minOppPerYear > 0) out.push(`opportunity ≥ $${f.minOppPerYear.toLocaleString('en-US')}/yr`);
+  return out;
+}
+
+/** The server-side read clause in words: "the Lake county filter", "the “acme” search filter", … */
+export function readFilterWords(county: string | null, serverSearch: string | null): string {
+  const term = serverSearch?.trim() ? `“${serverSearch.trim()}” search` : null;
+  if (county && term) return `the ${county} county and ${term} filter`;
+  if (county) return `the ${county} county filter`;
+  if (term) return `the ${term} filter`;
+  return 'no county or search filter (all counties)';
+}
+
+/** The large-export confirm: the pre-filter read count (a read-cost warning), and the filters applied after reading. */
+export function exportConfirmText(count: number, readWords: string, filters: readonly string[], cap: number): { message: string; detail: string; confirmText: string } {
+  const n = count.toLocaleString('en-US');
+  const capped = count > cap ? ` Only the first ${cap.toLocaleString('en-US')} will be read; the Basis sheet will say so.` : '';
+  return {
+    message: `${n} owners on this run match ${readWords} and will be read; the table's filters are applied after reading: ${filters.join(', ')}.`,
+    detail: `This is a read-cost warning on the pre-filter count — the file will hold fewer rows; the Basis sheet records rows read and rows written.${capped}`,
+    confirmText: `Read ${n} rows`,
+  };
+}
+
 /** The owner export's Basis lines. */
 export function ownerBasisLines(b: OwnerExportBasis, rowCount: number): (readonly [string, string | number])[] {
   return [
     ['Owner Prospects — owners export', ''],
     ...runLines(b),
     ['County', b.county ?? 'All counties'],
+    ['Filters applied', b.filters.join('; ')],
+    ['Rows read (run + county/search)', b.rowsRead],
+    ['Rows written after table filters', rowCount],
+    ...(b.county ? [['County scope', COUNTY_SCOPE_NOTE] as [string, string]] : []),
     ['Search term', b.searchTerm.trim() || 'none'],
     ['Complete YoY only', b.scope === 'Statewide' ? (b.completeOnly ? 'on' : 'off') : 'n/a (Marion)'],
-    ['Other filters', b.otherFilters.length ? b.otherFilters.join('; ') : 'none'],
     ['Sort', b.sort],
-    ['Rows', rowCount],
+    ...(b.scope === 'Marion' ? [['Counties', MARION_COUNTIES_NOTE] as [string, string]] : []),
     ...(b.capped && b.capNote ? [['Row cap', b.capNote] as [string, string]] : []),
     ['Generated at', isoMinute(b.generatedAt)],
     ...legendLines(),

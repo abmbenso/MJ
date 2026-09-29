@@ -12,6 +12,8 @@ import { OwnerProspectsDashboardComponent } from './owner-prospects-dashboard.co
 import { OwnerDetailPanelComponent } from './owner-detail-panel.component';
 import { NO_ANALYSIS_TOOLTIP, OwnerRow, mapParcelYearHeadlines } from './owner-prospects.model';
 import { ExportEngine, ExportResult, SheetDefinition } from '@memberjunction/export-engine';
+import { MJConfirmService, MJConfirmOptions } from '@memberjunction/ng-ui-components';
+import { OwnerProspectsDataAccess } from './owner-prospects-statewide-data';
 
 /**
  * DOM/TestBed coverage for the Owner Prospects statewide scope (owner-prospects-statewide
@@ -1166,5 +1168,63 @@ describe('Owner Prospects — YoY $ column and Excel export (years-export plan, 
     expect(column(parcels, 'Assessment status')).toEqual(['2025 roll · 2026 TBA', '2025 and 2026 on record']);
     const sortLine = basisSheet.data.find((r) => (r as unknown[])[0] === 'Sort') as unknown[];
     expect(sortLine[1]).toBe('AV 2025, ascending');
+  });
+});
+
+describe('Owner Prospects export — fix round 1 (the confirm names the filters; read vs written)', () => {
+  /** Force the large-read confirm (count above 20,000) and capture it; the user cancels, so nothing is read. */
+  function captureConfirm(): MJConfirmOptions[] {
+    const seen: MJConfirmOptions[] = [];
+    vi.spyOn(OwnerProspectsDataAccess.prototype, 'CountOwners').mockResolvedValue({ ok: true, count: 109_346 });
+    vi.spyOn(MJConfirmService.prototype, 'Confirm').mockImplementation(async (o: MJConfirmOptions | string): Promise<boolean> => {
+      if (typeof o !== 'string') seen.push(o);
+      return false;
+    });
+    return seen;
+  }
+
+  it('the confirm names Complete YoY only when it is on (the YoY sort default), with a neutral Read button', async () => {
+    const h = mount({ scope: 'Statewide', county: '45', complete: '1' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const seen = captureConfirm();
+    h.state.calls.length = 0;
+    await h.component.onExportOwners();
+    expect(seen).toHaveLength(1);
+    expect(seen[0].message).toBe("109,346 owners on this run match the Lake county filter and will be read; the table's filters are applied after reading: company owners only, Complete YoY only.");
+    expect(seen[0].detail).toContain('read-cost warning on the pre-filter count');
+    expect(seen[0].confirmText).toBe('Read 109,346 rows');
+    expect(ownerCalls(h.state).filter((c) => c.ResultType === 'simple')).toHaveLength(0); // cancelled: nothing read
+  });
+
+  it('the confirm omits Complete YoY only when it is off', async () => {
+    const h = mount({ scope: 'Statewide', complete: '0' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const seen = captureConfirm();
+    await h.component.onExportOwners();
+    expect(seen[0].message).not.toContain('Complete YoY only');
+    expect(seen[0].message).toContain('match no county or search filter (all counties)');
+    expect(seen[0].message).toMatch(/applied after reading: company owners only\.$/);
+  });
+
+  it('the Basis records rows read vs rows written and lists the filters applied', async () => {
+    const h = mount({ scope: 'Statewide', county: '45', complete: '1' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const sheets: SheetDefinition[][] = [];
+    vi.spyOn(ExportEngine, 'toExcelMultiSheet').mockImplementation(async (s: SheetDefinition[]): Promise<ExportResult> => {
+      sheets.push(s);
+      return { success: true, data: new Uint8Array([1]) } as ExportResult;
+    });
+    Object.defineProperty(URL, 'createObjectURL', { value: (): string => 'blob:x', configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: (): void => undefined, configurable: true });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    await h.component.onExportOwners();
+    const lines = new Map(sheets[0][0].data.map((r) => [(r as unknown[])[0], (r as unknown[])[1]]));
+    expect(lines.get('Rows read (run + county/search)')).toBe(2); // Walmart + Lake Only: the county clause (filterByCounty) holds; Allen is not read
+    expect(lines.get('Rows written after table filters')).toBe(sheets[0][1].data.length);
+    expect(lines.get('Filters applied')).toBe('company owners only; Complete YoY only');
+    expect(String(lines.get('County scope'))).toContain('owner-wide (all counties)');
   });
 });

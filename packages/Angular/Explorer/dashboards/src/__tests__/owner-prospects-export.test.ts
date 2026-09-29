@@ -26,6 +26,12 @@ import {
   pctFraction,
   primaryCountyName,
   slugify,
+  tableFilterWords,
+  readFilterWords,
+  exportConfirmText,
+  COUNTY_SCOPE_NOTE,
+  MARION_COUNTIES_NOTE,
+  TableFilterState,
 } from '../OwnerProspects/owner-prospects-export';
 import {
   EXPORT_PAGE_SIZE,
@@ -73,7 +79,7 @@ annotateOwnerYears(owners, Y);
 
 const basis: OwnerExportBasis = {
   runId: '19153E40-RUN', runDate: new Date(2026, 8, 28, 12, 0), methodologyVersion: 'statewide-v2', scope: 'Statewide',
-  county: 'Lake', searchTerm: '', completeOnly: false, otherFilters: ['company owners only'],
+  county: 'Lake', searchTerm: '', completeOnly: false, filters: ['company owners only'], rowsRead: 9_021,
   sort: ownerSortLabel('avCurrent', -1, Y, 'AV'), years: Y, tierBasis: 'AV', generatedAt: new Date(2026, 8, 28, 23, 30),
   capped: false, capNote: null,
 };
@@ -140,7 +146,11 @@ describe('owner workbook — read back from the file (Review Focus 3)', () => {
     expect(lines.get('Search term')).toBe('none');
     expect(lines.get('Complete YoY only')).toBe('off');
     expect(lines.get('Sort')).toBe('AV current, descending');
-    expect(lines.get('Rows')).toBe(2);
+    expect(lines.get('Rows read (run + county/search)')).toBe(9_021);
+    expect(lines.get('Rows written after table filters')).toBe(2);
+    expect(lines.get('Filters applied')).toBe('company owners only');
+    expect(lines.get('County scope')).toBe(COUNTY_SCOPE_NOTE);
+    expect(lines.has('Counties')).toBe(false);
     expect(lines.get('Generated at')).toBe('2026-09-28 23:30');
     for (const [mark, words] of EXPORT_LEGEND) expect(lines.get(mark)).toBe(words);
     expect(lines.get('TBA')).toBe('to be assessed — no figure on the record for the newest year');
@@ -216,6 +226,11 @@ describe('owner workbook — read back from the file (Review Focus 3)', () => {
     expect(row.getCell(columnOf(ws, 'Savings at ask')).value).toBe(51_000);
     expect(row.getCell(columnOf(ws, 'Savings tier')).value).toBe('Prime');
     expect(row.getCell(columnOf(ws, 'Primary county')).value).toBe('Marion');
+    expect(row.getCell(columnOf(ws, 'Counties')).type).toBe(ExcelJS.ValueType.Null); // stays empty — the Basis says why
+    const lines = new Map<string, ExcelJS.CellValue>();
+    (wb.getWorksheet('Basis') as ExcelJS.Worksheet).eachRow((r) => lines.set(String(r.getCell(1).value ?? ''), r.getCell(2).value));
+    expect(lines.get('Counties')).toBe(MARION_COUNTIES_NOTE);
+    expect(lines.has('County scope')).toBe(false); // no county chosen
   });
 });
 
@@ -334,5 +349,34 @@ describe('owner export collection', () => {
   it('CountOwners reads TotalRowCount', async () => {
     const { rv } = pagedRunView(38_412);
     expect(await new OwnerProspectsDataAccess(rv).CountOwners('x')).toEqual({ ok: true, count: 38_412 });
+  });
+});
+
+describe('fix round 1 — the confirm and the Basis name the filters; read vs written', () => {
+  const state = (over: Partial<TableFilterState> = {}): TableFilterState => ({
+    scope: 'Statewide', completeOnly: false, searchTerm: '', tier: 'all', tierHeader: 'AV tier', rep: '', hasAppealHistory: false,
+    typeGroup: '', minOppPerYear: 0, ...over,
+  });
+  it('tableFilterWords lists exactly the filters in force', () => {
+    expect(tableFilterWords(state())).toEqual(['company owners only']);
+    expect(tableFilterWords(state({ completeOnly: true, searchTerm: ' acme ', tier: 'A', rep: 'none', hasAppealHistory: true, typeGroup: 'Retail' }))).toEqual([
+      'company owners only', 'Complete YoY only', 'search “acme” (owner or rep)', 'AV tier: A', 'no rep on record', 'has an appealed parcel', 'dominant type: Retail',
+    ]);
+    // Complete-only is Statewide; the opportunity floor is Marion.
+    expect(tableFilterWords(state({ scope: 'Marion', completeOnly: true, minOppPerYear: 50_000, tierHeader: 'Savings tier' }))).toEqual(['company owners only', 'opportunity ≥ $50,000/yr']);
+    expect(tableFilterWords(state({ minOppPerYear: 50_000 }))).toEqual(['company owners only']);
+  });
+  it('readFilterWords names the server clause', () => {
+    expect(readFilterWords('Lake', null)).toBe('the Lake county filter');
+    expect(readFilterWords(null, 'acme')).toBe('the “acme” search filter');
+    expect(readFilterWords('Lake', 'acme')).toBe('the Lake county and “acme” search filter');
+    expect(readFilterWords(null, null)).toBe('no county or search filter (all counties)');
+  });
+  it('exportConfirmText: pre-filter count as a read-cost warning, the filters listed, a neutral "Read N rows"', () => {
+    const t = exportConfirmText(109_346, readFilterWords(null, null), ['company owners only', 'Complete YoY only'], 150_000);
+    expect(t.message).toBe("109,346 owners on this run match no county or search filter (all counties) and will be read; the table's filters are applied after reading: company owners only, Complete YoY only.");
+    expect(t.detail).toContain('read-cost warning on the pre-filter count');
+    expect(t.confirmText).toBe('Read 109,346 rows');
+    expect(exportConfirmText(160_000, 'x', ['company owners only'], 150_000).detail).toContain('Only the first 150,000 will be read');
   });
 });

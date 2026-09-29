@@ -75,6 +75,9 @@ import {
   ownerExportFileName,
   parcelExportFileName,
   ownerSortLabel,
+  tableFilterWords,
+  readFilterWords,
+  exportConfirmText,
 } from './owner-prospects-export';
 import { ParcelExportRequest } from './owner-detail-panel.component';
 import { AgentToolResult, validateEnumParam, validateStringParam, validateNonNegativeNumberParam } from '../shared/agent-tool-validation';
@@ -871,11 +874,13 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     if (!years || this.IsExporting || !this.latestRunId) return;
     this.beginExport('Counting owners…');
     try {
-      const collected = this.IsStatewide ? await this.collectStatewideOwners() : { rows: this.VisibleRows, capped: false };
+      const collected = this.IsStatewide
+        ? await this.collectStatewideOwners()
+        : { rows: this.VisibleRows, capped: false, read: this.AllOwners.length };
       if (!collected) return;
       this.ExportProgress = `Writing ${collected.rows.length.toLocaleString('en-US')} owners…`;
       this.cdr.markForCheck();
-      const basis = this.ownerExportBasis(years, collected.capped);
+      const basis = this.ownerExportBasis(years, collected.capped, collected.read);
       const sheets = buildOwnerWorkbook(exportRows(collected.rows, years, this.Scope), basis, this.nameByCounty);
       const slug = this.CountyNumber != null ? (this.slugByCounty[this.CountyNumber] ?? this.CountyName) : null;
       await this.writeWorkbook(sheets, ownerExportFileName(this.Scope, slug, basis.runDate), 'Owner Prospects — owners');
@@ -891,7 +896,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
    * paged to exhaustion (capped), after a confirm above {@link EXPORT_CONFIRM_ABOVE}; then the table's own company
    * subset, filters and sort. Null = cancelled or failed (already said).
    */
-  private async collectStatewideOwners(): Promise<{ rows: OwnerRow[]; capped: boolean } | null> {
+  private async collectStatewideOwners(): Promise<{ rows: OwnerRow[]; capped: boolean; read: number } | null> {
     const filter = OwnerProspectsDataAccess.ExportFilter(this.latestRunId ?? '', this.CountyNumber, this.SearchOwners ? this.filters.query : null);
     const data = this.data;
     const count = await data.CountOwners(filter);
@@ -912,47 +917,37 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     annotateOwnerYears(res.rows, this.DisplayYears);
     const f = { ...this.filters, minOppPerYear: 0 };
     const rows = buildVisibleRows(res.rows.filter((o) => o.kind === 'Company'), f, this.sortKey, this.sortDir, this.CompleteOnly);
-    return { rows, capped: res.capHit };
+    return { rows, capped: res.capHit, read: res.rows.length };
   }
 
-  /** Ask before a large export; the dialog states the count (and the cap when it binds). */
+  /** Ask before a large read: the pre-filter count (a read-cost warning) and exactly the filters applied after it. */
   private confirmLargeExport(count: number): Promise<boolean> {
-    const n = count.toLocaleString('en-US');
-    const cap = count > EXPORT_ROW_CAP ? ` Only the first ${EXPORT_ROW_CAP.toLocaleString('en-US')} will be read; the Basis sheet will say so.` : '';
-    return this.confirm.Confirm({
-      title: 'Export owners',
-      message: `${n} owner rows match this view. Reading them all may take a minute.`,
-      detail: `The table's filters and sort then apply to what is read.${cap}`,
-      confirmText: `Export ${n} rows`,
-      cancelText: 'Cancel',
-    });
+    const read = readFilterWords(this.CountyName, this.SearchOwners ? this.filters.query : null);
+    const text = exportConfirmText(count, read, this.tableFilters(), EXPORT_ROW_CAP);
+    return this.confirm.Confirm({ title: 'Export owners', ...text, cancelText: 'Cancel' });
   }
 
   /** What the owner export was taken from — the Basis sheet. */
-  private ownerExportBasis(years: DisplayYears, capped: boolean): OwnerExportBasis {
+  private ownerExportBasis(years: DisplayYears, capped: boolean, rowsRead: number): OwnerExportBasis {
     const cr = this.CountyRollup;
     const basis = this.RunTierBasis ?? effectiveTierBasis(null, this.Scope);
     const cap = EXPORT_ROW_CAP.toLocaleString('en-US');
     return {
       runId: this.latestRunId ?? '', runDate: cr?.runDate ? new Date(cr.runDate) : null, methodologyVersion: cr?.methodologyVersion ?? null,
       scope: this.Scope, county: this.CountyName, searchTerm: this.filters.query, completeOnly: this.CompleteOnly,
-      otherFilters: this.activeFilterWords(), sort: ownerSortLabel(this.sortKey, this.sortDir, years, basis),
+      filters: this.tableFilters(), rowsRead, sort: ownerSortLabel(this.sortKey, this.sortDir, years, basis),
       years, tierBasis: basis, generatedAt: new Date(), capped,
       capNote: capped ? `more than ${cap} owner rows matched; only the first ${cap} (by ID) were read` : null,
     };
   }
 
-  /** The table's other active filters, in words (company owners only is always on). */
-  private activeFilterWords(): string[] {
+  /** Every table filter in force, in words (the Basis sheet and the confirm list exactly these). */
+  private tableFilters(): string[] {
     const f = this.filters;
-    const out: string[] = ['company owners only'];
-    if (f.tier !== 'all') out.push(`${this.TierHeader}: ${f.tier}`);
-    if (f.rep === 'none') out.push('no rep on record');
-    if (f.rep === 'has') out.push('represented');
-    if (f.hasAppealHistory) out.push('has an appealed parcel');
-    if (f.typeGroup) out.push(`dominant type: ${f.typeGroup}`);
-    if (!this.IsStatewide && f.minOppPerYear > 0) out.push(`opportunity ≥ $${f.minOppPerYear.toLocaleString('en-US')}/yr`);
-    return out;
+    return tableFilterWords({
+      scope: this.Scope, completeOnly: this.CompleteOnly, searchTerm: f.query, tier: f.tier, tierHeader: this.TierHeader,
+      rep: f.rep, hasAppealHistory: f.hasAppealHistory, typeGroup: f.typeGroup, minOppPerYear: f.minOppPerYear,
+    });
   }
 
   /** The owner summary's Export parcels: the loaded parcel rows, as sorted in the panel. */
