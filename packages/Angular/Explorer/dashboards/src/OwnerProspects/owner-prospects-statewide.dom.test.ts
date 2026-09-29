@@ -11,6 +11,7 @@ import { renderComponentFixture, queryAll, query } from '@memberjunction/ng-test
 import { OwnerProspectsDashboardComponent } from './owner-prospects-dashboard.component';
 import { OwnerDetailPanelComponent } from './owner-detail-panel.component';
 import { NO_ANALYSIS_TOOLTIP, OwnerRow, mapParcelYearHeadlines } from './owner-prospects.model';
+import { ExportEngine, ExportResult, SheetDefinition } from '@memberjunction/export-engine';
 
 /**
  * DOM/TestBed coverage for the Owner Prospects statewide scope (owner-prospects-statewide
@@ -1021,5 +1022,149 @@ describe('Owner Prospects — years fix round 1', () => {
     const ok = await filter.Handler({ completeOnly: true });
     expect(ok.Success).toBe(true);
     expect(h.component.CompleteOnly).toBe(true);
+  });
+});
+
+describe('Owner Prospects — YoY $ column and Excel export (years-export plan, Task 3)', () => {
+  const t = (e: Element | null | undefined): string | undefined => e?.textContent?.trim();
+  const rowOf = (h: Harness, label: string): Element | undefined => queryAll(h.fixture, 'tbody tr').find((tr) => tr.textContent?.includes(label));
+  const withDollars = (): Raw[] => [
+    { ...WALMART, AVYoYDollars: 18_523_300 },
+    { ...LAKE_ONLY, AVYoYDollars: 2_723_900 },
+    { ...ALLEN_ONLY, AVYoYDollars: null },
+  ];
+
+  /** Capture the sheets handed to the export engine and the file name the browser is given; nothing is written. */
+  function captureExport(): { sheets: SheetDefinition[][]; files: string[] } {
+    const sheets: SheetDefinition[][] = [];
+    const files: string[] = [];
+    vi.spyOn(ExportEngine, 'toExcelMultiSheet').mockImplementation(async (s: SheetDefinition[]): Promise<ExportResult> => {
+      sheets.push(s);
+      return { success: true, data: new Uint8Array([1]), mimeType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' } as ExportResult;
+    });
+    Object.defineProperty(URL, 'createObjectURL', { value: (): string => 'blob:x', configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: (): void => undefined, configurable: true });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(function (this: HTMLAnchorElement) {
+      files.push(this.download);
+    });
+    return { sheets, files };
+  }
+  const column = (sheet: SheetDefinition, header: string): unknown[] => {
+    const i = (sheet.headers ?? []).indexOf(header);
+    expect(i, header).toBeGreaterThanOrEqual(0);
+    return sheet.data.map((r) => (r as unknown[])[i]);
+  };
+
+  it('YoY $ <y1>→<y2> after the YoY % column: signed dollars, — without a pair, sortable with blanks last', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = withDollars();
+    h.fixture.detectChanges();
+    await settle(h);
+    const headers = queryAll(h.fixture, 'thead th').map((th) => th.textContent?.trim());
+    expect(headers.indexOf('YoY $ 2025→2026')).toBe(headers.indexOf('YoY 2025→2026') + 1);
+    expect(t(rowOf(h, 'Walmart')?.querySelector('[data-testid="yoy-dollars"]'))).toBe('+$18,523,300');
+    expect(t(rowOf(h, 'Allen Only')?.querySelector('[data-testid="yoy-dollars"]'))).toBe('—');
+    expect(h.component.ColumnCount).toBe(17);
+    h.component.onSortColumn('avYoYDollars');
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['w', 'l', 'a']);
+    h.component.onSortColumn('avYoYDollars');
+    expect(h.component.VisibleRows.map((r) => r.id)).toEqual(['l', 'w', 'a']); // blanks last both directions
+  });
+
+  it('Export owners (Statewide, Lake): the page\'s own county filter, count then keyset pages, rows sorted as the table, the file name', async () => {
+    const h = mount({ scope: 'Statewide', county: '45' });
+    h.state.statewideOwners = withDollars();
+    h.fixture.detectChanges();
+    await settle(h);
+    const cap = captureExport();
+    h.state.calls.length = 0;
+    (query(h.fixture, '[data-testid="export-owners-btn"]') as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(cap.files).toHaveLength(1));
+
+    const reads = ownerCalls(h.state);
+    const countQ = reads.find((c) => c.ResultType === 'count_only');
+    const pageQ = reads.find((c) => c.ResultType === 'simple');
+    const clause = `RunID = 'S1' AND (PrimaryCountyNumber = 45 OR ByCountyJSON LIKE '%"45":%')`;
+    expect(countQ?.ExtraFilter).toBe(clause);
+    expect(pageQ?.ExtraFilter).toBe(clause);
+    expect(pageQ?.MaxRows).toBe(5001);
+    expect(pageQ?.OrderBy).toBeUndefined();
+    expect(cap.files[0]).toBe('owner-prospects_statewide_lake_2026-09-28.xlsx');
+
+    const [basisSheet, owners] = cap.sheets[0];
+    expect(basisSheet.name).toBe('Basis');
+    expect(owners.name).toBe('Owners');
+    // The county filter holds (Allen is not in Lake); the table's sort (AV current, descending) is the row order.
+    expect(column(owners, 'Owner')).toEqual(h.component.VisibleRows.map((r) => r.label));
+    expect(column(owners, 'Owner')).toEqual(['Walmart Inc.', 'Lake Only LLC']);
+    expect(column(owners, 'YoY $ 2025→2026')).toEqual([18_523_300, 2_723_900]);
+    expect(column(owners, 'Primary county')).toEqual(['Marion', 'Lake']);
+    expect(h.component.IsExporting).toBe(false);
+  });
+
+  it('Export owners (Statewide, All): an owner with no 2026 figure exports an empty (null) 2026 cell and the TBA words in the status', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = withDollars();
+    h.fixture.detectChanges();
+    await settle(h);
+    const cap = captureExport();
+    await h.component.onExportOwners();
+    expect(cap.files[0]).toBe('owner-prospects_statewide_all_2026-09-28.xlsx');
+    const owners = cap.sheets[0][1];
+    const labels = column(owners, 'Owner');
+    const allen = labels.indexOf('Allen Only LLC');
+    expect(column(owners, 'AV 2026')[allen]).toBeNull();
+    expect(column(owners, 'Assessment status')[allen]).toBe('2026 TBA (1 parcel)');
+    expect(column(owners, 'Primary county')[allen]).toBe('Allen');
+  });
+
+  it('Export owners (Marion): the loaded table, no re-read', async () => {
+    const h = mount({});
+    h.fixture.detectChanges();
+    await settle(h);
+    const cap = captureExport();
+    h.state.calls.length = 0;
+    await h.component.onExportOwners();
+    expect(ownerCalls(h.state)).toHaveLength(0);
+    expect(cap.files[0]).toBe('owner-prospects_marion_all_2026-09-24.xlsx');
+    expect(column(cap.sheets[0][1], 'Owner')).toEqual(['ACME PROPERTIES']);
+    expect(column(cap.sheets[0][1], 'Savings at ask')).toEqual([51_000]);
+  });
+
+  it('Export parcels: every loaded parcel of the opened owner, in the panel\'s sort', async () => {
+    const h = mount({ scope: 'Statewide' }, [STATEWIDE_RUN, MARION_RUN], true);
+    h.state.parcelsFor = (id) => (id === 'w' ? [
+      { ID: 'wp1', OwnerPortfolioID: 'w', ParcelID: 'P1', Parcel: '450706207002000023', Address: '1 Lake Ave', CountyNumber: 45, AVCurrent: 35_916_600 },
+      { ID: 'wp2', OwnerPortfolioID: 'w', ParcelID: 'P2', Parcel: '020000000000000001', Address: '2 Allen Rd', CountyNumber: 2, AVCurrent: 900_000 },
+    ] : []);
+    h.state.headlines = [
+      { ParcelID: 'P1', AssessmentYear: 2025, HeadlineTotalAV: 37_033_100, IsPlaceholder: 0, HeadlineDataSource: 'Lake County property record card' },
+      { ParcelID: 'P1', AssessmentYear: 2026, HeadlineTotalAV: 35_916_600, IsPlaceholder: 0, HeadlineDataSource: 'Lake County property record card' },
+      { ParcelID: 'P2', AssessmentYear: 2025, HeadlineTotalAV: 900_000, IsPlaceholder: 1, HeadlineDataSource: 'DLGF assessment roll' },
+    ];
+    h.fixture.detectChanges();
+    await settle(h);
+    const w = h.component.VisibleRows.find((r) => r.id === 'w') as OwnerRow;
+    h.component.toggleOwner(w);
+    await vi.waitFor(() => expect(h.component.ParcelYearsFor(w)).not.toBeNull());
+    await vi.waitFor(() => expect(h.component.LoadingParcelsFor).toBeNull());
+    h.fixture.detectChanges();
+    // Sort the panel by AV 2025 ascending: Allen (900,000) before Lake (37,033,100).
+    const year1Header = query(h.fixture, 'mj-owner-detail-panel [data-testid="pt-year1-header"]') as HTMLElement;
+    year1Header.click();
+    year1Header.click();
+    h.fixture.detectChanges();
+    const cap = captureExport();
+    (query(h.fixture, '[data-testid="export-parcels-btn"]') as HTMLButtonElement).click();
+    await vi.waitFor(() => expect(cap.files).toHaveLength(1));
+    expect(cap.files[0]).toBe('owner-parcels_walmart-inc_2026-09-28.xlsx');
+    const [basisSheet, parcels] = cap.sheets[0];
+    expect(parcels.name).toBe('Parcels');
+    expect(column(parcels, 'Address')).toEqual(['2 Allen Rd', '1 Lake Ave']);
+    expect(column(parcels, 'AV 2026')).toEqual([null, 35_916_600]);
+    expect(column(parcels, '2025 roll')).toEqual(['roll', null]);
+    expect(column(parcels, 'Assessment status')).toEqual(['2025 roll · 2026 TBA', '2025 and 2026 on record']);
+    const sortLine = basisSheet.data.find((r) => (r as unknown[])[0] === 'Sort') as unknown[];
+    expect(sortLine[1]).toBe('AV 2025, ascending');
   });
 });

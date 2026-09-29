@@ -10,6 +10,12 @@
     </div>
     <div actions>
       <mj-refresh-button [Loading]="IsLoading" (Clicked)="loadData()"></mj-refresh-button>
+      <button mjButton variant="secondary" size="sm" data-testid="export-owners-btn"
+        [disabled]="IsExporting || IsLoading || !DisplayYears || !!LoadError"
+        title="Every owner matching this view — scope, county, search and filters — to Excel, sorted as the table is"
+        (click)="onExportOwners()">
+        <i class="fa-solid fa-file-excel"></i> Export owners
+      </button>
     </div>
     <div toolbar>
       <mj-view-toggle
@@ -94,6 +100,12 @@
     </div>
   </mj-page-header>
   <mj-page-body>
+    @if (IsExporting) {
+      <div class="export-progress" data-testid="export-progress">
+        <mj-loading [text]="ExportProgress" size="small"></mj-loading>
+      </div>
+    }
+
     @if (LoadError) {
       <mj-alert Variant="warning" [Message]="LoadError"></mj-alert>
     }
@@ -245,6 +257,8 @@
                   <th class="num" (click)="onSortColumn('avYear1')" [attr.data-sort]="isSorted('avYear1')" data-testid="year1-header">{{ YearHeaders.y1 }}</th>
                   <th class="num" (click)="onSortColumn('avYear2')" [attr.data-sort]="isSorted('avYear2')" data-testid="year2-header">{{ YearHeaders.y2 }}</th>
                   <th class="num" (click)="onSortColumn('yoyPair')" [attr.data-sort]="isSorted('yoyPair')" data-testid="yoy-header">{{ YearHeaders.yoy }}</th>
+                  <th class="num" (click)="onSortColumn('avYoYDollars')" [attr.data-sort]="isSorted('avYoYDollars')" data-testid="yoy-dollars-header"
+                    title="Σ (newest − older year) over the owner's parcels with both years (DLGF roll figures included)">{{ YearHeaders.yoyDollars }}</th>
                   <th (click)="onSortColumn('completeness')" [attr.data-sort]="isSorted('completeness')" title="Sorted by the share of the newest-year AV the YoY covers">Assessment status</th>
                 } @else {
                   <th class="num" (click)="onSortColumn('totalAV2025')" [attr.data-sort]="isSorted('totalAV2025')">AV 2025</th>
@@ -294,6 +308,9 @@
                     <td class="num" data-testid="av-year2" [class.gap]="y2 === TbaMark" [attr.title]="yearTitle(row, 1)">{{ yearText(y2) }}</td>
                     <td class="num" data-testid="yoy-pair" [attr.title]="yoyTitle(row)">
                       <span class="yoy" [class.yoy--up]="pct != null && pct > 0" [class.yoy--down]="pct != null && pct < 0">{{ yoy(pct) }}</span>
+                    </td>
+                    <td class="num" data-testid="yoy-dollars">
+                      <span class="yoy" [class.yoy--up]="row.avYoYDollars != null && row.avYoYDollars > 0" [class.yoy--down]="row.avYoYDollars != null && row.avYoYDollars < 0">{{ yoyDollars(row.avYoYDollars) }}</span>
                     </td>
                     <td class="status-cell" data-testid="assessment-status">{{ status(row) }}</td>
                   } @else {
@@ -369,6 +386,8 @@
                         [CountySlugs]="CountySlugs"
                         [CountyNames]="CountyNames"
                         (FlagRequested)="onFlagOwner($event)"
+                        [Exporting]="IsExporting"
+                        (ExportParcelsRequested)="onExportParcels($event)"
                         (ViewProspectRequested)="onViewProspect($event)">
                       </mj-owner-detail-panel>
                     </td>

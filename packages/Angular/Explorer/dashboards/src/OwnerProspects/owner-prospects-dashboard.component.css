@@ -370,3 +370,12 @@
   font-size: 0.75rem;
   color: var(--mj-text-muted);
 }
+
+/* Excel export in progress: the mj-loading line above the table. */
+:host .export-progress {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0;
+  color: var(--mj-text-secondary);
+}

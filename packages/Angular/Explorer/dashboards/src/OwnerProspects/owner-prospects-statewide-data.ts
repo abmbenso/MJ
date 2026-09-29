@@ -8,7 +8,7 @@
  * lookup for the dropdown, the parcels of one opened owner (top {@link PARCEL_ROW_CAP}), that owner's
  * display-year figures read live from `Parcel Year Headlines`, and the existing-prospect match. The static `*Query` builders are pure so the filters can be unit-tested.
  */
-import { RunView, RunViewParams } from '@memberjunction/core';
+import { CompositeKey, RunView, RunViewParams, RunViewResult } from '@memberjunction/core';
 import {
   OwnerRow,
   OwnerParcelRow,
@@ -57,6 +57,15 @@ export type RunPick = { run: RawRow; error: null } | { run: null; error: string 
 export type OwnersResult = { ok: true; rows: OwnerRow[]; capHit: boolean } | { ok: false; error: string };
 export type ParcelsResult = { ok: true; parcels: OwnerParcelRow[]; capHit: boolean } | { ok: false; error: string };
 export type ParcelYearsResult = { ok: true; years: ParcelYearsMap } | { ok: false; error: string };
+export type CountResult = { ok: true; count: number } | { ok: false; error: string };
+export type ExportOwnersResult = { ok: true; rows: OwnerRow[]; capHit: boolean } | { ok: false; error: string };
+
+/** The owner export reads pages of this many rows (each asks for one more as the tripwire). */
+export const EXPORT_PAGE_SIZE = 5000;
+/** The owner export reads at most this many rows. */
+export const EXPORT_ROW_CAP = 150_000;
+/** Above this many matching rows the export asks first (the confirm states the count). */
+export const EXPORT_CONFIRM_ABOVE = 20_000;
 
 /** Parcel-year figures per opened owner: at most this many (the query asks for one more as a tripwire). */
 export const PARCEL_YEAR_ROW_CAP = 10000;
@@ -174,6 +183,35 @@ export class OwnerProspectsDataAccess {
     };
   }
 
+  /**
+   * The owner export's `ExtraFilter` — the page's own: the run + county clause, plus the server search's
+   * `Label LIKE` when the table is showing a server search (`searchTerm` non-null). Same builders as the page.
+   */
+  public static ExportFilter(runId: string, countyNumber: number | null, searchTerm: string | null): string {
+    return searchTerm != null ? statewideSearchFilter(runId, countyNumber, searchTerm) : statewidePortfolioFilter(runId, countyNumber);
+  }
+
+  /** How many `Owner Portfolios` rows match an export filter (count only; no rows come back). */
+  public static ExportCountQuery(extraFilter: string): RunViewParams {
+    return { EntityName: OWNER_PORTFOLIO_ENTITY, Fields: ['ID'], ExtraFilter: extraFilter, MaxRows: 1, ResultType: 'count_only' };
+  }
+
+  /**
+   * One export page: keyset-paged on the primary key (`AfterKey`, no `OrderBy` — the framework seeks on `ID`;
+   * guides/KEYSET_PAGINATION_GUIDE.md), {@link EXPORT_PAGE_SIZE} rows +1 as the tripwire. The table's sort is
+   * applied client-side after the read.
+   */
+  public static ExportPageQuery(extraFilter: string, afterId: string | null): RunViewParams {
+    return {
+      EntityName: OWNER_PORTFOLIO_ENTITY,
+      Fields: [...OWNER_FIELDS, ...STATEWIDE_OWNER_FIELDS],
+      ExtraFilter: extraFilter,
+      AfterKey: afterId ? CompositeKey.FromID(afterId) : undefined,
+      MaxRows: EXPORT_PAGE_SIZE + 1,
+      ResultType: 'simple',
+    };
+  }
+
   private static statewideOwners(extraFilter: string): RunViewParams {
     return {
       EntityName: OWNER_PORTFOLIO_ENTITY,
@@ -240,6 +278,40 @@ export class OwnerProspectsDataAccess {
     const raw = res.Results ?? [];
     const rows = filterByCounty(raw.slice(0, STATEWIDE_ROW_CAP).map(mapOwnerPortfolioRow), countyNumber);
     return { ok: true, rows, capHit: raw.length > STATEWIDE_ROW_CAP };
+  }
+
+  /** How many owners match an export filter. */
+  public async CountOwners(extraFilter: string): Promise<CountResult> {
+    const res = await this.rv.RunView<RawRow>(OwnerProspectsDataAccess.ExportCountQuery(extraFilter));
+    if (!res.Success) return { ok: false, error: res.ErrorMessage || 'Failed to count owners.' };
+    return { ok: true, count: res.TotalRowCount ?? 0 };
+  }
+
+  /**
+   * Every owner matching an export filter, page by page until exhausted or {@link EXPORT_ROW_CAP} is read
+   * (`capHit` = more matched). A failed page fails the export — never a partial workbook presented as whole.
+   * `onProgress` gets the running row count after each page.
+   */
+  public async LoadAllOwners(extraFilter: string, countyNumber: number | null, onProgress?: (read: number) => void): Promise<ExportOwnersResult> {
+    const raw: RawRow[] = [];
+    let afterId: string | null = null;
+    for (;;) {
+      const res: RunViewResult<RawRow> = await this.rv.RunView<RawRow>(OwnerProspectsDataAccess.ExportPageQuery(extraFilter, afterId));
+      if (!res.Success) return { ok: false, error: res.ErrorMessage || `Failed to read owners after row ${raw.length}.` };
+      const page: RawRow[] = res.Results ?? [];
+      const kept: RawRow[] = page.slice(0, EXPORT_PAGE_SIZE);
+      const room = EXPORT_ROW_CAP - raw.length;
+      raw.push(...kept.slice(0, room));
+      onProgress?.(raw.length);
+      const more = page.length > EXPORT_PAGE_SIZE;
+      if (kept.length > room || (more && raw.length >= EXPORT_ROW_CAP)) return { ok: true, rows: this.mapExport(raw, countyNumber), capHit: true };
+      if (!more) return { ok: true, rows: this.mapExport(raw, countyNumber), capHit: false };
+      afterId = String(kept[kept.length - 1]['ID']);
+    }
+  }
+
+  private mapExport(raw: readonly RawRow[], countyNumber: number | null): OwnerRow[] {
+    return filterByCounty(raw.map(mapOwnerPortfolioRow), countyNumber);
   }
 
   /** One opened owner's parcels (top {@link PARCEL_ROW_CAP} by AV). */

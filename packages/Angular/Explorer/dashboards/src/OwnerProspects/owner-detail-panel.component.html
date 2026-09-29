@@ -198,6 +198,10 @@
   }
 
   <div class="detail__actions">
+    <button mjButton variant="secondary" size="sm" data-testid="export-parcels-btn" [disabled]="!CanExportParcels" (click)="ExportParcels()"
+      title="Every loaded parcel of this owner, as sorted here, to Excel">
+      <i class="fa-solid fa-file-excel"></i> Export parcels
+    </button>
     @if (Owner.prospectId) {
       <button mjButton variant="secondary" size="sm" (click)="ViewProspectRequested.emit(Owner)">
         <i class="fa-solid fa-arrow-up-right-from-square"></i> View prospect

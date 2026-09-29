@@ -1,11 +1,12 @@
-import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit } from '@angular/core';
+import { Component, ChangeDetectionStrategy, ChangeDetectorRef, AfterViewInit, inject } from '@angular/core';
 import { BaseDashboard, BaseResourceComponent } from '@memberjunction/ng-shared';
 import { RegisterClass } from '@memberjunction/global';
 import { ResourceData, UserInfoEngine } from '@memberjunction/core-entities';
 import { CompositeKey, RunView, UserInfo } from '@memberjunction/core';
 import { MJNotificationService } from '@memberjunction/ng-notifications';
 import { indianataxProspectEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity } from 'mj_generatedentities';
-import { FilterFieldConfig } from '@memberjunction/ng-ui-components';
+import { FilterFieldConfig, MJConfirmService } from '@memberjunction/ng-ui-components';
+import { ExportEngine, SheetDefinition } from '@memberjunction/export-engine';
 import { ownerKeyFromRow } from './owner-key';
 import {
   OwnerRow,
@@ -57,8 +58,25 @@ import {
   countyYearBanner,
   MARION_PARCELS_MARKER,
   MARION_PARCELS_TOOLTIP,
+  exportRows,
+  exportParcelRows,
 } from './owner-prospects.model';
-import { OwnerProspectsDataAccess, CountyFilterOption, OwnersResult } from './owner-prospects-statewide-data';
+import {
+  OwnerProspectsDataAccess,
+  CountyFilterOption,
+  OwnersResult,
+  EXPORT_CONFIRM_ABOVE,
+  EXPORT_ROW_CAP,
+} from './owner-prospects-statewide-data';
+import {
+  OwnerExportBasis,
+  buildOwnerWorkbook,
+  buildParcelWorkbook,
+  ownerExportFileName,
+  parcelExportFileName,
+  ownerSortLabel,
+} from './owner-prospects-export';
+import { ParcelExportRequest } from './owner-detail-panel.component';
 import { AgentToolResult, validateEnumParam, validateStringParam, validateNonNegativeNumberParam } from '../shared/agent-tool-validation';
 
 /**
@@ -173,6 +191,12 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   public TierCounts: Record<string, number | undefined> = {};
   /** Statewide: id of the owner whose parcels are loading on expand. */
   public LoadingParcelsFor: string | null = null;
+  /** An Excel export is being collected / written. */
+  public IsExporting = false;
+  /** What the running export is doing ("Reading owners… 10,000 of 38,412"). */
+  public ExportProgress = '';
+
+  private confirm = inject(MJConfirmService);
 
   private filters: OwnerProspectsFilters = { ...DEFAULT_OWNER_PROSPECTS_FILTERS };
   private sortKey: OwnerSortKey = 'estSavingsAtAsk';
@@ -276,13 +300,15 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
 
   /** Table column count (drives the detail / overflow rows' colspan). */
   public get ColumnCount(): number {
-    return this.IsStatewide ? 16 : 14;
+    return this.IsStatewide ? 17 : 14;
   }
 
   /** `AV 2025` / `AV 2026` / `YoY 2025→2026` headers from the run's display years (`—` when the run has none). */
-  public get YearHeaders(): { y1: string; y2: string; yoy: string } {
+  public get YearHeaders(): { y1: string; y2: string; yoy: string; yoyDollars: string } {
     const y = this.DisplayYears;
-    return y ? { y1: `AV ${y[0]}`, y2: `AV ${y[1]}`, yoy: `YoY ${y[0]}→${y[1]}` } : { y1: 'AV —', y2: 'AV —', yoy: 'YoY' };
+    return y
+      ? { y1: `AV ${y[0]}`, y2: `AV ${y[1]}`, yoy: `YoY ${y[0]}→${y[1]}`, yoyDollars: `YoY $ ${y[0]}→${y[1]}` }
+      : { y1: 'AV —', y2: 'AV —', yoy: 'YoY', yoyDollars: 'YoY $' };
   }
 
   /** An owner's cell for display year 0 (older) or 1 (newest): its Σ AV, or `—` / `TBA`. */
@@ -310,6 +336,13 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
   /** The owner's YoY over its parcels with both display years; null = `—`. */
   public yoyValue(row: OwnerRow): number | null {
     return row.yoyPair ?? null;
+  }
+
+  /** Signed dollars for the YoY $ cell: `+$1,234` / `-$567` / `$0` / `—`. */
+  public yoyDollars(n: number | null): string {
+    if (n == null) return NO_FIGURE_MARK;
+    const abs = `$${Math.round(Math.abs(n)).toLocaleString('en-US')}`;
+    return n > 0 ? `+${abs}` : n < 0 ? `-${abs}` : abs;
   }
 
   /** The Assessment status column. */
@@ -828,6 +861,157 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       return;
     }
     this.navigationService.OpenEntityRecord('Prospects', new CompositeKey([{ FieldName: 'ID', Value: row.prospectId }]));
+  }
+
+  // ───── Excel export (owner-prospects-years-export plan, Task 3) ─────
+
+  /** The toolbar's Export owners: every owner matching the table's scope / county / search / filters, sorted as the table is. */
+  public async onExportOwners(): Promise<void> {
+    const years = this.DisplayYears;
+    if (!years || this.IsExporting || !this.latestRunId) return;
+    this.beginExport('Counting owners…');
+    try {
+      const collected = this.IsStatewide ? await this.collectStatewideOwners() : { rows: this.VisibleRows, capped: false };
+      if (!collected) return;
+      this.ExportProgress = `Writing ${collected.rows.length.toLocaleString('en-US')} owners…`;
+      this.cdr.markForCheck();
+      const basis = this.ownerExportBasis(years, collected.capped);
+      const sheets = buildOwnerWorkbook(exportRows(collected.rows, years, this.Scope), basis, this.nameByCounty);
+      const slug = this.CountyNumber != null ? (this.slugByCounty[this.CountyNumber] ?? this.CountyName) : null;
+      await this.writeWorkbook(sheets, ownerExportFileName(this.Scope, slug, basis.runDate), 'Owner Prospects — owners');
+    } catch (e) {
+      this.notify(`Export failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+    } finally {
+      this.endExport();
+    }
+  }
+
+  /**
+   * Statewide: read every owner the page's own ExtraFilter matches (the server search's when the table shows one),
+   * paged to exhaustion (capped), after a confirm above {@link EXPORT_CONFIRM_ABOVE}; then the table's own company
+   * subset, filters and sort. Null = cancelled or failed (already said).
+   */
+  private async collectStatewideOwners(): Promise<{ rows: OwnerRow[]; capped: boolean } | null> {
+    const filter = OwnerProspectsDataAccess.ExportFilter(this.latestRunId ?? '', this.CountyNumber, this.SearchOwners ? this.filters.query : null);
+    const data = this.data;
+    const count = await data.CountOwners(filter);
+    if (!count.ok) {
+      this.notify(`Export failed: ${count.error}`, 'error');
+      return null;
+    }
+    if (count.count > EXPORT_CONFIRM_ABOVE && !(await this.confirmLargeExport(count.count))) return null;
+    const total = Math.min(count.count, EXPORT_ROW_CAP).toLocaleString('en-US');
+    const res = await data.LoadAllOwners(filter, this.CountyNumber, (n) => {
+      this.ExportProgress = `Reading owners… ${n.toLocaleString('en-US')} of ${total}`;
+      this.cdr.markForCheck();
+    });
+    if (!res.ok) {
+      this.notify(`Export failed: ${res.error}`, 'error');
+      return null;
+    }
+    annotateOwnerYears(res.rows, this.DisplayYears);
+    const f = { ...this.filters, minOppPerYear: 0 };
+    const rows = buildVisibleRows(res.rows.filter((o) => o.kind === 'Company'), f, this.sortKey, this.sortDir, this.CompleteOnly);
+    return { rows, capped: res.capHit };
+  }
+
+  /** Ask before a large export; the dialog states the count (and the cap when it binds). */
+  private confirmLargeExport(count: number): Promise<boolean> {
+    const n = count.toLocaleString('en-US');
+    const cap = count > EXPORT_ROW_CAP ? ` Only the first ${EXPORT_ROW_CAP.toLocaleString('en-US')} will be read; the Basis sheet will say so.` : '';
+    return this.confirm.Confirm({
+      title: 'Export owners',
+      message: `${n} owner rows match this view. Reading them all may take a minute.`,
+      detail: `The table's filters and sort then apply to what is read.${cap}`,
+      confirmText: `Export ${n} rows`,
+      cancelText: 'Cancel',
+    });
+  }
+
+  /** What the owner export was taken from — the Basis sheet. */
+  private ownerExportBasis(years: DisplayYears, capped: boolean): OwnerExportBasis {
+    const cr = this.CountyRollup;
+    const basis = this.RunTierBasis ?? effectiveTierBasis(null, this.Scope);
+    const cap = EXPORT_ROW_CAP.toLocaleString('en-US');
+    return {
+      runId: this.latestRunId ?? '', runDate: cr?.runDate ? new Date(cr.runDate) : null, methodologyVersion: cr?.methodologyVersion ?? null,
+      scope: this.Scope, county: this.CountyName, searchTerm: this.filters.query, completeOnly: this.CompleteOnly,
+      otherFilters: this.activeFilterWords(), sort: ownerSortLabel(this.sortKey, this.sortDir, years, basis),
+      years, tierBasis: basis, generatedAt: new Date(), capped,
+      capNote: capped ? `more than ${cap} owner rows matched; only the first ${cap} (by ID) were read` : null,
+    };
+  }
+
+  /** The table's other active filters, in words (company owners only is always on). */
+  private activeFilterWords(): string[] {
+    const f = this.filters;
+    const out: string[] = ['company owners only'];
+    if (f.tier !== 'all') out.push(`${this.TierHeader}: ${f.tier}`);
+    if (f.rep === 'none') out.push('no rep on record');
+    if (f.rep === 'has') out.push('represented');
+    if (f.hasAppealHistory) out.push('has an appealed parcel');
+    if (f.typeGroup) out.push(`dominant type: ${f.typeGroup}`);
+    if (!this.IsStatewide && f.minOppPerYear > 0) out.push(`opportunity ≥ $${f.minOppPerYear.toLocaleString('en-US')}/yr`);
+    return out;
+  }
+
+  /** The owner summary's Export parcels: the loaded parcel rows, as sorted in the panel. */
+  public async onExportParcels(req: ParcelExportRequest): Promise<void> {
+    const years = this.DisplayYears;
+    if (!years || this.IsExporting) return;
+    this.beginExport(`Writing ${req.Rows.length.toLocaleString('en-US')} parcels…`);
+    try {
+      const cr = this.CountyRollup;
+      const runDate = cr?.runDate ? new Date(cr.runDate) : null;
+      const sheets = buildParcelWorkbook(exportParcelRows(req.Rows, years), {
+        runId: this.latestRunId ?? '', runDate, methodologyVersion: cr?.methodologyVersion ?? null, scope: this.Scope,
+        owner: req.Owner.label, ownerKey: req.Owner.ownerKey, ownerParcelCount: req.Owner.parcelCount,
+        capNote: this.ParcelsCappedFor(req.Owner) ? PARCEL_CAP_NOTE : null, sort: req.Sort, years, generatedAt: new Date(),
+      });
+      await this.writeWorkbook(sheets, parcelExportFileName(req.Owner.label, runDate), `Owner parcels — ${req.Owner.label}`);
+    } catch (e) {
+      this.notify(`Export failed: ${e instanceof Error ? e.message : String(e)}`, 'error');
+    } finally {
+      this.endExport();
+    }
+  }
+
+  private beginExport(progress: string): void {
+    this.IsExporting = true;
+    this.ExportProgress = progress;
+    this.cdr.markForCheck();
+  }
+
+  private endExport(): void {
+    this.IsExporting = false;
+    this.ExportProgress = '';
+    this.cdr.markForCheck();
+  }
+
+  /** Build the workbook through the export engine and hand the bytes to the browser (the TaxBillProjection pattern). */
+  private async writeWorkbook(sheets: SheetDefinition[], fileName: string, title: string): Promise<void> {
+    const result = await ExportEngine.toExcelMultiSheet(sheets, {
+      fileName: fileName.replace(/\.xlsx$/, ''),
+      metadata: { title, author: 'Indiana Property Tax Expert' },
+    });
+    if (!result.success || !result.data) {
+      this.notify(`Export failed: ${result.error ?? 'no data was produced'}`, 'error');
+      return;
+    }
+    // ExportEngine returns the bytes; handing them to the browser is ours to do.
+    this.downloadFile(result.data, fileName, result.mimeType);
+    this.notify(`Downloaded ${fileName}`, 'success');
+  }
+
+  private downloadFile(bytes: Uint8Array, fileName: string, mimeType?: string): void {
+    const blob = new Blob([bytes as BlobPart], { type: mimeType || 'application/octet-stream' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = fileName;
+    a.click();
+    // Revoking immediately can cancel the download in some browsers; one tick is enough.
+    setTimeout(() => URL.revokeObjectURL(url), 0);
   }
 
   // ───── Flag-as-prospect internals (mirror flag-prospect.js) ─────

@@ -170,11 +170,12 @@ describe('buildVisibleRows', () => {
 describe('KNOWN_SORT_KEYS', () => {
   it('covers every OwnerSortKey union member', () => {
     // 16 since the statewide scope (2026-09-28): + avPrior, avCurrent, countyCount;
-    // 20 since fixed assessment years (2026-09-28 evening): + avYear1, avYear2, yoyPair, completeness.
-    expect(KNOWN_SORT_KEYS.size).toBe(20);
+    // 20 since fixed assessment years (2026-09-28 evening): + avYear1, avYear2, yoyPair, completeness;
+    // 21 since the Excel export task: + avYoYDollars (the Statewide YoY $ column).
+    expect(KNOWN_SORT_KEYS.size).toBe(21);
     for (const k of ['label', 'tier', 'parcelCount', 'totalAV2025', 'totalAV2026', 'avYoYPct', 'totalUnits',
       'nAppealRec', 'estSavingsAtAsk', 'estSavingsAtFloor', 'historicalReductionWon', 'appealYears', 'repStatus',
-      'avPrior', 'avCurrent', 'countyCount', 'avYear1', 'avYear2', 'yoyPair', 'completeness'] as const) {
+      'avPrior', 'avCurrent', 'countyCount', 'avYear1', 'avYear2', 'yoyPair', 'avYoYDollars', 'completeness'] as const) {
       expect(KNOWN_SORT_KEYS.has(k)).toBe(true);
     }
   });

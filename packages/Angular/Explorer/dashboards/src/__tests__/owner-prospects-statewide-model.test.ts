@@ -624,6 +624,8 @@ describe('export rows for Task 3 — numbers as numbers, gaps as null, a status 
     expect(rows[0]).toMatchObject({ owner: 'ABC Holdings', avYear1: 1_200_000, avYear2: 1_600_000, yoyPct: 10, status: '2026 assessed: 2 of 3 · roll 2 · 2025 —: 1 parcel', tierBasis: 'AV' });
     expect(rows[1]).toMatchObject({ avYear1: 9_000_000, avYear2: null, yoyPct: null, status: '2026 TBA (12 parcels)' }); // Review Focus 3: a gap is null
     expect(typeof rows[0].avYear1).toBe('number');
+    // Task 3: the owner's AVYoYDollars travels as a number; null without a pair.
+    expect(exportRows([{ ...abc, avYoYDollars: 100_000 }, only2025], Y, 'Statewide').map((r) => r.yoyDollars)).toEqual([100_000, null]);
   });
   it('exportRows (Marion): the fixed columns, the savings figure', () => {
     const marion = owner({ label: 'ACME', tierBasis: 'Savings', totalAV2025: 4_000_000, totalAV2026: 4_200_000, avYoYPct: 5, estSavingsAtAsk: 51_000, byCounty: {}, ownerKey: 'acme' });
@@ -635,6 +637,9 @@ describe('export rows for Task 3 — numbers as numbers, gaps as null, a status 
     const map = mapParcelYearHeadlines([{ ParcelID: 'B', AssessmentYear: 2026, HeadlineTotalAV: 500_000, IsPlaceholder: 1, HeadlineDataSource: 'DLGF assessment roll' }]);
     const rows = exportParcelRows(buildParcelViewRows([P({ id: 'b', parcelId: 'B', parcelNumber: '45-1', address: '2 B St', countyNumber: 45 })], map, Y, { 45: 'Lake' }), Y);
     expect(rows[0]).toMatchObject({ parcel: '45-1', address: '2 B St', county: 'Lake', avYear1: null, avYear2: 500_000, rollYear1: false, rollYear2: true, yoyPct: null, status: '2025 — · 2026 roll' });
+    expect(rows[0]).toMatchObject({ ask: null, rec: null, conf: null }); // outside Marion: no valuation analysis
+    const marion = exportParcelRows(buildParcelViewRows([P({ id: 'm', parcelId: 'M', gisParcelNumber: '1001234', ask: 900_000, rec: 'Appeal', conf: 'High' })], map, Y), Y);
+    expect(marion[0]).toMatchObject({ parcel: '1001234', ask: 900_000, rec: 'Appeal', conf: 'High' });
   });
 });
 

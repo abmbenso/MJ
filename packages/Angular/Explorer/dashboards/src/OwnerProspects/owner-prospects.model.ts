@@ -313,6 +313,7 @@ export type OwnerSortKey =
   | 'avYear1'
   | 'avYear2'
   | 'yoyPair'
+  | 'avYoYDollars'
   | 'completeness';
 
 /**
@@ -341,6 +342,7 @@ export const KNOWN_SORT_KEYS: ReadonlySet<OwnerSortKey> = new Set<OwnerSortKey>(
   'avYear1',
   'avYear2',
   'yoyPair',
+  'avYoYDollars',
   'completeness',
 ]);
 
@@ -1021,7 +1023,10 @@ export function parcelVerifyLink(
 /**
  * The `Prospect.Thesis` for a flag from a Statewide (AV-basis) row. Every Marion-only figure carries its scope on the
  * record (final-review I5/I3): the opportunity (`EstimatedOpportunityAtAsk` keeps the Marion-parcels figure) and a
- * Marion-only rep status; a DLGF-placeholder AV among the attached parcels is noted (no snapshot note column).
+ * Marion-only rep status. The AV sentence names its display years ({@link thesisYears}): each year's Σ AV with its
+ * parcel coverage, `TBA` / `—` for a year with no figure, the parcels still TBA, and the YoY over parcels with both
+ * years — DLGF roll figures are assessed values on the record and count like any other figure (user direction
+ * 2026-09-28), so no separate placeholder note is written.
  */
 export function statewideThesis(row: OwnerRow, parcelCapNote: string | null, years: DisplayYears | null = null): string {
   const counties = row.countyCount ?? 1;
@@ -1495,6 +1500,8 @@ export interface OwnerExportRow {
   avYear1: number | null;
   avYear2: number | null;
   yoyPct: number | null;
+  /** The owner's `AVYoYDollars`: Σ (y2 − y1) over its parcels with both display years (roll included); null without a pair. */
+  yoyDollars: number | null;
   status: string;
   repStatus: string;
   savingsAtAsk: number | null;
@@ -1514,7 +1521,7 @@ export function exportRows(owners: readonly OwnerRow[], years: DisplayYears, sco
     return {
       owner: o.label, kind: o.kind, tier: o.tier, tierBasis: basis, parcels: o.parcelCount,
       counties: o.countyCount ?? null, primaryCountyNumber: o.primaryCountyNumber ?? null,
-      avYear1: s.avYear1, avYear2: s.avYear2, yoyPct: s.yoyPct, status: statusCell(o, years),
+      avYear1: s.avYear1, avYear2: s.avYear2, yoyPct: s.yoyPct, yoyDollars: o.avYoYDollars, status: statusCell(o, years),
       repStatus: o.repStatus, savingsAtAsk: o.estSavingsAtAsk,
       savingsMarionParcelsOnly: basis === 'AV' && o.estSavingsAtAsk != null,
       appealedParcels: o.appealedParcels, reductionWon: o.historicalReductionWon,
@@ -1539,6 +1546,10 @@ export interface ParcelExportRow {
   sqft: number | null;
   units: number | null;
   savingsAtAsk: number | null;
+  /** The valuation analysis' ask value, recommendation and confidence (Marion parcels; null elsewhere). */
+  ask: number | null;
+  rec: string | null;
+  conf: string | null;
   appealed: boolean;
   lastAppealYear: number | null;
   rep: string | null;
@@ -1552,7 +1563,8 @@ export function exportParcelRows(rows: readonly ParcelViewRow[], years: DisplayY
       parcel: p.parcelNumber ?? p.gisParcelNumber, address: p.address, county: r.countyName, type: p.typeGroup,
       avYear1: r.y1?.av ?? null, avYear2: r.y2?.av ?? null, rollYear1: r.y1?.roll ?? false, rollYear2: r.y2?.roll ?? false,
       yoyPct: r.yoyPct, newestYear: r.newestYear, status: parcelStatus(r, years), sqft: p.sqft, units: p.units,
-      savingsAtAsk: p.estSavingsAtAsk, appealed: p.appealed, lastAppealYear: p.lastAppealYear, rep: p.existingRep,
+      savingsAtAsk: p.estSavingsAtAsk, ask: p.ask, rec: p.rec, conf: p.conf,
+      appealed: p.appealed, lastAppealYear: p.lastAppealYear, rep: p.existingRep,
     };
   });
 }
