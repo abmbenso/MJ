@@ -326,7 +326,8 @@ describe('Owner Prospects statewide scope (DOM)', () => {
     expect(reps).toContain('No rep data for this county');
     // Walmart (Marion + Lake) also carries the Marion-parcels rep marker since the final-review fix round (I3).
     expect(reps.some((r) => r?.startsWith('Represented by INTEGRITY TAX CONSULTING'))).toBe(true);
-    expect(h.component.FilterCountLabel).toBe('3 owners · Σ AV current $142.0M'); // AV, never the blank savings
+    // AV, never the blank savings; the newest-figure sum says it mixes years (final-review I3); company owners (M5).
+    expect(h.component.FilterCountLabel).toBe('3 company owners · Σ AV (newest figure per parcel, mixed years) $142.0M');
     expect(queryAll(h.fixture, '[data-testid="yoy-floor-pill"]')).toHaveLength(0); // the $100k floor is gone (2026-09-28 evening)
     // YoY sort (the default statewide sort is AV): Complete YoY only turns on by default — the 2026-TBA Allen owner drops out.
     h.component.onSortColumn('yoyPair'); // a fresh numeric column starts descending
@@ -570,7 +571,7 @@ describe('Owner Prospects statewide — review fixes (fix round 2)', () => {
     h.state.statewideOwners = capPage();
     h.fixture.detectChanges();
     await settle(h);
-    expect(query(h.fixture, '[data-testid="statewide-total-av-label"]')?.textContent?.trim()).toBe('total assessed value (top 5,000 loaded)');
+    expect(query(h.fixture, '[data-testid="statewide-total-av-label"]')?.textContent?.trim()).toBe('total assessed value (newest figure per parcel; top 5,000 loaded)');
     h.component.onSearchChange('Owner 5999');
     await vi.waitFor(() => expect(h.component.SearchOwners).toHaveLength(1));
     h.state.failSearch = true;
@@ -825,7 +826,7 @@ describe('Owner Prospects — fixed assessment years (years-export plan, Task 2)
     expect(cellIn(w, 'av-year1')?.getAttribute('title')).toBe('21 of 21 parcels have a 2025 figure; 0 are the DLGF roll');
     expect(t(cellIn(w, 'av-year2'))).toBe('$138,333,200');
     expect(t(cellIn(w, 'yoy-pair'))).toBe('+15.5%');
-    expect(t(cellIn(w, 'assessment-status'))).toBe('2026 assessed: 21 of 21');
+    expect(t(cellIn(w, 'assessment-status'))).toBe('2025: 21 of 21 · roll 0; 2026 assessed: 21 of 21 · roll 0');
 
     // Review Focus 2: assessed only through 2025 — 2026 TBA, YoY —, "2026 TBA (n parcels)".
     const a = rowOf(h, 'Allen Only');
@@ -834,13 +835,13 @@ describe('Owner Prospects — fixed assessment years (years-export plan, Task 2)
     expect(t(cellIn(a, 'av-year2'))).toBe('TBA');
     expect(cellIn(a, 'av-year2')?.classList.contains('gap')).toBe(true);
     expect(t(cellIn(a, 'yoy-pair'))).toBe('—');
-    expect(t(cellIn(a, 'assessment-status'))).toBe('2026 TBA (1 parcel)');
+    expect(t(cellIn(a, 'assessment-status'))).toBe('2025: 1 of 1 · roll 1; 2026 TBA (1 parcel)'); // final-review I2: the 2025 roll count
 
     const n = rowOf(h, 'New 2026');
     expect(t(cellIn(n, 'av-year1'))).toBe('—');
     expect(t(cellIn(n, 'av-year2'))).toBe('$400,000');
     expect(t(cellIn(n, 'yoy-pair'))).toBe('—');
-    expect(t(cellIn(n, 'assessment-status'))).toBe('2026 assessed: 1 of 1 · roll 1 · 2025 —: 1 parcel');
+    expect(t(cellIn(n, 'assessment-status'))).toBe('2025 —; 2026 assessed: 1 of 1 · roll 1');
   });
 
   it('Review Focus 4: a run whose newest year is 2027 in one county — the columns follow the run, every other county reads 2027 TBA', async () => {
@@ -1116,7 +1117,10 @@ describe('Owner Prospects — YoY $ column and Excel export (years-export plan, 
     const labels = column(owners, 'Owner');
     const allen = labels.indexOf('Allen Only LLC');
     expect(column(owners, 'AV 2026')[allen]).toBeNull();
-    expect(column(owners, 'Assessment status')[allen]).toBe('2026 TBA (1 parcel)');
+    expect(column(owners, 'Assessment status')[allen]).toBe('2025: 1 of 1 · roll 1; 2026 TBA (1 parcel)');
+    expect(column(owners, 'roll 2025')[allen]).toBe(1); // final-review I2
+    expect(column(owners, 'roll 2026')[allen]).toBe(0);
+    expect(column(owners, 'AV newest (mixed years)')[allen]).toBe(900_000); // final-review I3
     expect(column(owners, 'Primary county')[allen]).toBe('Allen');
   });
 
@@ -1228,3 +1232,175 @@ describe('Owner Prospects export — fix round 1 (the confirm names the filters;
     expect(String(lines.get('County scope'))).toContain('owner-wide (all counties)');
   });
 });
+
+describe('Owner Prospects — final-review fix round (C1, I1, I3, minors)', () => {
+  const t = (e: Element | null | undefined): string | undefined => e?.textContent?.trim();
+  type AlertEl = Element & { Message?: string };
+
+  it('C1: flagging a Statewide owner with 2026 on only some parcels writes the full newest-figure total, not the partial 2026 sum', async () => {
+    const GM = statewideOwner({
+      ID: 'gm', Label: 'General Motors LLC', PrimaryCountyNumber: 45, CountyCount: 1, ParcelCount: 28,
+      TotalAV: 382_271_300, AVCurrent: 382_271_300, TotalAV2025: 370_000_000, TotalAV2026: 357_342_400, // 6 of 28 parcels have 2026
+      ByCountyJSON: JSON.stringify({ '45': { parcels: 28, avCurrent: 382_271_300, years: { '2025': fig(370_000_000, 28), '2026': fig(357_342_400, 6) }, pair: pair(6, 330_000_000, 357_342_400) } }),
+    });
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = [GM];
+    h.state.parcelsFor = (id) => parcelRows(id);
+    h.fixture.detectChanges();
+    await settle(h);
+    await h.component.onFlagOwner(h.component.AllOwners[0]);
+    const snap = h.state.saved.get('Prospect Snapshots')?.[0] ?? {};
+    expect(snap['TotalAV']).toBe(382_271_300);
+    expect(snap['TotalAV']).not.toBe(357_342_400);
+    // The thesis says what the 2026 figure covers, with the roll counts per year (I2).
+    const thesis = String(h.state.saved.get('Prospects')?.[0]?.['Thesis']);
+    expect(thesis).toContain('AV 2026 $357,342,400 (6 of 28 parcels, 0 DLGF roll); AV 2025 $370,000,000 (28 of 28 parcels, 0 DLGF roll). 22 parcels TBA for 2026.');
+  });
+
+  it('C1: the Marion scope keeps TotalAV2026 on the snapshot', async () => {
+    const h = mount({});
+    h.state.parcelsFor = () => [{ ID: 'mp1', OwnerPortfolioID: 'm', ParcelID: 'PM1', GISParcelNumber: '1012122', AV2025: 4_000_000, AV2026: 4_200_000 }];
+    h.fixture.detectChanges();
+    await settle(h);
+    await h.component.onFlagOwner(h.component.AllOwners[0]);
+    expect(h.state.saved.get('Prospect Snapshots')?.[0]?.['TotalAV']).toBe(4_200_000);
+  });
+
+  it('I1: a stale Marion run — the panel says the figures are live, and warns that the stored run differs (stored vs live)', async () => {
+    const h = mount({}, [STATEWIDE_RUN, MARION_RUN], true);
+    h.state.marionOwners = [{ ...MARION_OWNER, Label: 'West Ohio II Property Owner, LLC', TotalAV2025: 36_279_300, TotalAV2026: 4_200_000 }];
+    h.state.parcelsFor = () => [{ ID: 'mp1', OwnerPortfolioID: 'm', ParcelID: 'PM1', GISParcelNumber: '1012122', Address: '1 W Ohio St', AV2025: 36_279_300, AV2026: 4_200_000 }];
+    h.state.headlines = [
+      { ParcelID: 'PM1', AssessmentYear: 2025, HeadlineTotalAV: 17_972_700, IsPlaceholder: 0, HeadlineDataSource: 'Marion County property record card' },
+      { ParcelID: 'PM1', AssessmentYear: 2026, HeadlineTotalAV: 3_000_000, IsPlaceholder: 0, HeadlineDataSource: 'Marion County property record card' },
+    ];
+    h.fixture.detectChanges();
+    await settle(h);
+    const row = h.component.VisibleRows[0];
+    h.component.toggleOwner(row);
+    await vi.waitFor(() => expect(h.component.ParcelYearsFor(row)).not.toBeNull());
+    h.fixture.detectChanges();
+    expect(t(query(h.fixture, '[data-testid="run-live-note"]'))).toBe(
+      `Parcel figures are live from the headline table; the owner row is from the Marion run of ${isoLocal('2026-09-24T10:36:38Z')}.`,
+    );
+    const alert = query(h.fixture, 'mj-owner-detail-panel [data-testid="run-live-alert"]') as AlertEl | null;
+    expect(alert).not.toBeNull();
+    expect(alert?.Message).toBe("The stored run differs from today's headlines for this owner (2025: stored $36,279,300, live $17,972,700; 2026: stored $4,200,000, live $3,000,000) — re-run the Marion builder to refresh.");
+    // The panel shows the live record, not the run's stored figure.
+    expect(t(query(h.fixture, 'mj-owner-detail-panel [data-testid="pt-year1"]'))).toBe('17,972,700');
+  });
+
+  it('I1: a run stale on the older year only (West Ohio II: 2026 agrees, 2025 does not) still warns, naming 2025', async () => {
+    const h = mount({}, [STATEWIDE_RUN, MARION_RUN], true);
+    h.state.marionOwners = [{ ...MARION_OWNER, Label: 'West Ohio II Property Owner, LLC', TotalAV2025: 63_104_300, TotalAV2026: 46_564_600 }];
+    h.state.parcelsFor = () => [{ ID: 'mp1', OwnerPortfolioID: 'm', ParcelID: 'PM1', GISParcelNumber: '1012122', Address: '101 W Ohio St' }];
+    h.state.headlines = [
+      { ParcelID: 'PM1', AssessmentYear: 2025, HeadlineTotalAV: 44_421_200, IsPlaceholder: 0 },
+      { ParcelID: 'PM1', AssessmentYear: 2026, HeadlineTotalAV: 46_564_600, IsPlaceholder: 0 },
+    ];
+    h.fixture.detectChanges();
+    await settle(h);
+    const row = h.component.VisibleRows[0];
+    h.component.toggleOwner(row);
+    await vi.waitFor(() => expect(h.component.ParcelYearsFor(row)).not.toBeNull());
+    expect(h.component.RunLiveDiffFor(row)).toBe("The stored run differs from today's headlines for this owner (2025: stored $63,104,300, live $44,421,200) — re-run the Marion builder to refresh.");
+  });
+
+  it('I1: a Statewide owner whose live headlines agree with the run gets the note and no alert; M9: a $0-prior YoY says why', async () => {
+    const h = mount({ scope: 'Statewide' }, [STATEWIDE_RUN, MARION_RUN], true);
+    h.state.parcelsFor = (id) => (id === 'w' ? [
+      { ID: 'wp1', OwnerPortfolioID: 'w', ParcelID: 'P1', Address: '1 Lake Ave', CountyNumber: 45, AVCurrent: 138_333_200 },
+      { ID: 'wp2', OwnerPortfolioID: 'w', ParcelID: 'P2', Address: '2 New Rd', CountyNumber: 45, AVCurrent: 0 },
+    ] : []);
+    h.state.headlines = [
+      { ParcelID: 'P1', AssessmentYear: 2025, HeadlineTotalAV: 119_809_900, IsPlaceholder: 0 },
+      { ParcelID: 'P1', AssessmentYear: 2026, HeadlineTotalAV: 138_333_200, IsPlaceholder: 0 },
+      { ParcelID: 'P2', AssessmentYear: 2025, HeadlineTotalAV: 0, IsPlaceholder: 0 },
+      { ParcelID: 'P2', AssessmentYear: 2026, HeadlineTotalAV: 0, IsPlaceholder: 0 },
+    ];
+    h.fixture.detectChanges();
+    await settle(h);
+    const w = h.component.VisibleRows.find((r) => r.id === 'w') as OwnerRow;
+    h.component.toggleOwner(w);
+    await vi.waitFor(() => expect(h.component.ParcelYearsFor(w)).not.toBeNull());
+    await vi.waitFor(() => expect(h.component.LoadingParcelsFor).toBeNull());
+    h.fixture.detectChanges();
+    expect(t(query(h.fixture, '[data-testid="run-live-note"]'))).toContain('the owner row is from the Statewide run of');
+    expect(query(h.fixture, '[data-testid="run-live-alert"]')).toBeNull();
+    expect(h.component.RunLiveDiffFor(w)).toBeNull();
+    const newRow = queryAll(h.fixture, 'mj-owner-detail-panel table.pt tbody tr').find((r) => r.textContent?.includes('2 New Rd'));
+    expect(newRow?.querySelector('[data-testid="pt-yoy"]')?.getAttribute('title')).toBe('new since 2025 ($0 prior — not a comparable base)');
+  });
+
+  it('I3: the toolbar says "sorted by newest AV" on the default Statewide sort, and not once another column is sorted', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    expect(t(query(h.fixture, '[data-testid="sort-note"]'))).toBe('sorted by newest AV');
+    expect(t(query(h.fixture, '[data-testid="statewide-total-av-label"]'))).toBe('total assessed value (newest figure per parcel)');
+    h.component.onSortColumn('avYear2');
+    h.fixture.detectChanges();
+    expect(query(h.fixture, '[data-testid="sort-note"]')).toBeNull();
+  });
+
+  it('I3: the Owners export carries AV newest (mixed years), the column the Basis sort names', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    let sheets: SheetDefinition[] = [];
+    vi.spyOn(ExportEngine, 'toExcelMultiSheet').mockImplementation(async (s: SheetDefinition[]): Promise<ExportResult> => {
+      sheets = s;
+      return { success: true, data: new Uint8Array([1]) } as ExportResult;
+    });
+    Object.defineProperty(URL, 'createObjectURL', { value: (): string => 'blob:x', configurable: true });
+    Object.defineProperty(URL, 'revokeObjectURL', { value: (): void => undefined, configurable: true });
+    vi.spyOn(HTMLAnchorElement.prototype, 'click').mockImplementation(() => undefined);
+    await h.component.onExportOwners();
+    const basisRows = sheets[0].data as unknown[][];
+    expect(basisRows.find((r) => r[0] === 'Sort')?.[1]).toBe('AV newest (mixed years), descending');
+    expect(sheets[1].headers).toContain('AV newest (mixed years)');
+    expect(String(basisRows.find((r) => r[0] === 'Figures')?.[1])).toContain('the owner row is from the Statewide run of');
+  });
+
+  it('M4: when Complete YoY only hides every owner, the empty state names it', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.state.statewideOwners = [ALLEN_ONLY];
+    h.fixture.detectChanges();
+    await settle(h);
+    h.component.onSortColumn('yoyPair');
+    expect(h.component.VisibleRows).toHaveLength(0);
+    expect(h.component.EmptyMessage).toBe('Complete YoY only is hiding 1 owner without a complete YoY — switch it off, or adjust the search, tier, or filters above.');
+    h.component.onCompleteOnlyChange(false);
+    expect(h.component.EmptyMessage).toBe('Adjust the search, tier, or filters above.');
+  });
+
+  it('M6: Export parcels stays disabled after a failed year read', async () => {
+    const h = mount({ scope: 'Statewide' }, [STATEWIDE_RUN, MARION_RUN], true);
+    h.state.parcelsFor = (id) => (id === 'a' ? [{ ID: 'ap1', OwnerPortfolioID: 'a', ParcelID: 'PA', Address: '9 Fort Wayne', CountyNumber: 2 }] : []);
+    h.state.failHeadlines = true;
+    h.fixture.detectChanges();
+    await settle(h);
+    const a = h.component.VisibleRows.find((r) => r.id === 'a') as OwnerRow;
+    h.component.toggleOwner(a);
+    await vi.waitFor(() => expect(h.component.ParcelYearsErrorFor(a)).not.toBeNull());
+    await vi.waitFor(() => expect(h.component.LoadingParcelsFor).toBeNull());
+    h.fixture.detectChanges();
+    expect((query(h.fixture, '[data-testid="export-parcels-btn"]') as HTMLButtonElement).disabled).toBe(true);
+  });
+
+  it('M7: the agent sort on a removed Statewide column sorts as the fixed-pair YoY', async () => {
+    const h = mount({ scope: 'Statewide' });
+    h.fixture.detectChanges();
+    await settle(h);
+    const sort = (h.component as unknown as { applyAgentSort(p: Record<string, unknown>): { Success: boolean } }).applyAgentSort.bind(h.component);
+    expect(sort({ key: 'avPrior', direction: 'desc' }).Success).toBe(true);
+    expect(h.component.isSorted('yoyPair')).toBe('desc');
+  });
+});
+
+/** An ISO instant as the local calendar date (the note uses the viewer's day). */
+function isoLocal(iso: string): string {
+  const d = new Date(iso);
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}

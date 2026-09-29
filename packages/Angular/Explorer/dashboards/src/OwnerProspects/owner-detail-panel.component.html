@@ -61,6 +61,12 @@
   @if (YearsError) {
     <p class="detail__more detail__error" data-testid="years-error">{{ YearsError }}</p>
   }
+  @if (RunLiveNote) {
+    <p class="detail__more" data-testid="run-live-note">{{ RunLiveNote }}</p>
+  }
+  @if (RunLiveDiff) {
+    <mj-alert Variant="warning" [Message]="RunLiveDiff" data-testid="run-live-alert"></mj-alert>
+  }
 
   @if (Statewide) {
     @if (ParcelsLoading) {
@@ -118,7 +124,7 @@
                   <span class="pt__pill" data-testid="roll-pill">roll</span>
                 }
               </td>
-              <td class="num" data-testid="pt-yoy">{{ r.loaded ? yoy(r.yoyPct) : '' }}</td>
+              <td class="num" data-testid="pt-yoy" [attr.title]="yoyTitle(r)">{{ r.loaded ? yoy(r.yoyPct) : '' }}</td>
               <td class="num" [attr.title]="p.sqftSource">{{ p.sqft != null ? (p.sqft | number) : '—' }}</td>
               <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
               <td class="num" [attr.title]="p.estSavingsAtAsk == null ? NoAnalysisTooltip : null">{{ p.estSavingsAtAsk != null ? money(p.estSavingsAtAsk) : '' }}</td>
@@ -178,7 +184,7 @@
                   <span class="pt__pill" data-testid="roll-pill">roll</span>
                 }
               </td>
-              <td class="num" data-testid="pt-yoy">{{ r.loaded ? yoy(r.yoyPct) : '' }}</td>
+              <td class="num" data-testid="pt-yoy" [attr.title]="yoyTitle(r)">{{ r.loaded ? yoy(r.yoyPct) : '' }}</td>
               <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
               <td class="num">{{ p.ask != null ? (p.ask | number) : '—' }}</td>
               <td class="num">{{ money(p.estSavingsAtAsk) }}</td>

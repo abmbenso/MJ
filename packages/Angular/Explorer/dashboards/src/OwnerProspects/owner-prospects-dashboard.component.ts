@@ -60,6 +60,12 @@ import {
   MARION_PARCELS_TOOLTIP,
   exportRows,
   exportParcelRows,
+  snapshotTotalAV,
+  liveYearTotal,
+  storedYear2Total,
+  storedYear1Total,
+  runLiveSourceNote,
+  runVsLiveNote,
 } from './owner-prospects.model';
 import {
   OwnerProspectsDataAccess,
@@ -429,15 +435,48 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     return this.parcelCache.get(row.id)?.capHit ?? false;
   }
 
-  /** The Statewide "total assessed value" card label (qualified when only the top 5,000 are loaded). */
   /** Statewide "company owners" card label, qualified like the Total AV card when the row cap is hit (M5). */
   public get CompanyOwnersLabel(): string {
     const top = this.RowCapHit ? `, top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded` : '';
     return `company owners (${(this.Summary?.parcels ?? 0).toLocaleString('en-US')} parcels${top})`;
   }
 
+  /** The Statewide card sums each parcel's newest figure — mixed years — and says so (final-review I3). */
   public get TotalAVLabel(): string {
-    return this.RowCapHit ? `total assessed value (top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded)` : 'total assessed value';
+    return this.RowCapHit
+      ? `total assessed value (newest figure per parcel; top ${STATEWIDE_ROW_CAP.toLocaleString('en-US')} loaded)`
+      : 'total assessed value (newest figure per parcel)';
+  }
+
+  /** Statewide: the toolbar's sort indicator for the default sort, which has no column header (final-review I3). */
+  public get SortNote(): string | null {
+    return this.IsStatewide && this.sortKey === 'avCurrent' ? 'sorted by newest AV' : null;
+  }
+
+  /** The empty-table message: names Complete YoY only when it is what hides every owner (M4). */
+  public get EmptyMessage(): string {
+    const n = this.IncompleteHiddenCount;
+    return this.CompleteOnly && n > 0
+      ? `Complete YoY only is hiding ${n.toLocaleString('en-US')} owner${n === 1 ? '' : 's'} without a complete YoY — switch it off, or adjust the search, tier, or filters above.`
+      : 'Adjust the search, tier, or filters above.';
+  }
+
+  /** The live-read note for the detail panel (both scopes; final-review I1). */
+  public get RunLiveNote(): string {
+    return runLiveSourceNote(this.Scope, this.CountyRollup?.runDate ?? null);
+  }
+
+  /**
+   * The stale-run alert for an opened owner (final-review I1): Σ today's headlines per display year over the owner's
+   * parcels vs the row's stored totals (Marion `TotalAV2025/2026`, Statewide the run's year sums) — the newest year as
+   * ruled, plus the older year (West Ohio II is stale on 2025 only). Null until the live figures are in, or when both agree within $1.
+   */
+  public RunLiveDiffFor(row: OwnerRow): string | null {
+    const map = this.parcelYearsCache.get(row.id);
+    const years = this.DisplayYears;
+    if (!map || !years) return null;
+    const older = { year: years[0], stored: storedYear1Total(row, this.Scope), live: liveYearTotal(map, years[0]) };
+    return runVsLiveNote(storedYear2Total(row, this.Scope), liveYearTotal(map, years[1]), this.Scope, older, years[1]);
   }
 
   private get data(): OwnerProspectsDataAccess {
@@ -702,8 +741,9 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     const rows = this.VisibleRows;
     if (this.IsStatewide) {
       // No valuation analysis outside Marion: the statewide line sums AV, never the (blank) savings.
+      // Each parcel's newest figure on record — mixed years — labelled as such (final-review I3); company owners only (M5).
       const av = rows.reduce((s, o) => s + (o.avCurrent ?? o.totalAV ?? 0), 0);
-      return `${rows.length.toLocaleString('en-US')} owners · Σ AV current ${formatMoneyShort(av)}`;
+      return `${rows.length.toLocaleString('en-US')} company owners · Σ AV (newest figure per parcel, mixed years) ${formatMoneyShort(av)}`;
     }
     const ask = rows.reduce((s, o) => s + (o.estSavingsAtAsk ?? 0), 0);
     const floor = rows.reduce((s, o) => s + (o.estSavingsAtFloor ?? 0), 0);
@@ -936,7 +976,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
       runId: this.latestRunId ?? '', runDate: cr?.runDate ? new Date(cr.runDate) : null, methodologyVersion: cr?.methodologyVersion ?? null,
       scope: this.Scope, county: this.CountyName, searchTerm: this.filters.query, completeOnly: this.CompleteOnly,
       filters: this.tableFilters(), rowsRead, sort: ownerSortLabel(this.sortKey, this.sortDir, years, basis),
-      years, tierBasis: basis, generatedAt: new Date(), capped,
+      years, tierBasis: basis, generatedAt: new Date(), capped, runLiveNote: this.RunLiveNote,
       capNote: capped ? `more than ${cap} owner rows matched; only the first ${cap} (by ID) were read` : null,
     };
   }
@@ -947,6 +987,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     return tableFilterWords({
       scope: this.Scope, completeOnly: this.CompleteOnly, searchTerm: f.query, tier: f.tier, tierHeader: this.TierHeader,
       rep: f.rep, hasAppealHistory: f.hasAppealHistory, typeGroup: f.typeGroup, minOppPerYear: f.minOppPerYear,
+      serverSearch: !!this.SearchOwners,
     });
   }
 
@@ -962,6 +1003,7 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
         runId: this.latestRunId ?? '', runDate, methodologyVersion: cr?.methodologyVersion ?? null, scope: this.Scope,
         owner: req.Owner.label, ownerKey: req.Owner.ownerKey, ownerParcelCount: req.Owner.parcelCount,
         capNote: this.ParcelsCappedFor(req.Owner) ? PARCEL_CAP_NOTE : null, sort: req.Sort, years, generatedAt: new Date(),
+        runLiveNote: this.RunLiveNote, runLiveDiff: this.RunLiveDiffFor(req.Owner),
       });
       await this.writeWorkbook(sheets, parcelExportFileName(req.Owner.label, runDate), `Owner parcels — ${req.Owner.label}`);
     } catch (e) {
@@ -1132,7 +1174,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     snap.ProspectID = prospect.ID;
     snap.PortfolioRunTag = 'dashboard-flag';
     snap.ParcelCount = row.parcelCount;
-    snap.TotalAV = row.totalAV2026 ?? row.totalAV ?? null;
+    // Statewide: the owner's newest-figure total over every parcel, never the partial 2026 sum (final-review C1).
+    snap.TotalAV = snapshotTotalAV(row, this.Scope);
     snap.OpportunityAtAsk = row.estSavingsAtAsk ?? null;
     snap.OpportunityAtFloor = row.estSavingsAtFloor ?? null;
     snap.RepdParcelCount = repd;
@@ -1492,7 +1535,8 @@ export class OwnerProspectsDashboardComponent extends BaseDashboard implements A
     if (dir !== 'asc' && dir !== 'desc') {
       return { Success: false, ErrorMessage: `Invalid direction "${String(dir)}". Expected 'asc' or 'desc'.` };
     }
-    this.sortKey = key as OwnerSortKey;
+    // Statewide: a column the fixed-years table removed sorts as the fixed-pair YoY, as a saved preference does (M7).
+    this.sortKey = this.IsStatewide ? remapStatewideSortKey(key as OwnerSortKey) : (key as OwnerSortKey);
     this.sortDir = dir === 'asc' ? 1 : -1;
     this.persistSort();
     this.recomputeVisibleRows();

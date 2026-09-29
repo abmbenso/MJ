@@ -94,6 +94,10 @@ export class OwnerDetailPanelComponent {
   @Input() YearsLoading = false;
   /** The year read failed (the cells then claim no gap). */
   @Input() YearsError: string | null = null;
+  /** "Parcel figures are live from the headline table; the owner row is from the <scope> run of <date>." (final-review I1). */
+  @Input() RunLiveNote: string | null = null;
+  /** The stale-run warning when the owner row's stored newest-year total ≠ Σ today's headlines; null when they agree. */
+  @Input() RunLiveDiff: string | null = null;
 
   /** The column the parcel table is sorted by; null = the default order (savings on Marion, current AV Statewide). */
   public ParcelSortKey: ParcelSortKey | null = null;
@@ -162,9 +166,9 @@ export class OwnerDetailPanelComponent {
     return `${words}, ${this.ParcelSortDir === 1 ? 'ascending' : 'descending'}`;
   }
 
-  /** Export parcels is ready once the parcels and their year figures are in. */
+  /** Export parcels is ready once the parcels and their year figures are in — never after a failed year read (M6). */
   public get CanExportParcels(): boolean {
-    return !!this.DisplayYears && !this.ParcelsLoading && !this.YearsLoading && !this.Exporting && this.allParcels.length > 0;
+    return !!this.DisplayYears && !this.ParcelsLoading && !this.YearsLoading && !this.YearsError && !this.Exporting && this.allParcels.length > 0;
   }
 
   /** Ask the dashboard to write the parcel workbook. */
@@ -212,6 +216,12 @@ export class OwnerDetailPanelComponent {
     if (!v) return which === 1 ? `${year}: To Be Assessed — no ${year} figure on the record yet` : `no ${year} figure on the record`;
     const roll = v.roll ? ' — the DLGF roll (the assessed value reported to the DLGF; no county document on file)' : '';
     return `${year}: ${v.source ?? 'assessed value on the record'}${roll}`;
+  }
+
+  /** The YoY cell's tooltip: a `—` over a $0 prior says why (M9); null otherwise. */
+  public yoyTitle(r: ParcelViewRow): string | null {
+    if (!r.loaded || !this.DisplayYears || !r.y1 || !r.y2 || r.y1.av !== 0) return null;
+    return `new since ${this.DisplayYears[0]} ($0 prior — not a comparable base)`;
   }
 
   /** "newest assessment year on record: 2026" (the parcel cell's tooltip). */

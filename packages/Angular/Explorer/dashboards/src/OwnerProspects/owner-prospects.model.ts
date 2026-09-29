@@ -32,7 +32,7 @@ export const PARCEL_YEAR_HEADLINE_ENTITY = 'Parcel Year Headlines';
 // ─────────────────────────────────────────────────────────────────────────────
 // Scope (owner-prospects-statewide, Task 5). A run is either the Marion run
 // (fixed 2025→2026 pair, valuation-analysis savings tier) or the Statewide run
-// (latest headline pair per parcel, AV tier). `IsLatest` is per scope.
+// (the run's two display years per parcel — fixed years since 2026-09-28 — AV tier). `IsLatest` is per scope.
 // ─────────────────────────────────────────────────────────────────────────────
 
 export type OwnerProspectsScope = 'Marion' | 'Statewide';
@@ -136,7 +136,7 @@ export type DisplayYears = readonly [number, number];
 export interface OwnerCountySlice {
   parcels: number;
   avCurrent: number;
-  /** Σ prior over this county's paired (non-placeholder on both years) parcels. */
+  /** Σ prior over this county's paired parcels (a figure for BOTH display years and a positive prior; roll included). */
   avPrior: number | null;
   /** How many of this county's parcels are paired; null on runs written before 2026-09-28's fix round. */
   pairedParcels?: number | null;
@@ -188,8 +188,9 @@ export interface OwnerRow {
   countyCount?: number | null;
   /** County number (as a string key, the builder's JSON shape) → this owner's slice of that county. */
   byCounty?: Record<string, OwnerCountySlice>;
-  /** Σ AVPrior over the paired parcels (non-placeholder on both years) — exactly the YoY base, not the whole portfolio. */
+  /** Σ AVPrior over the paired parcels (a figure for both display years and a positive prior) — the YoY base, not the portfolio. */
   avPrior?: number | null;
+  /** `AVCurrent`: Σ each parcel's NEWEST figure on record — mixed assessment years; the Flag snapshot's Total AV (Statewide). */
   avCurrent?: number | null;
   pairYears?: string | null;
   tierBasis?: TierBasis | null;
@@ -966,8 +967,8 @@ export function repIsMarionOnly(row: Pick<OwnerRow, 'byCounty' | 'repStatus'>, b
 }
 
 /**
- * Tooltip for a Statewide owner's AV prior/current cells: the assessment years they come from. `PairYears` is the
- * single pair, `mixed`, or (no parcel with both years) the bare current year.
+ * Tooltip for the detail panel's "Assessment pair" line (`PairYears`, the builder's per-parcel newest pair: the single
+ * pair, `mixed`, or — no parcel with both years — the bare current year). The table's fixed display years do not use it.
  */
 export function pairYearsTooltip(pairYears: string | null | undefined): string {
   if (!pairYears) return 'no assessment year on record';
@@ -1024,9 +1025,9 @@ export function parcelVerifyLink(
  * The `Prospect.Thesis` for a flag from a Statewide (AV-basis) row. Every Marion-only figure carries its scope on the
  * record (final-review I5/I3): the opportunity (`EstimatedOpportunityAtAsk` keeps the Marion-parcels figure) and a
  * Marion-only rep status. The AV sentence names its display years ({@link thesisYears}): each year's Σ AV with its
- * parcel coverage, `TBA` / `—` for a year with no figure, the parcels still TBA, and the YoY over parcels with both
- * years — DLGF roll figures are assessed values on the record and count like any other figure (user direction
- * 2026-09-28), so no separate placeholder note is written.
+ * parcel coverage and how many of those parcels are the DLGF roll (final-review I2 — roll figures count like any other
+ * figure, user direction 2026-09-28, and the record says how many there are), `TBA` / `—` for a year with no figure,
+ * the parcels still TBA, and the YoY over parcels with both years.
  */
 export function statewideThesis(row: OwnerRow, parcelCapNote: string | null, years: DisplayYears | null = null): string {
   const counties = row.countyCount ?? 1;
@@ -1040,18 +1041,27 @@ export function statewideThesis(row: OwnerRow, parcelCapNote: string | null, yea
     + `AV tier ${row.tier ?? '—'}.${opp} ${rep}${capped}`;
 }
 
-/** The thesis' AV sentence, with its years: "AV 2026 $X (n of m parcels); AV 2025 $Y. k parcels TBA for 2026. YoY …". */
+/**
+ * The thesis' AV sentence, with its years and roll counts:
+ * "AV 2026 $X (n of m parcels, k DLGF roll); AV 2025 $Y (n of m parcels, k DLGF roll). j parcels TBA for 2026. YoY …".
+ */
 function thesisYears(row: OwnerRow, years: DisplayYears | null): string {
   if (!years) return 'AV by assessment year: not on this run.';
   const [y1, y2] = years;
   const s = ownerYearSummary(row, years);
   const dollars = (n: number | null): string => (n == null ? NO_FIGURE_MARK : `$${Math.round(n).toLocaleString('en-US')}`);
+  const m = row.parcelCount.toLocaleString('en-US');
+  const cover = (y: number): string => {
+    const f = s.years[String(y)];
+    return s.hasYearData && f ? ` (${f.parcels.toLocaleString('en-US')} of ${m} parcels, ${f.roll.toLocaleString('en-US')} DLGF roll)` : '';
+  };
   const n2 = s.years[String(y2)]?.parcels ?? 0;
-  const av2 = s.avYear2 == null ? `AV ${y2} ${TBA_MARK} (${count(row.parcelCount)})` : `AV ${y2} ${dollars(s.avYear2)} (${n2.toLocaleString('en-US')} of ${row.parcelCount.toLocaleString('en-US')} parcels)`;
+  const av2 = s.avYear2 == null ? `AV ${y2} ${TBA_MARK} (${count(row.parcelCount)})` : `AV ${y2} ${dollars(s.avYear2)}${cover(y2)}`;
+  const av1 = `AV ${y1} ${dollars(s.avYear1)}${s.avYear1 == null ? '' : cover(y1)}`;
   const tba = row.parcelCount - n2;
   const tbaNote = s.hasYearData && tba > 0 && s.avYear2 != null ? ` ${count(tba)} ${TBA_MARK} for ${y2}.` : '';
   const yoy = s.yoyPct == null ? ` No ${y1}→${y2} YoY.` : ` YoY ${s.yoyPct > 0 ? '+' : ''}${s.yoyPct}% over parcels with both years.`;
-  return `${av2}; AV ${y1} ${dollars(s.avYear1)}.${tbaNote}${yoy}`;
+  return `${av2}; ${av1}.${tbaNote}${yoy}`;
 }
 
 // ─────────────────────────────────────────────────────────────────────────────
@@ -1202,8 +1212,9 @@ export function yoyCell(row: OwnerRow, years: DisplayYears): number | typeof NO_
 const count = (n: number, noun = 'parcel'): string => `${n.toLocaleString('en-US')} ${noun}${n === 1 ? '' : 's'}`;
 
 /**
- * The Assessment status column: `2026 assessed: 38 of 112 · roll 30` / `2026 TBA (12 parcels)`, then
- * `2025 —: 3 parcels` for parcels with no older-year figure and `n new since 2025` for $0 priors.
+ * The Assessment status column — both years, each with its DLGF roll count (final-review I2):
+ * `2025: 112 of 112 · roll 74; 2026 assessed: 39 of 112 · roll 0`, `2025 —; 2026 TBA (12 parcels)` for a year with
+ * no figure, then `; n new since 2025` for $0 priors.
  */
 export function statusCell(row: OwnerRow, years: DisplayYears): string {
   const [y1, y2] = years;
@@ -1212,20 +1223,18 @@ export function statusCell(row: OwnerRow, years: DisplayYears): string {
     if (s.avYear2 == null) return `${y2} ${TBA_MARK}`;
     return s.avYear1 == null ? `${y1} ${NO_FIGURE_MARK}` : `${y1} and ${y2} on record`;
   }
-  const m = row.parcelCount;
-  const f2 = s.years[String(y2)];
+  const m = row.parcelCount.toLocaleString('en-US');
   const f1 = s.years[String(y1)];
-  const parts: string[] = [];
-  if (f2 && f2.parcels > 0) {
-    parts.push(`${y2} assessed: ${f2.parcels.toLocaleString('en-US')} of ${m.toLocaleString('en-US')}${f2.roll > 0 ? ` · roll ${f2.roll.toLocaleString('en-US')}` : ''}`);
-  } else {
-    parts.push(`${y2} ${TBA_MARK} (${count(m)})`);
-  }
-  const missing1 = m - (f1?.parcels ?? 0);
-  if (missing1 > 0 && f2 && f2.parcels > 0) parts.push(`${y1} ${NO_FIGURE_MARK}: ${count(missing1)}`);
+  const f2 = s.years[String(y2)];
+  const of = (f: YearFigure): string => `${f.parcels.toLocaleString('en-US')} of ${m} · roll ${f.roll.toLocaleString('en-US')}`;
+  const parts: string[] = [
+    f1 && f1.parcels > 0 ? `${y1}: ${of(f1)}` : `${y1} ${NO_FIGURE_MARK}`,
+    f2 && f2.parcels > 0 ? `${y2} assessed: ${of(f2)}` : `${y2} ${TBA_MARK} (${count(row.parcelCount)})`,
+  ];
   if ((s.pair?.newFromZero ?? 0) > 0) parts.push(`${(s.pair?.newFromZero ?? 0).toLocaleString('en-US')} new since ${y1}`);
-  return parts.join(' · ');
+  return parts.join('; ');
 }
+
 
 /** Tooltip on an owner's year cell: "n of m parcels have a <year> figure; k are the DLGF roll" (null on the Marion run). */
 export function yearTooltip(row: OwnerRow, year: number, years: DisplayYears): string | null {
@@ -1277,6 +1286,82 @@ export function annotateOwnerYears(rows: OwnerRow[], years: DisplayYears | null)
     r.completeness = s?.completeness ?? null;
     r.avPriorBoth = s?.pair && s.pair.parcelsBoth > 0 ? s.pair.avPriorBoth : null;
   }
+}
+
+/**
+ * The `ProspectSnapshot.TotalAV` a Flag writes (final-review C1). Marion: `TotalAV2026`, else `TotalAV` (unchanged).
+ * Statewide: `AVCurrent`, the owner's newest-figure total over EVERY parcel — never `TotalAV2026`, which sums only the
+ * parcels that already have a 2026 figure (a partial-year sum for 2,052 owners on the 2026-09-28 run).
+ */
+export function snapshotTotalAV(row: Pick<OwnerRow, 'totalAV' | 'totalAV2026' | 'avCurrent'>, scope: OwnerProspectsScope): number | null {
+  return scope === 'Statewide' ? (row.avCurrent ?? row.totalAV ?? null) : (row.totalAV2026 ?? row.totalAV ?? null);
+}
+
+/** Σ of one display year's live figures over an owner's parcels (`ParcelYearsMap`); null when no parcel has one. */
+export function liveYearTotal(map: ParcelYearsMap, year: number): number | null {
+  let sum = 0;
+  let any = false;
+  for (const figs of Object.values(map)) {
+    const v = figs[String(year)];
+    if (!v) continue;
+    any = true;
+    sum += v.av;
+  }
+  return any ? sum : null;
+}
+
+/** The owner row's stored newest display-year total: Marion `TotalAV2026`, Statewide the run's year sum ({@link OwnerRow.avYear2}). */
+export function storedYear2Total(row: OwnerRow, scope: OwnerProspectsScope): number | null {
+  return scope === 'Marion' ? row.totalAV2026 : (row.avYear2 ?? null);
+}
+
+/** The owner row's stored older display-year total: Marion `TotalAV2025`, Statewide the run's year sum ({@link OwnerRow.avYear1}). */
+export function storedYear1Total(row: OwnerRow, scope: OwnerProspectsScope): number | null {
+  return scope === 'Marion' ? row.totalAV2025 : (row.avYear1 ?? null);
+}
+
+/** One display year's stored-vs-live pair for {@link runVsLiveNote}. */
+export interface RunLiveYear {
+  year: number;
+  stored: number | null;
+  live: number | null;
+}
+
+/** "the Marion run of 2026-09-24" — the run date as the local calendar date (`undated` without one). */
+function runOfWords(scope: OwnerProspectsScope, runDate: string | Date | null): string {
+  const d = runDate == null ? null : new Date(runDate);
+  if (!d || Number.isNaN(d.getTime())) return `the ${scope} run (undated)`;
+  const pad = (n: number): string => String(n).padStart(2, '0');
+  return `the ${scope} run of ${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+/** The live-read note the detail panel and both Basis sheets carry (final-review I1: the live headline read is the record). */
+export function runLiveSourceNote(scope: OwnerProspectsScope, runDate: string | Date | null): string {
+  return `Parcel figures are live from the headline table; the owner row is from ${runOfWords(scope, runDate)}.`;
+}
+
+/** True when a stored and a live total differ by more than $1 (both empty counts as agreeing). */
+function totalsDiffer(stored: number | null, live: number | null): boolean {
+  if (stored == null && live == null) return false;
+  return stored == null || live == null || Math.abs(stored - live) > 1;
+}
+
+/**
+ * The stale-run warning (final-review I1): null when the owner row's stored newest display-year total and Σ of today's
+ * headlines over its parcels agree within $1 (both empty counts as agreeing); otherwise the words for the alert. `older`
+ * adds the older display year to the comparison (a run can be stale on the older year only — the Marion run of
+ * 2026-09-24 on West Ohio II: 2026 agrees, 2025 stored $63.1M vs live $44.4M); the words then name each year that differs.
+ */
+export function runVsLiveNote(storedY2: number | null, liveY2: number | null, scope: OwnerProspectsScope = 'Marion', older?: RunLiveYear, newestYear?: number): string | null {
+  const money = (n: number | null): string => (n == null ? 'none' : `$${Math.round(n).toLocaleString('en-US')}`);
+  const olderDiffers = older != null && totalsDiffer(older.stored, older.live);
+  const newestDiffers = totalsDiffer(storedY2, liveY2);
+  if (!olderDiffers && !newestDiffers) return null;
+  const tail = ` — re-run the ${scope} builder to refresh.`;
+  if (!olderDiffers) return `The stored run differs from today's headlines for this owner (stored ${money(storedY2)}, live ${money(liveY2)})${tail}`;
+  const parts = [`${older.year}: stored ${money(older.stored)}, live ${money(older.live)}`];
+  if (newestDiffers) parts.push(`${newestYear ?? 'newest year'}: stored ${money(storedY2)}, live ${money(liveY2)}`);
+  return `The stored run differs from today's headlines for this owner (${parts.join('; ')})${tail}`;
 }
 
 /** A run `ByCountyJSON` value as a slice (the same `years` / `pair` shape as an owner's). */
@@ -1393,6 +1478,14 @@ export interface ParcelViewRow {
   countyName: string | null;
 }
 
+/**
+ * A parcel's YoY dollars over both display years; null when either figure is missing or the prior is $0 (a parcel new
+ * since the older year is not a comparable base — the owner-level `AVYoYDollars` excludes it too; final-review I4).
+ */
+export function parcelYoYDollars(y1: ParcelYearValue | null, y2: ParcelYearValue | null): number | null {
+  return y1 && y2 && y1.av > 0 ? y2.av - y1.av : null;
+}
+
 function parcelYoY(y1: ParcelYearValue | null, y2: ParcelYearValue | null): number | null {
   if (!y1 || !y2 || !(y1.av > 0)) return null;
   return Math.round((y2.av / y1.av - 1) * 1000) / 10;
@@ -1499,6 +1592,11 @@ export interface OwnerExportRow {
   primaryCountyNumber: number | null;
   avYear1: number | null;
   avYear2: number | null;
+  /** DLGF roll parcels behind each year's figure (final-review I2); null on a run without per-year data (Marion). */
+  rollYear1: number | null;
+  rollYear2: number | null;
+  /** `AVCurrent`: Σ each parcel's newest figure — mixed years (final-review I3; the Statewide default sort). */
+  avNewest: number | null;
   yoyPct: number | null;
   /** The owner's `AVYoYDollars`: Σ (y2 − y1) over its parcels with both display years (roll included); null without a pair. */
   yoyDollars: number | null;
@@ -1521,7 +1619,10 @@ export function exportRows(owners: readonly OwnerRow[], years: DisplayYears, sco
     return {
       owner: o.label, kind: o.kind, tier: o.tier, tierBasis: basis, parcels: o.parcelCount,
       counties: o.countyCount ?? null, primaryCountyNumber: o.primaryCountyNumber ?? null,
-      avYear1: s.avYear1, avYear2: s.avYear2, yoyPct: s.yoyPct, yoyDollars: o.avYoYDollars, status: statusCell(o, years),
+      avYear1: s.avYear1, avYear2: s.avYear2,
+      rollYear1: s.hasYearData ? (s.years[String(years[0])]?.roll ?? 0) : null,
+      rollYear2: s.hasYearData ? (s.years[String(years[1])]?.roll ?? 0) : null,
+      avNewest: o.avCurrent ?? null, yoyPct: s.yoyPct, yoyDollars: o.avYoYDollars, status: statusCell(o, years),
       repStatus: o.repStatus, savingsAtAsk: o.estSavingsAtAsk,
       savingsMarionParcelsOnly: basis === 'AV' && o.estSavingsAtAsk != null,
       appealedParcels: o.appealedParcels, reductionWon: o.historicalReductionWon,
@@ -1541,6 +1642,8 @@ export interface ParcelExportRow {
   rollYear1: boolean;
   rollYear2: boolean;
   yoyPct: number | null;
+  /** {@link parcelYoYDollars}: blank for a $0 prior (status `new since <y1>`). */
+  yoyDollars: number | null;
   newestYear: number | null;
   status: string;
   sqft: number | null;
@@ -1562,7 +1665,7 @@ export function exportParcelRows(rows: readonly ParcelViewRow[], years: DisplayY
     return {
       parcel: p.parcelNumber ?? p.gisParcelNumber, address: p.address, county: r.countyName, type: p.typeGroup,
       avYear1: r.y1?.av ?? null, avYear2: r.y2?.av ?? null, rollYear1: r.y1?.roll ?? false, rollYear2: r.y2?.roll ?? false,
-      yoyPct: r.yoyPct, newestYear: r.newestYear, status: parcelStatus(r, years), sqft: p.sqft, units: p.units,
+      yoyPct: r.yoyPct, yoyDollars: parcelYoYDollars(r.y1, r.y2), newestYear: r.newestYear, status: parcelStatus(r, years), sqft: p.sqft, units: p.units,
       savingsAtAsk: p.estSavingsAtAsk, ask: p.ask, rec: p.rec, conf: p.conf,
       appealed: p.appealed, lastAppealYear: p.lastAppealYear, rep: p.existingRep,
     };

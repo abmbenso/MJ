@@ -52,6 +52,12 @@ import {
   buildParcelViewRows,
   parcelYearCell,
   parcelStatus,
+  snapshotTotalAV,
+  liveYearTotal,
+  storedYear2Total,
+  runLiveSourceNote,
+  runVsLiveNote,
+  parcelYoYDollars,
   sortParcels,
   exportRows,
   exportParcelRows,
@@ -453,13 +459,15 @@ describe('owner year cells — TBA for the newest year, — for the older, never
     expect(yoyCell(only2025, Y)).toBe('—');
     expect(yoyCell(newOne, Y)).toBe(5);
   });
-  it('statusCell: assessed n of m · roll k; TBA (n parcels); older-year —: n parcels; n new since y1', () => {
-    expect(statusCell(abc, Y)).toBe('2026 assessed: 2 of 3 · roll 2 · 2025 —: 1 parcel');
-    expect(statusCell(only2025, Y)).toBe('2026 TBA (12 parcels)');
-    expect(statusCell(complete, Y)).toBe('2026 assessed: 3 of 3');
-    expect(statusCell(newOne, Y)).toBe('2026 assessed: 2 of 2 · 1 new since 2025');
-    expect(statusCell(owner({ parcelCount: 112, byCounty: { '2': slice({ '2025': fig(1, 109), '2026': fig(1, 38, 30) }, pairOf(), 112) } }), Y))
-      .toBe('2026 assessed: 38 of 112 · roll 30 · 2025 —: 3 parcels');
+  it('statusCell (final-review I2): BOTH years with their roll counts; — / TBA (n parcels) for a year with no figure; n new since y1', () => {
+    expect(statusCell(abc, Y)).toBe('2025: 2 of 3 · roll 0; 2026 assessed: 2 of 3 · roll 2');
+    expect(statusCell(only2025, Y)).toBe('2025: 12 of 12 · roll 12; 2026 TBA (12 parcels)');
+    expect(statusCell(complete, Y)).toBe('2025: 3 of 3 · roll 2; 2026 assessed: 3 of 3 · roll 0');
+    expect(statusCell(newOne, Y)).toBe('2025: 2 of 2 · roll 0; 2026 assessed: 2 of 2 · roll 0; 1 new since 2025');
+    expect(statusCell(owner({ parcelCount: 112, byCounty: { '2': slice({ '2025': fig(1, 112, 74), '2026': fig(1, 39) }, pairOf(), 112) } }), Y))
+      .toBe('2025: 112 of 112 · roll 74; 2026 assessed: 39 of 112 · roll 0'); // the ruling's example shape
+    const only2026 = owner({ parcelCount: 1, byCounty: { '45': slice({ '2026': fig(500_000, 1, 1) }, pairOf(), 1) } });
+    expect(statusCell(only2026, Y)).toBe('2025 —; 2026 assessed: 1 of 1 · roll 1');
   });
   it('yearTooltip: n of m parcels have a <year> figure; k are the DLGF roll', () => {
     expect(yearTooltip(abc, 2026, Y)).toBe('2 of 3 parcels have a 2026 figure; 2 are the DLGF roll');
@@ -621,8 +629,12 @@ describe('parcel years read live from Parcel Year Headlines', () => {
 describe('export rows for Task 3 — numbers as numbers, gaps as null, a status string', () => {
   it('exportRows (Statewide): the year figures, YoY and status per owner', () => {
     const rows = exportRows([abc, only2025], Y, 'Statewide');
-    expect(rows[0]).toMatchObject({ owner: 'ABC Holdings', avYear1: 1_200_000, avYear2: 1_600_000, yoyPct: 10, status: '2026 assessed: 2 of 3 · roll 2 · 2025 —: 1 parcel', tierBasis: 'AV' });
-    expect(rows[1]).toMatchObject({ avYear1: 9_000_000, avYear2: null, yoyPct: null, status: '2026 TBA (12 parcels)' }); // Review Focus 3: a gap is null
+    expect(rows[0]).toMatchObject({ owner: 'ABC Holdings', avYear1: 1_200_000, avYear2: 1_600_000, yoyPct: 10, status: '2025: 2 of 3 · roll 0; 2026 assessed: 2 of 3 · roll 2', tierBasis: 'AV' });
+    expect(rows[1]).toMatchObject({ avYear1: 9_000_000, avYear2: null, yoyPct: null, status: '2025: 12 of 12 · roll 12; 2026 TBA (12 parcels)' }); // Review Focus 3: a gap is null
+    // Final-review I2: the roll parcel count per year travels as a number beside the figures.
+    expect(rows.map((r) => [r.rollYear1, r.rollYear2])).toEqual([[0, 2], [12, 0]]);
+    // Final-review I3: the newest-figure total (AVCurrent) travels too.
+    expect(exportRows([{ ...abc, avCurrent: 1_700_000 }], Y, 'Statewide')[0].avNewest).toBe(1_700_000);
     expect(typeof rows[0].avYear1).toBe('number');
     // Task 3: the owner's AVYoYDollars travels as a number; null without a pair.
     expect(exportRows([{ ...abc, avYoYDollars: 100_000 }, only2025], Y, 'Statewide').map((r) => r.yoyDollars)).toEqual([100_000, null]);
@@ -631,6 +643,7 @@ describe('export rows for Task 3 — numbers as numbers, gaps as null, a status 
     const marion = owner({ label: 'ACME', tierBasis: 'Savings', totalAV2025: 4_000_000, totalAV2026: 4_200_000, avYoYPct: 5, estSavingsAtAsk: 51_000, byCounty: {}, ownerKey: 'acme' });
     expect(exportRows([marion], Y, 'Marion')[0]).toMatchObject({
       owner: 'ACME', avYear1: 4_000_000, avYear2: 4_200_000, yoyPct: 5, savingsAtAsk: 51_000, savingsMarionParcelsOnly: false, ownerKey: 'acme', tierBasis: 'Savings',
+      rollYear1: null, rollYear2: null, // the Marion run carries no per-year roll counts
     });
   });
   it('exportParcelRows: per-year figures and roll flags, null gaps, the status words', () => {
@@ -676,8 +689,55 @@ describe('fix round 1 — materiality floor, saved-sort remap, unmatched parcels
   });
   it('statewideThesis states AV with its years, the TBA count and the pair YoY — no year-less total, no placeholder wording', () => {
     const t = statewideThesis({ ...abc, countyCount: 1, tier: 'A', repStatus: 'No rep data for this county' }, null, Y);
-    expect(t).toContain('3 parcels in 1 county. AV 2026 $1,600,000 (2 of 3 parcels); AV 2025 $1,200,000. 1 parcel TBA for 2026. YoY +10% over parcels with both years.');
+    // Final-review I2: each year names its DLGF roll count.
+    expect(t).toContain('3 parcels in 1 county. AV 2026 $1,600,000 (2 of 3 parcels, 2 DLGF roll); AV 2025 $1,200,000 (2 of 3 parcels, 0 DLGF roll). 1 parcel TBA for 2026. YoY +10% over parcels with both years.');
     expect(t).not.toContain('placeholder');
-    expect(statewideThesis({ ...only2025, countyCount: 1 }, null, Y)).toContain('AV 2026 TBA (12 parcels); AV 2025 $9,000,000. No 2025→2026 YoY.');
+    expect(statewideThesis({ ...only2025, countyCount: 1 }, null, Y)).toContain('AV 2026 TBA (12 parcels); AV 2025 $9,000,000 (12 of 12 parcels, 12 DLGF roll). No 2025→2026 YoY.');
+  });
+});
+
+describe('final-review fix round — snapshot total, run vs live, parcel YoY $', () => {
+  it('C1: the Flag snapshot Total AV — Statewide the newest-figure total (AVCurrent), never the partial 2026 sum; Marion unchanged', () => {
+    const gm = { totalAV: 382_271_300, totalAV2026: 357_342_400, avCurrent: 382_271_300 }; // 6 of 28 parcels have 2026
+    expect(snapshotTotalAV(gm, 'Statewide')).toBe(382_271_300);
+    expect(snapshotTotalAV({ ...gm, avCurrent: null }, 'Statewide')).toBe(382_271_300);
+    expect(snapshotTotalAV({ totalAV: 4_000_000, totalAV2026: 4_200_000, avCurrent: null }, 'Marion')).toBe(4_200_000);
+    expect(snapshotTotalAV({ totalAV: 4_000_000, totalAV2026: null, avCurrent: null }, 'Marion')).toBe(4_000_000);
+  });
+  it('I1: runVsLiveNote — null within $1 or when both are empty; the stored and live figures and the builder otherwise', () => {
+    expect(runVsLiveNote(36_279_300, 36_279_300.4)).toBeNull();
+    expect(runVsLiveNote(null, null)).toBeNull();
+    expect(runVsLiveNote(36_279_300, 17_972_700, 'Marion'))
+      .toBe("The stored run differs from today's headlines for this owner (stored $36,279,300, live $17,972,700) — re-run the Marion builder to refresh.");
+    expect(runVsLiveNote(null, 5_000, 'Statewide'))
+      .toBe("The stored run differs from today's headlines for this owner (stored none, live $5,000) — re-run the Statewide builder to refresh.");
+    expect(runVsLiveNote(5_000, null, 'Marion')).toContain('live none');
+    // The older year joins the comparison: a run stale on 2025 only still warns, naming the year.
+    expect(runVsLiveNote(46_564_600, 46_564_600, 'Marion', { year: 2025, stored: 63_104_300, live: 44_421_200 }, 2026))
+      .toBe("The stored run differs from today's headlines for this owner (2025: stored $63,104,300, live $44,421,200) — re-run the Marion builder to refresh.");
+    expect(runVsLiveNote(1, 1, 'Marion', { year: 2025, stored: 5, live: 5 }, 2026)).toBeNull();
+  });
+  it('I1: the live total sums one year over the owner\'s parcels; the stored total is the scope\'s own column', () => {
+    const map = mapParcelYearHeadlines([
+      { ParcelID: 'A', AssessmentYear: 2026, HeadlineTotalAV: 100 },
+      { ParcelID: 'B', AssessmentYear: 2026, HeadlineTotalAV: 0 },
+      { ParcelID: 'B', AssessmentYear: 2025, HeadlineTotalAV: 70 },
+    ]);
+    expect(liveYearTotal(map, 2026)).toBe(100);
+    expect(liveYearTotal(map, 2025)).toBe(70);
+    expect(liveYearTotal(map, 2024)).toBeNull();
+    const row = owner({ totalAV2026: 4_200_000, avYear2: 1_600_000 });
+    expect(storedYear2Total(row, 'Marion')).toBe(4_200_000);
+    expect(storedYear2Total(row, 'Statewide')).toBe(1_600_000);
+  });
+  it('I1: the source note names the scope and the run date', () => {
+    expect(runLiveSourceNote('Marion', new Date(2026, 8, 24, 10))).toBe('Parcel figures are live from the headline table; the owner row is from the Marion run of 2026-09-24.');
+    expect(runLiveSourceNote('Statewide', null)).toBe('Parcel figures are live from the headline table; the owner row is from the Statewide run (undated).');
+  });
+  it('I4: parcel YoY $ is blank for a $0 prior (and without both years)', () => {
+    const v = (av: number) => ({ av, roll: false, source: null });
+    expect(parcelYoYDollars(v(1_000), v(1_500))).toBe(500);
+    expect(parcelYoYDollars(v(0), v(5_800))).toBeNull();
+    expect(parcelYoYDollars(null, v(5_800))).toBeNull();
   });
 });

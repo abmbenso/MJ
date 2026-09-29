@@ -39,7 +39,7 @@ export const PERCENT_FORMAT = '0.0%';
 export const EXPORT_LEGEND: readonly (readonly [string, string])[] = [
   [TBA_MARK, 'to be assessed — no figure on the record for the newest year'],
   [NO_FIGURE_MARK, 'no figure for the older year'],
-  ['roll', 'DLGF roll figure without a card'],
+  ['roll', 'DLGF roll figure without a card (Owners sheet: roll <year> = how many of the owner\'s parcels that is)'],
 ];
 /** The CoStar caution every Basis sheet carries. */
 export const COSTAR_CAUTION = 'Owner names and groupings are CoStar-derived: for internal use, not for publication.';
@@ -65,6 +65,8 @@ export interface OwnerExportBasis {
   years: DisplayYears;
   tierBasis: TierBasis;
   generatedAt: Date;
+  /** {@link runLiveSourceNote}: the owner rows are the run's; parcel figures elsewhere are live (final-review I1). */
+  runLiveNote: string;
   /** True when more rows matched than the export cap read. */
   capped: boolean;
   capNote: string | null;
@@ -85,6 +87,10 @@ export interface ParcelExportBasis {
   sort: string;
   years: DisplayYears;
   generatedAt: Date;
+  /** {@link runLiveSourceNote}: these parcel figures are live; the owner row is the run's (final-review I1). */
+  runLiveNote: string;
+  /** {@link runVsLiveNote} when the run's stored owner total and today's headlines differ; null otherwise. */
+  runLiveDiff: string | null;
 }
 
 /** One exported column: header, number format, and how a row fills it. */
@@ -135,16 +141,20 @@ export function ownerSortLabel(key: OwnerSortKey, dir: 1 | -1, years: DisplayYea
     label: 'Owner', tier: tierLabel(tierBasis), parcelCount: 'Parcels', totalAV2025: 'AV 2025', totalAV2026: 'AV 2026',
     avYoYPct: 'YoY', totalUnits: 'Units', nAppealRec: 'Appeal recs', estSavingsAtAsk: 'Opp / yr (ask)',
     estSavingsAtFloor: 'Opp / yr (floor)', historicalReductionWon: 'Hist. reduction', appealYears: 'Appeals filed',
-    repStatus: 'Tax rep', avPrior: 'AV prior', avCurrent: 'AV current', countyCount: 'Counties', avYear1: y.y1,
+    repStatus: 'Tax rep', avPrior: 'AV prior', avCurrent: AV_NEWEST_HEADER, countyCount: 'Counties', avYear1: y.y1,
     avYear2: y.y2, yoyPair: `YoY ${y.pair} (complete owners first)`, avYoYDollars: `YoY $ ${y.pair}`,
     completeness: 'Assessment status (YoY coverage)',
   };
   return `${names[key]}, ${dir === 1 ? 'ascending' : 'descending'}`;
 }
 
-/** The Owners sheet's columns for the display years and tier basis. */
-function ownerColumns(years: DisplayYears, basis: TierBasis): ColumnSpec<OwnerExportRow & { countyName: string | null }>[] {
+/** The Statewide default sort's column (final-review I3): each parcel's newest figure on record, summed — mixed years. */
+export const AV_NEWEST_HEADER = 'AV newest (mixed years)';
+
+/** The Owners sheet's columns for the display years, tier basis and scope (the newest-AV column is Statewide only). */
+function ownerColumns(years: DisplayYears, basis: TierBasis, scope: OwnerProspectsScope): ColumnSpec<OwnerExportRow & { countyName: string | null }>[] {
   const [y1, y2] = years;
+  const newest: ColumnSpec<OwnerExportRow>[] = scope === 'Statewide' ? [{ header: AV_NEWEST_HEADER, format: DOLLAR_FORMAT, value: (r) => r.avNewest }] : [];
   return [
     { header: 'Owner', value: (r) => r.owner },
     { header: 'Kind', value: (r) => r.kind },
@@ -152,8 +162,11 @@ function ownerColumns(years: DisplayYears, basis: TierBasis): ColumnSpec<OwnerEx
     { header: 'Parcels', format: COUNT_FORMAT, value: (r) => r.parcels },
     { header: 'Counties', format: COUNT_FORMAT, value: (r) => r.counties },
     { header: 'Primary county', value: (r) => r.countyName },
+    ...newest,
     { header: `AV ${y1}`, format: DOLLAR_FORMAT, value: (r) => r.avYear1 },
+    { header: `roll ${y1}`, format: COUNT_FORMAT, value: (r) => r.rollYear1 },
     { header: `AV ${y2}`, format: DOLLAR_FORMAT, value: (r) => r.avYear2 },
+    { header: `roll ${y2}`, format: COUNT_FORMAT, value: (r) => r.rollYear2 },
     { header: 'YoY %', format: PERCENT_FORMAT, value: (r) => pctFraction(r.yoyPct) },
     { header: `YoY $ ${y1}→${y2}`, format: DOLLAR_FORMAT, value: (r) => r.yoyDollars },
     { header: 'Assessment status', value: (r) => r.status },
@@ -179,7 +192,7 @@ function parcelColumns(years: DisplayYears): ColumnSpec<ParcelExportRow>[] {
     { header: `AV ${y2}`, format: DOLLAR_FORMAT, value: (r) => r.avYear2 },
     { header: `${y2} roll`, value: (r) => (r.rollYear2 ? 'roll' : null) },
     { header: 'YoY %', format: PERCENT_FORMAT, value: (r) => pctFraction(r.yoyPct) },
-    { header: `YoY $ ${y1}→${y2}`, format: DOLLAR_FORMAT, value: (r) => (r.avYear1 != null && r.avYear2 != null ? r.avYear2 - r.avYear1 : null) },
+    { header: `YoY $ ${y1}→${y2}`, format: DOLLAR_FORMAT, value: (r) => r.yoyDollars },
     { header: 'Newest year', value: (r) => r.newestYear },
     { header: 'Assessment status', value: (r) => r.status },
     { header: 'SqFt', format: COUNT_FORMAT, value: (r) => r.sqft },
@@ -266,13 +279,15 @@ export interface TableFilterState {
   hasAppealHistory: boolean;
   typeGroup: string;
   minOppPerYear: number;
+  /** The rows were read by the server search (`Label LIKE`): the term matched owner names only, never a rep (M8). */
+  serverSearch?: boolean;
 }
 
 /** Every filter the table applies, in words — exactly those in force ("company owners only" always). */
 export function tableFilterWords(f: TableFilterState): string[] {
   const out: string[] = ['company owners only'];
   if (f.scope === 'Statewide' && f.completeOnly) out.push('Complete YoY only');
-  if (f.searchTerm.trim()) out.push(`search “${f.searchTerm.trim()}” (owner or rep)`);
+  if (f.searchTerm.trim()) out.push(`search “${f.searchTerm.trim()}” (${f.serverSearch ? 'owner name' : 'owner or rep'})`);
   if (f.tier !== 'all') out.push(`${f.tierHeader}: ${f.tier}`);
   if (f.rep === 'none') out.push('no rep on record');
   if (f.rep === 'has') out.push('represented');
@@ -315,6 +330,7 @@ export function ownerBasisLines(b: OwnerExportBasis, rowCount: number): (readonl
     ['Search term', b.searchTerm.trim() || 'none'],
     ['Complete YoY only', b.scope === 'Statewide' ? (b.completeOnly ? 'on' : 'off') : 'n/a (Marion)'],
     ['Sort', b.sort],
+    ['Figures', b.runLiveNote],
     ...(b.scope === 'Marion' ? [['Counties', MARION_COUNTIES_NOTE] as [string, string]] : []),
     ...(b.capped && b.capNote ? [['Row cap', b.capNote] as [string, string]] : []),
     ['Generated at', isoMinute(b.generatedAt)],
@@ -329,7 +345,7 @@ export function buildOwnerWorkbook(
   countyNames: Readonly<Record<number, string>>,
 ): SheetDefinition[] {
   const named = rows.map((r) => ({ ...r, countyName: primaryCountyName(r.primaryCountyNumber, basis.scope, countyNames) }));
-  return [basisSheet(ownerBasisLines(basis, rows.length)), dataSheet('Owners', named, ownerColumns(basis.years, basis.tierBasis))];
+  return [basisSheet(ownerBasisLines(basis, rows.length)), dataSheet('Owners', named, ownerColumns(basis.years, basis.tierBasis, basis.scope))];
 }
 
 /** A county number as its name — the number when the name is unknown, never blank; the Marion run is Marion. */
@@ -349,6 +365,8 @@ export function parcelBasisLines(b: ParcelExportBasis, rowCount: number): (reado
     ['Rows', rowCount],
     ...(b.capNote ? [['Row cap', b.capNote] as [string, string]] : []),
     ['Sort', b.sort],
+    ['Figures', b.runLiveNote],
+    ...(b.runLiveDiff ? [['Run vs live', b.runLiveDiff] as [string, string]] : []),
     ['Generated at', isoMinute(b.generatedAt)],
     ...legendLines(),
   ];

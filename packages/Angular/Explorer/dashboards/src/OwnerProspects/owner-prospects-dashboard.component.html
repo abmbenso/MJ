@@ -52,6 +52,9 @@
           <span>Complete YoY only</span>
           <span class="complete-toggle__note" data-testid="complete-note">{{ CompleteOnlyNote }}</span>
         </label>
+        @if (SortNote) {
+          <span class="complete-toggle__note" data-testid="sort-note" title="Each parcel's newest assessed value on record, summed per owner — mixed assessment years">{{ SortNote }}</span>
+        }
       }
 
       <mj-page-search
@@ -238,7 +241,7 @@
         <mj-empty-state
           Icon="fa-solid fa-users-viewfinder"
           Title="No owners match"
-          Message="Adjust the search, tier, or filters above.">
+          [Message]="EmptyMessage">
         </mj-empty-state>
       } @else {
         <div class="owners-count">{{ FilterCountLabel }}</div>
@@ -383,6 +386,8 @@
                         [ParcelYears]="ParcelYearsFor(row)"
                         [YearsLoading]="LoadingYearsFor === row.id"
                         [YearsError]="ParcelYearsErrorFor(row)"
+                        [RunLiveNote]="RunLiveNote"
+                        [RunLiveDiff]="RunLiveDiffFor(row)"
                         [CountySlugs]="CountySlugs"
                         [CountyNames]="CountyNames"
                         (FlagRequested)="onFlagOwner($event)"

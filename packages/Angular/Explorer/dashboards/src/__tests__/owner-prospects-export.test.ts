@@ -32,7 +32,9 @@ import {
   COUNTY_SCOPE_NOTE,
   MARION_COUNTIES_NOTE,
   TableFilterState,
+  AV_NEWEST_HEADER,
 } from '../OwnerProspects/owner-prospects-export';
+import { runLiveSourceNote, runVsLiveNote } from '../OwnerProspects/owner-prospects.model';
 import {
   EXPORT_PAGE_SIZE,
   EXPORT_ROW_CAP,
@@ -62,7 +64,7 @@ function rawOwner(over: Raw, county: string, slice: Raw): Raw {
 }
 
 // ABC: A 2025 card 1,000,000 + 2026 roll 1,100,000; B 2026 roll only 500,000; C 2025 card only 200,000 (Lake, 45).
-const abcRaw = rawOwner({ ID: 'abc', Label: 'ABC Holdings', OwnerKey: 'CO:ABC', AVYoYDollars: 100_000, AppealedParcels: 1, HistoricalReductionWon: 25_000, MostRecentAppealYear: 2024 }, '45', {
+const abcRaw = rawOwner({ ID: 'abc', Label: 'ABC Holdings', OwnerKey: 'CO:ABC', AVCurrent: 1_800_000, AVYoYDollars: 100_000, AppealedParcels: 1, HistoricalReductionWon: 25_000, MostRecentAppealYear: 2024 }, '45', {
   parcels: 3, avCurrent: 1_800_000, avPrior: 1_000_000, pairedParcels: 1,
   years: { '2025': { av: 1_200_000, parcels: 2, roll: 0 }, '2026': { av: 1_600_000, parcels: 2, roll: 2 } },
   pair: { prior: 2025, current: 2026, parcelsBoth: 1, avPriorBoth: 1_000_000, avCurrentBoth: 1_100_000, newFromZero: 0, avNewFromZero: 0, yoyPct: 10 },
@@ -81,7 +83,7 @@ const basis: OwnerExportBasis = {
   runId: '19153E40-RUN', runDate: new Date(2026, 8, 28, 12, 0), methodologyVersion: 'statewide-v2', scope: 'Statewide',
   county: 'Lake', searchTerm: '', completeOnly: false, filters: ['company owners only'], rowsRead: 9_021,
   sort: ownerSortLabel('avCurrent', -1, Y, 'AV'), years: Y, tierBasis: 'AV', generatedAt: new Date(2026, 8, 28, 23, 30),
-  capped: false, capNote: null,
+  capped: false, capNote: null, runLiveNote: runLiveSourceNote('Statewide', new Date(2026, 8, 28, 12, 0)),
 };
 
 /** Build the workbook through the export engine and read it back from its bytes. */
@@ -124,6 +126,7 @@ describe('owner export — pure helpers', () => {
     expect(ownerSortLabel('yoyPair', -1, Y, 'AV')).toBe('YoY 2025→2026 (complete owners first), descending');
     expect(ownerSortLabel('avYoYDollars', 1, Y, 'AV')).toBe('YoY $ 2025→2026, ascending');
     expect(ownerSortLabel('tier', 1, Y, 'Savings')).toBe('Savings tier, ascending');
+    expect(ownerSortLabel('avCurrent', -1, Y, 'AV')).toBe(`${AV_NEWEST_HEADER}, descending`); // final-review I3
   });
 });
 
@@ -145,7 +148,10 @@ describe('owner workbook — read back from the file (Review Focus 3)', () => {
     expect(lines.get('County')).toBe('Lake');
     expect(lines.get('Search term')).toBe('none');
     expect(lines.get('Complete YoY only')).toBe('off');
-    expect(lines.get('Sort')).toBe('AV current, descending');
+    // Final-review I3: the default sort names a column the file carries.
+    expect(lines.get('Sort')).toBe('AV newest (mixed years), descending');
+    // Final-review I1: the owner rows are the run's; parcel figures elsewhere are live.
+    expect(lines.get('Figures')).toBe('Parcel figures are live from the headline table; the owner row is from the Statewide run of 2026-09-28.');
     expect(lines.get('Rows read (run + county/search)')).toBe(9_021);
     expect(lines.get('Rows written after table filters')).toBe(2);
     expect(lines.get('Filters applied')).toBe('company owners only');
@@ -174,7 +180,15 @@ describe('owner workbook — read back from the file (Review Focus 3)', () => {
     expect(abc.getCell(c('YoY %')).numFmt).toBe('0.0%');
     expect(abc.getCell(c('YoY $ 2025→2026')).value).toBe(100_000);
     expect(abc.getCell(c('YoY $ 2025→2026')).numFmt).toBe('#,##0');
-    expect(abc.getCell(c('Assessment status')).value).toBe('2026 assessed: 2 of 3 · roll 2 · 2025 —: 1 parcel');
+    expect(abc.getCell(c('Assessment status')).value).toBe('2025: 2 of 3 · roll 0; 2026 assessed: 2 of 3 · roll 2');
+    // Final-review I2: roll parcel counts per year, beside the figures, as numbers.
+    expect(abc.getCell(c('roll 2025')).value).toBe(0);
+    expect(abc.getCell(c('roll 2026')).value).toBe(2);
+    expect(abc.getCell(c('roll 2026')).type).toBe(ExcelJS.ValueType.Number);
+    expect(c('roll 2025')).toBe(c('AV 2025') + 1);
+    expect(c('roll 2026')).toBe(c('AV 2026') + 1);
+    // Final-review I3: the newest-figure total (the default sort) is a column.
+    expect(abc.getCell(c(AV_NEWEST_HEADER)).value).toBe(1_800_000);
     expect(abc.getCell(c('Primary county')).value).toBe('Lake');
     expect(abc.getCell(c('Reduction won')).value).toBe(25_000);
     expect(abc.getCell(c('Last appeal year')).value).toBe(2024);
@@ -185,7 +199,8 @@ describe('owner workbook — read back from the file (Review Focus 3)', () => {
     expect(tba.getCell(c('AV 2026')).type).toBe(ExcelJS.ValueType.Null);
     expect(tba.getCell(c('YoY %')).type).toBe(ExcelJS.ValueType.Null);
     expect(tba.getCell(c('YoY $ 2025→2026')).type).toBe(ExcelJS.ValueType.Null);
-    expect(tba.getCell(c('Assessment status')).value).toBe('2026 TBA (12 parcels)');
+    expect(tba.getCell(c('Assessment status')).value).toBe('2025: 12 of 12 · roll 12; 2026 TBA (12 parcels)');
+    expect(tba.getCell(c('roll 2025')).value).toBe(12);
     expect(tba.getCell(c('Primary county')).value).toBe('88'); // unknown name → the number, never blank
 
     // No figure column anywhere carries the gap words.
@@ -231,6 +246,9 @@ describe('owner workbook — read back from the file (Review Focus 3)', () => {
     (wb.getWorksheet('Basis') as ExcelJS.Worksheet).eachRow((r) => lines.set(String(r.getCell(1).value ?? ''), r.getCell(2).value));
     expect(lines.get('Counties')).toBe(MARION_COUNTIES_NOTE);
     expect(lines.has('County scope')).toBe(false); // no county chosen
+    // The Marion run carries no per-year roll counts (empty cells) and no newest-figure column.
+    expect(row.getCell(columnOf(ws, 'roll 2025')).type).toBe(ExcelJS.ValueType.Null);
+    expect((ws.getRow(1).values as ExcelJS.CellValue[]).includes(AV_NEWEST_HEADER)).toBe(false);
   });
 });
 
@@ -252,6 +270,7 @@ describe('parcel workbook — read back from the file', () => {
   const pBasis: ParcelExportBasis = {
     runId: 'RUN', runDate: new Date(2026, 8, 28), methodologyVersion: 'v2', scope: 'Statewide', owner: 'ABC Holdings',
     ownerKey: 'CO:ABC', ownerParcelCount: 2, capNote: null, sort: 'AV 2026, descending', years: Y, generatedAt: new Date(2026, 8, 28, 23, 0),
+    runLiveNote: runLiveSourceNote('Statewide', new Date(2026, 8, 28)), runLiveDiff: null,
   };
 
   it('Basis then Parcels; roll flags as words beside numeric years; Marion ask / rec / conf; a TBA cell empty', async () => {
@@ -280,6 +299,31 @@ describe('parcel workbook — read back from the file', () => {
     expect(lines.get('Sort')).toBe('AV 2026, descending');
     expect(lines.get('Rows')).toBe(2);
     expect(lines.get('CoStar caution')).toBe(COSTAR_CAUTION);
+    expect(lines.get('Figures')).toBe('Parcel figures are live from the headline table; the owner row is from the Statewide run of 2026-09-28.');
+    expect(lines.has('Run vs live')).toBe(false); // no difference, no line
+  });
+
+  it('final-review I1: the Basis carries the run-vs-live difference when there is one', async () => {
+    const diff = runVsLiveNote(4_200_000, 3_000_000, 'Marion');
+    const wb = await roundTrip(buildParcelWorkbook(exportParcelRows(view, Y), { ...pBasis, scope: 'Marion', runLiveDiff: diff }));
+    const lines = new Map<string, ExcelJS.CellValue>();
+    (wb.getWorksheet('Basis') as ExcelJS.Worksheet).eachRow((row) => lines.set(String(row.getCell(1).value ?? ''), row.getCell(2).value));
+    expect(lines.get('Run vs live')).toBe("The stored run differs from today's headlines for this owner (stored $4,200,000, live $3,000,000) — re-run the Marion builder to refresh.");
+  });
+
+  it('final-review I4: YoY $ is blank for a parcel whose prior-year figure is $0 (status "new since <y1>"), like the owner-level YoY $', async () => {
+    const zeroMap = mapParcelYearHeadlines([
+      { ParcelID: 'Z', AssessmentYear: 2025, HeadlineTotalAV: 0, IsPlaceholder: 0 },
+      { ParcelID: 'Z', AssessmentYear: 2026, HeadlineTotalAV: 5_800, IsPlaceholder: 0 },
+    ]);
+    const rows = exportParcelRows(buildParcelViewRows([P({ id: 'z', parcelId: 'Z', parcelNumber: '49-9', countyNumber: 49 })], zeroMap, Y, { 49: 'Marion' }), Y);
+    expect(rows[0].yoyDollars).toBeNull();
+    const wb = await roundTrip(buildParcelWorkbook(rows, pBasis));
+    const ws = wb.getWorksheet('Parcels') as ExcelJS.Worksheet;
+    const r = ws.getRow(2);
+    expect(r.getCell(columnOf(ws, 'YoY $ 2025→2026')).type).toBe(ExcelJS.ValueType.Null);
+    expect(r.getCell(columnOf(ws, 'YoY %')).type).toBe(ExcelJS.ValueType.Null);
+    expect(r.getCell(columnOf(ws, 'Assessment status')).value).toBe('new since 2025');
   });
 });
 
@@ -365,6 +409,8 @@ describe('fix round 1 — the confirm and the Basis name the filters; read vs wr
     // Complete-only is Statewide; the opportunity floor is Marion.
     expect(tableFilterWords(state({ scope: 'Marion', completeOnly: true, minOppPerYear: 50_000, tierHeader: 'Savings tier' }))).toEqual(['company owners only', 'opportunity ≥ $50,000/yr']);
     expect(tableFilterWords(state({ minOppPerYear: 50_000 }))).toEqual(['company owners only']);
+    // M8: past the cap the rows are read by a Label LIKE — the term matched owner names only.
+    expect(tableFilterWords(state({ searchTerm: 'acme', serverSearch: true }))).toEqual(['company owners only', 'search “acme” (owner name)']);
   });
   it('readFilterWords names the server clause', () => {
     expect(readFilterWords('Lake', null)).toBe('the Lake county filter');
