@@ -27,10 +27,25 @@
           ValueField="CountyNumber"
           [ValuePrimitive]="true"
           [Filterable]="true"
-          [DefaultItem]="{ Label: 'All counties', CountyNumber: null }"
+          [DefaultItem]="{ Label: 'All counties', CountyNumber: null, Chip: null }"
           [ngModel]="CountyNumber"
           (ValueChange)="onCountyChange($event)">
+          <ng-template #mjDropdownItem let-item>
+            @let option = countyOption(item);
+            <span class="county-item">
+              <span>{{ option.Label }}</span>
+              @if (option.Chip) {
+                <span class="year-chip" [class.year-chip--tba]="option.Chip.endsWith('TBA')" data-testid="county-chip">{{ option.Chip }}</span>
+              }
+            </span>
+          </ng-template>
         </mj-dropdown>
+
+        <label class="complete-toggle" data-testid="complete-toggle">
+          <mj-switch [ngModel]="CompleteOnly" (ngModelChange)="onCompleteOnlyChange($event)"></mj-switch>
+          <span>Complete YoY only</span>
+          <span class="complete-toggle__note" data-testid="complete-note">{{ CompleteOnlyNote }}</span>
+        </label>
       }
 
       <mj-page-search
@@ -117,43 +132,45 @@
       <mj-alert Variant="info" [Message]="RowCapMessage" data-testid="row-cap-banner"></mj-alert>
     }
 
-    @if (IsStatewide && CountyBanner; as cb) {
+    @if (IsStatewide && !DisplayYears && !LoadError && !IsLoading) {
+      <mj-alert Variant="warning" Message="This run carries no per-year assessed values — re-run the statewide builder to show the fixed assessment years." data-testid="no-years"></mj-alert>
+    }
+
+    @if (IsStatewide && CountyBanner && DisplayYears) {
       <section class="ci-banner" data-testid="county-banner">
-        <div class="ci-banner__head">{{ CountyBannerTitle }} — commercial &amp; industrial assessed value, latest assessment pair</div>
-        @if (cb.pairsLabel) {
-          <div class="ci-banner__years" data-testid="county-banner-years">{{ cb.pairsLabel }}</div>
-        }
-        <div class="ci-banner__row">
-          @if (cb.yoyPct != null) {
-            <div class="ci-banner__cell">
-              <span class="ci-banner__yr">prior (paired)</span>
-              <span class="ci-banner__av">{{ money(cb.avPrior) }}</span>
-            </div>
-            <div class="ci-banner__arrow" aria-hidden="true">&rarr;</div>
-            <div class="ci-banner__cell">
-              <span class="ci-banner__yr">current (paired)</span>
-              <span class="ci-banner__av">{{ money(cb.avCurrentPaired) }}</span>
-            </div>
-            <div class="ci-banner__pct">
-              <span class="ci-banner__pct-val">{{ yoy(cb.yoyPct) }}</span>
-              <span class="ci-banner__pct-sub">{{ cb.yoyParcels | number }} of {{ cb.parcels | number }} parcels have a prior year</span>
-            </div>
-          } @else {
-            <div class="ci-banner__cell">
-              <span class="ci-banner__yr">current</span>
-              <span class="ci-banner__av">{{ money(cb.avCurrent) }}</span>
-            </div>
-            <div class="ci-banner__pct">
-              <span class="ci-banner__pct-sub">no prior-year pair on file — no YoY for {{ cb.parcels | number }} parcels</span>
-            </div>
+        <div class="ci-banner__head">
+          {{ CountyBannerTitle }} — commercial &amp; industrial assessed value, {{ DisplayYears[0] }} and {{ DisplayYears[1] }}
+          @if (CountyBanner.chip) {
+            <span class="year-chip" [class.year-chip--tba]="CountyBanner.chip.endsWith('TBA')" data-testid="county-banner-chip">{{ CountyBanner.chip }}</span>
           }
         </div>
-        <div class="ci-banner__break">
-          <span class="ci-banner__chip"><b>{{ cb.parcels | number }}</b> parcels</span>
-          <span class="ci-banner__chip"><b>{{ money(cb.avCurrent) }}</b> Σ AV current (all parcels)</span>
-          @if (cb.placeholderParcels > 0) {
-            <span class="ci-banner__chip" title="AV from the DLGF roll only — no county document for that year"><b>{{ cb.placeholderParcels | number }}</b> placeholder</span>
-          }
+        <div class="ci-banner__row">
+          <div class="ci-banner__cell">
+            <span class="ci-banner__yr">Σ {{ DisplayYears[0] }}</span>
+            <span class="ci-banner__av" data-testid="county-banner-y1">{{ CountyBanner.y1 ? money(CountyBanner.y1.av) : '—' }}</span>
+            @if (CountyBanner.y1; as f) {
+              <span class="ci-banner__sub">{{ f.parcels | number }} parcels · roll {{ f.roll | number }}</span>
+            }
+          </div>
+          <div class="ci-banner__arrow" aria-hidden="true">&rarr;</div>
+          <div class="ci-banner__cell">
+            <span class="ci-banner__yr">Σ {{ DisplayYears[1] }}</span>
+            <span class="ci-banner__av" data-testid="county-banner-y2">{{ CountyBanner.y2 ? money(CountyBanner.y2.av) : 'TBA' }}</span>
+            @if (CountyBanner.y2; as f) {
+              <span class="ci-banner__sub">{{ f.parcels | number }} parcels · roll {{ f.roll | number }}</span>
+            } @else {
+              <span class="ci-banner__sub">no {{ DisplayYears[1] }} figures on the record yet</span>
+            }
+          </div>
+          <div class="ci-banner__pct">
+            <span class="ci-banner__pct-val" data-testid="county-banner-yoy">{{ yoy(CountyBanner.yoyPct) }}</span>
+            <span class="ci-banner__pct-sub">
+              YoY over {{ CountyBanner.parcelsBoth | number }} of {{ CountyBanner.parcels | number }} parcels with both years
+              @if (CountyBanner.newFromZero > 0) {
+                · <span data-testid="county-banner-new">{{ CountyBanner.newFromZero | number }} new since {{ DisplayYears[0] }}</span>
+              }
+            </span>
+          </div>
         </div>
       </section>
     }
@@ -225,13 +242,15 @@
                 }
                 <th class="num" (click)="onSortColumn('parcelCount')" [attr.data-sort]="isSorted('parcelCount')">Parcels</th>
                 @if (IsStatewide) {
-                  <th class="num" (click)="onSortColumn('avPrior')" [attr.data-sort]="isSorted('avPrior')" [title]="AVPriorTooltip">AV prior (paired)</th>
-                  <th class="num" (click)="onSortColumn('avCurrent')" [attr.data-sort]="isSorted('avCurrent')">AV current</th>
+                  <th class="num" (click)="onSortColumn('avYear1')" [attr.data-sort]="isSorted('avYear1')" data-testid="year1-header">{{ YearHeaders.y1 }}</th>
+                  <th class="num" (click)="onSortColumn('avYear2')" [attr.data-sort]="isSorted('avYear2')" data-testid="year2-header">{{ YearHeaders.y2 }}</th>
+                  <th class="num" (click)="onSortColumn('yoyPair')" [attr.data-sort]="isSorted('yoyPair')" data-testid="yoy-header">{{ YearHeaders.yoy }}</th>
+                  <th (click)="onSortColumn('completeness')" [attr.data-sort]="isSorted('completeness')" title="Sorted by the share of the newest-year AV the YoY covers">Assessment status</th>
                 } @else {
                   <th class="num" (click)="onSortColumn('totalAV2025')" [attr.data-sort]="isSorted('totalAV2025')">AV 2025</th>
                   <th class="num" (click)="onSortColumn('totalAV2026')" [attr.data-sort]="isSorted('totalAV2026')">AV 2026</th>
+                  <th class="num" (click)="onSortColumn('avYoYPct')" [attr.data-sort]="isSorted('avYoYPct')">YoY</th>
                 }
-                <th class="num" (click)="onSortColumn('avYoYPct')" [attr.data-sort]="isSorted('avYoYPct')">YoY</th>
                 <th class="num" (click)="onSortColumn('totalUnits')" [attr.data-sort]="isSorted('totalUnits')">Units</th>
                 <th class="num" (click)="onSortColumn('nAppealRec')" [attr.data-sort]="isSorted('nAppealRec')">Appeal recs</th>
                 <th class="num" (click)="!IsStatewide && onSortColumn('estSavingsAtAsk')" [attr.data-sort]="isSorted('estSavingsAtAsk')">Opp / yr (ask)</th>
@@ -268,23 +287,27 @@
                   }
                   <td class="num">{{ row.parcelCount | number }}</td>
                   @if (IsStatewide) {
-                    <td class="num" data-testid="av-prior" [title]="avPriorTitle(row)">{{ money(row.avPrior ?? null) }}</td>
-                    <td class="num" data-testid="av-current" [title]="pairYears(row)">{{ money(row.avCurrent ?? null) }}</td>
+                    @let y1 = yearValue(row, 0);
+                    @let y2 = yearValue(row, 1);
+                    @let pct = yoyValue(row);
+                    <td class="num" data-testid="av-year1" [class.gap]="y1 === '—'" [attr.title]="yearTitle(row, 0)">{{ yearText(y1) }}</td>
+                    <td class="num" data-testid="av-year2" [class.gap]="y2 === 'TBA'" [attr.title]="yearTitle(row, 1)">{{ yearText(y2) }}</td>
+                    <td class="num" data-testid="yoy-pair" [attr.title]="yoyTitle(row)">
+                      <span class="yoy" [class.yoy--up]="pct != null && pct > 0" [class.yoy--down]="pct != null && pct < 0">{{ yoy(pct) }}</span>
+                    </td>
+                    <td class="status-cell" data-testid="assessment-status">{{ status(row) }}</td>
                   } @else {
                     <td class="num">{{ money(row.totalAV2025) }}</td>
                     <td class="num">{{ money(row.totalAV2026) }}</td>
+                    <td class="num">
+                      <span
+                        class="yoy"
+                        [class.yoy--up]="row.avYoYPct != null && row.avYoYPct > 0"
+                        [class.yoy--down]="row.avYoYPct != null && row.avYoYPct < 0">
+                        {{ yoy(row.avYoYPct) }}
+                      </span>
+                    </td>
                   }
-                  <td class="num">
-                    <span
-                      class="yoy"
-                      [class.yoy--up]="row.avYoYPct != null && row.avYoYPct > 0"
-                      [class.yoy--down]="row.avYoYPct != null && row.avYoYPct < 0">
-                      {{ yoy(row.avYoYPct) }}
-                    </span>
-                    @if (isBelowYoYFloor(row)) {
-                      <span class="pill pill--muted" data-testid="yoy-floor-pill" title="Prior-year AV under $100,000 — the % is shown but not ranked">prior &lt; $100k</span>
-                    }
-                  </td>
                   <td class="num">{{ row.totalUnits != null ? (row.totalUnits | number) : '—' }}</td>
                   @if (appealRecs(row); as ar) {
                     <td class="num" data-testid="appeal-recs" [attr.title]="ar.tooltip">
@@ -339,6 +362,10 @@
                         [Statewide]="IsStatewide"
                         [ParcelsLoading]="LoadingParcelsFor === row.id"
                         [ParcelsCapped]="ParcelsCappedFor(row)"
+                        [DisplayYears]="DisplayYears"
+                        [ParcelYears]="ParcelYearsFor(row)"
+                        [YearsLoading]="LoadingYearsFor === row.id"
+                        [YearsError]="ParcelYearsErrorFor(row)"
                         [CountySlugs]="CountySlugs"
                         [CountyNames]="CountyNames"
                         (FlagRequested)="onFlagOwner($event)"

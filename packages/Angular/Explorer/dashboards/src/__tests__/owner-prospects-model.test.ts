@@ -169,11 +169,12 @@ describe('buildVisibleRows', () => {
 
 describe('KNOWN_SORT_KEYS', () => {
   it('covers every OwnerSortKey union member', () => {
-    // 16 since the statewide scope (2026-09-28): + avPrior, avCurrent, countyCount.
-    expect(KNOWN_SORT_KEYS.size).toBe(16);
+    // 16 since the statewide scope (2026-09-28): + avPrior, avCurrent, countyCount;
+    // 20 since fixed assessment years (2026-09-28 evening): + avYear1, avYear2, yoyPair, completeness.
+    expect(KNOWN_SORT_KEYS.size).toBe(20);
     for (const k of ['label', 'tier', 'parcelCount', 'totalAV2025', 'totalAV2026', 'avYoYPct', 'totalUnits',
       'nAppealRec', 'estSavingsAtAsk', 'estSavingsAtFloor', 'historicalReductionWon', 'appealYears', 'repStatus',
-      'avPrior', 'avCurrent', 'countyCount'] as const) {
+      'avPrior', 'avCurrent', 'countyCount', 'avYear1', 'avYear2', 'yoyPair', 'completeness'] as const) {
       expect(KNOWN_SORT_KEYS.has(k)).toBe(true);
     }
   });
@@ -217,6 +218,8 @@ describe('buildOwnerProspectsAgentContext', () => {
     'MinOppPerYear', 'SearchQuery', 'SortKey', 'SortDir', 'SelectedOwnerLabel', 'SelectedOwnerIsFlagged', 'CountyYoYPct',
     // Statewide scope (2026-09-28): which run, which county, what the tier ranks on.
     'Scope', 'County', 'TierBasis', 'OpportunityBasis',
+    // Fixed assessment years (2026-09-28 evening): the display pair and the Complete YoY only filter.
+    'DisplayYears', 'CompleteOnly',
   ] as const;
 
   it('emits every documented named field plus the bounded label list', () => {

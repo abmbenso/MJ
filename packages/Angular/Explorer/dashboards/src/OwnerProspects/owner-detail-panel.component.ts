@@ -5,19 +5,24 @@ import {
   taxHistoryUrl,
   formatMoneyShort,
   formatMoneyOrDash,
-  parcelYears,
   parcelVerifyLink,
   MARION_RUN_COUNTY_NUMBER,
   NO_ANALYSIS_TOOLTIP,
   PARCEL_CAP_NOTE,
-  isPriorPlaceholder,
-  isPriorZero,
-  PRIOR_ZERO_TOOLTIP,
   pairYearsTooltip,
   repIsMarionOnly,
   MARION_PARCELS_MARKER,
   MARION_REP_TOOLTIP,
-  PRIOR_PLACEHOLDER_TOOLTIP,
+  DisplayYears,
+  ParcelYearsMap,
+  ParcelYearValue,
+  ParcelViewRow,
+  ParcelSortKey,
+  YearCellValue,
+  buildParcelViewRows,
+  parcelYearCell,
+  parcelSortStartsAscending,
+  sortParcels,
 } from './owner-prospects.model';
 import { CountyVerifyLink } from '../PropertySearch/property-search-county';
 
@@ -35,6 +40,10 @@ import { CountyVerifyLink } from '../PropertySearch/property-search-county';
  * outbound Marion County PRC / Tax-History links), and an actions row that shows
  * "Flag as prospect" (primary) until an `indiana_tax.Prospect` is linked, then
  * "View prospect" (secondary).
+ *
+ * Fixed assessment years (2026-09-28 evening): both scopes show `AV <y1>` | `AV <y2>` | `YoY` per parcel from
+ * the display-year figures the dashboard read live from `Parcel Year Headlines` (`ParcelYears` input), a `roll`
+ * pill on a DLGF roll figure, `TBA` / `—` gaps, and every column sortable (blanks last both directions).
  */
 @Component({
   standalone: false,
@@ -62,6 +71,20 @@ export class OwnerDetailPanelComponent {
   @Input() CountySlugs: Record<number, string> = {};
   /** County number → county name (the county split line and the parcel County column). */
   @Input() CountyNames: Record<number, string> = {};
+  /** The run's two display years (older first); null when the run carries none. */
+  @Input() DisplayYears: DisplayYears | null = null;
+  /** The owner's display-year figures by parcel (read live by the dashboard); null = not loaded. */
+  @Input() ParcelYears: ParcelYearsMap | null = null;
+  /** The year figures are being read. */
+  @Input() YearsLoading = false;
+  /** The year read failed (the cells then claim no gap). */
+  @Input() YearsError: string | null = null;
+
+  /** The column the parcel table is sorted by; null = the default order (savings on Marion, current AV Statewide). */
+  public ParcelSortKey: ParcelSortKey | null = null;
+  public ParcelSortDir: 1 | -1 = -1;
+  /** Rows shown at most (the rest are counted in the "N more parcels" note). */
+  public readonly ParcelRowLimit = 60;
 
   /** Emitted when the user clicks "Flag as prospect" — the dashboard creates the `indiana_tax.Prospect` (Task 8). */
   @Output() FlagRequested = new EventEmitter<OwnerRow>();
@@ -70,14 +93,7 @@ export class OwnerDetailPanelComponent {
 
   /** Marion County tax-history report URL for a GIS parcel number (template ref to the model fn). */
   public readonly taxHistoryUrl = taxHistoryUrl;
-  /** `2024→2025` / `2025 only` (template ref to the model fn). */
-  public readonly parcelYears = parcelYears;
   public readonly NoAnalysisTooltip = NO_ANALYSIS_TOOLTIP;
-  /** A parcel whose prior-year AV is a DLGF placeholder (the "prior placeholder" pill; final-review C1). */
-  public readonly isPriorPlaceholder = isPriorPlaceholder;
-  public readonly PriorPlaceholderTooltip = PRIOR_PLACEHOLDER_TOOLTIP;
-  public readonly isPriorZero = isPriorZero;
-  public readonly PriorZeroTooltip = PRIOR_ZERO_TOOLTIP;
   public readonly MarionParcelsMarker = MARION_PARCELS_MARKER;
   public readonly MarionRepTooltip = MARION_REP_TOOLTIP;
 
@@ -99,10 +115,62 @@ export class OwnerDetailPanelComponent {
     return this.Parcels ?? this.Owner.parcels;
   }
 
-  /** The owner's parcels, capped at 60 rows — biggest opportunity first (Marion), biggest current AV first (Statewide). */
-  public get TopParcels(): OwnerParcelRow[] {
+  /**
+   * The owner's parcels with their display-year figures, sorted by the clicked column (else biggest opportunity
+   * first on Marion, biggest current AV first Statewide), capped at {@link ParcelRowLimit} rows.
+   */
+  public get TopParcels(): ParcelViewRow[] {
     const key = (p: OwnerParcelRow): number => (this.Statewide ? (p.avCurrent ?? 0) : (p.estSavingsAtAsk ?? 0));
-    return [...this.allParcels].sort((a, b) => key(b) - key(a)).slice(0, 60);
+    const base = [...this.allParcels].sort((a, b) => key(b) - key(a));
+    const rows = buildParcelViewRows(base, this.ParcelYears, this.DisplayYears, this.CountyNames);
+    const sorted = this.ParcelSortKey ? sortParcels(rows, this.ParcelSortKey, this.ParcelSortDir) : rows;
+    return sorted.slice(0, this.ParcelRowLimit);
+  }
+
+  /** Header click: the same column flips direction; a new column starts ascending for words, descending for figures. */
+  public SortParcelsBy(key: ParcelSortKey): void {
+    if (this.ParcelSortKey === key) {
+      this.ParcelSortDir = this.ParcelSortDir === 1 ? -1 : 1;
+    } else {
+      this.ParcelSortKey = key;
+      this.ParcelSortDir = parcelSortStartsAscending(key) ? 1 : -1;
+    }
+  }
+
+  /** `asc` / `desc` on the sorted header (drives the arrow), '' elsewhere. */
+  public parcelSorted(key: ParcelSortKey): '' | 'asc' | 'desc' {
+    return this.ParcelSortKey !== key ? '' : this.ParcelSortDir === 1 ? 'asc' : 'desc';
+  }
+
+  /** `AV 2025` / `AV 2026` headers from the display years. */
+  public yearHeader(which: 0 | 1): string {
+    return this.DisplayYears ? `AV ${this.DisplayYears[which]}` : 'AV —';
+  }
+
+  /** A parcel's cell for display year 0 / 1: the figure, `TBA` / `—`, or '' while the figures are not loaded. */
+  public yearCell(r: ParcelViewRow, which: 0 | 1): YearCellValue | '' {
+    if (!r.loaded || !this.DisplayYears) return '';
+    return parcelYearCell(which === 0 ? r.y1 : r.y2, this.DisplayYears[which], this.DisplayYears);
+  }
+
+  /** Cell text: a figure with thousands separators, a gap marker verbatim. */
+  public yearText(v: YearCellValue | ''): string {
+    return typeof v === 'number' ? v.toLocaleString('en-US') : v;
+  }
+
+  /** The figure's source (and roll) in words; the not-loaded reason on an unloaded cell. */
+  public yearTitle(r: ParcelViewRow, which: 0 | 1): string | null {
+    if (!r.loaded || !this.DisplayYears) return this.YearsLoading ? 'loading the year figures…' : 'year figures not loaded';
+    const v: ParcelYearValue | null = which === 0 ? r.y1 : r.y2;
+    const year = this.DisplayYears[which];
+    if (!v) return which === 1 ? `${year}: To Be Assessed — no ${year} figure on the record yet` : `no ${year} figure on the record`;
+    const roll = v.roll ? ' — the DLGF roll (the assessed value reported to the DLGF; no county document on file)' : '';
+    return `${year}: ${v.source ?? 'assessed value on the record'}${roll}`;
+  }
+
+  /** "newest assessment year on record: 2026" (the parcel cell's tooltip). */
+  public newestTitle(r: ParcelViewRow): string {
+    return r.newestYear == null ? 'no assessment year on record' : `newest assessment year on record: ${r.newestYear}`;
   }
 
   /**
@@ -133,9 +201,9 @@ export class OwnerDetailPanelComponent {
       .join(' · ');
   }
 
-  /** Parcels beyond the 60 shown in {@link TopParcels} — drives the "N more parcels" note. */
+  /** Parcels beyond the {@link ParcelRowLimit} shown in {@link TopParcels} — drives the "N more parcels" note. */
   public get RemainingParcelCount(): number {
-    return Math.max(0, this.allParcels.length - 60);
+    return Math.max(0, this.allParcels.length - this.ParcelRowLimit);
   }
 
   /** Signed year-over-year percent for a parcel cell: `+7.1%` / `-4.1%` / `0%` / `—`. */

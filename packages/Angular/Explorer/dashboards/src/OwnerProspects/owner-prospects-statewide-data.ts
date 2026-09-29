@@ -5,8 +5,8 @@
  * Owns every query the screen runs against the owner-portfolio tables: the run pick (per scope, with
  * the 2-row tripwire), the Marion run's full owner + parcel load, the Statewide owners page (top
  * {@link STATEWIDE_ROW_CAP} by AV, optionally one county), the server search past that cap, the county
- * lookup for the dropdown, the parcels of one opened owner (top {@link PARCEL_ROW_CAP}), and the
- * existing-prospect match. The static `*Query` builders are pure so the filters can be unit-tested.
+ * lookup for the dropdown, the parcels of one opened owner (top {@link PARCEL_ROW_CAP}), that owner's
+ * display-year figures read live from `Parcel Year Headlines`, and the existing-prospect match. The static `*Query` builders are pure so the filters can be unit-tested.
  */
 import { RunView, RunViewParams } from '@memberjunction/core';
 import {
@@ -17,6 +17,11 @@ import {
   OWNER_PORTFOLIO_ENTITY,
   OWNER_PORTFOLIO_PARCEL_ENTITY,
   COUNTY_ENTITY,
+  PARCEL_YEAR_HEADLINE_ENTITY,
+  DisplayYears,
+  ParcelYearsMap,
+  mapParcelYearHeadlines,
+  countyChips,
   STATEWIDE_ROW_CAP,
   PARCEL_ROW_CAP,
   latestRunFor,
@@ -37,6 +42,8 @@ export interface CountyFilterOption {
   Name: string;
   /** "Lake — 15,001 parcels" */
   Label: string;
+  /** The county status chip for the display years (`cards` / `roll only` / `2026 TBA`); null without display years. */
+  Chip: string | null;
 }
 
 /** The county dropdown plus the slug / name maps the verify links and county split read. */
@@ -49,6 +56,12 @@ export interface CountyLookup {
 export type RunPick = { run: RawRow; error: null } | { run: null; error: string };
 export type OwnersResult = { ok: true; rows: OwnerRow[]; capHit: boolean } | { ok: false; error: string };
 export type ParcelsResult = { ok: true; parcels: OwnerParcelRow[]; capHit: boolean } | { ok: false; error: string };
+export type ParcelYearsResult = { ok: true; years: ParcelYearsMap } | { ok: false; error: string };
+
+/** Parcel-year figures per opened owner: at most this many (the query asks for one more as a tripwire). */
+export const PARCEL_YEAR_ROW_CAP = 10000;
+/** The `Parcel Year Headlines` columns the panel reads (ParcelID, the year, THE assessed value, roll flag, source label). */
+const PARCEL_YEAR_FIELDS: readonly string[] = ['ParcelID', 'AssessmentYear', 'HeadlineTotalAV', 'IsPlaceholder', 'HeadlineDataSource'];
 
 /** The run columns both scopes read. */
 const RUN_FIELDS: readonly string[] = [
@@ -100,7 +113,8 @@ export class OwnerProspectsDataAccess {
       { EntityName: OWNER_PORTFOLIO_ENTITY, Fields: [...OWNER_FIELDS], ExtraFilter: `RunID = '${run}'`, MaxRows: 20000, ResultType: 'simple' },
       {
         EntityName: OWNER_PORTFOLIO_PARCEL_ENTITY,
-        Fields: [...PARCEL_FIELDS],
+        // ParcelID: the key the live `Parcel Year Headlines` read joins on (populated on every Marion-run row).
+        Fields: [...PARCEL_FIELDS, 'ParcelID'],
         ExtraFilter: `OwnerPortfolioID IN (SELECT ID FROM indiana_tax.OwnerPortfolio WHERE RunID = '${run}')`,
         MaxRows: 50000,
         ResultType: 'simple',
@@ -126,6 +140,24 @@ export class OwnerProspectsDataAccess {
       ExtraFilter: `OwnerPortfolioID = '${escapeSqlLiteral(ownerId)}'`,
       OrderBy: 'AVCurrent DESC',
       MaxRows: PARCEL_ROW_CAP + 1,
+      ResultType: 'simple',
+    };
+  }
+
+  /**
+   * One opened owner's display-year figures, read live: every parcel of the owner (the subquery keys on the
+   * portfolio, so the filter never carries a parcel list), the two display years, figures only (a NULL total is no
+   * figure), +1 row as the tripwire.
+   */
+  public static ParcelYearsQuery(ownerId: string, years: DisplayYears): RunViewParams {
+    const owner = escapeSqlLiteral(ownerId);
+    return {
+      EntityName: PARCEL_YEAR_HEADLINE_ENTITY,
+      Fields: [...PARCEL_YEAR_FIELDS],
+      ExtraFilter:
+        `ParcelID IN (SELECT ParcelID FROM indiana_tax.OwnerPortfolioParcel WHERE OwnerPortfolioID = '${owner}') `
+        + `AND AssessmentYear IN (${Math.trunc(years[0])}, ${Math.trunc(years[1])}) AND HeadlineTotalAV IS NOT NULL`,
+      MaxRows: PARCEL_YEAR_ROW_CAP + 1,
       ResultType: 'simple',
     };
   }
@@ -218,8 +250,22 @@ export class OwnerProspectsDataAccess {
     return { ok: true, parcels: raw.slice(0, PARCEL_ROW_CAP).map(mapOwnerParcelRow), capHit: raw.length > PARCEL_ROW_CAP };
   }
 
-  /** The county dropdown for a run (counties with parcels in its `ByCountyJSON`), by name. */
-  public async LoadCountyLookup(byCountyJSON: string | null): Promise<CountyLookup> {
+  /**
+   * One opened owner's display-year figures. Past the tripwire it is an error, never a partial map: a parcel whose
+   * row was cut would otherwise read as `TBA` / `—` — a false statement about the record.
+   */
+  public async LoadParcelYears(ownerId: string, years: DisplayYears): Promise<ParcelYearsResult> {
+    const res = await this.rv.RunView<RawRow>(OwnerProspectsDataAccess.ParcelYearsQuery(ownerId, years));
+    if (!res.Success) return { ok: false, error: res.ErrorMessage || 'Failed to load the parcel year figures.' };
+    const rows = res.Results ?? [];
+    if (rows.length > PARCEL_YEAR_ROW_CAP) {
+      return { ok: false, error: `more than ${PARCEL_YEAR_ROW_CAP.toLocaleString('en-US')} parcel-year figures — too many to show here` };
+    }
+    return { ok: true, years: mapParcelYearHeadlines(rows) };
+  }
+
+  /** The county dropdown for a run (counties with parcels in its `ByCountyJSON`), by name, each with its status chip. */
+  public async LoadCountyLookup(byCountyJSON: string | null, years: DisplayYears | null = null): Promise<CountyLookup> {
     const numbers = countyNumbersInRun(byCountyJSON);
     const lookup: CountyLookup = { Options: [], Slugs: {}, Names: {} };
     if (!numbers.length) return lookup;
@@ -235,11 +281,12 @@ export class OwnerProspectsDataAccess {
     } catch {
       parcelsBy = {};
     }
+    const chips = years ? countyChips(byCountyJSON, years) : {};
     lookup.Options = numbers
       .map((n) => {
         const name = lookup.Names[n] ?? `County ${n}`;
         const parcels = parcelsBy[String(n)]?.parcels ?? 0;
-        return { CountyNumber: n, Name: name, Label: `${name} — ${parcels.toLocaleString('en-US')} parcels` };
+        return { CountyNumber: n, Name: name, Label: `${name} — ${parcels.toLocaleString('en-US')} parcels`, Chip: chips[n] ?? null };
       })
       .sort((a, b) => a.Name.localeCompare(b.Name));
     return lookup;

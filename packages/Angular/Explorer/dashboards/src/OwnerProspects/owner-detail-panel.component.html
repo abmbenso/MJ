@@ -55,6 +55,13 @@
 
   <p class="detail__portfolio">Portfolio: {{ ByTypeSummary || '—' }}</p>
 
+  @if (YearsLoading) {
+    <p class="detail__more" data-testid="years-loading">Reading the {{ DisplayYears?.[0] }} and {{ DisplayYears?.[1] }} figures…</p>
+  }
+  @if (YearsError) {
+    <p class="detail__more detail__error" data-testid="years-error">{{ YearsError }}</p>
+  }
+
   @if (Statewide) {
     @if (ParcelsLoading) {
       <p class="detail__more" data-testid="parcels-loading">Loading parcels…</p>
@@ -66,24 +73,24 @@
       <table class="pt">
         <thead>
           <tr>
-            <th>Parcel</th>
-            <th>County</th>
-            <th>Type</th>
-            <th>Years</th>
-            <th class="num">AV prior</th>
-            <th class="num">AV current</th>
-            <th class="num">YoY</th>
-            <th class="num">SqFt</th>
-            <th class="num">Units</th>
-            <th class="num">Save/yr</th>
-            <th>Appealed</th>
-            <th>Rep</th>
+            <th class="sortable" (click)="SortParcelsBy('parcel')" [attr.data-sort]="parcelSorted('parcel')">Parcel</th>
+            <th class="sortable" (click)="SortParcelsBy('county')" [attr.data-sort]="parcelSorted('county')">County</th>
+            <th class="sortable" (click)="SortParcelsBy('type')" [attr.data-sort]="parcelSorted('type')">Type</th>
+            <th class="num sortable" (click)="SortParcelsBy('avYear1')" [attr.data-sort]="parcelSorted('avYear1')" data-testid="pt-year1-header">{{ yearHeader(0) }}</th>
+            <th class="num sortable" (click)="SortParcelsBy('avYear2')" [attr.data-sort]="parcelSorted('avYear2')" data-testid="pt-year2-header">{{ yearHeader(1) }}</th>
+            <th class="num sortable" (click)="SortParcelsBy('yoy')" [attr.data-sort]="parcelSorted('yoy')" data-testid="pt-yoy-header">YoY</th>
+            <th class="num sortable" (click)="SortParcelsBy('sqft')" [attr.data-sort]="parcelSorted('sqft')">SqFt</th>
+            <th class="num sortable" (click)="SortParcelsBy('units')" [attr.data-sort]="parcelSorted('units')">Units</th>
+            <th class="num sortable" (click)="SortParcelsBy('savings')" [attr.data-sort]="parcelSorted('savings')">Save/yr</th>
+            <th class="sortable" (click)="SortParcelsBy('appealed')" [attr.data-sort]="parcelSorted('appealed')">Appealed</th>
+            <th class="sortable" (click)="SortParcelsBy('rep')" [attr.data-sort]="parcelSorted('rep')">Rep</th>
           </tr>
         </thead>
         <tbody>
-          @for (p of TopParcels; track p.id) {
+          @for (r of TopParcels; track r.parcel.id) {
+            @let p = r.parcel;
             <tr>
-              <td class="pt__parcel">
+              <td class="pt__parcel" [title]="newestTitle(r)" data-testid="pt-parcel">
                 <span class="pt__addr">{{ p.address ?? p.parcelNumber ?? p.gisParcelNumber }}</span>
                 @if (verifyLink(p); as link) {
                   <span class="pt__links">
@@ -95,24 +102,23 @@
                   </span>
                 }
               </td>
-              <td>{{ countyName(p.countyNumber) }}</td>
+              <td>{{ r.countyName ?? '—' }}</td>
               <td>{{ p.typeGroup ?? '—' }}</td>
-              <td>
-                {{ parcelYears(p) || '—' }}
-                @if (p.isPlaceholder) {
-                  <span class="pt__pill" data-testid="placeholder-pill" title="DLGF roll figure only — no county document for this year">placeholder</span>
+              @let v1 = yearCell(r, 0);
+              @let v2 = yearCell(r, 1);
+              <td class="num" data-testid="pt-year1" [class.pt__gap]="v1 === '—'" [attr.title]="yearTitle(r, 0)">
+                {{ yearText(v1) }}
+                @if (r.y1?.roll) {
+                  <span class="pt__pill" data-testid="roll-pill">roll</span>
                 }
               </td>
-              <td class="num">
-                {{ p.avPrior != null ? (p.avPrior | number) : '—' }}
-                @if (isPriorPlaceholder(p)) {
-                  <span class="pt__pill" data-testid="prior-placeholder-pill" [title]="PriorPlaceholderTooltip">prior placeholder</span>
-                } @else if (isPriorZero(p)) {
-                  <span class="pt__pill" data-testid="prior-zero-pill" [title]="PriorZeroTooltip">prior $0</span>
+              <td class="num" data-testid="pt-year2" [class.pt__gap]="v2 === 'TBA'" [attr.title]="yearTitle(r, 1)">
+                {{ yearText(v2) }}
+                @if (r.y2?.roll) {
+                  <span class="pt__pill" data-testid="roll-pill">roll</span>
                 }
               </td>
-              <td class="num">{{ p.avCurrent != null ? (p.avCurrent | number) : '—' }}</td>
-              <td class="num">{{ yoy(p.avYoYPct) }}</td>
+              <td class="num" data-testid="pt-yoy">{{ r.loaded ? yoy(r.yoyPct) : '' }}</td>
               <td class="num" [attr.title]="p.sqftSource">{{ p.sqft != null ? (p.sqft | number) : '—' }}</td>
               <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
               <td class="num" [attr.title]="p.estSavingsAtAsk == null ? NoAnalysisTooltip : null">{{ p.estSavingsAtAsk != null ? money(p.estSavingsAtAsk) : '' }}</td>
@@ -128,24 +134,25 @@
       <table class="pt">
         <thead>
           <tr>
-            <th>Parcel</th>
-            <th>Type</th>
-            <th class="num">AV 2025</th>
-            <th class="num">AV 2026</th>
-            <th class="num">YoY</th>
-            <th class="num">Units</th>
-            <th class="num">Ask</th>
-            <th class="num">Save/yr</th>
-            <th>Rec</th>
-            <th>Conf</th>
-            <th>Appealed</th>
-            <th>Rep</th>
+            <th class="sortable" (click)="SortParcelsBy('parcel')" [attr.data-sort]="parcelSorted('parcel')">Parcel</th>
+            <th class="sortable" (click)="SortParcelsBy('type')" [attr.data-sort]="parcelSorted('type')">Type</th>
+            <th class="num sortable" (click)="SortParcelsBy('avYear1')" [attr.data-sort]="parcelSorted('avYear1')" data-testid="pt-year1-header">{{ yearHeader(0) }}</th>
+            <th class="num sortable" (click)="SortParcelsBy('avYear2')" [attr.data-sort]="parcelSorted('avYear2')" data-testid="pt-year2-header">{{ yearHeader(1) }}</th>
+            <th class="num sortable" (click)="SortParcelsBy('yoy')" [attr.data-sort]="parcelSorted('yoy')" data-testid="pt-yoy-header">YoY</th>
+            <th class="num sortable" (click)="SortParcelsBy('units')" [attr.data-sort]="parcelSorted('units')">Units</th>
+            <th class="num sortable" (click)="SortParcelsBy('ask')" [attr.data-sort]="parcelSorted('ask')">Ask</th>
+            <th class="num sortable" (click)="SortParcelsBy('savings')" [attr.data-sort]="parcelSorted('savings')">Save/yr</th>
+            <th class="sortable" (click)="SortParcelsBy('rec')" [attr.data-sort]="parcelSorted('rec')">Rec</th>
+            <th class="sortable" (click)="SortParcelsBy('conf')" [attr.data-sort]="parcelSorted('conf')">Conf</th>
+            <th class="sortable" (click)="SortParcelsBy('appealed')" [attr.data-sort]="parcelSorted('appealed')">Appealed</th>
+            <th class="sortable" (click)="SortParcelsBy('rep')" [attr.data-sort]="parcelSorted('rep')">Rep</th>
           </tr>
         </thead>
         <tbody>
-          @for (p of TopParcels; track p.id) {
+          @for (r of TopParcels; track r.parcel.id) {
+            @let p = r.parcel;
             <tr>
-              <td class="pt__parcel">
+              <td class="pt__parcel" [title]="newestTitle(r)" data-testid="pt-parcel">
                 <span class="pt__addr">{{ p.address ?? p.gisParcelNumber }}</span>
                 @if (p.gisParcelNumber) {
                   <span class="pt__links">
@@ -157,9 +164,21 @@
                 }
               </td>
               <td>{{ p.typeGroup ?? '—' }}</td>
-              <td class="num">{{ p.av2025 != null ? (p.av2025 | number) : '—' }}</td>
-              <td class="num">{{ p.av2026 != null ? (p.av2026 | number) : '—' }}</td>
-              <td class="num">{{ yoy(p.avYoYPct) }}</td>
+              @let v1 = yearCell(r, 0);
+              @let v2 = yearCell(r, 1);
+              <td class="num" data-testid="pt-year1" [class.pt__gap]="v1 === '—'" [attr.title]="yearTitle(r, 0)">
+                {{ yearText(v1) }}
+                @if (r.y1?.roll) {
+                  <span class="pt__pill" data-testid="roll-pill">roll</span>
+                }
+              </td>
+              <td class="num" data-testid="pt-year2" [class.pt__gap]="v2 === 'TBA'" [attr.title]="yearTitle(r, 1)">
+                {{ yearText(v2) }}
+                @if (r.y2?.roll) {
+                  <span class="pt__pill" data-testid="roll-pill">roll</span>
+                }
+              </td>
+              <td class="num" data-testid="pt-yoy">{{ r.loaded ? yoy(r.yoyPct) : '' }}</td>
               <td class="num">{{ p.units != null ? (p.units | number) : '—' }}</td>
               <td class="num">{{ p.ask != null ? (p.ask | number) : '—' }}</td>
               <td class="num">{{ money(p.estSavingsAtAsk) }}</td>

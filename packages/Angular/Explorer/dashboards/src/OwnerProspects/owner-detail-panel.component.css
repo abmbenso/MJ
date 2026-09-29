@@ -148,3 +148,33 @@
 :host .detail__split {
   white-space: normal;
 }
+
+/* ── Sortable parcel columns (every column; blanks last both directions) ─────── */
+:host .pt thead th.sortable {
+  cursor: pointer;
+  user-select: none;
+}
+
+:host .pt thead th.sortable:hover {
+  color: var(--mj-text-primary);
+}
+
+:host .pt thead th[data-sort='asc']::after {
+  content: ' \25B2';
+  font-size: 0.625rem;
+}
+
+:host .pt thead th[data-sort='desc']::after {
+  content: ' \25BC';
+  font-size: 0.625rem;
+}
+
+/* A gap on the record (`TBA` / `—`) reads quieter than a figure. */
+:host .pt tbody td.pt__gap {
+  color: var(--mj-text-muted);
+  font-weight: 600;
+}
+
+:host .detail__error {
+  color: var(--mj-status-error-text);
+}
