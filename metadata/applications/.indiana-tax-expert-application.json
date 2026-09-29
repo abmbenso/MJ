@@ -88,6 +88,16 @@
           "ResourceType": "Custom",
           "DriverClass": "ParcelPickerPreviewResource",
           "isDefault": false
+        },
+        {
+          "Label": "Parcel Assistant",
+          "Icon": "fa-solid fa-house-flag",
+          "ResourceType": "Custom",
+          "DriverClass": "ParcelAssistantResource",
+          "isDefault": false,
+          "Configuration": {
+            "applicationId": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
+          }
         }
       ]
     },
@@ -169,8 +179,8 @@
       "ID": "A20836AC-1F4B-4A50-B5A1-B5728CFAD6AC"
     },
     "sync": {
-      "lastModified": "2026-09-27T20:25:37.813Z",
-      "checksum": "ce347ee696c6e4864fcef589d9baa6c38f9599440d0e46737773776d6614fba3"
+      "lastModified": "2026-09-29T11:50:34.137Z",
+      "checksum": "c621aa0ee2f23ef518077c0e4c8b94833d4321f64a264e1504038349fefd79b3"
     }
   }
 ]
