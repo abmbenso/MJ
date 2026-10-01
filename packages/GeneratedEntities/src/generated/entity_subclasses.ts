@@ -762,6 +762,412 @@ export const indianataxAppealOutcomeSchema = z.object({
 export type indianataxAppealOutcomeEntityType = z.infer<typeof indianataxAppealOutcomeSchema>;
 
 /**
+ * zod schema definition for the entity Appeal Recommendation Parcels
+ */
+export const indianataxAppealRecommendationParcelSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()
+        * * Description: Primary key.`),
+    AppealRecommendationID: z.string().describe(`
+        * * Field Name: AppealRecommendationID
+        * * Display Name: Appeal Recommendation
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Appeal Recommendations (vwAppealRecommendations.ID)
+        * * Description: The property-subject recommendation being allocated.`),
+    ParcelID: z.string().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The member parcel.`),
+    MemberCurrentAV: z.number().nullable().describe(`
+        * * Field Name: MemberCurrentAV
+        * * Display Name: Member Current AV
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The member's current AV for the assessment year, the basis of AllocationShare.`),
+    AllocationShare: z.number().describe(`
+        * * Field Name: AllocationShare
+        * * Display Name: Allocation Share
+        * * SQL Data Type: decimal(9, 6)
+        * * Description: The member's share of the property total: MemberCurrentAV over the summed CurrentAV, unless AllocationOverride. Shares sum to 1.`),
+    AllocatedFloor: z.number().nullable().describe(`
+        * * Field Name: AllocatedFloor
+        * * Display Name: Allocated Floor
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: FloorValue x AllocationShare.`),
+    AllocatedAsk: z.number().nullable().describe(`
+        * * Field Name: AllocatedAsk
+        * * Display Name: Allocated Ask
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: AskValue x AllocationShare: the value to ask for on this parcel's Form 130.`),
+    AllocatedSavingsAtAsk: z.number().nullable().describe(`
+        * * Field Name: AllocatedSavingsAtAsk
+        * * Display Name: Allocated Savings At Ask
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: EstSavingsAtAsk allocated to this parcel; Owner Prospects reads it.`),
+    AllocatedSavingsAtFloor: z.number().nullable().describe(`
+        * * Field Name: AllocatedSavingsAtFloor
+        * * Display Name: Allocated Savings At Floor
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: EstSavingsAtFloor allocated to this parcel.`),
+    AllocationOverride: z.boolean().describe(`
+        * * Field Name: AllocationOverride
+        * * Display Name: Allocation Override
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 when the practitioner set this member's share by hand instead of by current AV.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Parcel: z.string().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel Name
+        * * SQL Data Type: nvarchar(30)`),
+});
+
+export type indianataxAppealRecommendationParcelEntityType = z.infer<typeof indianataxAppealRecommendationParcelSchema>;
+
+/**
+ * zod schema definition for the entity Appeal Recommendation Signals
+ */
+export const indianataxAppealRecommendationSignalSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()
+        * * Description: Primary key.`),
+    AppealRecommendationID: z.string().describe(`
+        * * Field Name: AppealRecommendationID
+        * * Display Name: Appeal Recommendation
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Appeal Recommendations (vwAppealRecommendations.ID)
+        * * Description: The recommendation this signal belongs to.`),
+    SignalCode: z.union([z.literal('S1'), z.literal('S10'), z.literal('S2'), z.literal('S3'), z.literal('S4'), z.literal('S5'), z.literal('S6'), z.literal('S7'), z.literal('S8'), z.literal('S9')]).describe(`
+        * * Field Name: SignalCode
+        * * Display Name: Signal Code
+        * * SQL Data Type: nvarchar(4)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * S1
+    *   * S10
+    *   * S2
+    *   * S3
+    *   * S4
+    *   * S5
+    *   * S6
+    *   * S7
+    *   * S8
+    *   * S9
+        * * Description: S1 assessment comps (neighborhood); S2 assessment comps (county); S3 sales unadjusted; S4 sales adjusted; S5 income; S6 increase over 5% (flag); S7 PTABOA record; S8 out of line with peers (flag); S9 class threshold; S10 own sale (spec §5).`),
+    Supports: z.union([z.literal('Contrary'), z.literal('NA'), z.literal('No'), z.literal('Yes')]).describe(`
+        * * Field Name: Supports
+        * * Display Name: Supports Appeal
+        * * SQL Data Type: nvarchar(10)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Contrary
+    *   * NA
+    *   * No
+    *   * Yes
+        * * Description: Yes: the signal points to an appeal by its rule in rules/appeal-signals.json; No: it does not; NA: it cannot be evaluated (NAReason says why); Contrary: S10 only, an own sale at or above AV.`),
+    NAReason: z.string().nullable().describe(`
+        * * Field Name: NAReason
+        * * Display Name: NA Reason
+        * * SQL Data Type: nvarchar(60)
+        * * Description: Why the signal is NA, for example fewer than 3 comps, decisions < 5, no pro forma, no prior year, member-missing-year, member-exception-<code>; NULL otherwise.`),
+    IndicatedValue: z.number().nullable().describe(`
+        * * Field Name: IndicatedValue
+        * * Display Name: Indicated Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The total value this signal indicates for the subject (indicated per unit x the subject denominator, or the lane's value); NULL when it gives none.`),
+    IndicatedPerUnit: z.number().nullable().describe(`
+        * * Field Name: IndicatedPerUnit
+        * * Display Name: Indicated Per Unit
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: The signal's per-unit figure in UnitOfComparison; never shown or stored without a denominator (integrity per-unit-never-without-denominator).`),
+    UnitOfComparison: z.string().nullable().describe(`
+        * * Field Name: UnitOfComparison
+        * * Display Name: Unit of Comparison
+        * * SQL Data Type: nvarchar(10)
+        * * Description: The unit IndicatedPerUnit is in: $/SF, $/unit, $/key or $/acre.`),
+    EvidenceCount: z.number().nullable().describe(`
+        * * Field Name: EvidenceCount
+        * * Display Name: Evidence Count
+        * * SQL Data Type: int
+        * * Description: How many records the signal rests on (comps, selected sales, decisions, peers); NULL where a count does not apply.`),
+    EvidenceNote: z.string().nullable().describe(`
+        * * Field Name: EvidenceNote
+        * * Display Name: Evidence Note
+        * * SQL Data Type: nvarchar(400)
+        * * Description: Plain text of what the signal read and found, for the reviewer (for example which side of a split land and improvement comparison carried the indication).`),
+    RuleVersion: z.string().describe(`
+        * * Field Name: RuleVersion
+        * * Display Name: Rule Version
+        * * SQL Data Type: nvarchar(40)
+        * * Description: The version of the rule file the signal's thresholds came from (rules/appeal-signals.json, class-thresholds.json, unit-of-comparison.json); every threshold change is a new version.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+});
+
+export type indianataxAppealRecommendationSignalEntityType = z.infer<typeof indianataxAppealRecommendationSignalSchema>;
+
+/**
+ * zod schema definition for the entity Appeal Recommendations
+ */
+export const indianataxAppealRecommendationSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()
+        * * Description: Primary key.`),
+    SubjectKind: z.string().describe(`
+        * * Field Name: SubjectKind
+        * * Display Name: Subject Kind
+        * * SQL Data Type: nvarchar(10)
+        * * Description: Parcel or Property: what was analysed. Exactly one of ParcelID and PropertyID is set to match (CHECK).`),
+    ParcelID: z.string().nullable().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The subject parcel when SubjectKind = Parcel (a Standalone or Suggested-unrolled parcel); NULL for a property subject.`),
+    PropertyID: z.string().nullable().describe(`
+        * * Field Name: PropertyID
+        * * Display Name: Property
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+        * * Description: The subject property when SubjectKind = Property (a Confirmed property, or the Suggested property rolled up as Provisional); NULL for a parcel subject.`),
+    AssessmentYear: z.number().describe(`
+        * * Field Name: AssessmentYear
+        * * Display Name: Assessment Year
+        * * SQL Data Type: int
+        * * Description: The assessment year the recommendation is for (AY2026 in the first run).`),
+    MethodologyVersion: z.string().describe(`
+        * * Field Name: MethodologyVersion
+        * * Display Name: Methodology Version
+        * * SQL Data Type: nvarchar(40)
+        * * Description: The methodology the row was computed under (first: signals-v2-2026-09-29). A version is not marked current until its back-test report exists (integrity recommendation-version-has-backtest).`),
+    IsCurrent: z.boolean().describe(`
+        * * Field Name: IsCurrent
+        * * Display Name: Is Current
+        * * SQL Data Type: bit
+        * * Default Value: 1
+        * * Description: 1 for the one current row per subject, year and methodology version (filtered unique indexes); older rows are kept as history with 0.`),
+    CurrentAV: z.number().nullable().describe(`
+        * * Field Name: CurrentAV
+        * * Display Name: Current Assessed Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The subject's assessed value for AssessmentYear; for a property, the sum over members, NULL when any member lacks the year (member-missing-year).`),
+    PriorAVAsDetermined: z.number().nullable().describe(`
+        * * Field Name: PriorAVAsDetermined
+        * * Display Name: Prior AV As Determined
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The prior year's assessed value as determined (after any appeal), as core burden-shift reads it for S6 and S8; NULL when there is no prior year.`),
+    UnitOfComparison: z.string().nullable().describe(`
+        * * Field Name: UnitOfComparison
+        * * Display Name: Unit of Comparison
+        * * SQL Data Type: nvarchar(10)
+        * * Description: The unit every per-unit figure on this row and its signals is shown in: $/SF, $/unit, $/key or $/acre (rules/unit-of-comparison.json, spec §4.3).`),
+    Denominator: z.number().nullable().describe(`
+        * * Field Name: Denominator
+        * * Display Name: Denominator
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: The subject's denominator in UnitOfComparison (building SF ex-parking, units, keys or acres; summed over members for a property). NULL means every per-unit figure is withheld.`),
+    DenominatorSource: z.string().nullable().describe(`
+        * * Field Name: DenominatorSource
+        * * Display Name: Denominator Source
+        * * SQL Data Type: nvarchar(20)
+        * * Description: Where the denominator came from: Client, Practitioner, PRC, CoStar, Web or a DLGF segment sum; for a property, the weakest member source (rank PRC > CoStar > Web > DLGF segment).`),
+    DenominatorIsFallback: z.boolean().describe(`
+        * * Field Name: DenominatorIsFallback
+        * * Display Name: Denominator Is Fallback
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 when the class's own unit had no denominator and $/SF was used instead (Multifamily without units, Hospitality without keys); labelled fallback on every screen.`),
+    ValueSignalCount: z.number().describe(`
+        * * Field Name: ValueSignalCount
+        * * Display Name: Value Signal Count
+        * * SQL Data Type: tinyint
+        * * Description: The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9 and S10 when it supports. The verdict and the confidence tier both read it.`),
+    IncreaseFlag: z.boolean().describe(`
+        * * Field Name: IncreaseFlag
+        * * Display Name: Increase Flag
+        * * SQL Data Type: bit
+        * * Description: S6: the assessment rose more than 5% over the prior year as determined (IC 6-1.1-15-20, core burden-shift). A context flag, not a value signal.`),
+    FloorSupport: z.boolean().describe(`
+        * * Field Name: FloorSupport
+        * * Display Name: Floor Support
+        * * SQL Data Type: bit
+        * * Description: 1 when S6 holds and any of S1-S5's indicated values is within 10% of the prior-year as-determined AV: the prior year is shown reasonable, so the ask is floored at it (AskBasis prior-year-floor).`),
+    PeerOutOfLine: z.boolean().describe(`
+        * * Field Name: PeerOutOfLine
+        * * Display Name: Peer Out of Line
+        * * SQL Data Type: bit
+        * * Description: S8: the subject's year-over-year increase exceeds the median of its neighborhood and type group (at least 5 parcels; else county and type group) by 5 points or more. A context flag.`),
+    OwnSaleContrary: z.boolean().describe(`
+        * * Field Name: OwnSaleContrary
+        * * Display Name: Own Sale Contrary
+        * * SQL Data Type: bit
+        * * Description: S10 contrary: a qualifying own sale within 24 months of the valuation date at or above AV. Caps the verdict at Consider and the ask is never below that price.`),
+    Verdict: z.union([z.literal('Appeal'), z.literal('Consider'), z.literal('No'), z.literal('not-available')]).describe(`
+        * * Field Name: Verdict
+        * * Display Name: Verdict
+        * * SQL Data Type: nvarchar(16)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Appeal
+    *   * Consider
+    *   * No
+    *   * not-available
+        * * Description: Appeal: two or more value signals, or one plus the increase or peer flag unless the one is S9. Consider: one value signal, or none with both flags. No: otherwise. not-available: AV missing, or a property subject with member-missing-year. OwnSaleContrary caps it at Consider.`),
+    NotAvailableReason: z.string().nullable().describe(`
+        * * Field Name: NotAvailableReason
+        * * Display Name: Not Available Reason
+        * * SQL Data Type: nvarchar(60)
+        * * Description: Why the verdict is not-available (for example member-missing-year, or AV missing); NULL otherwise.`),
+    ConfidenceTier: z.union([z.literal('High'), z.literal('Low'), z.literal('Medium')]).nullable().describe(`
+        * * Field Name: ConfidenceTier
+        * * Display Name: Confidence Tier
+        * * SQL Data Type: nvarchar(8)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * High
+    *   * Low
+    *   * Medium
+        * * Description: The back-tested hit rate of the value-signal count: High, Medium or Low by the cuts in rules/appeal-signals.json (initially k >= 3, k = 2, k <= 1), shown with the measured recall and false-alarm rate for that k. NULL when not-available.`),
+    FloorValue: z.number().nullable().describe(`
+        * * Field Name: FloorValue
+        * * Display Name: Floor Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The lowest supporting indication: S3, S4, S5, S10 within [0.5, 1.2] x AV, then S1, S2, S7, S9 indicated values at or below 0.95 x AV. NULL when none supports.`),
+    AskValue: z.number().nullable().describe(`
+        * * Field Name: AskValue
+        * * Display Name: Ask Value
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The value to ask for, by AskPolicy, then floored at the prior-year as-determined AV when FloorSupport holds, and never below the own-sale price when OwnSaleContrary. For a property, allocated to members in AppealRecommendationParcel.`),
+    AskPolicy: z.union([z.literal('Lowest'), z.literal('SecondLowest')]).describe(`
+        * * Field Name: AskPolicy
+        * * Display Name: Ask Policy
+        * * SQL Data Type: nvarchar(16)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Lowest
+    *   * SecondLowest
+        * * Description: Lowest (the floor) or SecondLowest (the second-lowest supporting indication when two or more exist, else the floor; the default, as the Appeal Workbench does). A rule value in rules/appeal-signals.json.`),
+    AskBasis: z.union([z.literal('lowest-supported'), z.literal('own-sale-cap'), z.literal('prior-year-floor')]).nullable().describe(`
+        * * Field Name: AskBasis
+        * * Display Name: Ask Basis
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * lowest-supported
+    *   * own-sale-cap
+    *   * prior-year-floor
+        * * Description: What set AskValue: lowest-supported (the AskPolicy pick), prior-year-floor (S6 with floor support), or own-sale-cap (raised to the S10 contrary sale price). NULL when there is no ask.`),
+    EstSavingsAtAsk: z.number().nullable().describe(`
+        * * Field Name: EstSavingsAtAsk
+        * * Display Name: Est Savings at Ask
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: (CurrentAV - AskValue) x EffectiveTaxRate, as savings.ts computes it; for a property, the total, allocated per member in AppealRecommendationParcel. Below $1,000 sets BelowSavingsFloor.`),
+    EstSavingsAtFloor: z.number().nullable().describe(`
+        * * Field Name: EstSavingsAtFloor
+        * * Display Name: Est Savings at Floor
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: (CurrentAV - FloorValue) x EffectiveTaxRate; for a property, the total, allocated per member in AppealRecommendationParcel.`),
+    EffectiveTaxRate: z.number().nullable().describe(`
+        * * Field Name: EffectiveTaxRate
+        * * Display Name: Effective Tax Rate
+        * * SQL Data Type: decimal(9, 6)
+        * * Description: The 6-place effective tax rate the savings were computed with (as savings.ts).`),
+    GroupingStatus: z.union([z.literal('Confirmed'), z.literal('Provisional'), z.literal('Standalone'), z.literal('Suggested-unrolled')]).describe(`
+        * * Field Name: GroupingStatus
+        * * Display Name: Grouping Status
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Confirmed
+    *   * Provisional
+    *   * Standalone
+    *   * Suggested-unrolled
+        * * Description: Standalone = a parcel in no property; Confirmed = a practitioner-confirmed property (Client Setup); Provisional = a multi-parcel conveyance whose members share an owner today, rolled up before confirmation and marked so; Suggested-unrolled = a parcel that sits in a Suggested property and was analysed alone, per-unit figures withheld.`),
+    GroupingVersion: z.date().nullable().describe(`
+        * * Field Name: GroupingVersion
+        * * Display Name: Grouping Version
+        * * SQL Data Type: datetime2
+        * * Description: Property.GroupingVersion of the subject property when this row was computed. A row whose version is older than the property's current one is stale (a confirm or split since). NULL for a parcel subject.`),
+    AlreadyAppealed: z.boolean().describe(`
+        * * Field Name: AlreadyAppealed
+        * * Display Name: Already Appealed
+        * * SQL Data Type: bit
+        * * Description: Gate: an AppealOutcome or PTABOAAppeal row exists for AssessmentYear (for a property, on any member). Shown beside the verdict, never changes it; used for prospect ranking.`),
+    ExistingRep: z.string().nullable().describe(`
+        * * Field Name: ExistingRep
+        * * Display Name: Existing Rep
+        * * SQL Data Type: nvarchar(200)
+        * * Description: Gate: the representative already on file for the subject (Owner Prospects; for a property, any member); NULL when none. Shown beside the verdict, never changes it.`),
+    Exempt: z.boolean().describe(`
+        * * Field Name: Exempt
+        * * Display Name: Exempt
+        * * SQL Data Type: bit
+        * * Description: Gate: an Exemption outcome current for AssessmentYear, or deductions and exemptions at or above AV on the assessor record (for a property, any member). Shown beside the verdict, never changes it.`),
+    BelowSavingsFloor: z.boolean().describe(`
+        * * Field Name: BelowSavingsFloor
+        * * Display Name: Below Savings Floor
+        * * SQL Data Type: bit
+        * * Description: Gate: EstSavingsAtAsk is below the savings floor ($1,000, rules/appeal-signals.json). Shown beside the verdict, never changes it.`),
+    RunStamp: z.date().describe(`
+        * * Field Name: RunStamp
+        * * Display Name: Run Stamp
+        * * SQL Data Type: datetime2
+        * * Description: The run that wrote this row (scripts/build-appeal-recommendations.js). Each run writes one stamp; rows of an older stamp are swept.`),
+    GeneratedAt: z.date().describe(`
+        * * Field Name: GeneratedAt
+        * * Display Name: Generated At
+        * * SQL Data Type: datetime2
+        * * Description: When this row was written.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Parcel: z.string().nullable().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel
+        * * SQL Data Type: nvarchar(30)`),
+    Property: z.string().nullable().describe(`
+        * * Field Name: Property
+        * * Display Name: Property
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxAppealRecommendationEntityType = z.infer<typeof indianataxAppealRecommendationSchema>;
+
+/**
  * zod schema definition for the entity Appeal Stage Playbook Notes
  */
 export const indianataxAppealStagePlaybookNoteSchema = z.object({
@@ -2284,6 +2690,17 @@ export const indianataxCardSummarySchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    ParseStatus: z.union([z.literal('needs_review'), z.literal('parsed'), z.literal('quarantined')]).describe(`
+        * * Field Name: ParseStatus
+        * * Display Name: Parse Status
+        * * SQL Data Type: nvarchar(20)
+        * * Default Value: parsed
+    * * Value List Type: List
+    * * Possible Values 
+    *   * needs_review
+    *   * parsed
+    *   * quarantined
+        * * Description: The loader's parse verdict for this card: parsed (every internal identity held), quarantined (an identity failed -- ParseNotes carries which; no Assessment row is written from it), needs_review (harvest could not settle the card). Rows loaded before 2026-09-29 are parsed.`),
     SourceDocument: z.string().describe(`
         * * Field Name: SourceDocument
         * * Display Name: Source Document
@@ -2338,11 +2755,11 @@ export const indianataxCardValuationColumnSchema = z.object({
         * * Display Name: Assessment Year
         * * SQL Data Type: smallint
         * * Description: The assessment year this column values. A year printed twice on one card is a revision, a split or a combination; the later As Of Date is final.`),
-    IsCertified: z.boolean().describe(`
+    IsCertified: z.boolean().nullable().describe(`
         * * Field Name: IsCertified
         * * Display Name: Is Certified
         * * SQL Data Type: bit
-        * * Description: 0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise. A WIP column never becomes an Assessment row.`),
+        * * Description: 0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise; NULL when the source states no certification flag the loader could read (Marion residential cards, loaded 2026-09-29): unknown, never inferred. The county intake never turns a WIP column into an Assessment row; the Marion loaders (C&I fetch-marion-prc-full.js and the residential loader) write every printed year.`),
     ReasonForChange: z.string().nullable().describe(`
         * * Field Name: ReasonForChange
         * * Display Name: Reason for Change
@@ -3890,7 +4307,7 @@ export const indianataxComparableAssessmentSetSchema = z.object({
         * * Display Name: Property Type Group
         * * SQL Data Type: nvarchar(30)
         * * Description: Rolled-up property category the comp pool was drawn from.`),
-    UnitOfComparison: z.union([z.literal('$/SF'), z.literal('$/acre'), z.literal('$/unit')]).describe(`
+    UnitOfComparison: z.union([z.literal('$/SF'), z.literal('$/acre'), z.literal('$/key'), z.literal('$/unit')]).describe(`
         * * Field Name: UnitOfComparison
         * * Display Name: Unit of Comparison
         * * SQL Data Type: nvarchar(10)
@@ -3898,8 +4315,9 @@ export const indianataxComparableAssessmentSetSchema = z.object({
     * * Possible Values 
     *   * $/SF
     *   * $/acre
+    *   * $/key
     *   * $/unit
-        * * Description: Unit of comparison: $/SF (default), $/unit (multifamily with a trustworthy unit count), or $/acre (land).`),
+        * * Description: Unit of comparison: $/SF building ex-parking (default; Office, Retail, Industrial, Special, and the fallback for a multifamily or hotel subject without a unit or key count), $/unit (multifamily with a unit count), $/key (hotels with a key count compare per key), or $/acre (land, parking, and any subject with ParkingSharePct >= 85). Chosen by core chooseUnit (rule uoc-v1-2026-09-29) for comps-bulk-v2 sets; every comp in the set is measured in the same unit.`),
     HeadlineTrack: z.union([z.literal('Appealed'), z.literal('Effective'), z.literal('Original')]).describe(`
         * * Field Name: HeadlineTrack
         * * Display Name: Headline Track
@@ -8566,7 +8984,7 @@ export const indianataxPropertySchema = z.object({
         * * Display Name: Unit Count
         * * SQL Data Type: int
         * * Description: Confirmed unit count for per-unit analysis and Form 11-A peer comparison; NULL until confirmed. UnitCountSource says where it came from.`),
-    UnitCountSource: z.union([z.literal('Client'), z.literal('CoStar'), z.literal('PRC'), z.literal('Practitioner')]).nullable().describe(`
+    UnitCountSource: z.union([z.literal('Client'), z.literal('CoStar'), z.literal('PRC'), z.literal('Practitioner'), z.literal('Web')]).nullable().describe(`
         * * Field Name: UnitCountSource
         * * Display Name: Unit Count Source
         * * SQL Data Type: nvarchar(20)
@@ -8576,7 +8994,8 @@ export const indianataxPropertySchema = z.object({
     *   * CoStar
     *   * PRC
     *   * Practitioner
-        * * Description: Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us) or Practitioner (counted or judged by the practice). NULL while UnitCount is NULL.`),
+    *   * Web
+        * * Description: Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us), Practitioner (counted or judged by the practice) or Web (a public web page, with UnitCountSourceURL and UnitCountRetrievedAt; written only on approval of a reviewed candidate list). NULL while UnitCount is NULL.`),
     GroupingStatus: z.union([z.literal('Confirmed'), z.literal('Suggested')]).describe(`
         * * Field Name: GroupingStatus
         * * Display Name: Grouping Status
@@ -8589,7 +9008,7 @@ export const indianataxPropertySchema = z.object({
         * * Description: Suggested = the system proposed this parcel grouping (CoStar multi-parcel flag, owner + address adjacency, a client spreadsheet) and nobody has checked it; Confirmed = the practitioner confirmed the parcels belong together. Only Confirmed properties are shown to a client, and a parcel may sit in at most one Confirmed property.`),
     ConfirmedByUserID: z.string().nullable().describe(`
         * * Field Name: ConfirmedByUserID
-        * * Display Name: Confirmed By
+        * * Display Name: Confirmed By User
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)
         * * Description: The MJ user who confirmed the grouping. NULL while Suggested.`),
@@ -8613,13 +9032,33 @@ export const indianataxPropertySchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    GroupingVersion: z.date().nullable().describe(`
+        * * Field Name: GroupingVersion
+        * * Display Name: Grouping Version
+        * * SQL Data Type: datetime2
+        * * Description: Set to ConfirmedAt on every confirm or split of this property. Recommendation rows computed on an older version are stale (AppealRecommendation.GroupingVersion).`),
+    SplitAt: z.date().nullable().describe(`
+        * * Field Name: SplitAt
+        * * Display Name: Split At
+        * * SQL Data Type: datetime2
+        * * Description: When a practitioner split this property. Blocks re-suggestion of the same member set by scripts/suggest-properties.js.`),
+    UnitCountSourceURL: z.string().nullable().describe(`
+        * * Field Name: UnitCountSourceURL
+        * * Display Name: Unit Count Source URL
+        * * SQL Data Type: nvarchar(500)
+        * * Description: The page a Web unit count was read from (operator site, then Visit Indy / Cvent for hotels, then Apartments.com / Apartment Finder; never a units-available count). NULL unless UnitCountSource = Web.`),
+    UnitCountRetrievedAt: z.date().nullable().describe(`
+        * * Field Name: UnitCountRetrievedAt
+        * * Display Name: Unit Count Retrieved At
+        * * SQL Data Type: datetime2
+        * * Description: When the Web unit count was read from UnitCountSourceURL. NULL unless UnitCountSource = Web.`),
     County: z.string().describe(`
         * * Field Name: County
         * * Display Name: County Name
         * * SQL Data Type: nvarchar(50)`),
     ConfirmedByUser: z.string().nullable().describe(`
         * * Field Name: ConfirmedByUser
-        * * Display Name: Confirmed By User
+        * * Display Name: Confirmed By User Name
         * * SQL Data Type: nvarchar(100)`),
 });
 
@@ -8730,6 +9169,72 @@ export const indianataxPropertyParcelSchema = z.object({
 });
 
 export type indianataxPropertyParcelEntityType = z.infer<typeof indianataxPropertyParcelSchema>;
+
+/**
+ * zod schema definition for the entity Property Suggestion Evidences
+ */
+export const indianataxPropertySuggestionEvidenceSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()
+        * * Description: Primary key.`),
+    PropertyID: z.string().describe(`
+        * * Field Name: PropertyID
+        * * Display Name: Property
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+        * * Description: The suggested property.`),
+    SignalCode: z.union([z.literal('A'), z.literal('B'), z.literal('C'), z.literal('D'), z.literal('E')]).describe(`
+        * * Field Name: SignalCode
+        * * Display Name: Signal Code
+        * * SQL Data Type: nvarchar(2)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * A
+    *   * B
+    *   * C
+    *   * D
+    *   * E
+        * * Description: A same owner and adjacency; B improved parcel with land-only neighbours; C conveyed together (shared ConveyanceKey, same owner today); D CoStar multi-parcel; E card cross-reference (spec §3.2).`),
+    Grade: z.union([z.literal('A'), z.literal('B'), z.literal('C')]).describe(`
+        * * Field Name: Grade
+        * * Display Name: Grade
+        * * SQL Data Type: nvarchar(1)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * A
+    *   * B
+    *   * C
+        * * Description: The grade of this signal: A for signals B and C; B for A and E, and for D when the parcels also satisfy A; C for D without A. A candidate resting on a single grade-C signal is not written.`),
+    Evidence: z.string().describe(`
+        * * Field Name: Evidence
+        * * Display Name: Evidence
+        * * SQL Data Type: nvarchar(400)
+        * * Description: Plain text of the evidence: the conveyance key, the owner, the card note.`),
+    SuggestedAt: z.date().describe(`
+        * * Field Name: SuggestedAt
+        * * Display Name: Suggested At
+        * * SQL Data Type: datetime2
+        * * Description: When the suggestion engine wrote this evidence.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    Property: z.string().describe(`
+        * * Field Name: Property
+        * * Display Name: Property Name
+        * * SQL Data Type: nvarchar(200)`),
+});
+
+export type indianataxPropertySuggestionEvidenceEntityType = z.infer<typeof indianataxPropertySuggestionEvidenceSchema>;
 
 /**
  * zod schema definition for the entity Prospect Activities
@@ -9479,6 +9984,202 @@ export const indianataxResearchTaskSchema = z.object({
 });
 
 export type indianataxResearchTaskEntityType = z.infer<typeof indianataxResearchTaskSchema>;
+
+/**
+ * zod schema definition for the entity Sale Conveyance Members
+ */
+export const indianataxSaleConveyanceMemberSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()
+        * * Description: Primary key.`),
+    SaleConveyanceID: z.string().describe(`
+        * * Field Name: SaleConveyanceID
+        * * Display Name: Sale Conveyance
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Sale Conveyances (vwSaleConveyances.ID)
+        * * Description: The conveyance this SaleTransaction row belongs to.`),
+    SaleTransactionID: z.string().describe(`
+        * * Field Name: SaleTransactionID
+        * * Display Name: Sale Transaction
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Sale Transactions (vwSaleTransactions.ID)
+        * * Description: The SaleTransaction row (one parcel's record of the sale). Unique: a sale row belongs to exactly one conveyance.`),
+    ParcelID: z.string().nullable().describe(`
+        * * Field Name: ParcelID
+        * * Display Name: Parcel
+        * * SQL Data Type: uniqueidentifier
+        * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+        * * Description: The parcel the SaleTransaction row is for, copied from it at rebuild. NULL when the sale row is not matched to a parcel.`),
+    MemberBuildingSqFt: z.number().nullable().describe(`
+        * * Field Name: MemberBuildingSqFt
+        * * Display Name: Member Building Square Feet
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: This member's building SF ex-parking at rebuild. NULL when none is held; an improved member (type group other than Parking or Land) without it makes the conveyance incomplete (IsComplete = 0).`),
+    MemberUnits: z.number().nullable().describe(`
+        * * Field Name: MemberUnits
+        * * Display Name: Member Units
+        * * SQL Data Type: decimal(12, 2)
+        * * Description: This member's unit or key count at rebuild; NULL when none is held.`),
+    MemberAcres: z.number().nullable().describe(`
+        * * Field Name: MemberAcres
+        * * Display Name: Member Acres
+        * * SQL Data Type: decimal(12, 4)
+        * * Description: This member's acres at rebuild; NULL when none is held.`),
+    ContributesSqFt: z.boolean().describe(`
+        * * Field Name: ContributesSqFt
+        * * Display Name: Contributes Square Feet
+        * * SQL Data Type: bit
+        * * Description: Whether this member's building SF is part of BuildingSqFtSum: 1 for an improved member with SF, 0 for Parking/Land members (they contribute acres) and for duplicates.`),
+    IsDuplicateCard: z.boolean().describe(`
+        * * Field Name: IsDuplicateCard
+        * * Display Name: Is Duplicate Card
+        * * SQL Data Type: bit
+        * * Default Value: 0
+        * * Description: 1 when this row is a second card of a parcel already a member of the same conveyance (same parcel, same date, same price). Kept for the record; contributes nothing to the sums.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    SaleTransaction: z.string().nullable().describe(`
+        * * Field Name: SaleTransaction
+        * * Display Name: Sale Transaction
+        * * SQL Data Type: nvarchar(200)`),
+    Parcel: z.string().nullable().describe(`
+        * * Field Name: Parcel
+        * * Display Name: Parcel
+        * * SQL Data Type: nvarchar(30)`),
+});
+
+export type indianataxSaleConveyanceMemberEntityType = z.infer<typeof indianataxSaleConveyanceMemberSchema>;
+
+/**
+ * zod schema definition for the entity Sale Conveyances
+ */
+export const indianataxSaleConveyanceSchema = z.object({
+    ID: z.string().describe(`
+        * * Field Name: ID
+        * * Display Name: ID
+        * * SQL Data Type: uniqueidentifier
+        * * Default Value: newsequentialid()
+        * * Description: Primary key.`),
+    ConveyanceKey: z.string().describe(`
+        * * Field Name: ConveyanceKey
+        * * Display Name: Conveyance Key
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The grouping key (spec §2.1): CountyNumber|SaleDate|SalePrice|normOwner(Grantee), using the owner normaliser of build-owner-portfolios.js; where every row of the group lacks a grantee, CountyNumber|SaleDate|SalePrice, accepted only when the members share an owner on the roll today. One row per key.`),
+    CountyNumber: z.number().describe(`
+        * * Field Name: CountyNumber
+        * * Display Name: County Number
+        * * SQL Data Type: int
+        * * Description: Indiana county number of the conveyed parcels. Part of the key, so a conveyance never spans two counties.`),
+    SaleDate: z.date().describe(`
+        * * Field Name: SaleDate
+        * * Display Name: Sale Date
+        * * SQL Data Type: date
+        * * Description: The sale date every member SaleTransaction row carries.`),
+    SalePrice: z.number().describe(`
+        * * Field Name: SalePrice
+        * * Display Name: Sale Price
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: The whole conveyance price. SaleTransaction repeats it on every member row; it is counted once here.`),
+    GranteeNormalized: z.string().nullable().describe(`
+        * * Field Name: GranteeNormalized
+        * * Display Name: Grantee
+        * * SQL Data Type: nvarchar(200)
+        * * Description: The grantee after the owner normaliser of build-owner-portfolios.js. NULL when no member row records a grantee.`),
+    KeyBasis: z.union([z.literal('grantee'), z.literal('owner-corroborated'), z.literal('single')]).describe(`
+        * * Field Name: KeyBasis
+        * * Display Name: Key Basis
+        * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * grantee
+    *   * owner-corroborated
+    *   * single
+        * * Description: How the members were grouped: grantee (date, price and normalized grantee agree); owner-corroborated (no grantee recorded, date and price agree, and the members share an owner on the roll today); single (a lone row).`),
+    ParcelCount: z.number().describe(`
+        * * Field Name: ParcelCount
+        * * Display Name: Parcel Count
+        * * SQL Data Type: int
+        * * Description: Number of distinct parcels conveyed. Duplicate cards of one parcel (IsDuplicateCard) count once.`),
+    DominantTypeGroup: z.string().nullable().describe(`
+        * * Field Name: DominantTypeGroup
+        * * Display Name: Dominant Type Group
+        * * SQL Data Type: nvarchar(30)
+        * * Description: The type group with the largest summed assessed value among the members; decides UnitOfComparison.`),
+    UnitOfComparison: z.union([z.literal('$/SF'), z.literal('$/acre'), z.literal('$/key'), z.literal('$/unit')]).nullable().describe(`
+        * * Field Name: UnitOfComparison
+        * * Display Name: Unit of Comparison
+        * * SQL Data Type: nvarchar(10)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * $/SF
+    *   * $/acre
+    *   * $/key
+    *   * $/unit
+        * * Description: The unit PricePerUnit is in: $/SF, $/unit, $/key or $/acre, decided by DominantTypeGroup through rules/unit-of-comparison.json (spec §4.3). NULL when no unit applies.`),
+    BuildingSqFtSum: z.number().nullable().describe(`
+        * * Field Name: BuildingSqFtSum
+        * * Display Name: Building Square Feet
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: Sum of the members' building SF ex-parking over members with ContributesSqFt = 1. Parking and Land members and duplicate cards add 0. The $/SF denominator.`),
+    UnitSum: z.number().nullable().describe(`
+        * * Field Name: UnitSum
+        * * Display Name: Unit Sum
+        * * SQL Data Type: decimal(12, 2)
+        * * Description: Sum of the members' unit (multifamily) or key (hospitality) counts, duplicate cards excluded. The $/unit or $/key denominator.`),
+    AcreSum: z.number().nullable().describe(`
+        * * Field Name: AcreSum
+        * * Display Name: Acre Sum
+        * * SQL Data Type: decimal(12, 4)
+        * * Description: Sum of the members' acres, duplicate cards excluded. The $/acre denominator.`),
+    IsComplete: z.boolean().describe(`
+        * * Field Name: IsComplete
+        * * Display Name: Is Complete
+        * * SQL Data Type: bit
+        * * Description: True when every improved member (type group other than Parking or Land) carries building SF, so PricePerUnit is a whole-property figure. False = the conveyance leaves the comp pool with DropReason multi-parcel-denominator-incomplete.`),
+    PricePerUnit: z.number().nullable().describe(`
+        * * Field Name: PricePerUnit
+        * * Display Name: Price Per Unit
+        * * SQL Data Type: decimal(14, 2)
+        * * Description: Whole price over the summed denominator in UnitOfComparison ($/SF over BuildingSqFtSum, $/unit or $/key over UnitSum, $/acre over AcreSum). Null when IsComplete = 0 or the denominator sum is zero.`),
+    AssessedAtSaleSum: z.number().nullable().describe(`
+        * * Field Name: AssessedAtSaleSum
+        * * Display Name: Assessed at Sale Sum
+        * * SQL Data Type: decimal(18, 2)
+        * * Description: Sum of the members' AssessedValueAtSale, duplicate cards excluded; NULL when any member lacks one. The denominator of SaleToAssessedRatio.`),
+    SaleToAssessedRatio: z.number().nullable().describe(`
+        * * Field Name: SaleToAssessedRatio
+        * * Display Name: Sale to Assessed Ratio
+        * * SQL Data Type: decimal(9, 4)
+        * * Description: SalePrice over the members' summed AssessedValueAtSale; null when any member lacks one. Read by signal S10 (own sale).`),
+    RebuiltAt: z.date().describe(`
+        * * Field Name: RebuiltAt
+        * * Display Name: Rebuilt At
+        * * SQL Data Type: datetime2
+        * * Description: When scripts/rebuild-sale-conveyances.js wrote this row. Conveyances are rebuilt whole from SaleTransaction, never edited by hand.`),
+    __mj_CreatedAt: z.date().describe(`
+        * * Field Name: __mj_CreatedAt
+        * * Display Name: Created At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+    __mj_UpdatedAt: z.date().describe(`
+        * * Field Name: __mj_UpdatedAt
+        * * Display Name: Updated At
+        * * SQL Data Type: datetimeoffset
+        * * Default Value: getutcdate()`),
+});
+
+export type indianataxSaleConveyanceEntityType = z.infer<typeof indianataxSaleConveyanceSchema>;
 
 /**
  * zod schema definition for the entity Sale Reassessment Scenario Probabilities
@@ -13769,6 +14470,1044 @@ export class indianataxAppealOutcomeEntity extends BaseEntity<indianataxAppealOu
 
 
 /**
+ * Appeal Recommendation Parcels - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: AppealRecommendationParcel
+ * * Base View: vwAppealRecommendationParcels
+ * * @description A property subject's result allocated to each member parcel (Form 130 is per parcel; Owner Prospects sums per parcel): proportional to the member's current AV, overridable by the practitioner. Allocations sum to the property total within $1 (integrity allocation-sums-to-total).
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Appeal Recommendation Parcels')
+export class indianataxAppealRecommendationParcelEntity extends BaseEntity<indianataxAppealRecommendationParcelEntityType> {
+    /**
+    * Loads the Appeal Recommendation Parcels record from the database
+    * @param ID: string - primary key value to load the Appeal Recommendation Parcels record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxAppealRecommendationParcelEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    * * Description: Primary key.
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: AppealRecommendationID
+    * * Display Name: Appeal Recommendation
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Appeal Recommendations (vwAppealRecommendations.ID)
+    * * Description: The property-subject recommendation being allocated.
+    */
+    get AppealRecommendationID(): string {
+        return this.Get('AppealRecommendationID');
+    }
+    set AppealRecommendationID(value: string) {
+        this.Set('AppealRecommendationID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The member parcel.
+    */
+    get ParcelID(): string {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: MemberCurrentAV
+    * * Display Name: Member Current AV
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The member's current AV for the assessment year, the basis of AllocationShare.
+    */
+    get MemberCurrentAV(): number | null {
+        return this.Get('MemberCurrentAV');
+    }
+    set MemberCurrentAV(value: number | null) {
+        this.Set('MemberCurrentAV', value);
+    }
+
+    /**
+    * * Field Name: AllocationShare
+    * * Display Name: Allocation Share
+    * * SQL Data Type: decimal(9, 6)
+    * * Description: The member's share of the property total: MemberCurrentAV over the summed CurrentAV, unless AllocationOverride. Shares sum to 1.
+    */
+    get AllocationShare(): number {
+        return this.Get('AllocationShare');
+    }
+    set AllocationShare(value: number) {
+        this.Set('AllocationShare', value);
+    }
+
+    /**
+    * * Field Name: AllocatedFloor
+    * * Display Name: Allocated Floor
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: FloorValue x AllocationShare.
+    */
+    get AllocatedFloor(): number | null {
+        return this.Get('AllocatedFloor');
+    }
+    set AllocatedFloor(value: number | null) {
+        this.Set('AllocatedFloor', value);
+    }
+
+    /**
+    * * Field Name: AllocatedAsk
+    * * Display Name: Allocated Ask
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: AskValue x AllocationShare: the value to ask for on this parcel's Form 130.
+    */
+    get AllocatedAsk(): number | null {
+        return this.Get('AllocatedAsk');
+    }
+    set AllocatedAsk(value: number | null) {
+        this.Set('AllocatedAsk', value);
+    }
+
+    /**
+    * * Field Name: AllocatedSavingsAtAsk
+    * * Display Name: Allocated Savings At Ask
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: EstSavingsAtAsk allocated to this parcel; Owner Prospects reads it.
+    */
+    get AllocatedSavingsAtAsk(): number | null {
+        return this.Get('AllocatedSavingsAtAsk');
+    }
+    set AllocatedSavingsAtAsk(value: number | null) {
+        this.Set('AllocatedSavingsAtAsk', value);
+    }
+
+    /**
+    * * Field Name: AllocatedSavingsAtFloor
+    * * Display Name: Allocated Savings At Floor
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: EstSavingsAtFloor allocated to this parcel.
+    */
+    get AllocatedSavingsAtFloor(): number | null {
+        return this.Get('AllocatedSavingsAtFloor');
+    }
+    set AllocatedSavingsAtFloor(value: number | null) {
+        this.Set('AllocatedSavingsAtFloor', value);
+    }
+
+    /**
+    * * Field Name: AllocationOverride
+    * * Display Name: Allocation Override
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 when the practitioner set this member's share by hand instead of by current AV.
+    */
+    get AllocationOverride(): boolean {
+        return this.Get('AllocationOverride');
+    }
+    set AllocationOverride(value: boolean) {
+        this.Set('AllocationOverride', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel Name
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string {
+        return this.Get('Parcel');
+    }
+}
+
+
+/**
+ * Appeal Recommendation Signals - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: AppealRecommendationSignal
+ * * Base View: vwAppealRecommendationSignals
+ * * @description One row per signal S1-S10 per recommendation, exactly ten (integrity signal-rows-ten-per-recommendation): whether it supports, why not, and its indicated value in its unit of comparison, with the evidence count and note a reviewer needs to see why.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Appeal Recommendation Signals')
+export class indianataxAppealRecommendationSignalEntity extends BaseEntity<indianataxAppealRecommendationSignalEntityType> {
+    /**
+    * Loads the Appeal Recommendation Signals record from the database
+    * @param ID: string - primary key value to load the Appeal Recommendation Signals record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxAppealRecommendationSignalEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    * * Description: Primary key.
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: AppealRecommendationID
+    * * Display Name: Appeal Recommendation
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Appeal Recommendations (vwAppealRecommendations.ID)
+    * * Description: The recommendation this signal belongs to.
+    */
+    get AppealRecommendationID(): string {
+        return this.Get('AppealRecommendationID');
+    }
+    set AppealRecommendationID(value: string) {
+        this.Set('AppealRecommendationID', value);
+    }
+
+    /**
+    * * Field Name: SignalCode
+    * * Display Name: Signal Code
+    * * SQL Data Type: nvarchar(4)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * S1
+    *   * S10
+    *   * S2
+    *   * S3
+    *   * S4
+    *   * S5
+    *   * S6
+    *   * S7
+    *   * S8
+    *   * S9
+    * * Description: S1 assessment comps (neighborhood); S2 assessment comps (county); S3 sales unadjusted; S4 sales adjusted; S5 income; S6 increase over 5% (flag); S7 PTABOA record; S8 out of line with peers (flag); S9 class threshold; S10 own sale (spec §5).
+    */
+    get SignalCode(): 'S1' | 'S10' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' {
+        return this.Get('SignalCode');
+    }
+    set SignalCode(value: 'S1' | 'S10' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9') {
+        this.Set('SignalCode', value);
+    }
+
+    /**
+    * * Field Name: Supports
+    * * Display Name: Supports Appeal
+    * * SQL Data Type: nvarchar(10)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Contrary
+    *   * NA
+    *   * No
+    *   * Yes
+    * * Description: Yes: the signal points to an appeal by its rule in rules/appeal-signals.json; No: it does not; NA: it cannot be evaluated (NAReason says why); Contrary: S10 only, an own sale at or above AV.
+    */
+    get Supports(): 'Contrary' | 'NA' | 'No' | 'Yes' {
+        return this.Get('Supports');
+    }
+    set Supports(value: 'Contrary' | 'NA' | 'No' | 'Yes') {
+        this.Set('Supports', value);
+    }
+
+    /**
+    * * Field Name: NAReason
+    * * Display Name: NA Reason
+    * * SQL Data Type: nvarchar(60)
+    * * Description: Why the signal is NA, for example fewer than 3 comps, decisions < 5, no pro forma, no prior year, member-missing-year, member-exception-<code>; NULL otherwise.
+    */
+    get NAReason(): string | null {
+        return this.Get('NAReason');
+    }
+    set NAReason(value: string | null) {
+        this.Set('NAReason', value);
+    }
+
+    /**
+    * * Field Name: IndicatedValue
+    * * Display Name: Indicated Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The total value this signal indicates for the subject (indicated per unit x the subject denominator, or the lane's value); NULL when it gives none.
+    */
+    get IndicatedValue(): number | null {
+        return this.Get('IndicatedValue');
+    }
+    set IndicatedValue(value: number | null) {
+        this.Set('IndicatedValue', value);
+    }
+
+    /**
+    * * Field Name: IndicatedPerUnit
+    * * Display Name: Indicated Per Unit
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: The signal's per-unit figure in UnitOfComparison; never shown or stored without a denominator (integrity per-unit-never-without-denominator).
+    */
+    get IndicatedPerUnit(): number | null {
+        return this.Get('IndicatedPerUnit');
+    }
+    set IndicatedPerUnit(value: number | null) {
+        this.Set('IndicatedPerUnit', value);
+    }
+
+    /**
+    * * Field Name: UnitOfComparison
+    * * Display Name: Unit of Comparison
+    * * SQL Data Type: nvarchar(10)
+    * * Description: The unit IndicatedPerUnit is in: $/SF, $/unit, $/key or $/acre.
+    */
+    get UnitOfComparison(): string | null {
+        return this.Get('UnitOfComparison');
+    }
+    set UnitOfComparison(value: string | null) {
+        this.Set('UnitOfComparison', value);
+    }
+
+    /**
+    * * Field Name: EvidenceCount
+    * * Display Name: Evidence Count
+    * * SQL Data Type: int
+    * * Description: How many records the signal rests on (comps, selected sales, decisions, peers); NULL where a count does not apply.
+    */
+    get EvidenceCount(): number | null {
+        return this.Get('EvidenceCount');
+    }
+    set EvidenceCount(value: number | null) {
+        this.Set('EvidenceCount', value);
+    }
+
+    /**
+    * * Field Name: EvidenceNote
+    * * Display Name: Evidence Note
+    * * SQL Data Type: nvarchar(400)
+    * * Description: Plain text of what the signal read and found, for the reviewer (for example which side of a split land and improvement comparison carried the indication).
+    */
+    get EvidenceNote(): string | null {
+        return this.Get('EvidenceNote');
+    }
+    set EvidenceNote(value: string | null) {
+        this.Set('EvidenceNote', value);
+    }
+
+    /**
+    * * Field Name: RuleVersion
+    * * Display Name: Rule Version
+    * * SQL Data Type: nvarchar(40)
+    * * Description: The version of the rule file the signal's thresholds came from (rules/appeal-signals.json, class-thresholds.json, unit-of-comparison.json); every threshold change is a new version.
+    */
+    get RuleVersion(): string {
+        return this.Get('RuleVersion');
+    }
+    set RuleVersion(value: string) {
+        this.Set('RuleVersion', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+}
+
+
+/**
+ * Appeal Recommendations - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: AppealRecommendation
+ * * Base View: vwAppealRecommendations
+ * * @description One current recommendation per subject (a parcel, or a Confirmed/Provisional property) per assessment year per methodology version, from scripts/build-appeal-recommendations.js. The verdict is the count of agreeing value signals (S1-S5, S7, S9, S10) with the increase (S6) and peer (S8) flags: Appeal at two, or one plus a flag; Consider at one; No otherwise. Practitioner-facing only. Every indicated value is in AppealRecommendationSignal; a property subject's ask and savings are allocated to its parcels in AppealRecommendationParcel, never copied.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Appeal Recommendations')
+export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxAppealRecommendationEntityType> {
+    /**
+    * Loads the Appeal Recommendations record from the database
+    * @param ID: string - primary key value to load the Appeal Recommendations record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxAppealRecommendationEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * Validate() method override for Appeal Recommendations entity. This is an auto-generated method that invokes the generated validators for this entity for the following fields:
+    * * Table-Level: Each assessment record must reference either a Parcel or a Property, but not both. If the SubjectKind is 'Parcel', then ParcelID must be provided and PropertyID must be empty. If the SubjectKind is 'Property', then PropertyID must be provided and ParcelID must be empty. This ensures that every assessment is tied to exactly one subject type.
+    * @public
+    * @method
+    * @override
+    */
+    public override Validate(): ValidationResult {
+        const result = super.Validate();
+        this.ValidateSubjectKindAndIdConsistency(result);
+        result.Success = result.Success && (result.Errors.length === 0);
+
+        return result;
+    }
+
+    /**
+    * Each assessment record must reference either a Parcel or a Property, but not both. If the SubjectKind is 'Parcel', then ParcelID must be provided and PropertyID must be empty. If the SubjectKind is 'Property', then PropertyID must be provided and ParcelID must be empty. This ensures that every assessment is tied to exactly one subject type.
+    * @param result - the ValidationResult object to add any errors or warnings to
+    * @public
+    * @method
+    */
+    public ValidateSubjectKindAndIdConsistency(result: ValidationResult) {
+    	if (this.SubjectKind === "Parcel") {
+    		if (this.ParcelID == null) {
+    			result.Errors.push(new ValidationErrorInfo(
+    				"ParcelID",
+    				"ParcelID is required when SubjectKind is 'Parcel'",
+    				this.ParcelID,
+    				ValidationErrorType.Failure
+    			));
+    		}
+    		if (this.PropertyID != null) {
+    			result.Errors.push(new ValidationErrorInfo(
+    				"PropertyID",
+    				"PropertyID must be empty when SubjectKind is 'Parcel'",
+    				this.PropertyID,
+    				ValidationErrorType.Failure
+    			));
+    		}
+    	} else if (this.SubjectKind === "Property") {
+    		if (this.PropertyID == null) {
+    			result.Errors.push(new ValidationErrorInfo(
+    				"PropertyID",
+    				"PropertyID is required when SubjectKind is 'Property'",
+    				this.PropertyID,
+    				ValidationErrorType.Failure
+    			));
+    		}
+    		if (this.ParcelID != null) {
+    			result.Errors.push(new ValidationErrorInfo(
+    				"ParcelID",
+    				"ParcelID must be empty when SubjectKind is 'Property'",
+    				this.ParcelID,
+    				ValidationErrorType.Failure
+    			));
+    		}
+    	}
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    * * Description: Primary key.
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: SubjectKind
+    * * Display Name: Subject Kind
+    * * SQL Data Type: nvarchar(10)
+    * * Description: Parcel or Property: what was analysed. Exactly one of ParcelID and PropertyID is set to match (CHECK).
+    */
+    get SubjectKind(): string {
+        return this.Get('SubjectKind');
+    }
+    set SubjectKind(value: string) {
+        this.Set('SubjectKind', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The subject parcel when SubjectKind = Parcel (a Standalone or Suggested-unrolled parcel); NULL for a property subject.
+    */
+    get ParcelID(): string | null {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string | null) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: PropertyID
+    * * Display Name: Property
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+    * * Description: The subject property when SubjectKind = Property (a Confirmed property, or the Suggested property rolled up as Provisional); NULL for a parcel subject.
+    */
+    get PropertyID(): string | null {
+        return this.Get('PropertyID');
+    }
+    set PropertyID(value: string | null) {
+        this.Set('PropertyID', value);
+    }
+
+    /**
+    * * Field Name: AssessmentYear
+    * * Display Name: Assessment Year
+    * * SQL Data Type: int
+    * * Description: The assessment year the recommendation is for (AY2026 in the first run).
+    */
+    get AssessmentYear(): number {
+        return this.Get('AssessmentYear');
+    }
+    set AssessmentYear(value: number) {
+        this.Set('AssessmentYear', value);
+    }
+
+    /**
+    * * Field Name: MethodologyVersion
+    * * Display Name: Methodology Version
+    * * SQL Data Type: nvarchar(40)
+    * * Description: The methodology the row was computed under (first: signals-v2-2026-09-29). A version is not marked current until its back-test report exists (integrity recommendation-version-has-backtest).
+    */
+    get MethodologyVersion(): string {
+        return this.Get('MethodologyVersion');
+    }
+    set MethodologyVersion(value: string) {
+        this.Set('MethodologyVersion', value);
+    }
+
+    /**
+    * * Field Name: IsCurrent
+    * * Display Name: Is Current
+    * * SQL Data Type: bit
+    * * Default Value: 1
+    * * Description: 1 for the one current row per subject, year and methodology version (filtered unique indexes); older rows are kept as history with 0.
+    */
+    get IsCurrent(): boolean {
+        return this.Get('IsCurrent');
+    }
+    set IsCurrent(value: boolean) {
+        this.Set('IsCurrent', value);
+    }
+
+    /**
+    * * Field Name: CurrentAV
+    * * Display Name: Current Assessed Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The subject's assessed value for AssessmentYear; for a property, the sum over members, NULL when any member lacks the year (member-missing-year).
+    */
+    get CurrentAV(): number | null {
+        return this.Get('CurrentAV');
+    }
+    set CurrentAV(value: number | null) {
+        this.Set('CurrentAV', value);
+    }
+
+    /**
+    * * Field Name: PriorAVAsDetermined
+    * * Display Name: Prior AV As Determined
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The prior year's assessed value as determined (after any appeal), as core burden-shift reads it for S6 and S8; NULL when there is no prior year.
+    */
+    get PriorAVAsDetermined(): number | null {
+        return this.Get('PriorAVAsDetermined');
+    }
+    set PriorAVAsDetermined(value: number | null) {
+        this.Set('PriorAVAsDetermined', value);
+    }
+
+    /**
+    * * Field Name: UnitOfComparison
+    * * Display Name: Unit of Comparison
+    * * SQL Data Type: nvarchar(10)
+    * * Description: The unit every per-unit figure on this row and its signals is shown in: $/SF, $/unit, $/key or $/acre (rules/unit-of-comparison.json, spec §4.3).
+    */
+    get UnitOfComparison(): string | null {
+        return this.Get('UnitOfComparison');
+    }
+    set UnitOfComparison(value: string | null) {
+        this.Set('UnitOfComparison', value);
+    }
+
+    /**
+    * * Field Name: Denominator
+    * * Display Name: Denominator
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: The subject's denominator in UnitOfComparison (building SF ex-parking, units, keys or acres; summed over members for a property). NULL means every per-unit figure is withheld.
+    */
+    get Denominator(): number | null {
+        return this.Get('Denominator');
+    }
+    set Denominator(value: number | null) {
+        this.Set('Denominator', value);
+    }
+
+    /**
+    * * Field Name: DenominatorSource
+    * * Display Name: Denominator Source
+    * * SQL Data Type: nvarchar(20)
+    * * Description: Where the denominator came from: Client, Practitioner, PRC, CoStar, Web or a DLGF segment sum; for a property, the weakest member source (rank PRC > CoStar > Web > DLGF segment).
+    */
+    get DenominatorSource(): string | null {
+        return this.Get('DenominatorSource');
+    }
+    set DenominatorSource(value: string | null) {
+        this.Set('DenominatorSource', value);
+    }
+
+    /**
+    * * Field Name: DenominatorIsFallback
+    * * Display Name: Denominator Is Fallback
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 when the class's own unit had no denominator and $/SF was used instead (Multifamily without units, Hospitality without keys); labelled fallback on every screen.
+    */
+    get DenominatorIsFallback(): boolean {
+        return this.Get('DenominatorIsFallback');
+    }
+    set DenominatorIsFallback(value: boolean) {
+        this.Set('DenominatorIsFallback', value);
+    }
+
+    /**
+    * * Field Name: ValueSignalCount
+    * * Display Name: Value Signal Count
+    * * SQL Data Type: tinyint
+    * * Description: The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9 and S10 when it supports. The verdict and the confidence tier both read it.
+    */
+    get ValueSignalCount(): number {
+        return this.Get('ValueSignalCount');
+    }
+    set ValueSignalCount(value: number) {
+        this.Set('ValueSignalCount', value);
+    }
+
+    /**
+    * * Field Name: IncreaseFlag
+    * * Display Name: Increase Flag
+    * * SQL Data Type: bit
+    * * Description: S6: the assessment rose more than 5% over the prior year as determined (IC 6-1.1-15-20, core burden-shift). A context flag, not a value signal.
+    */
+    get IncreaseFlag(): boolean {
+        return this.Get('IncreaseFlag');
+    }
+    set IncreaseFlag(value: boolean) {
+        this.Set('IncreaseFlag', value);
+    }
+
+    /**
+    * * Field Name: FloorSupport
+    * * Display Name: Floor Support
+    * * SQL Data Type: bit
+    * * Description: 1 when S6 holds and any of S1-S5's indicated values is within 10% of the prior-year as-determined AV: the prior year is shown reasonable, so the ask is floored at it (AskBasis prior-year-floor).
+    */
+    get FloorSupport(): boolean {
+        return this.Get('FloorSupport');
+    }
+    set FloorSupport(value: boolean) {
+        this.Set('FloorSupport', value);
+    }
+
+    /**
+    * * Field Name: PeerOutOfLine
+    * * Display Name: Peer Out of Line
+    * * SQL Data Type: bit
+    * * Description: S8: the subject's year-over-year increase exceeds the median of its neighborhood and type group (at least 5 parcels; else county and type group) by 5 points or more. A context flag.
+    */
+    get PeerOutOfLine(): boolean {
+        return this.Get('PeerOutOfLine');
+    }
+    set PeerOutOfLine(value: boolean) {
+        this.Set('PeerOutOfLine', value);
+    }
+
+    /**
+    * * Field Name: OwnSaleContrary
+    * * Display Name: Own Sale Contrary
+    * * SQL Data Type: bit
+    * * Description: S10 contrary: a qualifying own sale within 24 months of the valuation date at or above AV. Caps the verdict at Consider and the ask is never below that price.
+    */
+    get OwnSaleContrary(): boolean {
+        return this.Get('OwnSaleContrary');
+    }
+    set OwnSaleContrary(value: boolean) {
+        this.Set('OwnSaleContrary', value);
+    }
+
+    /**
+    * * Field Name: Verdict
+    * * Display Name: Verdict
+    * * SQL Data Type: nvarchar(16)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Appeal
+    *   * Consider
+    *   * No
+    *   * not-available
+    * * Description: Appeal: two or more value signals, or one plus the increase or peer flag unless the one is S9. Consider: one value signal, or none with both flags. No: otherwise. not-available: AV missing, or a property subject with member-missing-year. OwnSaleContrary caps it at Consider.
+    */
+    get Verdict(): 'Appeal' | 'Consider' | 'No' | 'not-available' {
+        return this.Get('Verdict');
+    }
+    set Verdict(value: 'Appeal' | 'Consider' | 'No' | 'not-available') {
+        this.Set('Verdict', value);
+    }
+
+    /**
+    * * Field Name: NotAvailableReason
+    * * Display Name: Not Available Reason
+    * * SQL Data Type: nvarchar(60)
+    * * Description: Why the verdict is not-available (for example member-missing-year, or AV missing); NULL otherwise.
+    */
+    get NotAvailableReason(): string | null {
+        return this.Get('NotAvailableReason');
+    }
+    set NotAvailableReason(value: string | null) {
+        this.Set('NotAvailableReason', value);
+    }
+
+    /**
+    * * Field Name: ConfidenceTier
+    * * Display Name: Confidence Tier
+    * * SQL Data Type: nvarchar(8)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * High
+    *   * Low
+    *   * Medium
+    * * Description: The back-tested hit rate of the value-signal count: High, Medium or Low by the cuts in rules/appeal-signals.json (initially k >= 3, k = 2, k <= 1), shown with the measured recall and false-alarm rate for that k. NULL when not-available.
+    */
+    get ConfidenceTier(): 'High' | 'Low' | 'Medium' | null {
+        return this.Get('ConfidenceTier');
+    }
+    set ConfidenceTier(value: 'High' | 'Low' | 'Medium' | null) {
+        this.Set('ConfidenceTier', value);
+    }
+
+    /**
+    * * Field Name: FloorValue
+    * * Display Name: Floor Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The lowest supporting indication: S3, S4, S5, S10 within [0.5, 1.2] x AV, then S1, S2, S7, S9 indicated values at or below 0.95 x AV. NULL when none supports.
+    */
+    get FloorValue(): number | null {
+        return this.Get('FloorValue');
+    }
+    set FloorValue(value: number | null) {
+        this.Set('FloorValue', value);
+    }
+
+    /**
+    * * Field Name: AskValue
+    * * Display Name: Ask Value
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The value to ask for, by AskPolicy, then floored at the prior-year as-determined AV when FloorSupport holds, and never below the own-sale price when OwnSaleContrary. For a property, allocated to members in AppealRecommendationParcel.
+    */
+    get AskValue(): number | null {
+        return this.Get('AskValue');
+    }
+    set AskValue(value: number | null) {
+        this.Set('AskValue', value);
+    }
+
+    /**
+    * * Field Name: AskPolicy
+    * * Display Name: Ask Policy
+    * * SQL Data Type: nvarchar(16)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Lowest
+    *   * SecondLowest
+    * * Description: Lowest (the floor) or SecondLowest (the second-lowest supporting indication when two or more exist, else the floor; the default, as the Appeal Workbench does). A rule value in rules/appeal-signals.json.
+    */
+    get AskPolicy(): 'Lowest' | 'SecondLowest' {
+        return this.Get('AskPolicy');
+    }
+    set AskPolicy(value: 'Lowest' | 'SecondLowest') {
+        this.Set('AskPolicy', value);
+    }
+
+    /**
+    * * Field Name: AskBasis
+    * * Display Name: Ask Basis
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * lowest-supported
+    *   * own-sale-cap
+    *   * prior-year-floor
+    * * Description: What set AskValue: lowest-supported (the AskPolicy pick), prior-year-floor (S6 with floor support), or own-sale-cap (raised to the S10 contrary sale price). NULL when there is no ask.
+    */
+    get AskBasis(): 'lowest-supported' | 'own-sale-cap' | 'prior-year-floor' | null {
+        return this.Get('AskBasis');
+    }
+    set AskBasis(value: 'lowest-supported' | 'own-sale-cap' | 'prior-year-floor' | null) {
+        this.Set('AskBasis', value);
+    }
+
+    /**
+    * * Field Name: EstSavingsAtAsk
+    * * Display Name: Est Savings at Ask
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: (CurrentAV - AskValue) x EffectiveTaxRate, as savings.ts computes it; for a property, the total, allocated per member in AppealRecommendationParcel. Below $1,000 sets BelowSavingsFloor.
+    */
+    get EstSavingsAtAsk(): number | null {
+        return this.Get('EstSavingsAtAsk');
+    }
+    set EstSavingsAtAsk(value: number | null) {
+        this.Set('EstSavingsAtAsk', value);
+    }
+
+    /**
+    * * Field Name: EstSavingsAtFloor
+    * * Display Name: Est Savings at Floor
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: (CurrentAV - FloorValue) x EffectiveTaxRate; for a property, the total, allocated per member in AppealRecommendationParcel.
+    */
+    get EstSavingsAtFloor(): number | null {
+        return this.Get('EstSavingsAtFloor');
+    }
+    set EstSavingsAtFloor(value: number | null) {
+        this.Set('EstSavingsAtFloor', value);
+    }
+
+    /**
+    * * Field Name: EffectiveTaxRate
+    * * Display Name: Effective Tax Rate
+    * * SQL Data Type: decimal(9, 6)
+    * * Description: The 6-place effective tax rate the savings were computed with (as savings.ts).
+    */
+    get EffectiveTaxRate(): number | null {
+        return this.Get('EffectiveTaxRate');
+    }
+    set EffectiveTaxRate(value: number | null) {
+        this.Set('EffectiveTaxRate', value);
+    }
+
+    /**
+    * * Field Name: GroupingStatus
+    * * Display Name: Grouping Status
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * Confirmed
+    *   * Provisional
+    *   * Standalone
+    *   * Suggested-unrolled
+    * * Description: Standalone = a parcel in no property; Confirmed = a practitioner-confirmed property (Client Setup); Provisional = a multi-parcel conveyance whose members share an owner today, rolled up before confirmation and marked so; Suggested-unrolled = a parcel that sits in a Suggested property and was analysed alone, per-unit figures withheld.
+    */
+    get GroupingStatus(): 'Confirmed' | 'Provisional' | 'Standalone' | 'Suggested-unrolled' {
+        return this.Get('GroupingStatus');
+    }
+    set GroupingStatus(value: 'Confirmed' | 'Provisional' | 'Standalone' | 'Suggested-unrolled') {
+        this.Set('GroupingStatus', value);
+    }
+
+    /**
+    * * Field Name: GroupingVersion
+    * * Display Name: Grouping Version
+    * * SQL Data Type: datetime2
+    * * Description: Property.GroupingVersion of the subject property when this row was computed. A row whose version is older than the property's current one is stale (a confirm or split since). NULL for a parcel subject.
+    */
+    get GroupingVersion(): Date | null {
+        return this.Get('GroupingVersion');
+    }
+    set GroupingVersion(value: Date | null) {
+        this.Set('GroupingVersion', value);
+    }
+
+    /**
+    * * Field Name: AlreadyAppealed
+    * * Display Name: Already Appealed
+    * * SQL Data Type: bit
+    * * Description: Gate: an AppealOutcome or PTABOAAppeal row exists for AssessmentYear (for a property, on any member). Shown beside the verdict, never changes it; used for prospect ranking.
+    */
+    get AlreadyAppealed(): boolean {
+        return this.Get('AlreadyAppealed');
+    }
+    set AlreadyAppealed(value: boolean) {
+        this.Set('AlreadyAppealed', value);
+    }
+
+    /**
+    * * Field Name: ExistingRep
+    * * Display Name: Existing Rep
+    * * SQL Data Type: nvarchar(200)
+    * * Description: Gate: the representative already on file for the subject (Owner Prospects; for a property, any member); NULL when none. Shown beside the verdict, never changes it.
+    */
+    get ExistingRep(): string | null {
+        return this.Get('ExistingRep');
+    }
+    set ExistingRep(value: string | null) {
+        this.Set('ExistingRep', value);
+    }
+
+    /**
+    * * Field Name: Exempt
+    * * Display Name: Exempt
+    * * SQL Data Type: bit
+    * * Description: Gate: an Exemption outcome current for AssessmentYear, or deductions and exemptions at or above AV on the assessor record (for a property, any member). Shown beside the verdict, never changes it.
+    */
+    get Exempt(): boolean {
+        return this.Get('Exempt');
+    }
+    set Exempt(value: boolean) {
+        this.Set('Exempt', value);
+    }
+
+    /**
+    * * Field Name: BelowSavingsFloor
+    * * Display Name: Below Savings Floor
+    * * SQL Data Type: bit
+    * * Description: Gate: EstSavingsAtAsk is below the savings floor ($1,000, rules/appeal-signals.json). Shown beside the verdict, never changes it.
+    */
+    get BelowSavingsFloor(): boolean {
+        return this.Get('BelowSavingsFloor');
+    }
+    set BelowSavingsFloor(value: boolean) {
+        this.Set('BelowSavingsFloor', value);
+    }
+
+    /**
+    * * Field Name: RunStamp
+    * * Display Name: Run Stamp
+    * * SQL Data Type: datetime2
+    * * Description: The run that wrote this row (scripts/build-appeal-recommendations.js). Each run writes one stamp; rows of an older stamp are swept.
+    */
+    get RunStamp(): Date {
+        return this.Get('RunStamp');
+    }
+    set RunStamp(value: Date) {
+        this.Set('RunStamp', value);
+    }
+
+    /**
+    * * Field Name: GeneratedAt
+    * * Display Name: Generated At
+    * * SQL Data Type: datetime2
+    * * Description: When this row was written.
+    */
+    get GeneratedAt(): Date {
+        return this.Get('GeneratedAt');
+    }
+    set GeneratedAt(value: Date) {
+        this.Set('GeneratedAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string | null {
+        return this.Get('Parcel');
+    }
+
+    /**
+    * * Field Name: Property
+    * * Display Name: Property
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Property(): string | null {
+        return this.Get('Property');
+    }
+}
+
+
+/**
  * Appeal Stage Playbook Notes - strongly typed entity sub-class
  * * Schema: indiana_tax
  * * Base Table: AppealStagePlaybookNote
@@ -17660,6 +19399,25 @@ export class indianataxCardSummaryEntity extends BaseEntity<indianataxCardSummar
     }
 
     /**
+    * * Field Name: ParseStatus
+    * * Display Name: Parse Status
+    * * SQL Data Type: nvarchar(20)
+    * * Default Value: parsed
+    * * Value List Type: List
+    * * Possible Values 
+    *   * needs_review
+    *   * parsed
+    *   * quarantined
+    * * Description: The loader's parse verdict for this card: parsed (every internal identity held), quarantined (an identity failed -- ParseNotes carries which; no Assessment row is written from it), needs_review (harvest could not settle the card). Rows loaded before 2026-09-29 are parsed.
+    */
+    get ParseStatus(): 'needs_review' | 'parsed' | 'quarantined' {
+        return this.Get('ParseStatus');
+    }
+    set ParseStatus(value: 'needs_review' | 'parsed' | 'quarantined') {
+        this.Set('ParseStatus', value);
+    }
+
+    /**
     * * Field Name: SourceDocument
     * * Display Name: Source Document
     * * SQL Data Type: nvarchar(500)
@@ -17843,12 +19601,12 @@ export class indianataxCardValuationColumnEntity extends BaseEntity<indianataxCa
     * * Field Name: IsCertified
     * * Display Name: Is Certified
     * * SQL Data Type: bit
-    * * Description: 0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise. A WIP column never becomes an Assessment row.
+    * * Description: 0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise; NULL when the source states no certification flag the loader could read (Marion residential cards, loaded 2026-09-29): unknown, never inferred. The county intake never turns a WIP column into an Assessment row; the Marion loaders (C&I fetch-marion-prc-full.js and the residential loader) write every printed year.
     */
-    get IsCertified(): boolean {
+    get IsCertified(): boolean | null {
         return this.Get('IsCertified');
     }
-    set IsCertified(value: boolean) {
+    set IsCertified(value: boolean | null) {
         this.Set('IsCertified', value);
     }
 
@@ -21747,13 +23505,14 @@ export class indianataxComparableAssessmentSetEntity extends BaseEntity<indianat
     * * Possible Values 
     *   * $/SF
     *   * $/acre
+    *   * $/key
     *   * $/unit
-    * * Description: Unit of comparison: $/SF (default), $/unit (multifamily with a trustworthy unit count), or $/acre (land).
+    * * Description: Unit of comparison: $/SF building ex-parking (default; Office, Retail, Industrial, Special, and the fallback for a multifamily or hotel subject without a unit or key count), $/unit (multifamily with a unit count), $/key (hotels with a key count compare per key), or $/acre (land, parking, and any subject with ParkingSharePct >= 85). Chosen by core chooseUnit (rule uoc-v1-2026-09-29) for comps-bulk-v2 sets; every comp in the set is measured in the same unit.
     */
-    get UnitOfComparison(): '$/SF' | '$/acre' | '$/unit' {
+    get UnitOfComparison(): '$/SF' | '$/acre' | '$/key' | '$/unit' {
         return this.Get('UnitOfComparison');
     }
-    set UnitOfComparison(value: '$/SF' | '$/acre' | '$/unit') {
+    set UnitOfComparison(value: '$/SF' | '$/acre' | '$/key' | '$/unit') {
         this.Set('UnitOfComparison', value);
     }
 
@@ -33771,12 +35530,13 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     *   * CoStar
     *   * PRC
     *   * Practitioner
-    * * Description: Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us) or Practitioner (counted or judged by the practice). NULL while UnitCount is NULL.
+    *   * Web
+    * * Description: Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us), Practitioner (counted or judged by the practice) or Web (a public web page, with UnitCountSourceURL and UnitCountRetrievedAt; written only on approval of a reviewed candidate list). NULL while UnitCount is NULL.
     */
-    get UnitCountSource(): 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | null {
+    get UnitCountSource(): 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | 'Web' | null {
         return this.Get('UnitCountSource');
     }
-    set UnitCountSource(value: 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | null) {
+    set UnitCountSource(value: 'Client' | 'CoStar' | 'PRC' | 'Practitioner' | 'Web' | null) {
         this.Set('UnitCountSource', value);
     }
 
@@ -33800,7 +35560,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
 
     /**
     * * Field Name: ConfirmedByUserID
-    * * Display Name: Confirmed By
+    * * Display Name: Confirmed By User
     * * SQL Data Type: uniqueidentifier
     * * Related Entity/Foreign Key: MJ: Users (vwUsers.ID)
     * * Description: The MJ user who confirmed the grouping. NULL while Suggested.
@@ -33859,6 +35619,58 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
     }
 
     /**
+    * * Field Name: GroupingVersion
+    * * Display Name: Grouping Version
+    * * SQL Data Type: datetime2
+    * * Description: Set to ConfirmedAt on every confirm or split of this property. Recommendation rows computed on an older version are stale (AppealRecommendation.GroupingVersion).
+    */
+    get GroupingVersion(): Date | null {
+        return this.Get('GroupingVersion');
+    }
+    set GroupingVersion(value: Date | null) {
+        this.Set('GroupingVersion', value);
+    }
+
+    /**
+    * * Field Name: SplitAt
+    * * Display Name: Split At
+    * * SQL Data Type: datetime2
+    * * Description: When a practitioner split this property. Blocks re-suggestion of the same member set by scripts/suggest-properties.js.
+    */
+    get SplitAt(): Date | null {
+        return this.Get('SplitAt');
+    }
+    set SplitAt(value: Date | null) {
+        this.Set('SplitAt', value);
+    }
+
+    /**
+    * * Field Name: UnitCountSourceURL
+    * * Display Name: Unit Count Source URL
+    * * SQL Data Type: nvarchar(500)
+    * * Description: The page a Web unit count was read from (operator site, then Visit Indy / Cvent for hotels, then Apartments.com / Apartment Finder; never a units-available count). NULL unless UnitCountSource = Web.
+    */
+    get UnitCountSourceURL(): string | null {
+        return this.Get('UnitCountSourceURL');
+    }
+    set UnitCountSourceURL(value: string | null) {
+        this.Set('UnitCountSourceURL', value);
+    }
+
+    /**
+    * * Field Name: UnitCountRetrievedAt
+    * * Display Name: Unit Count Retrieved At
+    * * SQL Data Type: datetime2
+    * * Description: When the Web unit count was read from UnitCountSourceURL. NULL unless UnitCountSource = Web.
+    */
+    get UnitCountRetrievedAt(): Date | null {
+        return this.Get('UnitCountRetrievedAt');
+    }
+    set UnitCountRetrievedAt(value: Date | null) {
+        this.Set('UnitCountRetrievedAt', value);
+    }
+
+    /**
     * * Field Name: County
     * * Display Name: County Name
     * * SQL Data Type: nvarchar(50)
@@ -33869,7 +35681,7 @@ export class indianataxPropertyEntity extends BaseEntity<indianataxPropertyEntit
 
     /**
     * * Field Name: ConfirmedByUser
-    * * Display Name: Confirmed By User
+    * * Display Name: Confirmed By User Name
     * * SQL Data Type: nvarchar(100)
     */
     get ConfirmedByUser(): string | null {
@@ -34122,6 +35934,159 @@ export class indianataxPropertyParcelEntity extends BaseEntity<indianataxPropert
     */
     get Parcel(): string {
         return this.Get('Parcel');
+    }
+}
+
+
+/**
+ * Property Suggestion Evidences - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: PropertySuggestionEvidence
+ * * Base View: vwPropertySuggestionEvidences
+ * * @description One row per signal that suggested a Property (GroupingStatus Suggested), written by scripts/suggest-properties.js: the evidence a practitioner reads before confirming. The system suggests; it never regroups on its own.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Property Suggestion Evidences')
+export class indianataxPropertySuggestionEvidenceEntity extends BaseEntity<indianataxPropertySuggestionEvidenceEntityType> {
+    /**
+    * Loads the Property Suggestion Evidences record from the database
+    * @param ID: string - primary key value to load the Property Suggestion Evidences record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxPropertySuggestionEvidenceEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    * * Description: Primary key.
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: PropertyID
+    * * Display Name: Property
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Properties (vwProperties.ID)
+    * * Description: The suggested property.
+    */
+    get PropertyID(): string {
+        return this.Get('PropertyID');
+    }
+    set PropertyID(value: string) {
+        this.Set('PropertyID', value);
+    }
+
+    /**
+    * * Field Name: SignalCode
+    * * Display Name: Signal Code
+    * * SQL Data Type: nvarchar(2)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * A
+    *   * B
+    *   * C
+    *   * D
+    *   * E
+    * * Description: A same owner and adjacency; B improved parcel with land-only neighbours; C conveyed together (shared ConveyanceKey, same owner today); D CoStar multi-parcel; E card cross-reference (spec §3.2).
+    */
+    get SignalCode(): 'A' | 'B' | 'C' | 'D' | 'E' {
+        return this.Get('SignalCode');
+    }
+    set SignalCode(value: 'A' | 'B' | 'C' | 'D' | 'E') {
+        this.Set('SignalCode', value);
+    }
+
+    /**
+    * * Field Name: Grade
+    * * Display Name: Grade
+    * * SQL Data Type: nvarchar(1)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * A
+    *   * B
+    *   * C
+    * * Description: The grade of this signal: A for signals B and C; B for A and E, and for D when the parcels also satisfy A; C for D without A. A candidate resting on a single grade-C signal is not written.
+    */
+    get Grade(): 'A' | 'B' | 'C' {
+        return this.Get('Grade');
+    }
+    set Grade(value: 'A' | 'B' | 'C') {
+        this.Set('Grade', value);
+    }
+
+    /**
+    * * Field Name: Evidence
+    * * Display Name: Evidence
+    * * SQL Data Type: nvarchar(400)
+    * * Description: Plain text of the evidence: the conveyance key, the owner, the card note.
+    */
+    get Evidence(): string {
+        return this.Get('Evidence');
+    }
+    set Evidence(value: string) {
+        this.Set('Evidence', value);
+    }
+
+    /**
+    * * Field Name: SuggestedAt
+    * * Display Name: Suggested At
+    * * SQL Data Type: datetime2
+    * * Description: When the suggestion engine wrote this evidence.
+    */
+    get SuggestedAt(): Date {
+        return this.Get('SuggestedAt');
+    }
+    set SuggestedAt(value: Date) {
+        this.Set('SuggestedAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: Property
+    * * Display Name: Property Name
+    * * SQL Data Type: nvarchar(200)
+    */
+    get Property(): string {
+        return this.Get('Property');
     }
 }
 
@@ -36112,6 +38077,496 @@ export class indianataxResearchTaskEntity extends BaseEntity<indianataxResearchT
     */
     get RelatedSourceDocument(): string | null {
         return this.Get('RelatedSourceDocument');
+    }
+}
+
+
+/**
+ * Sale Conveyance Members - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: SaleConveyanceMember
+ * * Base View: vwSaleConveyanceMembers
+ * * @description Which SaleTransaction rows belong to a conveyance. A same-parcel duplicate row (two cards, one sale) is kept as a member with IsDuplicateCard = 1 and contributes nothing to the sums.
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Sale Conveyance Members')
+export class indianataxSaleConveyanceMemberEntity extends BaseEntity<indianataxSaleConveyanceMemberEntityType> {
+    /**
+    * Loads the Sale Conveyance Members record from the database
+    * @param ID: string - primary key value to load the Sale Conveyance Members record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxSaleConveyanceMemberEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    * * Description: Primary key.
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: SaleConveyanceID
+    * * Display Name: Sale Conveyance
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Sale Conveyances (vwSaleConveyances.ID)
+    * * Description: The conveyance this SaleTransaction row belongs to.
+    */
+    get SaleConveyanceID(): string {
+        return this.Get('SaleConveyanceID');
+    }
+    set SaleConveyanceID(value: string) {
+        this.Set('SaleConveyanceID', value);
+    }
+
+    /**
+    * * Field Name: SaleTransactionID
+    * * Display Name: Sale Transaction
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Sale Transactions (vwSaleTransactions.ID)
+    * * Description: The SaleTransaction row (one parcel's record of the sale). Unique: a sale row belongs to exactly one conveyance.
+    */
+    get SaleTransactionID(): string {
+        return this.Get('SaleTransactionID');
+    }
+    set SaleTransactionID(value: string) {
+        this.Set('SaleTransactionID', value);
+    }
+
+    /**
+    * * Field Name: ParcelID
+    * * Display Name: Parcel
+    * * SQL Data Type: uniqueidentifier
+    * * Related Entity/Foreign Key: Parcels (vwParcels.ID)
+    * * Description: The parcel the SaleTransaction row is for, copied from it at rebuild. NULL when the sale row is not matched to a parcel.
+    */
+    get ParcelID(): string | null {
+        return this.Get('ParcelID');
+    }
+    set ParcelID(value: string | null) {
+        this.Set('ParcelID', value);
+    }
+
+    /**
+    * * Field Name: MemberBuildingSqFt
+    * * Display Name: Member Building Square Feet
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: This member's building SF ex-parking at rebuild. NULL when none is held; an improved member (type group other than Parking or Land) without it makes the conveyance incomplete (IsComplete = 0).
+    */
+    get MemberBuildingSqFt(): number | null {
+        return this.Get('MemberBuildingSqFt');
+    }
+    set MemberBuildingSqFt(value: number | null) {
+        this.Set('MemberBuildingSqFt', value);
+    }
+
+    /**
+    * * Field Name: MemberUnits
+    * * Display Name: Member Units
+    * * SQL Data Type: decimal(12, 2)
+    * * Description: This member's unit or key count at rebuild; NULL when none is held.
+    */
+    get MemberUnits(): number | null {
+        return this.Get('MemberUnits');
+    }
+    set MemberUnits(value: number | null) {
+        this.Set('MemberUnits', value);
+    }
+
+    /**
+    * * Field Name: MemberAcres
+    * * Display Name: Member Acres
+    * * SQL Data Type: decimal(12, 4)
+    * * Description: This member's acres at rebuild; NULL when none is held.
+    */
+    get MemberAcres(): number | null {
+        return this.Get('MemberAcres');
+    }
+    set MemberAcres(value: number | null) {
+        this.Set('MemberAcres', value);
+    }
+
+    /**
+    * * Field Name: ContributesSqFt
+    * * Display Name: Contributes Square Feet
+    * * SQL Data Type: bit
+    * * Description: Whether this member's building SF is part of BuildingSqFtSum: 1 for an improved member with SF, 0 for Parking/Land members (they contribute acres) and for duplicates.
+    */
+    get ContributesSqFt(): boolean {
+        return this.Get('ContributesSqFt');
+    }
+    set ContributesSqFt(value: boolean) {
+        this.Set('ContributesSqFt', value);
+    }
+
+    /**
+    * * Field Name: IsDuplicateCard
+    * * Display Name: Is Duplicate Card
+    * * SQL Data Type: bit
+    * * Default Value: 0
+    * * Description: 1 when this row is a second card of a parcel already a member of the same conveyance (same parcel, same date, same price). Kept for the record; contributes nothing to the sums.
+    */
+    get IsDuplicateCard(): boolean {
+        return this.Get('IsDuplicateCard');
+    }
+    set IsDuplicateCard(value: boolean) {
+        this.Set('IsDuplicateCard', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: SaleTransaction
+    * * Display Name: Sale Transaction
+    * * SQL Data Type: nvarchar(200)
+    */
+    get SaleTransaction(): string | null {
+        return this.Get('SaleTransaction');
+    }
+
+    /**
+    * * Field Name: Parcel
+    * * Display Name: Parcel
+    * * SQL Data Type: nvarchar(30)
+    */
+    get Parcel(): string | null {
+        return this.Get('Parcel');
+    }
+}
+
+
+/**
+ * Sale Conveyances - strongly typed entity sub-class
+ * * Schema: indiana_tax
+ * * Base Table: SaleConveyance
+ * * Base View: vwSaleConveyances
+ * * @description One deed transfer, grouping the SaleTransaction rows (one per parcel) it conveyed. Rebuilt by scripts/rebuild-sale-conveyances.js from county, sale date, price and the normalized grantee (KeyBasis grantee), or date+price corroborated by a shared owner on the roll today where no grantee is recorded (owner-corroborated); a lone row is its own conveyance (single). PricePerUnit is the whole price over the members' summed denominator -- the figure every comp grid must use; the per-row PricePerSqFt on SaleTransaction is wrong for a multi-parcel conveyance (2026-09-29: 8,740 selected comps came from such rows).
+ * * Primary Key: ID
+ * @extends {BaseEntity}
+ * @class
+ * @public
+ */
+@RegisterClass(BaseEntity, 'Sale Conveyances')
+export class indianataxSaleConveyanceEntity extends BaseEntity<indianataxSaleConveyanceEntityType> {
+    /**
+    * Loads the Sale Conveyances record from the database
+    * @param ID: string - primary key value to load the Sale Conveyances record.
+    * @param EntityRelationshipsToLoad - (optional) the relationships to load
+    * @returns {Promise<boolean>} - true if successful, false otherwise
+    * @public
+    * @async
+    * @memberof indianataxSaleConveyanceEntity
+    * @method
+    * @override
+    */
+    public async Load(ID: string, EntityRelationshipsToLoad?: string[]) : Promise<boolean> {
+        const compositeKey: CompositeKey = new CompositeKey();
+        compositeKey.KeyValuePairs.push({ FieldName: 'ID', Value: ID });
+        return await super.InnerLoad(compositeKey, EntityRelationshipsToLoad);
+    }
+
+    /**
+    * * Field Name: ID
+    * * Display Name: ID
+    * * SQL Data Type: uniqueidentifier
+    * * Default Value: newsequentialid()
+    * * Description: Primary key.
+    */
+    get ID(): string {
+        return this.Get('ID');
+    }
+    set ID(value: string) {
+        this.Set('ID', value);
+    }
+
+    /**
+    * * Field Name: ConveyanceKey
+    * * Display Name: Conveyance Key
+    * * SQL Data Type: nvarchar(200)
+    * * Description: The grouping key (spec §2.1): CountyNumber|SaleDate|SalePrice|normOwner(Grantee), using the owner normaliser of build-owner-portfolios.js; where every row of the group lacks a grantee, CountyNumber|SaleDate|SalePrice, accepted only when the members share an owner on the roll today. One row per key.
+    */
+    get ConveyanceKey(): string {
+        return this.Get('ConveyanceKey');
+    }
+    set ConveyanceKey(value: string) {
+        this.Set('ConveyanceKey', value);
+    }
+
+    /**
+    * * Field Name: CountyNumber
+    * * Display Name: County Number
+    * * SQL Data Type: int
+    * * Description: Indiana county number of the conveyed parcels. Part of the key, so a conveyance never spans two counties.
+    */
+    get CountyNumber(): number {
+        return this.Get('CountyNumber');
+    }
+    set CountyNumber(value: number) {
+        this.Set('CountyNumber', value);
+    }
+
+    /**
+    * * Field Name: SaleDate
+    * * Display Name: Sale Date
+    * * SQL Data Type: date
+    * * Description: The sale date every member SaleTransaction row carries.
+    */
+    get SaleDate(): Date {
+        return this.Get('SaleDate');
+    }
+    set SaleDate(value: Date) {
+        this.Set('SaleDate', value);
+    }
+
+    /**
+    * * Field Name: SalePrice
+    * * Display Name: Sale Price
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: The whole conveyance price. SaleTransaction repeats it on every member row; it is counted once here.
+    */
+    get SalePrice(): number {
+        return this.Get('SalePrice');
+    }
+    set SalePrice(value: number) {
+        this.Set('SalePrice', value);
+    }
+
+    /**
+    * * Field Name: GranteeNormalized
+    * * Display Name: Grantee
+    * * SQL Data Type: nvarchar(200)
+    * * Description: The grantee after the owner normaliser of build-owner-portfolios.js. NULL when no member row records a grantee.
+    */
+    get GranteeNormalized(): string | null {
+        return this.Get('GranteeNormalized');
+    }
+    set GranteeNormalized(value: string | null) {
+        this.Set('GranteeNormalized', value);
+    }
+
+    /**
+    * * Field Name: KeyBasis
+    * * Display Name: Key Basis
+    * * SQL Data Type: nvarchar(20)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * grantee
+    *   * owner-corroborated
+    *   * single
+    * * Description: How the members were grouped: grantee (date, price and normalized grantee agree); owner-corroborated (no grantee recorded, date and price agree, and the members share an owner on the roll today); single (a lone row).
+    */
+    get KeyBasis(): 'grantee' | 'owner-corroborated' | 'single' {
+        return this.Get('KeyBasis');
+    }
+    set KeyBasis(value: 'grantee' | 'owner-corroborated' | 'single') {
+        this.Set('KeyBasis', value);
+    }
+
+    /**
+    * * Field Name: ParcelCount
+    * * Display Name: Parcel Count
+    * * SQL Data Type: int
+    * * Description: Number of distinct parcels conveyed. Duplicate cards of one parcel (IsDuplicateCard) count once.
+    */
+    get ParcelCount(): number {
+        return this.Get('ParcelCount');
+    }
+    set ParcelCount(value: number) {
+        this.Set('ParcelCount', value);
+    }
+
+    /**
+    * * Field Name: DominantTypeGroup
+    * * Display Name: Dominant Type Group
+    * * SQL Data Type: nvarchar(30)
+    * * Description: The type group with the largest summed assessed value among the members; decides UnitOfComparison.
+    */
+    get DominantTypeGroup(): string | null {
+        return this.Get('DominantTypeGroup');
+    }
+    set DominantTypeGroup(value: string | null) {
+        this.Set('DominantTypeGroup', value);
+    }
+
+    /**
+    * * Field Name: UnitOfComparison
+    * * Display Name: Unit of Comparison
+    * * SQL Data Type: nvarchar(10)
+    * * Value List Type: List
+    * * Possible Values 
+    *   * $/SF
+    *   * $/acre
+    *   * $/key
+    *   * $/unit
+    * * Description: The unit PricePerUnit is in: $/SF, $/unit, $/key or $/acre, decided by DominantTypeGroup through rules/unit-of-comparison.json (spec §4.3). NULL when no unit applies.
+    */
+    get UnitOfComparison(): '$/SF' | '$/acre' | '$/key' | '$/unit' | null {
+        return this.Get('UnitOfComparison');
+    }
+    set UnitOfComparison(value: '$/SF' | '$/acre' | '$/key' | '$/unit' | null) {
+        this.Set('UnitOfComparison', value);
+    }
+
+    /**
+    * * Field Name: BuildingSqFtSum
+    * * Display Name: Building Square Feet
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: Sum of the members' building SF ex-parking over members with ContributesSqFt = 1. Parking and Land members and duplicate cards add 0. The $/SF denominator.
+    */
+    get BuildingSqFtSum(): number | null {
+        return this.Get('BuildingSqFtSum');
+    }
+    set BuildingSqFtSum(value: number | null) {
+        this.Set('BuildingSqFtSum', value);
+    }
+
+    /**
+    * * Field Name: UnitSum
+    * * Display Name: Unit Sum
+    * * SQL Data Type: decimal(12, 2)
+    * * Description: Sum of the members' unit (multifamily) or key (hospitality) counts, duplicate cards excluded. The $/unit or $/key denominator.
+    */
+    get UnitSum(): number | null {
+        return this.Get('UnitSum');
+    }
+    set UnitSum(value: number | null) {
+        this.Set('UnitSum', value);
+    }
+
+    /**
+    * * Field Name: AcreSum
+    * * Display Name: Acre Sum
+    * * SQL Data Type: decimal(12, 4)
+    * * Description: Sum of the members' acres, duplicate cards excluded. The $/acre denominator.
+    */
+    get AcreSum(): number | null {
+        return this.Get('AcreSum');
+    }
+    set AcreSum(value: number | null) {
+        this.Set('AcreSum', value);
+    }
+
+    /**
+    * * Field Name: IsComplete
+    * * Display Name: Is Complete
+    * * SQL Data Type: bit
+    * * Description: True when every improved member (type group other than Parking or Land) carries building SF, so PricePerUnit is a whole-property figure. False = the conveyance leaves the comp pool with DropReason multi-parcel-denominator-incomplete.
+    */
+    get IsComplete(): boolean {
+        return this.Get('IsComplete');
+    }
+    set IsComplete(value: boolean) {
+        this.Set('IsComplete', value);
+    }
+
+    /**
+    * * Field Name: PricePerUnit
+    * * Display Name: Price Per Unit
+    * * SQL Data Type: decimal(14, 2)
+    * * Description: Whole price over the summed denominator in UnitOfComparison ($/SF over BuildingSqFtSum, $/unit or $/key over UnitSum, $/acre over AcreSum). Null when IsComplete = 0 or the denominator sum is zero.
+    */
+    get PricePerUnit(): number | null {
+        return this.Get('PricePerUnit');
+    }
+    set PricePerUnit(value: number | null) {
+        this.Set('PricePerUnit', value);
+    }
+
+    /**
+    * * Field Name: AssessedAtSaleSum
+    * * Display Name: Assessed at Sale Sum
+    * * SQL Data Type: decimal(18, 2)
+    * * Description: Sum of the members' AssessedValueAtSale, duplicate cards excluded; NULL when any member lacks one. The denominator of SaleToAssessedRatio.
+    */
+    get AssessedAtSaleSum(): number | null {
+        return this.Get('AssessedAtSaleSum');
+    }
+    set AssessedAtSaleSum(value: number | null) {
+        this.Set('AssessedAtSaleSum', value);
+    }
+
+    /**
+    * * Field Name: SaleToAssessedRatio
+    * * Display Name: Sale to Assessed Ratio
+    * * SQL Data Type: decimal(9, 4)
+    * * Description: SalePrice over the members' summed AssessedValueAtSale; null when any member lacks one. Read by signal S10 (own sale).
+    */
+    get SaleToAssessedRatio(): number | null {
+        return this.Get('SaleToAssessedRatio');
+    }
+    set SaleToAssessedRatio(value: number | null) {
+        this.Set('SaleToAssessedRatio', value);
+    }
+
+    /**
+    * * Field Name: RebuiltAt
+    * * Display Name: Rebuilt At
+    * * SQL Data Type: datetime2
+    * * Description: When scripts/rebuild-sale-conveyances.js wrote this row. Conveyances are rebuilt whole from SaleTransaction, never edited by hand.
+    */
+    get RebuiltAt(): Date {
+        return this.Get('RebuiltAt');
+    }
+    set RebuiltAt(value: Date) {
+        this.Set('RebuiltAt', value);
+    }
+
+    /**
+    * * Field Name: __mj_CreatedAt
+    * * Display Name: Created At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_CreatedAt(): Date {
+        return this.Get('__mj_CreatedAt');
+    }
+
+    /**
+    * * Field Name: __mj_UpdatedAt
+    * * Display Name: Updated At
+    * * SQL Data Type: datetimeoffset
+    * * Default Value: getutcdate()
+    */
+    get __mj_UpdatedAt(): Date {
+        return this.Get('__mj_UpdatedAt');
     }
 }
 

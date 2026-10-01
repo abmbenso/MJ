@@ -26,7 +26,8 @@ export class indianataxSaleTransactionFormComponent extends BaseFormComponent {
             { sectionKey: 'valuationAndAssessment', sectionName: 'Valuation and Assessment', isExpanded: true },
             { sectionKey: 'systemMetadata', sectionName: 'System Metadata', isExpanded: false },
             { sectionKey: 'valuationComps', sectionName: 'Valuation Comps', isExpanded: false },
-            { sectionKey: 'appealAnalysisCompDecisions', sectionName: 'Appeal Analysis Comp Decisions', isExpanded: false }
+            { sectionKey: 'appealAnalysisCompDecisions', sectionName: 'Appeal Analysis Comp Decisions', isExpanded: false },
+            { sectionKey: 'saleConveyanceMembers', sectionName: 'Sale Conveyance Members', isExpanded: false }
         ]);
     }
 }

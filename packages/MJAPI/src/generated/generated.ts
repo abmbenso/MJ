@@ -17,7 +17,7 @@ import { MaxLength } from 'class-validator';
 import * as mj_core_schema_server_object_types from '@memberjunction/server'
 
 
-import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealOutcomeEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxClientAppealStatusEntity, indianataxClientAppealEntity, indianataxClientAuthorizationEntity, indianataxClientContactEntity, indianataxClientImportEntity, indianataxClientPropertyEntity, indianataxClientTaskEntity, indianataxClientEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessmentCycleEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDataSourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, indianataxParcelIndexEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelYearHeadlineEntity, indianataxParcelEntity, indianataxPropertyEntity, indianataxPropertyClassMapEntity, indianataxPropertyParcelEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxCourtCaseEntity, indianataxTaxCourtIBTRLinkEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
+import { indianataxAdjustmentCodeEntity, indianataxAppealAnalysisEntity, indianataxAppealAnalysisAssumptionEntity, indianataxAppealAnalysisCompDecisionEntity, indianataxAppealAnalysisIndicationEntity, indianataxAppealLeadEntity, indianataxAppealOutcomeEntity, indianataxAppealRecommendationParcelEntity, indianataxAppealRecommendationSignalEntity, indianataxAppealRecommendationEntity, indianataxAppealStagePlaybookNoteEntity, indianataxAppealStageStatuteEntity, indianataxAppealStageEntity, indianataxAPRARequestEventEntity, indianataxAPRARequestEntity, indianataxAPRAResponseFileEntity, indianataxAssessmentNoticeEntity, indianataxAssessmentEntity, indianataxBoardDecisionEntity, indianataxCardImprovementEntity, indianataxCardNoteEntity, indianataxCardSummaryEntity, indianataxCardValuationColumnEntity, indianataxClientAppealStatusEntity, indianataxClientAppealEntity, indianataxClientAuthorizationEntity, indianataxClientContactEntity, indianataxClientImportEntity, indianataxClientPropertyEntity, indianataxClientTaskEntity, indianataxClientEntity, indianataxCoStarIncomeInputEntity, indianataxCoStarPropertyEntity, indianataxComparableAssessmentMemberEntity, indianataxComparableAssessmentSetEntity, indianataxCountyEntity, indianataxCountyAssessmentCycleEntity, indianataxCountyAssessorImprovementSegmentEntity, indianataxCountyAssessorImprovementEntity, indianataxCountyAssessorRecordEntity, indianataxCountyAssessorSaleHistoryEntity, indianataxCountyContactEntity, indianataxCountyResourceEntity, indianataxDataSourceEntity, indianataxDLGFBuildingDetailEntity, indianataxDLGFBuildingEntity, indianataxDLGFImprovementEntity, indianataxDLGFLandEntity, indianataxDocumentAcquisitionEntity, indianataxDocumentCatalogEntity, indianataxFairAndAccurateLeadEntity, indianataxFormCatalogEntity, indianataxIBTRAppealEntity, indianataxIBTRDecisionChunkEntity, indianataxIBTRDecisionCitationEntity, indianataxIBTRDecisionHoldingEntity, indianataxIBTRDecisionIssueEntity, indianataxIBTRDecisionPartyEntity, indianataxJurisdictionDeadlineAnchorEntity, indianataxLegalAuthorityEntity, indianataxLegalAuthorityChunkEntity, indianataxLegalAuthoritySectionEntity, indianataxMarketAssumptionEntity, indianataxOwnerPortfolioParcelEntity, indianataxOwnerPortfolioRunEntity, indianataxOwnerPortfolioEntity, bigboxretailParcelBurdenShiftEntity, indianataxParcelIndexEntity, bigboxretailParcelSettlementEntity, bigboxretailParcelTransferEntity, indianataxParcelYearHeadlineEntity, indianataxParcelEntity, indianataxPropertyEntity, indianataxPropertyClassMapEntity, indianataxPropertyParcelEntity, indianataxPropertySuggestionEvidenceEntity, indianataxProspectActivityEntity, indianataxProspectContactEntity, indianataxProspectParcelEntity, indianataxProspectSnapshotEntity, indianataxProspectTaskEntity, indianataxProspectEntity, indianataxPTABOAAppealEntity, indianataxResearchTaskEntity, indianataxSaleConveyanceMemberEntity, indianataxSaleConveyanceEntity, indianataxSaleReassessmentScenarioProbabilityEntity, indianataxSaleTransactionEntity, indianataxSourceDocumentEntity, indianataxSourceRegistryEntity, indianataxStatuteSectionEntity, bigboxretailvwStoreAnalysisEntity, bigboxretailStoreAssessmentEntity, bigboxretailStoreTaxEntity, bigboxretailvwStoreYearEntity, bigboxretailStoreEntity, indianataxTaxAdjustmentEntity, indianataxTaxBillEntity, indianataxTaxCourtCaseEntity, indianataxTaxCourtIBTRLinkEntity, indianataxTaxHistoryYearEntity, indianataxValuationAnalysisEntity, indianataxValuationCompEntity } from 'mj_generatedentities';
     
 
 //****************************************************************************
@@ -1987,6 +1987,945 @@ export class indianataxAppealOutcomeResolver extends ResolverBase {
         const provider = GetReadWriteProvider(providers);
         const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
         return this.DeleteRecord('Appeal Outcomes', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Appeal Recommendation Parcels
+//****************************************************************************
+@ObjectType({ description: `A property subject\'s result allocated to each member parcel (Form 130 is per parcel; Owner Prospects sums per parcel): proportional to the member\'s current AV, overridable by the practitioner. Allocations sum to the property total within $1 (integrity allocation-sums-to-total).` })
+export class indianataxAppealRecommendationParcel_ {
+    @Field({description: `Primary key.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The property-subject recommendation being allocated.`}) 
+    @MaxLength(36)
+    AppealRecommendationID: string;
+        
+    @Field({description: `The member parcel.`}) 
+    @MaxLength(36)
+    ParcelID: string;
+        
+    @Field(() => Float, {nullable: true, description: `The member's current AV for the assessment year, the basis of AllocationShare.`}) 
+    MemberCurrentAV?: number;
+        
+    @Field(() => Float, {description: `The member's share of the property total: MemberCurrentAV over the summed CurrentAV, unless AllocationOverride. Shares sum to 1.`}) 
+    AllocationShare: number;
+        
+    @Field(() => Float, {nullable: true, description: `FloorValue x AllocationShare.`}) 
+    AllocatedFloor?: number;
+        
+    @Field(() => Float, {nullable: true, description: `AskValue x AllocationShare: the value to ask for on this parcel's Form 130.`}) 
+    AllocatedAsk?: number;
+        
+    @Field(() => Float, {nullable: true, description: `EstSavingsAtAsk allocated to this parcel; Owner Prospects reads it.`}) 
+    AllocatedSavingsAtAsk?: number;
+        
+    @Field(() => Float, {nullable: true, description: `EstSavingsAtFloor allocated to this parcel.`}) 
+    AllocatedSavingsAtFloor?: number;
+        
+    @Field(() => Boolean, {description: `1 when the practitioner set this member's share by hand instead of by current AV.`}) 
+    AllocationOverride: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(30)
+    Parcel: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Appeal Recommendation Parcels
+//****************************************************************************
+@InputType()
+export class CreateindianataxAppealRecommendationParcelInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    AppealRecommendationID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Float, { nullable: true })
+    MemberCurrentAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocationShare?: number;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedFloor: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedAsk: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedSavingsAtAsk: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedSavingsAtFloor: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    AllocationOverride?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Appeal Recommendation Parcels
+//****************************************************************************
+@InputType()
+export class UpdateindianataxAppealRecommendationParcelInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    AppealRecommendationID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string;
+
+    @Field(() => Float, { nullable: true })
+    MemberCurrentAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocationShare?: number;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedFloor?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedAsk?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedSavingsAtAsk?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AllocatedSavingsAtFloor?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    AllocationOverride?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Appeal Recommendation Parcels
+//****************************************************************************
+@ObjectType()
+export class RunindianataxAppealRecommendationParcelViewResult {
+    @Field(() => [indianataxAppealRecommendationParcel_])
+    Results: indianataxAppealRecommendationParcel_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxAppealRecommendationParcel_)
+export class indianataxAppealRecommendationParcelResolver extends ResolverBase {
+    @Query(() => RunindianataxAppealRecommendationParcelViewResult)
+    async RunindianataxAppealRecommendationParcelViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAppealRecommendationParcelViewResult)
+    async RunindianataxAppealRecommendationParcelViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAppealRecommendationParcelViewResult)
+    async RunindianataxAppealRecommendationParcelDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Appeal Recommendation Parcels';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxAppealRecommendationParcel_, { nullable: true })
+    async indianataxAppealRecommendationParcel(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxAppealRecommendationParcel_ | null> {
+        this.CheckUserReadPermissions('Appeal Recommendation Parcels', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendationParcels')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendation Parcels', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Appeal Recommendation Parcels', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxAppealRecommendationParcel_)
+    async CreateindianataxAppealRecommendationParcel(
+        @Arg('input', () => CreateindianataxAppealRecommendationParcelInput) input: CreateindianataxAppealRecommendationParcelInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Appeal Recommendation Parcels', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxAppealRecommendationParcel_)
+    async UpdateindianataxAppealRecommendationParcel(
+        @Arg('input', () => UpdateindianataxAppealRecommendationParcelInput) input: UpdateindianataxAppealRecommendationParcelInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Appeal Recommendation Parcels', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxAppealRecommendationParcel_)
+    async DeleteindianataxAppealRecommendationParcel(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Appeal Recommendation Parcels', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Appeal Recommendation Signals
+//****************************************************************************
+@ObjectType({ description: `One row per signal S1-S10 per recommendation, exactly ten (integrity signal-rows-ten-per-recommendation): whether it supports, why not, and its indicated value in its unit of comparison, with the evidence count and note a reviewer needs to see why.` })
+export class indianataxAppealRecommendationSignal_ {
+    @Field({description: `Primary key.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The recommendation this signal belongs to.`}) 
+    @MaxLength(36)
+    AppealRecommendationID: string;
+        
+    @Field({description: `S1 assessment comps (neighborhood); S2 assessment comps (county); S3 sales unadjusted; S4 sales adjusted; S5 income; S6 increase over 5% (flag); S7 PTABOA record; S8 out of line with peers (flag); S9 class threshold; S10 own sale (spec §5).`}) 
+    @MaxLength(4)
+    SignalCode: string;
+        
+    @Field({description: `Yes: the signal points to an appeal by its rule in rules/appeal-signals.json; No: it does not; NA: it cannot be evaluated (NAReason says why); Contrary: S10 only, an own sale at or above AV.`}) 
+    @MaxLength(10)
+    Supports: string;
+        
+    @Field({nullable: true, description: `Why the signal is NA, for example fewer than 3 comps, decisions < 5, no pro forma, no prior year, member-missing-year, member-exception-<code>; NULL otherwise.`}) 
+    @MaxLength(60)
+    NAReason?: string;
+        
+    @Field(() => Float, {nullable: true, description: `The total value this signal indicates for the subject (indicated per unit x the subject denominator, or the lane's value); NULL when it gives none.`}) 
+    IndicatedValue?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The signal's per-unit figure in UnitOfComparison; never shown or stored without a denominator (integrity per-unit-never-without-denominator).`}) 
+    IndicatedPerUnit?: number;
+        
+    @Field({nullable: true, description: `The unit IndicatedPerUnit is in: $/SF, $/unit, $/key or $/acre.`}) 
+    @MaxLength(10)
+    UnitOfComparison?: string;
+        
+    @Field(() => Int, {nullable: true, description: `How many records the signal rests on (comps, selected sales, decisions, peers); NULL where a count does not apply.`}) 
+    EvidenceCount?: number;
+        
+    @Field({nullable: true, description: `Plain text of what the signal read and found, for the reviewer (for example which side of a split land and improvement comparison carried the indication).`}) 
+    @MaxLength(400)
+    EvidenceNote?: string;
+        
+    @Field({description: `The version of the rule file the signal's thresholds came from (rules/appeal-signals.json, class-thresholds.json, unit-of-comparison.json); every threshold change is a new version.`}) 
+    @MaxLength(40)
+    RuleVersion: string;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Appeal Recommendation Signals
+//****************************************************************************
+@InputType()
+export class CreateindianataxAppealRecommendationSignalInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    AppealRecommendationID?: string;
+
+    @Field({ nullable: true })
+    SignalCode?: string;
+
+    @Field({ nullable: true })
+    Supports?: string;
+
+    @Field({ nullable: true })
+    NAReason: string | null;
+
+    @Field(() => Float, { nullable: true })
+    IndicatedValue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    IndicatedPerUnit: number | null;
+
+    @Field({ nullable: true })
+    UnitOfComparison: string | null;
+
+    @Field(() => Int, { nullable: true })
+    EvidenceCount: number | null;
+
+    @Field({ nullable: true })
+    EvidenceNote: string | null;
+
+    @Field({ nullable: true })
+    RuleVersion?: string;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Appeal Recommendation Signals
+//****************************************************************************
+@InputType()
+export class UpdateindianataxAppealRecommendationSignalInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    AppealRecommendationID?: string;
+
+    @Field({ nullable: true })
+    SignalCode?: string;
+
+    @Field({ nullable: true })
+    Supports?: string;
+
+    @Field({ nullable: true })
+    NAReason?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    IndicatedValue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    IndicatedPerUnit?: number | null;
+
+    @Field({ nullable: true })
+    UnitOfComparison?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    EvidenceCount?: number | null;
+
+    @Field({ nullable: true })
+    EvidenceNote?: string | null;
+
+    @Field({ nullable: true })
+    RuleVersion?: string;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Appeal Recommendation Signals
+//****************************************************************************
+@ObjectType()
+export class RunindianataxAppealRecommendationSignalViewResult {
+    @Field(() => [indianataxAppealRecommendationSignal_])
+    Results: indianataxAppealRecommendationSignal_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxAppealRecommendationSignal_)
+export class indianataxAppealRecommendationSignalResolver extends ResolverBase {
+    @Query(() => RunindianataxAppealRecommendationSignalViewResult)
+    async RunindianataxAppealRecommendationSignalViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAppealRecommendationSignalViewResult)
+    async RunindianataxAppealRecommendationSignalViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAppealRecommendationSignalViewResult)
+    async RunindianataxAppealRecommendationSignalDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Appeal Recommendation Signals';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxAppealRecommendationSignal_, { nullable: true })
+    async indianataxAppealRecommendationSignal(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxAppealRecommendationSignal_ | null> {
+        this.CheckUserReadPermissions('Appeal Recommendation Signals', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendationSignals')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendation Signals', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Appeal Recommendation Signals', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxAppealRecommendationSignal_)
+    async CreateindianataxAppealRecommendationSignal(
+        @Arg('input', () => CreateindianataxAppealRecommendationSignalInput) input: CreateindianataxAppealRecommendationSignalInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Appeal Recommendation Signals', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxAppealRecommendationSignal_)
+    async UpdateindianataxAppealRecommendationSignal(
+        @Arg('input', () => UpdateindianataxAppealRecommendationSignalInput) input: UpdateindianataxAppealRecommendationSignalInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Appeal Recommendation Signals', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxAppealRecommendationSignal_)
+    async DeleteindianataxAppealRecommendationSignal(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Appeal Recommendation Signals', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Appeal Recommendations
+//****************************************************************************
+@ObjectType({ description: `One current recommendation per subject (a parcel, or a Confirmed/Provisional property) per assessment year per methodology version, from scripts/build-appeal-recommendations.js. The verdict is the count of agreeing value signals (S1-S5, S7, S9, S10) with the increase (S6) and peer (S8) flags: Appeal at two, or one plus a flag; Consider at one; No otherwise. Practitioner-facing only. Every indicated value is in AppealRecommendationSignal; a property subject\'s ask and savings are allocated to its parcels in AppealRecommendationParcel, never copied.` })
+export class indianataxAppealRecommendation_ {
+    @Field({description: `Primary key.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `Parcel or Property: what was analysed. Exactly one of ParcelID and PropertyID is set to match (CHECK).`}) 
+    @MaxLength(10)
+    SubjectKind: string;
+        
+    @Field({nullable: true, description: `The subject parcel when SubjectKind = Parcel (a Standalone or Suggested-unrolled parcel); NULL for a property subject.`}) 
+    @MaxLength(36)
+    ParcelID?: string;
+        
+    @Field({nullable: true, description: `The subject property when SubjectKind = Property (a Confirmed property, or the Suggested property rolled up as Provisional); NULL for a parcel subject.`}) 
+    @MaxLength(36)
+    PropertyID?: string;
+        
+    @Field(() => Int, {description: `The assessment year the recommendation is for (AY2026 in the first run).`}) 
+    AssessmentYear: number;
+        
+    @Field({description: `The methodology the row was computed under (first: signals-v2-2026-09-29). A version is not marked current until its back-test report exists (integrity recommendation-version-has-backtest).`}) 
+    @MaxLength(40)
+    MethodologyVersion: string;
+        
+    @Field(() => Boolean, {description: `1 for the one current row per subject, year and methodology version (filtered unique indexes); older rows are kept as history with 0.`}) 
+    IsCurrent: boolean;
+        
+    @Field(() => Float, {nullable: true, description: `The subject's assessed value for AssessmentYear; for a property, the sum over members, NULL when any member lacks the year (member-missing-year).`}) 
+    CurrentAV?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The prior year's assessed value as determined (after any appeal), as core burden-shift reads it for S6 and S8; NULL when there is no prior year.`}) 
+    PriorAVAsDetermined?: number;
+        
+    @Field({nullable: true, description: `The unit every per-unit figure on this row and its signals is shown in: $/SF, $/unit, $/key or $/acre (rules/unit-of-comparison.json, spec §4.3).`}) 
+    @MaxLength(10)
+    UnitOfComparison?: string;
+        
+    @Field(() => Float, {nullable: true, description: `The subject's denominator in UnitOfComparison (building SF ex-parking, units, keys or acres; summed over members for a property). NULL means every per-unit figure is withheld.`}) 
+    Denominator?: number;
+        
+    @Field({nullable: true, description: `Where the denominator came from: Client, Practitioner, PRC, CoStar, Web or a DLGF segment sum; for a property, the weakest member source (rank PRC > CoStar > Web > DLGF segment).`}) 
+    @MaxLength(20)
+    DenominatorSource?: string;
+        
+    @Field(() => Boolean, {description: `1 when the class's own unit had no denominator and $/SF was used instead (Multifamily without units, Hospitality without keys); labelled fallback on every screen.`}) 
+    DenominatorIsFallback: boolean;
+        
+    @Field(() => Int, {description: `The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9 and S10 when it supports. The verdict and the confidence tier both read it.`}) 
+    ValueSignalCount: number;
+        
+    @Field(() => Boolean, {description: `S6: the assessment rose more than 5% over the prior year as determined (IC 6-1.1-15-20, core burden-shift). A context flag, not a value signal.`}) 
+    IncreaseFlag: boolean;
+        
+    @Field(() => Boolean, {description: `1 when S6 holds and any of S1-S5's indicated values is within 10% of the prior-year as-determined AV: the prior year is shown reasonable, so the ask is floored at it (AskBasis prior-year-floor).`}) 
+    FloorSupport: boolean;
+        
+    @Field(() => Boolean, {description: `S8: the subject's year-over-year increase exceeds the median of its neighborhood and type group (at least 5 parcels; else county and type group) by 5 points or more. A context flag.`}) 
+    PeerOutOfLine: boolean;
+        
+    @Field(() => Boolean, {description: `S10 contrary: a qualifying own sale within 24 months of the valuation date at or above AV. Caps the verdict at Consider and the ask is never below that price.`}) 
+    OwnSaleContrary: boolean;
+        
+    @Field({description: `Appeal: two or more value signals, or one plus the increase or peer flag unless the one is S9. Consider: one value signal, or none with both flags. No: otherwise. not-available: AV missing, or a property subject with member-missing-year. OwnSaleContrary caps it at Consider.`}) 
+    @MaxLength(16)
+    Verdict: string;
+        
+    @Field({nullable: true, description: `Why the verdict is not-available (for example member-missing-year, or AV missing); NULL otherwise.`}) 
+    @MaxLength(60)
+    NotAvailableReason?: string;
+        
+    @Field({nullable: true, description: `The back-tested hit rate of the value-signal count: High, Medium or Low by the cuts in rules/appeal-signals.json (initially k >= 3, k = 2, k <= 1), shown with the measured recall and false-alarm rate for that k. NULL when not-available.`}) 
+    @MaxLength(8)
+    ConfidenceTier?: string;
+        
+    @Field(() => Float, {nullable: true, description: `The lowest supporting indication: S3, S4, S5, S10 within [0.5, 1.2] x AV, then S1, S2, S7, S9 indicated values at or below 0.95 x AV. NULL when none supports.`}) 
+    FloorValue?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The value to ask for, by AskPolicy, then floored at the prior-year as-determined AV when FloorSupport holds, and never below the own-sale price when OwnSaleContrary. For a property, allocated to members in AppealRecommendationParcel.`}) 
+    AskValue?: number;
+        
+    @Field({description: `Lowest (the floor) or SecondLowest (the second-lowest supporting indication when two or more exist, else the floor; the default, as the Appeal Workbench does). A rule value in rules/appeal-signals.json.`}) 
+    @MaxLength(16)
+    AskPolicy: string;
+        
+    @Field({nullable: true, description: `What set AskValue: lowest-supported (the AskPolicy pick), prior-year-floor (S6 with floor support), or own-sale-cap (raised to the S10 contrary sale price). NULL when there is no ask.`}) 
+    @MaxLength(20)
+    AskBasis?: string;
+        
+    @Field(() => Float, {nullable: true, description: `(CurrentAV - AskValue) x EffectiveTaxRate, as savings.ts computes it; for a property, the total, allocated per member in AppealRecommendationParcel. Below $1,000 sets BelowSavingsFloor.`}) 
+    EstSavingsAtAsk?: number;
+        
+    @Field(() => Float, {nullable: true, description: `(CurrentAV - FloorValue) x EffectiveTaxRate; for a property, the total, allocated per member in AppealRecommendationParcel.`}) 
+    EstSavingsAtFloor?: number;
+        
+    @Field(() => Float, {nullable: true, description: `The 6-place effective tax rate the savings were computed with (as savings.ts).`}) 
+    EffectiveTaxRate?: number;
+        
+    @Field({description: `Standalone = a parcel in no property; Confirmed = a practitioner-confirmed property (Client Setup); Provisional = a multi-parcel conveyance whose members share an owner today, rolled up before confirmation and marked so; Suggested-unrolled = a parcel that sits in a Suggested property and was analysed alone, per-unit figures withheld.`}) 
+    @MaxLength(20)
+    GroupingStatus: string;
+        
+    @Field({nullable: true, description: `Property.GroupingVersion of the subject property when this row was computed. A row whose version is older than the property's current one is stale (a confirm or split since). NULL for a parcel subject.`}) 
+    GroupingVersion?: Date;
+        
+    @Field(() => Boolean, {description: `Gate: an AppealOutcome or PTABOAAppeal row exists for AssessmentYear (for a property, on any member). Shown beside the verdict, never changes it; used for prospect ranking.`}) 
+    AlreadyAppealed: boolean;
+        
+    @Field({nullable: true, description: `Gate: the representative already on file for the subject (Owner Prospects; for a property, any member); NULL when none. Shown beside the verdict, never changes it.`}) 
+    @MaxLength(200)
+    ExistingRep?: string;
+        
+    @Field(() => Boolean, {description: `Gate: an Exemption outcome current for AssessmentYear, or deductions and exemptions at or above AV on the assessor record (for a property, any member). Shown beside the verdict, never changes it.`}) 
+    Exempt: boolean;
+        
+    @Field(() => Boolean, {description: `Gate: EstSavingsAtAsk is below the savings floor ($1,000, rules/appeal-signals.json). Shown beside the verdict, never changes it.`}) 
+    BelowSavingsFloor: boolean;
+        
+    @Field({description: `The run that wrote this row (scripts/build-appeal-recommendations.js). Each run writes one stamp; rows of an older stamp are swept.`}) 
+    RunStamp: Date;
+        
+    @Field({description: `When this row was written.`}) 
+    GeneratedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(30)
+    Parcel?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(200)
+    Property?: string;
+        
+    @Field(() => [indianataxAppealRecommendationParcel_])
+    indianataxAppealRecommendationParcels_AppealRecommendationIDArray: indianataxAppealRecommendationParcel_[]; // Link to indianataxAppealRecommendationParcels
+    
+    @Field(() => [indianataxAppealRecommendationSignal_])
+    indianataxAppealRecommendationSignals_AppealRecommendationIDArray: indianataxAppealRecommendationSignal_[]; // Link to indianataxAppealRecommendationSignals
+    
+}
+
+//****************************************************************************
+// INPUT TYPE for Appeal Recommendations
+//****************************************************************************
+@InputType()
+export class CreateindianataxAppealRecommendationInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    SubjectKind?: string;
+
+    @Field({ nullable: true })
+    ParcelID: string | null;
+
+    @Field({ nullable: true })
+    PropertyID: string | null;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field({ nullable: true })
+    MethodologyVersion?: string;
+
+    @Field(() => Boolean, { nullable: true })
+    IsCurrent?: boolean;
+
+    @Field(() => Float, { nullable: true })
+    CurrentAV: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PriorAVAsDetermined: number | null;
+
+    @Field({ nullable: true })
+    UnitOfComparison: string | null;
+
+    @Field(() => Float, { nullable: true })
+    Denominator: number | null;
+
+    @Field({ nullable: true })
+    DenominatorSource: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    DenominatorIsFallback?: boolean;
+
+    @Field(() => Int, { nullable: true })
+    ValueSignalCount?: number;
+
+    @Field(() => Boolean, { nullable: true })
+    IncreaseFlag?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    FloorSupport?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    PeerOutOfLine?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    OwnSaleContrary?: boolean;
+
+    @Field({ nullable: true })
+    Verdict?: string;
+
+    @Field({ nullable: true })
+    NotAvailableReason: string | null;
+
+    @Field({ nullable: true })
+    ConfidenceTier: string | null;
+
+    @Field(() => Float, { nullable: true })
+    FloorValue: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AskValue: number | null;
+
+    @Field({ nullable: true })
+    AskPolicy?: string;
+
+    @Field({ nullable: true })
+    AskBasis: string | null;
+
+    @Field(() => Float, { nullable: true })
+    EstSavingsAtAsk: number | null;
+
+    @Field(() => Float, { nullable: true })
+    EstSavingsAtFloor: number | null;
+
+    @Field(() => Float, { nullable: true })
+    EffectiveTaxRate: number | null;
+
+    @Field({ nullable: true })
+    GroupingStatus?: string;
+
+    @Field({ nullable: true })
+    GroupingVersion: Date | null;
+
+    @Field(() => Boolean, { nullable: true })
+    AlreadyAppealed?: boolean;
+
+    @Field({ nullable: true })
+    ExistingRep: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    Exempt?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    BelowSavingsFloor?: boolean;
+
+    @Field({ nullable: true })
+    RunStamp?: Date;
+
+    @Field({ nullable: true })
+    GeneratedAt?: Date;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Appeal Recommendations
+//****************************************************************************
+@InputType()
+export class UpdateindianataxAppealRecommendationInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    SubjectKind?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string | null;
+
+    @Field({ nullable: true })
+    PropertyID?: string | null;
+
+    @Field(() => Int, { nullable: true })
+    AssessmentYear?: number;
+
+    @Field({ nullable: true })
+    MethodologyVersion?: string;
+
+    @Field(() => Boolean, { nullable: true })
+    IsCurrent?: boolean;
+
+    @Field(() => Float, { nullable: true })
+    CurrentAV?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    PriorAVAsDetermined?: number | null;
+
+    @Field({ nullable: true })
+    UnitOfComparison?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    Denominator?: number | null;
+
+    @Field({ nullable: true })
+    DenominatorSource?: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    DenominatorIsFallback?: boolean;
+
+    @Field(() => Int, { nullable: true })
+    ValueSignalCount?: number;
+
+    @Field(() => Boolean, { nullable: true })
+    IncreaseFlag?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    FloorSupport?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    PeerOutOfLine?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    OwnSaleContrary?: boolean;
+
+    @Field({ nullable: true })
+    Verdict?: string;
+
+    @Field({ nullable: true })
+    NotAvailableReason?: string | null;
+
+    @Field({ nullable: true })
+    ConfidenceTier?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    FloorValue?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AskValue?: number | null;
+
+    @Field({ nullable: true })
+    AskPolicy?: string;
+
+    @Field({ nullable: true })
+    AskBasis?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    EstSavingsAtAsk?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    EstSavingsAtFloor?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    EffectiveTaxRate?: number | null;
+
+    @Field({ nullable: true })
+    GroupingStatus?: string;
+
+    @Field({ nullable: true })
+    GroupingVersion?: Date | null;
+
+    @Field(() => Boolean, { nullable: true })
+    AlreadyAppealed?: boolean;
+
+    @Field({ nullable: true })
+    ExistingRep?: string | null;
+
+    @Field(() => Boolean, { nullable: true })
+    Exempt?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    BelowSavingsFloor?: boolean;
+
+    @Field({ nullable: true })
+    RunStamp?: Date;
+
+    @Field({ nullable: true })
+    GeneratedAt?: Date;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Appeal Recommendations
+//****************************************************************************
+@ObjectType()
+export class RunindianataxAppealRecommendationViewResult {
+    @Field(() => [indianataxAppealRecommendation_])
+    Results: indianataxAppealRecommendation_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxAppealRecommendation_)
+export class indianataxAppealRecommendationResolver extends ResolverBase {
+    @Query(() => RunindianataxAppealRecommendationViewResult)
+    async RunindianataxAppealRecommendationViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAppealRecommendationViewResult)
+    async RunindianataxAppealRecommendationViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxAppealRecommendationViewResult)
+    async RunindianataxAppealRecommendationDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Appeal Recommendations';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxAppealRecommendation_, { nullable: true })
+    async indianataxAppealRecommendation(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxAppealRecommendation_ | null> {
+        this.CheckUserReadPermissions('Appeal Recommendations', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendations')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendations', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Appeal Recommendations', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @FieldResolver(() => [indianataxAppealRecommendationParcel_])
+    async indianataxAppealRecommendationParcels_AppealRecommendationIDArray(@Root() indianataxappealrecommendation_: indianataxAppealRecommendation_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Appeal Recommendation Parcels', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendationParcels')} WHERE ${provider.QuoteIdentifier('AppealRecommendationID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendation Parcels', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxappealrecommendation_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Recommendation Parcels', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxAppealRecommendationSignal_])
+    async indianataxAppealRecommendationSignals_AppealRecommendationIDArray(@Root() indianataxappealrecommendation_: indianataxAppealRecommendation_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Appeal Recommendation Signals', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendationSignals')} WHERE ${provider.QuoteIdentifier('AppealRecommendationID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendation Signals', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxappealrecommendation_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Recommendation Signals', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @Mutation(() => indianataxAppealRecommendation_)
+    async CreateindianataxAppealRecommendation(
+        @Arg('input', () => CreateindianataxAppealRecommendationInput) input: CreateindianataxAppealRecommendationInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Appeal Recommendations', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxAppealRecommendation_)
+    async UpdateindianataxAppealRecommendation(
+        @Arg('input', () => UpdateindianataxAppealRecommendationInput) input: UpdateindianataxAppealRecommendationInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Appeal Recommendations', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxAppealRecommendation_)
+    async DeleteindianataxAppealRecommendation(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Appeal Recommendations', key, options, provider, userPayload, pubSub);
     }
     
 }
@@ -5457,6 +6396,10 @@ export class indianataxCardSummary_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({description: `The loader's parse verdict for this card: parsed (every internal identity held), quarantined (an identity failed -- ParseNotes carries which; no Assessment row is written from it), needs_review (harvest could not settle the card). Rows loaded before 2026-09-29 are parsed.`}) 
+    @MaxLength(20)
+    ParseStatus: string;
+        
     @Field() 
     @MaxLength(500)
     SourceDocument: string;
@@ -5547,6 +6490,9 @@ export class CreateindianataxCardSummaryInput {
     @Field({ nullable: true })
     ParseNotes: string | null;
 
+    @Field({ nullable: true })
+    ParseStatus?: string;
+
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
 }
@@ -5625,6 +6571,9 @@ export class UpdateindianataxCardSummaryInput {
 
     @Field({ nullable: true })
     ParseNotes?: string | null;
+
+    @Field({ nullable: true })
+    ParseStatus?: string;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -5745,8 +6694,8 @@ export class indianataxCardValuationColumn_ {
     @Field(() => Int, {description: `The assessment year this column values. A year printed twice on one card is a revision, a split or a combination; the later As Of Date is final.`}) 
     AssessmentYear: number;
         
-    @Field(() => Boolean, {description: `0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise. A WIP column never becomes an Assessment row.`}) 
-    IsCertified: boolean;
+    @Field(() => Boolean, {nullable: true, description: `0 for the work-in-progress column ("not certified values and subject to change"); 1 otherwise; NULL when the source states no certification flag the loader could read (Marion residential cards, loaded 2026-09-29): unknown, never inferred. The county intake never turns a WIP column into an Assessment row; the Marion loaders (C&I fetch-marion-prc-full.js and the residential loader) write every printed year.`}) 
+    IsCertified?: boolean;
         
     @Field({nullable: true, description: `The Reason For Change cell verbatim (AA, GenReval, Rev. 134, Det/115, WIP). NULL where the card prints it blank.`}) 
     @MaxLength(50)
@@ -5845,7 +6794,7 @@ export class CreateindianataxCardValuationColumnInput {
     AssessmentYear?: number;
 
     @Field(() => Boolean, { nullable: true })
-    IsCertified?: boolean;
+    IsCertified: boolean | null;
 
     @Field({ nullable: true })
     ReasonForChange: string | null;
@@ -5927,7 +6876,7 @@ export class UpdateindianataxCardValuationColumnInput {
     AssessmentYear?: number;
 
     @Field(() => Boolean, { nullable: true })
-    IsCertified?: boolean;
+    IsCertified?: boolean | null;
 
     @Field({ nullable: true })
     ReasonForChange?: string | null;
@@ -9562,7 +10511,7 @@ export class indianataxComparableAssessmentSet_ {
     @MaxLength(30)
     PropertyTypeGroup?: string;
         
-    @Field({description: `Unit of comparison: $/SF (default), $/unit (multifamily with a trustworthy unit count), or $/acre (land).`}) 
+    @Field({description: `Unit of comparison: $/SF building ex-parking (default; Office, Retail, Industrial, Special, and the fallback for a multifamily or hotel subject without a unit or key count), $/unit (multifamily with a unit count), $/key (hotels with a key count compare per key), or $/acre (land, parking, and any subject with ParkingSharePct >= 85). Chosen by core chooseUnit (rule uoc-v1-2026-09-29) for comps-bulk-v2 sets; every comp in the set is measured in the same unit.`}) 
     @MaxLength(10)
     UnitOfComparison: string;
         
@@ -20780,6 +21729,15 @@ export class indianataxParcel_ {
     @Field(() => [indianataxParcelIndex_])
     indianataxParcelIndexes_ParcelIDArray: indianataxParcelIndex_[]; // Link to indianataxParcelIndexes
     
+    @Field(() => [indianataxAppealRecommendation_])
+    indianataxAppealRecommendations_ParcelIDArray: indianataxAppealRecommendation_[]; // Link to indianataxAppealRecommendations
+    
+    @Field(() => [indianataxAppealRecommendationParcel_])
+    indianataxAppealRecommendationParcels_ParcelIDArray: indianataxAppealRecommendationParcel_[]; // Link to indianataxAppealRecommendationParcels
+    
+    @Field(() => [indianataxSaleConveyanceMember_])
+    indianataxSaleConveyanceMembers_ParcelIDArray: indianataxSaleConveyanceMember_[]; // Link to indianataxSaleConveyanceMembers
+    
 }
 
 //****************************************************************************
@@ -21351,6 +22309,36 @@ export class indianataxParcelResolver extends ResolverBase {
         return result;
     }
         
+    @FieldResolver(() => [indianataxAppealRecommendation_])
+    async indianataxAppealRecommendations_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Appeal Recommendations', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendations')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendations', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Recommendations', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxAppealRecommendationParcel_])
+    async indianataxAppealRecommendationParcels_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Appeal Recommendation Parcels', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendationParcels')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendation Parcels', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Recommendation Parcels', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxSaleConveyanceMember_])
+    async indianataxSaleConveyanceMembers_ParcelIDArray(@Root() indianataxparcel_: indianataxParcel_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Sale Conveyance Members', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwSaleConveyanceMembers')} WHERE ${provider.QuoteIdentifier('ParcelID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Sale Conveyance Members', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxparcel_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Sale Conveyance Members', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
     @Mutation(() => indianataxParcel_)
     async CreateindianataxParcel(
         @Arg('input', () => CreateindianataxParcelInput) input: CreateindianataxParcelInput,
@@ -21404,7 +22392,7 @@ export class indianataxProperty_ {
     @Field(() => Int, {nullable: true, description: `Confirmed unit count for per-unit analysis and Form 11-A peer comparison; NULL until confirmed. UnitCountSource says where it came from.`}) 
     UnitCount?: number;
         
-    @Field({nullable: true, description: `Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us) or Practitioner (counted or judged by the practice). NULL while UnitCount is NULL.`}) 
+    @Field({nullable: true, description: `Where UnitCount came from: PRC (the county record card), CoStar, Client (the client told us), Practitioner (counted or judged by the practice) or Web (a public web page, with UnitCountSourceURL and UnitCountRetrievedAt; written only on approval of a reviewed candidate list). NULL while UnitCount is NULL.`}) 
     @MaxLength(20)
     UnitCountSource?: string;
         
@@ -21428,6 +22416,19 @@ export class indianataxProperty_ {
     @Field() 
     _mj__UpdatedAt: Date;
         
+    @Field({nullable: true, description: `Set to ConfirmedAt on every confirm or split of this property. Recommendation rows computed on an older version are stale (AppealRecommendation.GroupingVersion).`}) 
+    GroupingVersion?: Date;
+        
+    @Field({nullable: true, description: `When a practitioner split this property. Blocks re-suggestion of the same member set by scripts/suggest-properties.js.`}) 
+    SplitAt?: Date;
+        
+    @Field({nullable: true, description: `The page a Web unit count was read from (operator site, then Visit Indy / Cvent for hotels, then Apartments.com / Apartment Finder; never a units-available count). NULL unless UnitCountSource = Web.`}) 
+    @MaxLength(500)
+    UnitCountSourceURL?: string;
+        
+    @Field({nullable: true, description: `When the Web unit count was read from UnitCountSourceURL. NULL unless UnitCountSource = Web.`}) 
+    UnitCountRetrievedAt?: Date;
+        
     @Field() 
     @MaxLength(50)
     County: string;
@@ -21441,6 +22442,12 @@ export class indianataxProperty_ {
     
     @Field(() => [indianataxClientProperty_])
     indianataxClientProperties_PropertyIDArray: indianataxClientProperty_[]; // Link to indianataxClientProperties
+    
+    @Field(() => [indianataxAppealRecommendation_])
+    indianataxAppealRecommendations_PropertyIDArray: indianataxAppealRecommendation_[]; // Link to indianataxAppealRecommendations
+    
+    @Field(() => [indianataxPropertySuggestionEvidence_])
+    indianataxPropertySuggestionEvidences_PropertyIDArray: indianataxPropertySuggestionEvidence_[]; // Link to indianataxPropertySuggestionEvidences
     
 }
 
@@ -21478,6 +22485,18 @@ export class CreateindianataxPropertyInput {
 
     @Field({ nullable: true })
     Notes: string | null;
+
+    @Field({ nullable: true })
+    GroupingVersion: Date | null;
+
+    @Field({ nullable: true })
+    SplitAt: Date | null;
+
+    @Field({ nullable: true })
+    UnitCountSourceURL: string | null;
+
+    @Field({ nullable: true })
+    UnitCountRetrievedAt: Date | null;
 
     @Field(() => RestoreContextInput, { nullable: true })
     RestoreContext___?: RestoreContextInput;
@@ -21518,6 +22537,18 @@ export class UpdateindianataxPropertyInput {
 
     @Field({ nullable: true })
     Notes?: string | null;
+
+    @Field({ nullable: true })
+    GroupingVersion?: Date | null;
+
+    @Field({ nullable: true })
+    SplitAt?: Date | null;
+
+    @Field({ nullable: true })
+    UnitCountSourceURL?: string | null;
+
+    @Field({ nullable: true })
+    UnitCountRetrievedAt?: Date | null;
 
     @Field(() => [KeyValuePairInput], { nullable: true })
     OldValues___?: KeyValuePairInput[];
@@ -21600,6 +22631,26 @@ export class indianataxPropertyResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwClientProperties')} WHERE ${provider.QuoteIdentifier('PropertyID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Client Properties', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxproperty_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('Client Properties', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxAppealRecommendation_])
+    async indianataxAppealRecommendations_PropertyIDArray(@Root() indianataxproperty_: indianataxProperty_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Appeal Recommendations', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealRecommendations')} WHERE ${provider.QuoteIdentifier('PropertyID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Recommendations', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxproperty_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Recommendations', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxPropertySuggestionEvidence_])
+    async indianataxPropertySuggestionEvidences_PropertyIDArray(@Root() indianataxproperty_: indianataxProperty_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Property Suggestion Evidences', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwPropertySuggestionEvidences')} WHERE ${provider.QuoteIdentifier('PropertyID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Property Suggestion Evidences', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxproperty_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Property Suggestion Evidences', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         
@@ -21958,6 +23009,190 @@ export class indianataxPropertyParcelResolver extends ResolverBase {
         const provider = GetReadWriteProvider(providers);
         const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
         return this.DeleteRecord('Property Parcels', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Property Suggestion Evidences
+//****************************************************************************
+@ObjectType({ description: `One row per signal that suggested a Property (GroupingStatus Suggested), written by scripts/suggest-properties.js: the evidence a practitioner reads before confirming. The system suggests; it never regroups on its own.` })
+export class indianataxPropertySuggestionEvidence_ {
+    @Field({description: `Primary key.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The suggested property.`}) 
+    @MaxLength(36)
+    PropertyID: string;
+        
+    @Field({description: `A same owner and adjacency; B improved parcel with land-only neighbours; C conveyed together (shared ConveyanceKey, same owner today); D CoStar multi-parcel; E card cross-reference (spec §3.2).`}) 
+    @MaxLength(2)
+    SignalCode: string;
+        
+    @Field({description: `The grade of this signal: A for signals B and C; B for A and E, and for D when the parcels also satisfy A; C for D without A. A candidate resting on a single grade-C signal is not written.`}) 
+    @MaxLength(1)
+    Grade: string;
+        
+    @Field({description: `Plain text of the evidence: the conveyance key, the owner, the card note.`}) 
+    @MaxLength(400)
+    Evidence: string;
+        
+    @Field({description: `When the suggestion engine wrote this evidence.`}) 
+    SuggestedAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(200)
+    Property: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Property Suggestion Evidences
+//****************************************************************************
+@InputType()
+export class CreateindianataxPropertySuggestionEvidenceInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    PropertyID?: string;
+
+    @Field({ nullable: true })
+    SignalCode?: string;
+
+    @Field({ nullable: true })
+    Grade?: string;
+
+    @Field({ nullable: true })
+    Evidence?: string;
+
+    @Field({ nullable: true })
+    SuggestedAt?: Date;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Property Suggestion Evidences
+//****************************************************************************
+@InputType()
+export class UpdateindianataxPropertySuggestionEvidenceInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    PropertyID?: string;
+
+    @Field({ nullable: true })
+    SignalCode?: string;
+
+    @Field({ nullable: true })
+    Grade?: string;
+
+    @Field({ nullable: true })
+    Evidence?: string;
+
+    @Field({ nullable: true })
+    SuggestedAt?: Date;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Property Suggestion Evidences
+//****************************************************************************
+@ObjectType()
+export class RunindianataxPropertySuggestionEvidenceViewResult {
+    @Field(() => [indianataxPropertySuggestionEvidence_])
+    Results: indianataxPropertySuggestionEvidence_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxPropertySuggestionEvidence_)
+export class indianataxPropertySuggestionEvidenceResolver extends ResolverBase {
+    @Query(() => RunindianataxPropertySuggestionEvidenceViewResult)
+    async RunindianataxPropertySuggestionEvidenceViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxPropertySuggestionEvidenceViewResult)
+    async RunindianataxPropertySuggestionEvidenceViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxPropertySuggestionEvidenceViewResult)
+    async RunindianataxPropertySuggestionEvidenceDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Property Suggestion Evidences';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxPropertySuggestionEvidence_, { nullable: true })
+    async indianataxPropertySuggestionEvidence(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxPropertySuggestionEvidence_ | null> {
+        this.CheckUserReadPermissions('Property Suggestion Evidences', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwPropertySuggestionEvidences')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Property Suggestion Evidences', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Property Suggestion Evidences', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxPropertySuggestionEvidence_)
+    async CreateindianataxPropertySuggestionEvidence(
+        @Arg('input', () => CreateindianataxPropertySuggestionEvidenceInput) input: CreateindianataxPropertySuggestionEvidenceInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Property Suggestion Evidences', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxPropertySuggestionEvidence_)
+    async UpdateindianataxPropertySuggestionEvidence(
+        @Arg('input', () => UpdateindianataxPropertySuggestionEvidenceInput) input: UpdateindianataxPropertySuggestionEvidenceInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Property Suggestion Evidences', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxPropertySuggestionEvidence_)
+    async DeleteindianataxPropertySuggestionEvidence(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Property Suggestion Evidences', key, options, provider, userPayload, pubSub);
     }
     
 }
@@ -24070,6 +25305,522 @@ export class indianataxResearchTaskResolver extends ResolverBase {
 }
 
 //****************************************************************************
+// ENTITY CLASS for Sale Conveyance Members
+//****************************************************************************
+@ObjectType({ description: `Which SaleTransaction rows belong to a conveyance. A same-parcel duplicate row (two cards, one sale) is kept as a member with IsDuplicateCard = 1 and contributes nothing to the sums.` })
+export class indianataxSaleConveyanceMember_ {
+    @Field({description: `Primary key.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The conveyance this SaleTransaction row belongs to.`}) 
+    @MaxLength(36)
+    SaleConveyanceID: string;
+        
+    @Field({description: `The SaleTransaction row (one parcel's record of the sale). Unique: a sale row belongs to exactly one conveyance.`}) 
+    @MaxLength(36)
+    SaleTransactionID: string;
+        
+    @Field({nullable: true, description: `The parcel the SaleTransaction row is for, copied from it at rebuild. NULL when the sale row is not matched to a parcel.`}) 
+    @MaxLength(36)
+    ParcelID?: string;
+        
+    @Field(() => Float, {nullable: true, description: `This member's building SF ex-parking at rebuild. NULL when none is held; an improved member (type group other than Parking or Land) without it makes the conveyance incomplete (IsComplete = 0).`}) 
+    MemberBuildingSqFt?: number;
+        
+    @Field(() => Float, {nullable: true, description: `This member's unit or key count at rebuild; NULL when none is held.`}) 
+    MemberUnits?: number;
+        
+    @Field(() => Float, {nullable: true, description: `This member's acres at rebuild; NULL when none is held.`}) 
+    MemberAcres?: number;
+        
+    @Field(() => Boolean, {description: `Whether this member's building SF is part of BuildingSqFtSum: 1 for an improved member with SF, 0 for Parking/Land members (they contribute acres) and for duplicates.`}) 
+    ContributesSqFt: boolean;
+        
+    @Field(() => Boolean, {description: `1 when this row is a second card of a parcel already a member of the same conveyance (same parcel, same date, same price). Kept for the record; contributes nothing to the sums.`}) 
+    IsDuplicateCard: boolean;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field({nullable: true}) 
+    @MaxLength(200)
+    SaleTransaction?: string;
+        
+    @Field({nullable: true}) 
+    @MaxLength(30)
+    Parcel?: string;
+        
+}
+
+//****************************************************************************
+// INPUT TYPE for Sale Conveyance Members
+//****************************************************************************
+@InputType()
+export class CreateindianataxSaleConveyanceMemberInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    SaleConveyanceID?: string;
+
+    @Field({ nullable: true })
+    SaleTransactionID?: string;
+
+    @Field({ nullable: true })
+    ParcelID: string | null;
+
+    @Field(() => Float, { nullable: true })
+    MemberBuildingSqFt: number | null;
+
+    @Field(() => Float, { nullable: true })
+    MemberUnits: number | null;
+
+    @Field(() => Float, { nullable: true })
+    MemberAcres: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    ContributesSqFt?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    IsDuplicateCard?: boolean;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Sale Conveyance Members
+//****************************************************************************
+@InputType()
+export class UpdateindianataxSaleConveyanceMemberInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    SaleConveyanceID?: string;
+
+    @Field({ nullable: true })
+    SaleTransactionID?: string;
+
+    @Field({ nullable: true })
+    ParcelID?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    MemberBuildingSqFt?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    MemberUnits?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    MemberAcres?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    ContributesSqFt?: boolean;
+
+    @Field(() => Boolean, { nullable: true })
+    IsDuplicateCard?: boolean;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Sale Conveyance Members
+//****************************************************************************
+@ObjectType()
+export class RunindianataxSaleConveyanceMemberViewResult {
+    @Field(() => [indianataxSaleConveyanceMember_])
+    Results: indianataxSaleConveyanceMember_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxSaleConveyanceMember_)
+export class indianataxSaleConveyanceMemberResolver extends ResolverBase {
+    @Query(() => RunindianataxSaleConveyanceMemberViewResult)
+    async RunindianataxSaleConveyanceMemberViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxSaleConveyanceMemberViewResult)
+    async RunindianataxSaleConveyanceMemberViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxSaleConveyanceMemberViewResult)
+    async RunindianataxSaleConveyanceMemberDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Sale Conveyance Members';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxSaleConveyanceMember_, { nullable: true })
+    async indianataxSaleConveyanceMember(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxSaleConveyanceMember_ | null> {
+        this.CheckUserReadPermissions('Sale Conveyance Members', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwSaleConveyanceMembers')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Sale Conveyance Members', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Sale Conveyance Members', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @Mutation(() => indianataxSaleConveyanceMember_)
+    async CreateindianataxSaleConveyanceMember(
+        @Arg('input', () => CreateindianataxSaleConveyanceMemberInput) input: CreateindianataxSaleConveyanceMemberInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Sale Conveyance Members', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxSaleConveyanceMember_)
+    async UpdateindianataxSaleConveyanceMember(
+        @Arg('input', () => UpdateindianataxSaleConveyanceMemberInput) input: UpdateindianataxSaleConveyanceMemberInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Sale Conveyance Members', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxSaleConveyanceMember_)
+    async DeleteindianataxSaleConveyanceMember(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Sale Conveyance Members', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
+// ENTITY CLASS for Sale Conveyances
+//****************************************************************************
+@ObjectType({ description: `One deed transfer, grouping the SaleTransaction rows (one per parcel) it conveyed. Rebuilt by scripts/rebuild-sale-conveyances.js from county, sale date, price and the normalized grantee (KeyBasis grantee), or date+price corroborated by a shared owner on the roll today where no grantee is recorded (owner-corroborated); a lone row is its own conveyance (single). PricePerUnit is the whole price over the members\' summed denominator -- the figure every comp grid must use; the per-row PricePerSqFt on SaleTransaction is wrong for a multi-parcel conveyance (2026-09-29: 8,740 selected comps came from such rows).` })
+export class indianataxSaleConveyance_ {
+    @Field({description: `Primary key.`}) 
+    @MaxLength(36)
+    ID: string;
+        
+    @Field({description: `The grouping key (spec §2.1): CountyNumber|SaleDate|SalePrice|normOwner(Grantee), using the owner normaliser of build-owner-portfolios.js; where every row of the group lacks a grantee, CountyNumber|SaleDate|SalePrice, accepted only when the members share an owner on the roll today. One row per key.`}) 
+    @MaxLength(200)
+    ConveyanceKey: string;
+        
+    @Field(() => Int, {description: `Indiana county number of the conveyed parcels. Part of the key, so a conveyance never spans two counties.`}) 
+    CountyNumber: number;
+        
+    @Field({description: `The sale date every member SaleTransaction row carries.`}) 
+    SaleDate: Date;
+        
+    @Field(() => Float, {description: `The whole conveyance price. SaleTransaction repeats it on every member row; it is counted once here.`}) 
+    SalePrice: number;
+        
+    @Field({nullable: true, description: `The grantee after the owner normaliser of build-owner-portfolios.js. NULL when no member row records a grantee.`}) 
+    @MaxLength(200)
+    GranteeNormalized?: string;
+        
+    @Field({description: `How the members were grouped: grantee (date, price and normalized grantee agree); owner-corroborated (no grantee recorded, date and price agree, and the members share an owner on the roll today); single (a lone row).`}) 
+    @MaxLength(20)
+    KeyBasis: string;
+        
+    @Field(() => Int, {description: `Number of distinct parcels conveyed. Duplicate cards of one parcel (IsDuplicateCard) count once.`}) 
+    ParcelCount: number;
+        
+    @Field({nullable: true, description: `The type group with the largest summed assessed value among the members; decides UnitOfComparison.`}) 
+    @MaxLength(30)
+    DominantTypeGroup?: string;
+        
+    @Field({nullable: true, description: `The unit PricePerUnit is in: $/SF, $/unit, $/key or $/acre, decided by DominantTypeGroup through rules/unit-of-comparison.json (spec §4.3). NULL when no unit applies.`}) 
+    @MaxLength(10)
+    UnitOfComparison?: string;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of the members' building SF ex-parking over members with ContributesSqFt = 1. Parking and Land members and duplicate cards add 0. The $/SF denominator.`}) 
+    BuildingSqFtSum?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of the members' unit (multifamily) or key (hospitality) counts, duplicate cards excluded. The $/unit or $/key denominator.`}) 
+    UnitSum?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of the members' acres, duplicate cards excluded. The $/acre denominator.`}) 
+    AcreSum?: number;
+        
+    @Field(() => Boolean, {description: `True when every improved member (type group other than Parking or Land) carries building SF, so PricePerUnit is a whole-property figure. False = the conveyance leaves the comp pool with DropReason multi-parcel-denominator-incomplete.`}) 
+    IsComplete: boolean;
+        
+    @Field(() => Float, {nullable: true, description: `Whole price over the summed denominator in UnitOfComparison ($/SF over BuildingSqFtSum, $/unit or $/key over UnitSum, $/acre over AcreSum). Null when IsComplete = 0 or the denominator sum is zero.`}) 
+    PricePerUnit?: number;
+        
+    @Field(() => Float, {nullable: true, description: `Sum of the members' AssessedValueAtSale, duplicate cards excluded; NULL when any member lacks one. The denominator of SaleToAssessedRatio.`}) 
+    AssessedAtSaleSum?: number;
+        
+    @Field(() => Float, {nullable: true, description: `SalePrice over the members' summed AssessedValueAtSale; null when any member lacks one. Read by signal S10 (own sale).`}) 
+    SaleToAssessedRatio?: number;
+        
+    @Field({description: `When scripts/rebuild-sale-conveyances.js wrote this row. Conveyances are rebuilt whole from SaleTransaction, never edited by hand.`}) 
+    RebuiltAt: Date;
+        
+    @Field() 
+    _mj__CreatedAt: Date;
+        
+    @Field() 
+    _mj__UpdatedAt: Date;
+        
+    @Field(() => [indianataxSaleConveyanceMember_])
+    indianataxSaleConveyanceMembers_SaleConveyanceIDArray: indianataxSaleConveyanceMember_[]; // Link to indianataxSaleConveyanceMembers
+    
+}
+
+//****************************************************************************
+// INPUT TYPE for Sale Conveyances
+//****************************************************************************
+@InputType()
+export class CreateindianataxSaleConveyanceInput {
+    @Field({ nullable: true })
+    ID?: string;
+
+    @Field({ nullable: true })
+    ConveyanceKey?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field({ nullable: true })
+    SaleDate?: Date;
+
+    @Field(() => Float, { nullable: true })
+    SalePrice?: number;
+
+    @Field({ nullable: true })
+    GranteeNormalized: string | null;
+
+    @Field({ nullable: true })
+    KeyBasis?: string;
+
+    @Field(() => Int, { nullable: true })
+    ParcelCount?: number;
+
+    @Field({ nullable: true })
+    DominantTypeGroup: string | null;
+
+    @Field({ nullable: true })
+    UnitOfComparison: string | null;
+
+    @Field(() => Float, { nullable: true })
+    BuildingSqFtSum: number | null;
+
+    @Field(() => Float, { nullable: true })
+    UnitSum: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AcreSum: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsComplete?: boolean;
+
+    @Field(() => Float, { nullable: true })
+    PricePerUnit: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AssessedAtSaleSum: number | null;
+
+    @Field(() => Float, { nullable: true })
+    SaleToAssessedRatio: number | null;
+
+    @Field({ nullable: true })
+    RebuiltAt?: Date;
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+
+//****************************************************************************
+// INPUT TYPE for Sale Conveyances
+//****************************************************************************
+@InputType()
+export class UpdateindianataxSaleConveyanceInput {
+    @Field()
+    ID: string;
+
+    @Field({ nullable: true })
+    ConveyanceKey?: string;
+
+    @Field(() => Int, { nullable: true })
+    CountyNumber?: number;
+
+    @Field({ nullable: true })
+    SaleDate?: Date;
+
+    @Field(() => Float, { nullable: true })
+    SalePrice?: number;
+
+    @Field({ nullable: true })
+    GranteeNormalized?: string | null;
+
+    @Field({ nullable: true })
+    KeyBasis?: string;
+
+    @Field(() => Int, { nullable: true })
+    ParcelCount?: number;
+
+    @Field({ nullable: true })
+    DominantTypeGroup?: string | null;
+
+    @Field({ nullable: true })
+    UnitOfComparison?: string | null;
+
+    @Field(() => Float, { nullable: true })
+    BuildingSqFtSum?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    UnitSum?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AcreSum?: number | null;
+
+    @Field(() => Boolean, { nullable: true })
+    IsComplete?: boolean;
+
+    @Field(() => Float, { nullable: true })
+    PricePerUnit?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    AssessedAtSaleSum?: number | null;
+
+    @Field(() => Float, { nullable: true })
+    SaleToAssessedRatio?: number | null;
+
+    @Field({ nullable: true })
+    RebuiltAt?: Date;
+
+    @Field(() => [KeyValuePairInput], { nullable: true })
+    OldValues___?: KeyValuePairInput[];
+
+    @Field(() => RestoreContextInput, { nullable: true })
+    RestoreContext___?: RestoreContextInput;
+}
+    
+//****************************************************************************
+// RESOLVER for Sale Conveyances
+//****************************************************************************
+@ObjectType()
+export class RunindianataxSaleConveyanceViewResult {
+    @Field(() => [indianataxSaleConveyance_])
+    Results: indianataxSaleConveyance_[];
+
+    @Field(() => String, {nullable: true})
+    UserViewRunID?: string;
+
+    @Field(() => Int, {nullable: true})
+    RowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    TotalRowCount: number;
+
+    @Field(() => Int, {nullable: true})
+    ExecutionTime: number;
+
+    @Field({nullable: true})
+    ErrorMessage?: string;
+
+    @Field(() => Boolean, {nullable: false})
+    Success: boolean;
+}
+
+@Resolver(indianataxSaleConveyance_)
+export class indianataxSaleConveyanceResolver extends ResolverBase {
+    @Query(() => RunindianataxSaleConveyanceViewResult)
+    async RunindianataxSaleConveyanceViewByID(@Arg('input', () => RunViewByIDInput) input: RunViewByIDInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByIDGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxSaleConveyanceViewResult)
+    async RunindianataxSaleConveyanceViewByName(@Arg('input', () => RunViewByNameInput) input: RunViewByNameInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        return super.RunViewByNameGeneric(input, provider, userPayload, pubSub);
+    }
+
+    @Query(() => RunindianataxSaleConveyanceViewResult)
+    async RunindianataxSaleConveyanceDynamicView(@Arg('input', () => RunDynamicViewInput) input: RunDynamicViewInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        input.EntityName = 'Sale Conveyances';
+        return super.RunDynamicViewGeneric(input, provider, userPayload, pubSub);
+    }
+    @Query(() => indianataxSaleConveyance_, { nullable: true })
+    async indianataxSaleConveyance(@Arg('ID', () => String) ID: string, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine): Promise<indianataxSaleConveyance_ | null> {
+        this.CheckUserReadPermissions('Sale Conveyances', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwSaleConveyances')} WHERE ${provider.QuoteIdentifier('ID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Sale Conveyances', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.MapFieldNamesToCodeNames('Sale Conveyances', rows && rows.length > 0 ? rows[0] : null, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+    
+    @FieldResolver(() => [indianataxSaleConveyanceMember_])
+    async indianataxSaleConveyanceMembers_SaleConveyanceIDArray(@Root() indianataxsaleconveyance_: indianataxSaleConveyance_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Sale Conveyance Members', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwSaleConveyanceMembers')} WHERE ${provider.QuoteIdentifier('SaleConveyanceID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Sale Conveyance Members', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsaleconveyance_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Sale Conveyance Members', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @Mutation(() => indianataxSaleConveyance_)
+    async CreateindianataxSaleConveyance(
+        @Arg('input', () => CreateindianataxSaleConveyanceInput) input: CreateindianataxSaleConveyanceInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.CreateRecord('Sale Conveyances', input, provider, userPayload, pubSub)
+    }
+        
+    @Mutation(() => indianataxSaleConveyance_)
+    async UpdateindianataxSaleConveyance(
+        @Arg('input', () => UpdateindianataxSaleConveyanceInput) input: UpdateindianataxSaleConveyanceInput,
+        @Ctx() { providers, userPayload }: AppContext,
+        @PubSub() pubSub: PubSubEngine
+    ) {
+        const provider = GetReadWriteProvider(providers);
+        return this.UpdateRecord('Sale Conveyances', input, provider, userPayload, pubSub);
+    }
+    
+    @Mutation(() => indianataxSaleConveyance_)
+    async DeleteindianataxSaleConveyance(@Arg('ID', () => String) ID: string, @Arg('options___', () => DeleteOptionsInput) options: DeleteOptionsInput, @Ctx() { providers, userPayload }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        const provider = GetReadWriteProvider(providers);
+        const key = new CompositeKey([{FieldName: 'ID', Value: ID}]);
+        return this.DeleteRecord('Sale Conveyances', key, options, provider, userPayload, pubSub);
+    }
+    
+}
+
+//****************************************************************************
 // ENTITY CLASS for Sale Reassessment Scenario Probabilities
 //****************************************************************************
 @ObjectType({ description: `Empirical post-sale reassessment scenario probabilities (OPP-2 Component A), one row per (county, property type, gap-to-price band, methodology version): what fraction of comparable arm\'s-length sales landing this far above their pre-sale AV got fully chased to price within 3 years (Worst Case) vs. partially reacted to (Most Likely) vs. saw no reaction (Best Case). Feeds OPP-1 Component B\'s probability-weighted tax-budget projection. Recomputed periodically by scripts/model-post-sale-reassessment.js -- not a live view.` })
@@ -24472,6 +26223,9 @@ export class indianataxSaleTransaction_ {
     @Field(() => [indianataxAppealAnalysisCompDecision_])
     indianataxAppealAnalysisCompDecisions_SaleTransactionIDArray: indianataxAppealAnalysisCompDecision_[]; // Link to indianataxAppealAnalysisCompDecisions
     
+    @Field(() => [indianataxSaleConveyanceMember_])
+    indianataxSaleConveyanceMembers_SaleTransactionIDArray: indianataxSaleConveyanceMember_[]; // Link to indianataxSaleConveyanceMembers
+    
 }
 
 //****************************************************************************
@@ -24780,6 +26534,16 @@ export class indianataxSaleTransactionResolver extends ResolverBase {
         const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwAppealAnalysisCompDecisions')} WHERE ${provider.QuoteIdentifier('SaleTransactionID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Appeal Analysis Comp Decisions', userPayload, EntityPermissionType.Read, 'AND');
         const rows = await provider.ExecuteSQL(sSQL, [indianataxsaletransaction_.ID], undefined, this.GetUserFromPayload(userPayload));
         const result = await this.ArrayMapFieldNamesToCodeNames('Appeal Analysis Comp Decisions', rows, this.GetUserFromPayload(userPayload));
+        return result;
+    }
+        
+    @FieldResolver(() => [indianataxSaleConveyanceMember_])
+    async indianataxSaleConveyanceMembers_SaleTransactionIDArray(@Root() indianataxsaletransaction_: indianataxSaleTransaction_, @Ctx() { userPayload, providers }: AppContext, @PubSub() pubSub: PubSubEngine) {
+        this.CheckUserReadPermissions('Sale Conveyance Members', userPayload);
+        const provider = GetReadOnlyProvider(providers, { allowFallbackToReadWrite: true });
+        const sSQL = `SELECT * FROM ${provider.QuoteSchemaAndView('indiana_tax', 'vwSaleConveyanceMembers')} WHERE ${provider.QuoteIdentifier('SaleTransactionID')}=${provider.BuildParameterPlaceholder(0)} ` + this.getRowLevelSecurityWhereClause(provider, 'Sale Conveyance Members', userPayload, EntityPermissionType.Read, 'AND');
+        const rows = await provider.ExecuteSQL(sSQL, [indianataxsaletransaction_.ID], undefined, this.GetUserFromPayload(userPayload));
+        const result = await this.ArrayMapFieldNamesToCodeNames('Sale Conveyance Members', rows, this.GetUserFromPayload(userPayload));
         return result;
     }
         

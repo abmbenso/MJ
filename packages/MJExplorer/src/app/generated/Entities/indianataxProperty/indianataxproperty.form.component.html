@@ -14,7 +14,7 @@
     <mj-collapsible-panel
         SectionKey="propertyIdentification"
         SectionName="Property Identification"
-        Icon="fa fa-map-marker-alt"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -41,7 +41,7 @@
     <mj-collapsible-panel
         SectionKey="propertyDetails"
         SectionName="Property Details"
-        Icon="fa fa-info-circle"
+        Icon="fa fa-align-left"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -83,7 +83,7 @@
     <mj-collapsible-panel
         SectionKey="confirmationAndAudit"
         SectionName="Confirmation and Audit"
-        Icon="fa fa-check-circle"
+        Icon="fa fa-info-circle"
         [Form]="this"
         [FormContext]="formContext">
         <mj-form-field 
@@ -108,6 +108,59 @@
             [ShowLabel]="true"
             FieldName="Notes"
             Type="textarea"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Parcel Grouping Section -->
+    <mj-collapsible-panel
+        SectionKey="parcelGrouping"
+        SectionName="Parcel Grouping"
+        Icon="fa fa-object-group"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="GroupingVersion"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="SplitAt"
+            Type="datepicker"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+        ></mj-form-field>
+
+    </mj-collapsible-panel>
+
+    <!-- Unit Count Source Section -->
+    <mj-collapsible-panel
+        SectionKey="unitCountSource"
+        SectionName="Unit Count Source"
+        Icon="fa fa-info-circle"
+        [Form]="this"
+        [FormContext]="formContext">
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="UnitCountSourceURL"
+            Type="textbox"
+            [EditMode]="EditMode"
+            [FormContext]="formContext"
+            LinkType="URL"
+        ></mj-form-field>
+        <mj-form-field 
+            [Record]="record"
+            [ShowLabel]="true"
+            FieldName="UnitCountRetrievedAt"
+            Type="datepicker"
             [EditMode]="EditMode"
             [FormContext]="formContext"
         ></mj-form-field>
@@ -190,6 +243,56 @@
                 [ShowToolbar]="false"
                 (Navigate)="OnFormNavigate($event)"
                 (AfterDataLoad)="SetSectionRowCount('clientProperties', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Appeal Recommendations Section -->
+    <mj-collapsible-panel
+        SectionKey="appealRecommendations"
+        SectionName="Appeal Recommendations"
+        Icon="fa fa-lightbulb"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('appealRecommendations')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Appeal Recommendations','PropertyID')"
+                [NewRecordValues]="NewRecordValues('Appeal Recommendations')"
+                [AllowLoad]="IsSectionExpanded('appealRecommendations')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('appealRecommendations', $event.totalRowCount)"
+                >
+            </mj-explorer-entity-data-grid>
+        </div>
+        }
+    </mj-collapsible-panel>
+
+    <!-- Property Suggestion Evidences Section -->
+    <mj-collapsible-panel
+        SectionKey="propertySuggestionEvidences"
+        SectionName="Property Suggestion Evidences"
+        Icon="fa fa-lightbulb"
+        Variant="related-entity"
+        [Form]="this"
+        [FormContext]="formContext"
+        [BadgeCount]="GetSectionRowCount('propertySuggestionEvidences')"
+        [DefaultExpanded]="false">
+        @if (record.IsSaved) {
+        <div>
+            <mj-explorer-entity-data-grid
+                [Params]="BuildRelationshipViewParamsByEntityName('Property Suggestion Evidences','PropertyID')"
+                [NewRecordValues]="NewRecordValues('Property Suggestion Evidences')"
+                [AllowLoad]="IsSectionExpanded('propertySuggestionEvidences')"
+                [ShowToolbar]="false"
+                (Navigate)="OnFormNavigate($event)"
+                (AfterDataLoad)="SetSectionRowCount('propertySuggestionEvidences', $event.totalRowCount)"
                 >
             </mj-explorer-entity-data-grid>
         </div>

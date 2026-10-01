@@ -11,14 +11,16 @@
 
 /* eslint-disable @typescript-eslint/no-unused-vars */
 
-// @abmbenso/mj-indiana-tax-server (3 classes)
+// @abmbenso/mj-indiana-tax-server (5 classes)
 import {
+    BuildParcelRundownAction,
     ClientAppealEntityServer,
     ClientPortfolioImportServerOperation,
     ClientPortfolioPrepareServerOperation,
+    ParcelRundownBuildServerOperation,
 } from '@abmbenso/mj-indiana-tax-server';
 
-// mj_generatedentities (97 classes)
+// mj_generatedentities (103 classes)
 import {
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
@@ -38,6 +40,9 @@ import {
     indianataxAppealAnalysisIndicationEntity,
     indianataxAppealLeadEntity,
     indianataxAppealOutcomeEntity,
+    indianataxAppealRecommendationEntity,
+    indianataxAppealRecommendationParcelEntity,
+    indianataxAppealRecommendationSignalEntity,
     indianataxAppealStageEntity,
     indianataxAppealStagePlaybookNoteEntity,
     indianataxAppealStageStatuteEntity,
@@ -98,6 +103,7 @@ import {
     indianataxPropertyClassMapEntity,
     indianataxPropertyEntity,
     indianataxPropertyParcelEntity,
+    indianataxPropertySuggestionEvidenceEntity,
     indianataxProspectActivityEntity,
     indianataxProspectContactEntity,
     indianataxProspectEntity,
@@ -105,6 +111,8 @@ import {
     indianataxProspectSnapshotEntity,
     indianataxProspectTaskEntity,
     indianataxResearchTaskEntity,
+    indianataxSaleConveyanceEntity,
+    indianataxSaleConveyanceMemberEntity,
     indianataxSaleReassessmentScenarioProbabilityEntity,
     indianataxSaleTransactionEntity,
     indianataxSourceDocumentEntity,
@@ -125,9 +133,11 @@ import {
  */
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const CLASS_REGISTRATIONS: any[] = [
+    BuildParcelRundownAction,
     ClientAppealEntityServer,
     ClientPortfolioImportServerOperation,
     ClientPortfolioPrepareServerOperation,
+    ParcelRundownBuildServerOperation,
     bigboxretailParcelBurdenShiftEntity,
     bigboxretailParcelSettlementEntity,
     bigboxretailParcelTransferEntity,
@@ -146,6 +156,9 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxAppealAnalysisIndicationEntity,
     indianataxAppealLeadEntity,
     indianataxAppealOutcomeEntity,
+    indianataxAppealRecommendationEntity,
+    indianataxAppealRecommendationParcelEntity,
+    indianataxAppealRecommendationSignalEntity,
     indianataxAppealStageEntity,
     indianataxAppealStagePlaybookNoteEntity,
     indianataxAppealStageStatuteEntity,
@@ -206,6 +219,7 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxPropertyClassMapEntity,
     indianataxPropertyEntity,
     indianataxPropertyParcelEntity,
+    indianataxPropertySuggestionEvidenceEntity,
     indianataxProspectActivityEntity,
     indianataxProspectContactEntity,
     indianataxProspectEntity,
@@ -213,6 +227,8 @@ export const CLASS_REGISTRATIONS: any[] = [
     indianataxProspectSnapshotEntity,
     indianataxProspectTaskEntity,
     indianataxResearchTaskEntity,
+    indianataxSaleConveyanceEntity,
+    indianataxSaleConveyanceMemberEntity,
     indianataxSaleReassessmentScenarioProbabilityEntity,
     indianataxSaleTransactionEntity,
     indianataxSourceDocumentEntity,
@@ -231,7 +247,7 @@ export const CLASS_REGISTRATIONS: any[] = [
 export const CLASS_REGISTRATIONS_MANIFEST_LOADED = true;
 
 /** Total @RegisterClass decorated classes discovered in dependency tree */
-export const CLASS_REGISTRATIONS_COUNT = 100;
+export const CLASS_REGISTRATIONS_COUNT = 108;
 
 /** Packages imported by this manifest */
 export const CLASS_REGISTRATIONS_PACKAGES = [

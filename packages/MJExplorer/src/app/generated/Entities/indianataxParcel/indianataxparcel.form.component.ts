@@ -57,7 +57,10 @@ export class indianataxParcelFormComponent extends BaseFormComponent {
             { sectionKey: 'propertyParcels', sectionName: 'Property Parcels', isExpanded: false },
             { sectionKey: 'parcelYearHeadlines', sectionName: 'Parcel Year Headlines', isExpanded: false },
             { sectionKey: 'appealOutcomes', sectionName: 'Appeal Outcomes', isExpanded: false },
-            { sectionKey: 'parcelIndexes', sectionName: 'Parcel Indexes', isExpanded: false }
+            { sectionKey: 'parcelIndexes', sectionName: 'Parcel Indexes', isExpanded: false },
+            { sectionKey: 'appealRecommendations', sectionName: 'Appeal Recommendations', isExpanded: false },
+            { sectionKey: 'appealRecommendationParcels', sectionName: 'Appeal Recommendation Parcels', isExpanded: false },
+            { sectionKey: 'saleConveyanceMembers', sectionName: 'Sale Conveyance Members', isExpanded: false }
         ]);
     }
 }
