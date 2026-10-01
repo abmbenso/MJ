@@ -2212,7 +2212,7 @@ export class indianataxAppealRecommendationParcelResolver extends ResolverBase {
 //****************************************************************************
 // ENTITY CLASS for Appeal Recommendation Signals
 //****************************************************************************
-@ObjectType({ description: `One row per signal S1-S10 per recommendation, exactly ten (integrity signal-rows-ten-per-recommendation): whether it supports, why not, and its indicated value in its unit of comparison, with the evidence count and note a reviewer needs to see why.` })
+@ObjectType({ description: `One row per signal per recommendation: S1-S11 for a current recommendation (integrity recommendation-signal-rows-complete), S1-S10 for the retired rows of rule versions before signals-v2-2026-10-01b. Each row says whether the signal supports, why not, and its indicated value in the subject\'s unit of comparison. S11 is the subject\'s own most recent board determination (AY-2 to AY-1) not carried forward: its determined value is the indication.` })
 export class indianataxAppealRecommendationSignal_ {
     @Field({description: `Primary key.`}) 
     @MaxLength(36)
@@ -2488,7 +2488,7 @@ export class indianataxAppealRecommendation_ {
     @Field(() => Boolean, {description: `1 when the class's own unit had no denominator and $/SF was used instead (Multifamily without units, Hospitality without keys); labelled fallback on every screen.`}) 
     DenominatorIsFallback: boolean;
         
-    @Field(() => Int, {description: `The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9 and S10 when it supports. The verdict and the confidence tier both read it.`}) 
+    @Field(() => Int, {description: `The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9, S10 and (from rule version signals-v2-2026-10-01b) S11, each when it supports. The verdict reads it; the confidence tier reads the count among the back-tested signals only.`}) 
     ValueSignalCount: number;
         
     @Field(() => Boolean, {description: `S6: the assessment rose more than 5% over the prior year as determined (IC 6-1.1-15-20, core burden-shift). A context flag, not a value signal.`}) 
@@ -25345,6 +25345,10 @@ export class indianataxSaleConveyanceMember_ {
         
     @Field() 
     _mj__UpdatedAt: Date;
+        
+    @Field() 
+    @MaxLength(200)
+    SaleConveyance: string;
         
     @Field({nullable: true}) 
     @MaxLength(200)

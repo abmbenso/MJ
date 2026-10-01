@@ -853,7 +853,7 @@ export const indianataxAppealRecommendationSignalSchema = z.object({
         * * SQL Data Type: uniqueidentifier
         * * Related Entity/Foreign Key: Appeal Recommendations (vwAppealRecommendations.ID)
         * * Description: The recommendation this signal belongs to.`),
-    SignalCode: z.union([z.literal('S1'), z.literal('S10'), z.literal('S2'), z.literal('S3'), z.literal('S4'), z.literal('S5'), z.literal('S6'), z.literal('S7'), z.literal('S8'), z.literal('S9')]).describe(`
+    SignalCode: z.union([z.literal('S1'), z.literal('S10'), z.literal('S11'), z.literal('S2'), z.literal('S3'), z.literal('S4'), z.literal('S5'), z.literal('S6'), z.literal('S7'), z.literal('S8'), z.literal('S9')]).describe(`
         * * Field Name: SignalCode
         * * Display Name: Signal Code
         * * SQL Data Type: nvarchar(4)
@@ -861,6 +861,7 @@ export const indianataxAppealRecommendationSignalSchema = z.object({
     * * Possible Values 
     *   * S1
     *   * S10
+    *   * S11
     *   * S2
     *   * S3
     *   * S4
@@ -969,7 +970,7 @@ export const indianataxAppealRecommendationSchema = z.object({
         * * Description: The methodology the row was computed under (first: signals-v2-2026-09-29). A version is not marked current until its back-test report exists (integrity recommendation-version-has-backtest).`),
     IsCurrent: z.boolean().describe(`
         * * Field Name: IsCurrent
-        * * Display Name: Is Current
+        * * Display Name: Current
         * * SQL Data Type: bit
         * * Default Value: 1
         * * Description: 1 for the one current row per subject, year and methodology version (filtered unique indexes); older rows are kept as history with 0.`),
@@ -980,7 +981,7 @@ export const indianataxAppealRecommendationSchema = z.object({
         * * Description: The subject's assessed value for AssessmentYear; for a property, the sum over members, NULL when any member lacks the year (member-missing-year).`),
     PriorAVAsDetermined: z.number().nullable().describe(`
         * * Field Name: PriorAVAsDetermined
-        * * Display Name: Prior AV As Determined
+        * * Display Name: Prior Year Assessed Value
         * * SQL Data Type: decimal(18, 2)
         * * Description: The prior year's assessed value as determined (after any appeal), as core burden-shift reads it for S6 and S8; NULL when there is no prior year.`),
     UnitOfComparison: z.string().nullable().describe(`
@@ -1008,7 +1009,7 @@ export const indianataxAppealRecommendationSchema = z.object({
         * * Field Name: ValueSignalCount
         * * Display Name: Value Signal Count
         * * SQL Data Type: tinyint
-        * * Description: The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9 and S10 when it supports. The verdict and the confidence tier both read it.`),
+        * * Description: The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9, S10 and (from rule version signals-v2-2026-10-01b) S11, each when it supports. The verdict reads it; the confidence tier reads the count among the back-tested signals only.`),
     IncreaseFlag: z.boolean().describe(`
         * * Field Name: IncreaseFlag
         * * Display Name: Increase Flag
@@ -1086,12 +1087,12 @@ export const indianataxAppealRecommendationSchema = z.object({
         * * Description: What set AskValue: lowest-supported (the AskPolicy pick), prior-year-floor (S6 with floor support), or own-sale-cap (raised to the S10 contrary sale price). NULL when there is no ask.`),
     EstSavingsAtAsk: z.number().nullable().describe(`
         * * Field Name: EstSavingsAtAsk
-        * * Display Name: Est Savings at Ask
+        * * Display Name: Est. Savings at Ask
         * * SQL Data Type: decimal(14, 2)
         * * Description: (CurrentAV - AskValue) x EffectiveTaxRate, as savings.ts computes it; for a property, the total, allocated per member in AppealRecommendationParcel. Below $1,000 sets BelowSavingsFloor.`),
     EstSavingsAtFloor: z.number().nullable().describe(`
         * * Field Name: EstSavingsAtFloor
-        * * Display Name: Est Savings at Floor
+        * * Display Name: Est. Savings at Floor
         * * SQL Data Type: decimal(14, 2)
         * * Description: (CurrentAV - FloorValue) x EffectiveTaxRate; for a property, the total, allocated per member in AppealRecommendationParcel.`),
     EffectiveTaxRate: z.number().nullable().describe(`
@@ -1122,7 +1123,7 @@ export const indianataxAppealRecommendationSchema = z.object({
         * * Description: Gate: an AppealOutcome or PTABOAAppeal row exists for AssessmentYear (for a property, on any member). Shown beside the verdict, never changes it; used for prospect ranking.`),
     ExistingRep: z.string().nullable().describe(`
         * * Field Name: ExistingRep
-        * * Display Name: Existing Rep
+        * * Display Name: Existing Representative
         * * SQL Data Type: nvarchar(200)
         * * Description: Gate: the representative already on file for the subject (Owner Prospects; for a property, any member); NULL when none. Shown beside the verdict, never changes it.`),
     Exempt: z.boolean().describe(`
@@ -1157,7 +1158,7 @@ export const indianataxAppealRecommendationSchema = z.object({
         * * Default Value: getutcdate()`),
     Parcel: z.string().nullable().describe(`
         * * Field Name: Parcel
-        * * Display Name: Parcel
+        * * Display Name: Parcel Name
         * * SQL Data Type: nvarchar(30)`),
     Property: z.string().nullable().describe(`
         * * Field Name: Property
@@ -10049,6 +10050,10 @@ export const indianataxSaleConveyanceMemberSchema = z.object({
         * * Display Name: Updated At
         * * SQL Data Type: datetimeoffset
         * * Default Value: getutcdate()`),
+    SaleConveyance: z.string().describe(`
+        * * Field Name: SaleConveyance
+        * * Display Name: Sale Conveyance
+        * * SQL Data Type: nvarchar(200)`),
     SaleTransaction: z.string().nullable().describe(`
         * * Field Name: SaleTransaction
         * * Display Name: Sale Transaction
@@ -14669,7 +14674,7 @@ export class indianataxAppealRecommendationParcelEntity extends BaseEntity<india
  * * Schema: indiana_tax
  * * Base Table: AppealRecommendationSignal
  * * Base View: vwAppealRecommendationSignals
- * * @description One row per signal S1-S10 per recommendation, exactly ten (integrity signal-rows-ten-per-recommendation): whether it supports, why not, and its indicated value in its unit of comparison, with the evidence count and note a reviewer needs to see why.
+ * * @description One row per signal per recommendation: S1-S11 for a current recommendation (integrity recommendation-signal-rows-complete), S1-S10 for the retired rows of rule versions before signals-v2-2026-10-01b. Each row says whether the signal supports, why not, and its indicated value in the subject's unit of comparison. S11 is the subject's own most recent board determination (AY-2 to AY-1) not carried forward: its determined value is the indication.
  * * Primary Key: ID
  * @extends {BaseEntity}
  * @class
@@ -14730,6 +14735,7 @@ export class indianataxAppealRecommendationSignalEntity extends BaseEntity<india
     * * Possible Values 
     *   * S1
     *   * S10
+    *   * S11
     *   * S2
     *   * S3
     *   * S4
@@ -14740,10 +14746,10 @@ export class indianataxAppealRecommendationSignalEntity extends BaseEntity<india
     *   * S9
     * * Description: S1 assessment comps (neighborhood); S2 assessment comps (county); S3 sales unadjusted; S4 sales adjusted; S5 income; S6 increase over 5% (flag); S7 PTABOA record; S8 out of line with peers (flag); S9 class threshold; S10 own sale (spec §5).
     */
-    get SignalCode(): 'S1' | 'S10' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' {
+    get SignalCode(): 'S1' | 'S10' | 'S11' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9' {
         return this.Get('SignalCode');
     }
-    set SignalCode(value: 'S1' | 'S10' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9') {
+    set SignalCode(value: 'S1' | 'S10' | 'S11' | 'S2' | 'S3' | 'S4' | 'S5' | 'S6' | 'S7' | 'S8' | 'S9') {
         this.Set('SignalCode', value);
     }
 
@@ -15051,7 +15057,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
 
     /**
     * * Field Name: IsCurrent
-    * * Display Name: Is Current
+    * * Display Name: Current
     * * SQL Data Type: bit
     * * Default Value: 1
     * * Description: 1 for the one current row per subject, year and methodology version (filtered unique indexes); older rows are kept as history with 0.
@@ -15078,7 +15084,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
 
     /**
     * * Field Name: PriorAVAsDetermined
-    * * Display Name: Prior AV As Determined
+    * * Display Name: Prior Year Assessed Value
     * * SQL Data Type: decimal(18, 2)
     * * Description: The prior year's assessed value as determined (after any appeal), as core burden-shift reads it for S6 and S8; NULL when there is no prior year.
     */
@@ -15146,7 +15152,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
     * * Field Name: ValueSignalCount
     * * Display Name: Value Signal Count
     * * SQL Data Type: tinyint
-    * * Description: The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9 and S10 when it supports. The verdict and the confidence tier both read it.
+    * * Description: The count of agreeing value signals: S1, S2, S3, S4, S5, S7, S9, S10 and (from rule version signals-v2-2026-10-01b) S11, each when it supports. The verdict reads it; the confidence tier reads the count among the back-tested signals only.
     */
     get ValueSignalCount(): number {
         return this.Get('ValueSignalCount');
@@ -15320,7 +15326,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
 
     /**
     * * Field Name: EstSavingsAtAsk
-    * * Display Name: Est Savings at Ask
+    * * Display Name: Est. Savings at Ask
     * * SQL Data Type: decimal(14, 2)
     * * Description: (CurrentAV - AskValue) x EffectiveTaxRate, as savings.ts computes it; for a property, the total, allocated per member in AppealRecommendationParcel. Below $1,000 sets BelowSavingsFloor.
     */
@@ -15333,7 +15339,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
 
     /**
     * * Field Name: EstSavingsAtFloor
-    * * Display Name: Est Savings at Floor
+    * * Display Name: Est. Savings at Floor
     * * SQL Data Type: decimal(14, 2)
     * * Description: (CurrentAV - FloorValue) x EffectiveTaxRate; for a property, the total, allocated per member in AppealRecommendationParcel.
     */
@@ -15404,7 +15410,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
 
     /**
     * * Field Name: ExistingRep
-    * * Display Name: Existing Rep
+    * * Display Name: Existing Representative
     * * SQL Data Type: nvarchar(200)
     * * Description: Gate: the representative already on file for the subject (Owner Prospects; for a property, any member); NULL when none. Shown beside the verdict, never changes it.
     */
@@ -15489,7 +15495,7 @@ export class indianataxAppealRecommendationEntity extends BaseEntity<indianataxA
 
     /**
     * * Field Name: Parcel
-    * * Display Name: Parcel
+    * * Display Name: Parcel Name
     * * SQL Data Type: nvarchar(30)
     */
     get Parcel(): string | null {
@@ -38251,6 +38257,15 @@ export class indianataxSaleConveyanceMemberEntity extends BaseEntity<indianataxS
     */
     get __mj_UpdatedAt(): Date {
         return this.Get('__mj_UpdatedAt');
+    }
+
+    /**
+    * * Field Name: SaleConveyance
+    * * Display Name: Sale Conveyance
+    * * SQL Data Type: nvarchar(200)
+    */
+    get SaleConveyance(): string {
+        return this.Get('SaleConveyance');
     }
 
     /**
